@@ -3,6 +3,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
+type Quarter = {
+  label: string;
+  tint: string;
+  border: string;
+  text: string;
+};
+
+const QUARTERS: Quarter[] = [
+  { label: "Q1", tint: "rgba(0,122,255,0.045)", border: "#0a84ff", text: "#0a84ff" },
+  { label: "Q2", tint: "rgba(52,199,89,0.05)", border: "#34c759", text: "#28a745" },
+  { label: "Q3", tint: "rgba(255,204,0,0.07)", border: "#ffcc00", text: "#b58900" },
+  { label: "Q4", tint: "rgba(255,149,0,0.06)", border: "#ff9500", text: "#c2410c" },
+];
+
 function startOfDay(d: Date) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -17,11 +31,10 @@ function startOfNextYear(year: number) {
   return new Date(year + 1, 0, 1);
 }
 
-// Monday-start week containing the given date
 function startOfWeekMonday(d: Date) {
   const x = startOfDay(d);
-  const dow = x.getDay(); // 0 = Sun
-  const diff = (dow + 6) % 7; // days since Monday
+  const dow = x.getDay();
+  const diff = (dow + 6) % 7;
   x.setDate(x.getDate() - diff);
   return x;
 }
@@ -45,7 +58,6 @@ type DayState = "past" | "today" | "future" | "out";
 function App() {
   const [now, setNow] = useState<Date>(() => new Date());
 
-  // Tick every minute so today's tile and the year bar update in real time
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(t);
@@ -116,11 +128,20 @@ function App() {
   const totalDays =
     (startOfNextYear(year).getTime() - startOfYear(year).getTime()) / 86_400_000;
 
+  // Group rows into quarters (13 weeks each)
+  const quarterChunks = useMemo(() => {
+    return [0, 1, 2, 3].map((qi) => ({
+      quarter: QUARTERS[qi]!,
+      startIndex: qi * 13,
+      rows: weeks.slice(qi * 13, qi * 13 + 13),
+    }));
+  }, [weeks]);
+
   return (
     <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
       {/* Header / Year progress */}
       <header
-        className="sticky top-0 z-10"
+        className="sticky top-0 z-20"
         style={{
           background: "rgba(245,245,247,0.85)",
           backdropFilter: "saturate(180%) blur(20px)",
@@ -128,7 +149,7 @@ function App() {
           borderBottom: "1px solid var(--border-soft)",
         }}
       >
-        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-7 pb-5">
+        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-7 pb-4">
           <div className="flex items-baseline justify-between">
             <h1
               className="text-2xl sm:text-3xl font-semibold tracking-tight"
@@ -145,11 +166,8 @@ function App() {
           </div>
 
           <div
-            className="mt-4 h-2.5 w-full overflow-hidden"
-            style={{
-              background: "var(--border-soft)",
-              borderRadius: 999,
-            }}
+            className="mt-3 h-1.5 w-full overflow-hidden"
+            style={{ background: "var(--border-soft)", borderRadius: 999 }}
           >
             <div
               className="h-full transition-[width] duration-700 ease-out"
@@ -158,13 +176,12 @@ function App() {
                 background:
                   "linear-gradient(90deg, #5ed47b 0%, #34c759 55%, #28a745 100%)",
                 borderRadius: 999,
-                boxShadow: "0 0 0 0.5px rgba(40,167,69,0.25) inset",
               }}
             />
           </div>
 
           <div
-            className="mt-3 flex items-center justify-between text-xs tabular-nums"
+            className="mt-2.5 flex items-center justify-between text-xs tabular-nums"
             style={{ color: "var(--text-tertiary)" }}
           >
             <span>
@@ -177,43 +194,87 @@ function App() {
 
       {/* Main view */}
       <main className="mx-auto max-w-3xl px-5 sm:px-8 py-8">
-        <div
-          className="mb-3 grid grid-cols-7 gap-2 sm:gap-3 px-1"
-          style={{ color: "var(--text-tertiary)" }}
-        >
-          {WEEKDAYS.map((w, i) => (
-            <div
-              key={i}
-              className="text-center text-[10px] font-medium tracking-widest uppercase"
-            >
-              {w}
-            </div>
-          ))}
+        {/* Weekday header — aligned to the 7-day grid (offset by week-number column) */}
+        <div className="mb-4 flex items-center gap-3 sm:gap-4 px-1">
+          <div className="w-14 sm:w-16 shrink-0" />
+          <div
+            className="grid grid-cols-7 gap-2 sm:gap-3 flex-1"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            {WEEKDAYS.map((w, i) => (
+              <div
+                key={i}
+                className="text-center text-[10px] font-medium tracking-widest uppercase"
+              >
+                {w}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:gap-3">
-          {weeks.map(({ days }, wi) => {
-            const isCurrent = wi === currentWeekIndex;
-            return (
-              <div
-                key={wi}
-                ref={(el) => {
-                  weekRefs.current[wi] = el;
-                }}
-                className="grid grid-cols-7 gap-2 sm:gap-3"
-              >
-                {days.map((d, di) => (
-                  <DayTile
-                    key={di}
-                    date={d}
-                    state={dayState(d)}
-                    todayProgress={todayProgress}
-                    highlightWeek={isCurrent}
-                  />
-                ))}
+        <div className="flex flex-col gap-6">
+          {quarterChunks.map(({ quarter, startIndex, rows }, qi) => (
+            <section
+              key={qi}
+              className="overflow-hidden"
+              style={{
+                background: quarter.tint,
+                borderRadius: 18,
+                borderLeft: `3px solid ${quarter.border}`,
+              }}
+            >
+              <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-2">
+                <div
+                  className="text-[11px] font-semibold tracking-widest uppercase"
+                  style={{ color: quarter.text }}
+                >
+                  {quarter.label}
+                </div>
+                <div
+                  className="text-[11px] tabular-nums"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  Weeks {startIndex + 1}–{startIndex + rows.length}
+                </div>
               </div>
-            );
-          })}
+
+              <div className="flex flex-col gap-2 sm:gap-3 px-3 sm:px-4 pb-4 pt-1">
+                {rows.map(({ days }, ri) => {
+                  const wi = startIndex + ri;
+                  const isCurrent = wi === currentWeekIndex;
+                  return (
+                    <div
+                      key={wi}
+                      ref={(el) => {
+                        weekRefs.current[wi] = el;
+                      }}
+                      className="flex items-center gap-3 sm:gap-4"
+                    >
+                      <div
+                        className="w-14 sm:w-16 shrink-0 text-right text-[11px] tabular-nums select-none"
+                        style={{
+                          color: isCurrent ? quarter.text : "var(--text-tertiary)",
+                          fontWeight: isCurrent ? 600 : 500,
+                        }}
+                      >
+                        Week {wi + 1}
+                      </div>
+                      <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
+                        {days.map((d, di) => (
+                          <DayTile
+                            key={di}
+                            date={d}
+                            state={dayState(d)}
+                            todayProgress={todayProgress}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
 
         <footer
@@ -231,19 +292,17 @@ function DayTile({
   date,
   state,
   todayProgress,
-  highlightWeek,
 }: {
   date: Date;
   state: DayState;
   todayProgress: number;
-  highlightWeek: boolean;
 }) {
   const isOut = state === "out";
   const isPast = state === "past";
   const isToday = state === "today";
 
   const baseStyle: React.CSSProperties = {
-    borderRadius: 14,
+    borderRadius: 12,
     aspectRatio: "1 / 1",
     transition: "transform 200ms ease, box-shadow 200ms ease",
   };
@@ -264,7 +323,6 @@ function DayTile({
     );
   }
 
-  // Past — fully filled apple green
   if (isPast) {
     return (
       <div
@@ -283,7 +341,6 @@ function DayTile({
     );
   }
 
-  // Today — partial green fill from bottom
   if (isToday) {
     return (
       <div
@@ -298,7 +355,6 @@ function DayTile({
         }}
         aria-label={`Today, ${todayProgress.toFixed(0)}% elapsed`}
       >
-        {/* fill */}
         <div
           className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
           style={{
@@ -314,18 +370,15 @@ function DayTile({
     );
   }
 
-  // Future
   return (
     <div
       className="relative flex flex-col items-center justify-center"
       style={{
         ...baseStyle,
         background: "var(--surface)",
-        border: `1px solid ${highlightWeek ? "#c7c7cc" : "var(--border-soft)"}`,
+        border: "1px solid var(--border-soft)",
         color: "var(--text-secondary)",
-        boxShadow: highlightWeek
-          ? "0 1px 2px rgba(0,0,0,0.03)"
-          : "0 1px 1px rgba(0,0,0,0.02)",
+        boxShadow: "0 1px 1px rgba(0,0,0,0.02)",
       }}
     >
       <Label number={dayNumber} month={monthAbbr} tone="muted" />
@@ -343,7 +396,7 @@ function Label({
   tone: "onGreen" | "muted" | "auto";
 }) {
   const numberColor =
-    tone === "onGreen" ? "white" : tone === "muted" ? "var(--text)" : "var(--text)";
+    tone === "onGreen" ? "white" : "var(--text)";
   const monthColor =
     tone === "onGreen"
       ? "rgba(255,255,255,0.85)"
