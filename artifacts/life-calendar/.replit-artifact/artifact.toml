@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Life Calendar"
+version = "1.0.0"
+id = "artifacts/life-calendar"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22196
+
+[services.development]
+run = "pnpm --filter @workspace/life-calendar run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/life-calendar", "run", "build" ]
+publicDir = "artifacts/life-calendar/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22196"
+BASE_PATH = "/"
