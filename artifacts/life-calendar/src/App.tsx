@@ -345,6 +345,15 @@ function BlocksRenderer({
         <AnimatePresence initial={false}>
           {blocks.map((block) => {
             const blockRows = weeks.slice(startIndex + block.start, startIndex + block.end);
+            const allDays = blockRows.flatMap((r) => r.days);
+            const pastDays = allDays.filter((d) => dayState(d) === "past").length;
+            const hasToday = allDays.some((d) => dayState(d) === "today");
+            const totalDays = block.weeks * 7;
+            const completedPortion = pastDays + (hasToday ? todayProgress / 100 : 0);
+            const pct = Math.max(0, Math.min(100, (completedPortion / totalDays) * 100));
+            const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
+            const isFuture = pastDays === 0 && !hasToday;
+            const isComplete = pct >= 100;
             return (
               <motion.div
                 layout
@@ -370,6 +379,46 @@ function BlocksRenderer({
                   />
                   <div className="text-[10px] tabular-nums" style={{ color: "var(--text-tertiary)" }}>
                     {block.weeks} {block.weeks === 1 ? "week" : "weeks"}
+                  </div>
+                </div>
+                <div className="px-3 sm:px-3.5 pb-2">
+                  <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
+                    <span style={{ color: "var(--text-tertiary)" }}>
+                      {pastDays} of {totalDays} days
+                    </span>
+                    <span
+                      style={{
+                        color: isComplete
+                          ? "var(--apple-green)"
+                          : isFuture
+                          ? "var(--text-tertiary)"
+                          : quarter.text,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {pct.toFixed(0)}%
+                    </span>
+                    <span style={{ color: "var(--text-tertiary)" }}>
+                      {isComplete ? "done" : `${daysLeft} left`}
+                    </span>
+                  </div>
+                  <div
+                    className="h-1 rounded-full overflow-hidden"
+                    style={{ background: "rgba(0,0,0,0.06)" }}
+                  >
+                    <motion.div
+                      initial={false}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ type: "spring", stiffness: 120, damping: 24 }}
+                      style={{
+                        height: "100%",
+                        background: isComplete
+                          ? "linear-gradient(90deg, #5ed47b, #34c759)"
+                          : `linear-gradient(90deg, ${quarter.text}, ${quarter.border})`,
+                        borderRadius: 999,
+                        boxShadow: pct > 0 ? `0 0 6px ${quarter.soft}` : "none",
+                      }}
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
