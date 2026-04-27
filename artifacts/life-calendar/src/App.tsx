@@ -86,7 +86,7 @@ function App() {
   const [now, setNow] = useState<Date>(() => new Date());
 
   useEffect(() => {
-    const t = window.setInterval(() => setNow(new Date()), 30_000);
+    const t = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(t);
   }, []);
 
@@ -117,19 +117,16 @@ function App() {
     return Math.max(0, Math.min(100, ((now.getTime() - start) / (end - start)) * 100));
   }, [now, year]);
 
+  const todayProgress = useMemo(() => {
+    const start = startOfDay(now).getTime();
+    return Math.max(0, Math.min(100, ((now.getTime() - start) / 86_400_000) * 100));
+  }, [now]);
+
   const today = startOfDay(now);
 
   const currentWeekIndex = useMemo(() => {
     return weeks.findIndex(({ days }) => days.some((d) => sameDay(d, today)));
   }, [weeks, today]);
-
-  const weekProgress = useMemo(() => {
-    if (currentWeekIndex < 0) return 0;
-    const w = weeks[currentWeekIndex]!;
-    const start = w.weekStart.getTime();
-    const end = start + 7 * 86_400_000;
-    return Math.max(0, Math.min(100, ((now.getTime() - start) / (end - start)) * 100));
-  }, [weeks, currentWeekIndex, now]);
 
   const weekRefs = useRef<Array<HTMLDivElement | null>>([]);
   const didScrollRef = useRef(false);
@@ -286,7 +283,7 @@ function App() {
                       startIndex={startIndex}
                       weeks={weeks}
                       currentWeekIndex={currentWeekIndex}
-                      weekProgress={weekProgress}
+                      todayProgress={todayProgress}
                       dayState={dayState}
                       weekRefs={weekRefs}
                       onLabelChange={(blockId, label) => updateBlockLabel(qi, blockId, label)}
@@ -322,7 +319,7 @@ function App() {
 }
 
 function BlocksRenderer({
-  qi: _qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, weekProgress, dayState, weekRefs, onLabelChange,
+  qi: _qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress, dayState, weekRefs, onLabelChange,
 }: {
   qi: number;
   quarter: Quarter;
@@ -330,7 +327,7 @@ function BlocksRenderer({
   startIndex: number;
   weeks: Array<{ weekStart: Date; days: Date[] }>;
   currentWeekIndex: number;
-  weekProgress: number;
+  todayProgress: number;
   dayState: (d: Date) => DayState;
   weekRefs: React.MutableRefObject<Array<HTMLDivElement | null>>;
   onLabelChange: (blockId: string, label: string) => void;
@@ -394,17 +391,15 @@ function BlocksRenderer({
                         >
                           Week {wi + 1}
                         </div>
-                        <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1 relative">
+                        <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                           {days.map((d, di) => (
                             <DayTile
                               key={di}
                               date={d}
                               state={dayState(d)}
-                              isInCurrentWeek={isCurrent}
-                              weekPct={weekProgress}
+                              todayProgress={todayProgress}
                             />
                           ))}
-                          {isCurrent && <TodayLine pct={weekProgress} />}
                         </div>
                       </div>
                     );
@@ -751,49 +746,9 @@ function SprintSettingsModal({
   );
 }
 
-function TodayLine({ pct }: { pct: number }) {
-  return (
-    <div
-      className="absolute left-0 right-0 pointer-events-none z-20"
-      style={{
-        top: `${pct}%`,
-        transform: "translateY(-50%)",
-        height: 2,
-        transition: "top 1s ease-out",
-      }}
-      aria-hidden
-    >
-      <div
-        style={{
-          height: "100%",
-          width: "100%",
-          background:
-            "linear-gradient(90deg, rgba(52,199,89,0) 0%, rgba(94,212,123,0.95) 12%, #34c759 50%, rgba(94,212,123,0.95) 88%, rgba(52,199,89,0) 100%)",
-          borderRadius: 999,
-          boxShadow:
-            "0 0 4px rgba(52,199,89,0.95), 0 0 10px rgba(52,199,89,0.7), 0 0 20px rgba(52,199,89,0.4)",
-        }}
-      />
-      <div
-        className="absolute top-1/2"
-        style={{
-          left: "calc(100% - 2px)",
-          width: 8,
-          height: 8,
-          marginTop: -4,
-          borderRadius: 999,
-          background: "#34c759",
-          boxShadow:
-            "0 0 6px rgba(52,199,89,1), 0 0 14px rgba(52,199,89,0.8), 0 0 24px rgba(52,199,89,0.4)",
-        }}
-      />
-    </div>
-  );
-}
-
 function DayTile({
-  date, state, isInCurrentWeek, weekPct,
-}: { date: Date; state: DayState; isInCurrentWeek: boolean; weekPct: number }) {
+  date, state, todayProgress,
+}: { date: Date; state: DayState; todayProgress: number }) {
   const isOut = state === "out";
   const isPast = state === "past";
   const isToday = state === "today";
@@ -829,40 +784,45 @@ function DayTile({
     );
   }
 
-  // Future or today (today is part of current week, not yet "past")
-  // In the current week, render a soft tint above the today line.
-  const showTint = isInCurrentWeek;
+  if (isToday) {
+    return (
+      <div
+        className="relative flex flex-col items-center justify-center overflow-hidden"
+        style={{
+          ...baseStyle,
+          background: "var(--surface)",
+          border: "1.5px solid var(--apple-green)",
+          boxShadow: "0 0 0 4px rgba(52,199,89,0.12), 0 4px 14px rgba(52,199,89,0.18)",
+          color: "var(--text)",
+        }}
+        aria-label={`Today, ${todayProgress.toFixed(0)}% elapsed`}
+      >
+        <div
+          className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
+          style={{
+            height: `${todayProgress}%`,
+            background: "linear-gradient(180deg, rgba(94,212,123,0.85) 0%, #34c759 100%)",
+          }}
+        />
+        <div className="relative z-10 flex flex-col items-center justify-center">
+          <Label number={dayNumber} month={monthAbbr} tone="auto" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className="relative flex flex-col items-center justify-center overflow-hidden"
+      className="relative flex flex-col items-center justify-center"
       style={{
         ...baseStyle,
         background: "var(--surface)",
-        border: isToday
-          ? "1.5px solid var(--apple-green)"
-          : "1px solid var(--border-soft)",
+        border: "1px solid var(--border-soft)",
         color: "var(--text-secondary)",
-        boxShadow: isToday
-          ? "0 0 0 4px rgba(52,199,89,0.10), 0 2px 10px rgba(52,199,89,0.18)"
-          : "0 1px 1px rgba(0,0,0,0.02)",
+        boxShadow: "0 1px 1px rgba(0,0,0,0.02)",
       }}
-      aria-label={isToday ? "Today" : undefined}
     >
-      {showTint && (
-        <div
-          className="absolute inset-x-0 top-0 pointer-events-none"
-          style={{
-            height: `${weekPct}%`,
-            background:
-              "linear-gradient(180deg, rgba(52,199,89,0.18) 0%, rgba(52,199,89,0.10) 100%)",
-            transition: "height 1s ease-out",
-          }}
-        />
-      )}
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        <Label number={dayNumber} month={monthAbbr} tone={isToday ? "auto" : "muted"} />
-      </div>
+      <Label number={dayNumber} month={monthAbbr} tone="muted" />
     </div>
   );
 }
