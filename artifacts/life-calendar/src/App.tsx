@@ -1,6 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 
+function dateKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function loadNotes(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem("lifeCalendar:notes");
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch { return {}; }
+}
+
+function saveNotes(notes: Record<string, string>) {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem("lifeCalendar:notes", JSON.stringify(notes)); }
+  catch { /* ignore */ }
+}
+
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 const WEEKS_PER_QUARTER = 13;
@@ -155,6 +173,18 @@ function App() {
 
   const totalDays = (startOfNextYear(year).getTime() - startOfYear(year).getTime()) / 86_400_000;
 
+  const [notes, setNotes] = useState<Record<string, string>>(() => loadNotes());
+  const [openNote, setOpenNote] = useState<string | null>(null);
+
+  const upsertNote = (key: string, text: string) => {
+    setNotes((prev) => {
+      const next = { ...prev };
+      if (text.trim()) { next[key] = text.trim(); } else { delete next[key]; }
+      saveNotes(next);
+      return next;
+    });
+  };
+
   const [settingsQuarter, setSettingsQuarter] = useState<number | null>(null);
 
   const updateQuarter = (qi: number, next: QuarterConfig) => {
@@ -286,6 +316,8 @@ function App() {
                       todayProgress={todayProgress}
                       dayState={dayState}
                       weekRefs={weekRefs}
+                      notes={notes}
+                      onNoteOpen={(key) => setOpenNote(key)}
                       onLabelChange={(blockId, label) => updateBlockLabel(qi, blockId, label)}
                     />
                   </div>
@@ -314,12 +346,23 @@ function App() {
           />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {openNote !== null && (
+          <NoteModal
+            dateKey={openNote}
+            initial={notes[openNote] ?? ""}
+            onSave={(text) => { upsertNote(openNote, text); setOpenNote(null); }}
+            onClose={() => setOpenNote(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 function BlocksRenderer({
-  qi: _qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress, dayState, weekRefs, onLabelChange,
+  qi: _qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress, dayState, weekRefs, notes, onNoteOpen, onLabelChange,
 }: {
   qi: number;
   quarter: Quarter;
@@ -330,6 +373,8 @@ function BlocksRenderer({
   todayProgress: number;
   dayState: (d: Date) => DayState;
   weekRefs: React.MutableRefObject<Array<HTMLDivElement | null>>;
+  notes: Record<string, string>;
+  onNoteOpen: (key: string) => void;
   onLabelChange: (blockId: string, label: string) => void;
 }) {
   let cursor = 0;
@@ -447,6 +492,8 @@ function BlocksRenderer({
                               date={d}
                               state={dayState(d)}
                               todayProgress={todayProgress}
+                              note={notes[dateKey(d)]}
+                              onOpen={() => { if (dayState(d) !== "out") onNoteOpen(dateKey(d)); }}
                             />
                           ))}
                         </div>
@@ -796,39 +843,94 @@ function SprintSettingsModal({
 }
 
 function DayTile({
-  date, state, todayProgress,
-}: { date: Date; state: DayState; todayProgress: number }) {
+  date, state, todayProgress, note, onOpen,
+}: { date: Date; state: DayState; todayProgress: number; note?: string; onOpen: () => void }) {
+  const [hovered, setHovered] = useState(false);
   const isOut = state === "out";
   const isPast = state === "past";
   const isToday = state === "today";
+  const hasNote = Boolean(note);
 
   const baseStyle: React.CSSProperties = {
     borderRadius: 12,
     aspectRatio: "1 / 1",
-    transition: "transform 200ms ease, box-shadow 200ms ease",
+    cursor: isOut ? "default" : "pointer",
+    transition: "transform 150ms ease, box-shadow 200ms ease",
+    position: "relative",
   };
 
   const dayNumber = date.getDate();
   const monthAbbr = MONTHS[date.getMonth()];
 
   if (isOut) {
-    return (
-      <div style={{ ...baseStyle, background: "transparent", border: "1px dashed var(--border-soft)", opacity: 0.5 }} />
-    );
+    return <div style={{ ...baseStyle, background: "transparent", border: "1px dashed var(--border-soft)", opacity: 0.5, cursor: "default" }} />;
   }
+
+  const tooltip = hovered && hasNote ? (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "calc(100% + 6px)",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 50,
+        background: "rgba(29,29,31,0.92)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        color: "white",
+        fontSize: 11,
+        lineHeight: 1.4,
+        borderRadius: 8,
+        padding: "6px 9px",
+        whiteSpace: "pre-wrap",
+        maxWidth: 180,
+        wordBreak: "break-word",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.22)",
+        pointerEvents: "none",
+      }}
+    >
+      {note}
+      <div style={{
+        position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)",
+        width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent",
+        borderTop: "5px solid rgba(29,29,31,0.92)",
+      }} />
+    </div>
+  ) : null;
+
+  const dot = hasNote ? (
+    <div style={{
+      position: "absolute", bottom: 4, right: 5,
+      width: 5, height: 5, borderRadius: 999,
+      background: isPast ? "rgba(255,255,255,0.75)" : "var(--apple-green)",
+      boxShadow: isPast ? "none" : "0 0 4px rgba(52,199,89,0.7)",
+      zIndex: 2,
+    }} />
+  ) : null;
+
+  const hoverHandlers = {
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+    onClick: onOpen,
+  };
 
   if (isPast) {
     return (
       <div
-        className="relative flex flex-col items-center justify-center"
+        className="flex flex-col items-center justify-center"
         style={{
           ...baseStyle,
           background: "linear-gradient(160deg, #5ed47b 0%, #34c759 60%, #2ab84f 100%)",
           color: "white",
-          boxShadow: "0 1px 2px rgba(40,167,69,0.18), inset 0 0 0 0.5px rgba(255,255,255,0.18)",
+          boxShadow: hovered
+            ? "0 2px 8px rgba(40,167,69,0.35), inset 0 0 0 0.5px rgba(255,255,255,0.18)"
+            : "0 1px 2px rgba(40,167,69,0.18), inset 0 0 0 0.5px rgba(255,255,255,0.18)",
         }}
+        {...hoverHandlers}
       >
+        {tooltip}
         <Label number={dayNumber} month={monthAbbr} tone="onGreen" />
+        {dot}
       </div>
     );
   }
@@ -836,43 +938,173 @@ function DayTile({
   if (isToday) {
     return (
       <div
-        className="relative flex flex-col items-center justify-center overflow-hidden"
+        className="flex flex-col items-center justify-center overflow-hidden"
         style={{
           ...baseStyle,
           background: "var(--surface)",
           border: "1.5px solid var(--apple-green)",
-          boxShadow: "0 0 0 4px rgba(52,199,89,0.12), 0 4px 14px rgba(52,199,89,0.18)",
+          boxShadow: hovered
+            ? "0 0 0 4px rgba(52,199,89,0.18), 0 4px 18px rgba(52,199,89,0.28)"
+            : "0 0 0 4px rgba(52,199,89,0.12), 0 4px 14px rgba(52,199,89,0.18)",
           color: "var(--text)",
         }}
         aria-label={`Today, ${todayProgress.toFixed(0)}% elapsed`}
+        {...hoverHandlers}
       >
+        {tooltip}
         <div
           className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
-          style={{
-            height: `${todayProgress}%`,
-            background: "linear-gradient(180deg, rgba(94,212,123,0.85) 0%, #34c759 100%)",
-          }}
+          style={{ height: `${todayProgress}%`, background: "linear-gradient(180deg, rgba(94,212,123,0.85) 0%, #34c759 100%)" }}
         />
         <div className="relative z-10 flex flex-col items-center justify-center">
           <Label number={dayNumber} month={monthAbbr} tone="auto" />
         </div>
+        {dot}
       </div>
     );
   }
 
   return (
     <div
-      className="relative flex flex-col items-center justify-center"
+      className="flex flex-col items-center justify-center"
       style={{
         ...baseStyle,
         background: "var(--surface)",
         border: "1px solid var(--border-soft)",
         color: "var(--text-secondary)",
-        boxShadow: "0 1px 1px rgba(0,0,0,0.02)",
+        boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)",
       }}
+      {...hoverHandlers}
     >
+      {tooltip}
       <Label number={dayNumber} month={monthAbbr} tone="muted" />
+      {dot}
     </div>
+  );
+}
+
+function NoteModal({
+  dateKey: dk, initial, onSave, onClose,
+}: { dateKey: string; initial: string; onSave: (text: string) => void; onClose: () => void }) {
+  const [text, setText] = useState(initial);
+  const areaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => { areaRef.current?.focus(); }, []);
+
+  const [y, m, d] = dk.split("-").map(Number) as [number, number, number];
+  const label = new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") onSave(text);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.28)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "min(90vw, 380px)",
+          background: "rgba(255,255,255,0.88)",
+          backdropFilter: "saturate(180%) blur(24px)",
+          WebkitBackdropFilter: "saturate(180%) blur(24px)",
+          borderRadius: 20,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.9) inset",
+          border: "1px solid rgba(255,255,255,0.7)",
+          overflow: "hidden",
+        }}
+      >
+        <div className="px-5 pt-5 pb-3 flex items-start justify-between">
+          <div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>
+              Day Note
+            </div>
+            <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+              {label}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 26, height: 26, borderRadius: 99, background: "rgba(0,0,0,0.06)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--text-secondary)", fontSize: 14, border: "none", cursor: "pointer",
+              flexShrink: 0, marginTop: 2,
+            }}
+            aria-label="Close"
+          >✕</button>
+        </div>
+
+        <div className="px-5 pb-2">
+          <textarea
+            ref={areaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value.slice(0, 320))}
+            onKeyDown={handleKey}
+            placeholder="Add a note, emoji, or reflection… ✨"
+            maxLength={320}
+            rows={4}
+            style={{
+              width: "100%", resize: "none", outline: "none", border: "1px solid var(--border-soft)",
+              borderRadius: 12, padding: "10px 12px", fontSize: 14, lineHeight: 1.55,
+              fontFamily: "inherit", background: "rgba(255,255,255,0.7)", color: "var(--text)",
+              boxSizing: "border-box",
+            }}
+          />
+          <div className="text-right text-[10px] tabular-nums mt-1" style={{ color: "var(--text-tertiary)" }}>
+            {text.length} / 320
+          </div>
+        </div>
+
+        <div className="px-5 pb-5 flex gap-2.5">
+          {initial && (
+            <button
+              onClick={() => onSave("")}
+              style={{
+                flex: 1, height: 36, borderRadius: 10, border: "1px solid var(--border-soft)",
+                background: "rgba(255,59,48,0.07)", color: "#ff3b30", fontSize: 13,
+                fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, height: 36, borderRadius: 10, border: "1px solid var(--border-soft)",
+              background: "rgba(0,0,0,0.04)", color: "var(--text-secondary)", fontSize: 13,
+              fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onSave(text)}
+            style={{
+              flex: 2, height: 36, borderRadius: 10, border: "none",
+              background: "linear-gradient(135deg, #5ed47b 0%, #34c759 100%)",
+              color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              fontFamily: "inherit", boxShadow: "0 2px 8px rgba(52,199,89,0.35)",
+            }}
+          >
+            Save  <span style={{ opacity: 0.7, fontSize: 11 }}>⌘↵</span>
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
