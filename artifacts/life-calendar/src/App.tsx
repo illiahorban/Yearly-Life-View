@@ -44,7 +44,7 @@ type Block = { id: string; weeks: number; label: string };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
 type DayState = "past" | "today" | "future" | "out";
-type Milestone = { id: string; label: string; date: string; color: string };
+type Milestone = { id: string; label: string; date: string; color: string; description?: string };
 type Goal = { id: string; text: string; done: boolean };
 type BlockGoals = { description: string; goals: Goal[] };
 
@@ -647,11 +647,13 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
+  const [draftDesc, setDraftDesc] = useState("");
 
   const add = () => {
     if (!draftLabel.trim()) return;
-    setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor }].sort((a,b)=>a.date.localeCompare(b.date)));
+    setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined }].sort((a,b)=>a.date.localeCompare(b.date)));
     setDraftLabel("");
+    setDraftDesc("");
   };
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
@@ -682,7 +684,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
               />
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-2">
             <input value={draftLabel} onChange={e => setDraftLabel(e.target.value)} placeholder="Label…"
               onKeyDown={e => { if (e.key==="Enter") add(); }}
               style={{ ...inputStyle, flex:2, width:"auto" }}
@@ -694,6 +696,15 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
               style={{ height:36, paddingInline:14, borderRadius:9, background: draftLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: draftLabel.trim()?"white":"var(--text-tertiary)", fontSize:13, fontWeight:600, border:"none", cursor: draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, transition:"background 150ms" }}>
               Add
             </button>
+          </div>
+          <div style={{ position:"relative" }}>
+            <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value.slice(0,300))}
+              placeholder="Description (optional, up to 300 chars)…" rows={2}
+              style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px", paddingBottom:18 }}
+            />
+            <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>
+              {draftDesc.length}/300
+            </span>
           </div>
         </div>
 
@@ -707,14 +718,19 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
               const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
               const lbl = new Date(y2,m2-1,d2).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
               return (
-                <div key={ms.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl"
+                <div key={ms.id} className="flex flex-col gap-1 px-2.5 py-2 rounded-xl"
                   style={{ background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}` }}
                 >
-                  <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
-                  <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
-                  <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
-                  <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
-                    style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                  <div className="flex items-center gap-2.5">
+                    <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
+                    <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
+                    <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
+                    <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
+                      style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                  </div>
+                  {ms.description && (
+                    <p className="text-[11px] leading-snug ml-5" style={{ color:"var(--text-tertiary)", margin:0 }}>{ms.description}</p>
+                  )}
                 </div>
               );
             })}
