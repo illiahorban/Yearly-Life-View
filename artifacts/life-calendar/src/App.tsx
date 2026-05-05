@@ -540,13 +540,15 @@ function DayTile({ date, state, todayProgress, note, milestone, onOpen }: {
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
   const tooltip = hovered && hasNote ? (
-    <div style={{ position:"absolute", bottom:"calc(100% + 6px)", left:"50%", transform:"translateX(-50%)", zIndex:50, background:"rgba(29,29,31,0.94)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", color:"white", fontSize:11, lineHeight:1.4, borderRadius:8, padding:"6px 9px", whiteSpace:"pre-wrap", maxWidth:180, wordBreak:"break-word", boxShadow:"0 4px 20px rgba(0,0,0,0.22)", pointerEvents:"none" }}>
+    <div style={{ position:"absolute", bottom:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50, background:"rgba(29,29,31,0.96)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", color:"rgba(255,255,255,0.92)", fontSize:12, lineHeight:1.55, borderRadius:12, padding:"10px 12px", whiteSpace:"pre-wrap", width:240, wordBreak:"break-word", boxShadow:"0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset", border:"1px solid rgba(255,255,255,0.08)", pointerEvents:"none" }}>
       {note}
-      <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"5px solid transparent", borderRight:"5px solid transparent", borderTop:"5px solid rgba(29,29,31,0.94)" }} />
+      <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />
     </div>
   ) : null;
 
-  const noteDot = hasNote ? <div style={{ position:"absolute", bottom:4, right:5, width:5, height:5, borderRadius:999, background: isPast ? "rgba(255,255,255,0.78)" : "var(--apple-green)", boxShadow: isPast ? "none" : "0 0 4px rgba(52,199,89,0.7)", zIndex:3 }} /> : null;
+  const dotColor = (isPast || isToday) ? "#007aff" : "#34c759";
+  const dotGlow  = (isPast || isToday) ? "0 0 4px rgba(0,122,255,0.65)" : "0 0 4px rgba(52,199,89,0.65)";
+  const noteDot = hasNote ? <div style={{ position:"absolute", top:5, right:5, width:6, height:6, borderRadius:999, background:dotColor, boxShadow:dotGlow, zIndex:5 }} /> : null;
 
   const msBar = milestone ? <div style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"12px 12px 0 0", background:milestone.color, zIndex:4, opacity: isPast ? 0.6 : 1 }} /> : null;
 
