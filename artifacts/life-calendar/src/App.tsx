@@ -1,161 +1,186 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 
-function dateKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+// ─── Tiny localStorage helpers ────────────────────────────────────────────────
 
-function loadNotes(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem("lifeCalendar:notes");
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
-  } catch { return {}; }
+function ls<T>(key: string, fb: T): T {
+  if (typeof window === "undefined") return fb;
+  try { const r = localStorage.getItem(key); return r ? (JSON.parse(r) as T) : fb; }
+  catch { return fb; }
 }
-
-function saveNotes(notes: Record<string, string>) {
+function lsSet(key: string, v: unknown) {
   if (typeof window === "undefined") return;
-  try { window.localStorage.setItem("lifeCalendar:notes", JSON.stringify(notes)); }
-  catch { /* ignore */ }
+  try { localStorage.setItem(key, JSON.stringify(v)); } catch {}
 }
 
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+
+function dateKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function startOfDay(d: Date) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function startOfYear(y: number) { return new Date(y, 0, 1); }
+function startOfNextYear(y: number) { return new Date(y+1, 0, 1); }
+function startOfWeekMonday(d: Date) {
+  const x = startOfDay(d);
+  x.setDate(x.getDate() - (x.getDay()+6)%7);
+  return x;
+}
+function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+function daysBetween(a: Date, b: Date) { return Math.round((b.getTime()-a.getTime())/86_400_000); }
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const WEEKDAYS = ["M","T","W","T","F","S","S"];
 const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
-type Quarter = {
-  label: string;
-  tint: string;
-  border: string;
-  text: string;
-  soft: string;
-};
-
-const QUARTERS: Quarter[] = [
-  { label: "Q1", tint: "rgba(0,122,255,0.045)",  border: "#0a84ff", text: "#0a84ff", soft: "rgba(10,132,255,0.18)" },
-  { label: "Q2", tint: "rgba(52,199,89,0.05)",   border: "#34c759", text: "#28a745", soft: "rgba(52,199,89,0.20)" },
-  { label: "Q3", tint: "rgba(255,204,0,0.07)",   border: "#ffcc00", text: "#b58900", soft: "rgba(255,204,0,0.28)" },
-  { label: "Q4", tint: "rgba(255,149,0,0.06)",   border: "#ff9500", text: "#c2410c", soft: "rgba(255,149,0,0.22)" },
-];
-
+type Quarter = { label: string; tint: string; darkTint: string; border: string; text: string; soft: string; darkSoft: string };
 type Block = { id: string; weeks: number; label: string };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
+type DayState = "past" | "today" | "future" | "out";
+type Milestone = { id: string; label: string; date: string; color: string };
+type Goal = { id: string; text: string; done: boolean };
+type BlockGoals = { description: string; goals: Goal[] };
 
-function makeId() {
-  return Math.random().toString(36).slice(2, 10);
-}
+const QUARTERS: Quarter[] = [
+  { label:"Q1", tint:"rgba(0,122,255,0.045)",  darkTint:"rgba(10,132,255,0.13)",  border:"#0a84ff", text:"#0a84ff", soft:"rgba(10,132,255,0.18)", darkSoft:"rgba(10,132,255,0.32)" },
+  { label:"Q2", tint:"rgba(52,199,89,0.05)",   darkTint:"rgba(48,209,88,0.11)",   border:"#34c759", text:"#28a745", soft:"rgba(52,199,89,0.20)",  darkSoft:"rgba(48,209,88,0.34)" },
+  { label:"Q3", tint:"rgba(255,204,0,0.07)",   darkTint:"rgba(255,214,10,0.12)",  border:"#ffcc00", text:"#b58900", soft:"rgba(255,204,0,0.28)",  darkSoft:"rgba(255,214,10,0.36)" },
+  { label:"Q4", tint:"rgba(255,149,0,0.06)",   darkTint:"rgba(255,159,10,0.11)",  border:"#ff9500", text:"#c2410c", soft:"rgba(255,149,0,0.22)",  darkSoft:"rgba(255,159,10,0.32)" },
+];
 
-function defaultQuarterConfig(): QuarterConfig {
-  return {
-    blocks: [{ id: makeId(), weeks: WEEKS_PER_QUARTER, label: "All weeks" }],
-  };
-}
+const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa"];
 
-function defaultConfig(): CalendarConfig {
-  return { quarters: [0, 1, 2, 3].map(() => defaultQuarterConfig()) };
-}
+// ─── Config helpers ───────────────────────────────────────────────────────────
 
+function makeId() { return Math.random().toString(36).slice(2,10); }
+function defaultBlock(): Block { return { id: makeId(), weeks: WEEKS_PER_QUARTER, label: "All weeks" }; }
+function defaultConfig(): CalendarConfig { return { quarters: [0,1,2,3].map(() => ({ blocks: [defaultBlock()] })) }; }
 function loadConfig(year: number): CalendarConfig {
   if (typeof window === "undefined") return defaultConfig();
   try {
-    const raw = window.localStorage.getItem(`lifeCalendar:v1:${year}`);
+    const raw = localStorage.getItem(`lifeCalendar:v1:${year}`);
     if (!raw) return defaultConfig();
-    const parsed = JSON.parse(raw) as CalendarConfig;
-    if (!parsed?.quarters || parsed.quarters.length !== 4) return defaultConfig();
-    for (const q of parsed.quarters) {
-      const sum = q.blocks.reduce((a, b) => a + (b.weeks || 0), 0);
-      if (sum !== WEEKS_PER_QUARTER) return defaultConfig();
+    const p = JSON.parse(raw) as CalendarConfig;
+    if (!p?.quarters || p.quarters.length !== 4) return defaultConfig();
+    for (const q of p.quarters) {
+      if (q.blocks.reduce((a,b) => a+(b.weeks||0), 0) !== WEEKS_PER_QUARTER) return defaultConfig();
     }
-    return parsed;
-  } catch {
-    return defaultConfig();
-  }
+    return p;
+  } catch { return defaultConfig(); }
 }
-
 function saveConfig(year: number, cfg: CalendarConfig) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(`lifeCalendar:v1:${year}`, JSON.stringify(cfg));
-  } catch {
-    // ignore
-  }
+  try { localStorage.setItem(`lifeCalendar:v1:${year}`, JSON.stringify(cfg)); } catch {}
 }
 
-function startOfDay(d: Date) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
-function startOfYear(year: number) { return new Date(year, 0, 1); }
-function startOfNextYear(year: number) { return new Date(year + 1, 0, 1); }
-function startOfWeekMonday(d: Date) {
-  const x = startOfDay(d);
-  const dow = x.getDay();
-  const diff = (dow + 6) % 7;
-  x.setDate(x.getDate() - diff);
-  return x;
-}
-function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
-function sameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-type DayState = "past" | "today" | "future" | "out";
+// ─── App ──────────────────────────────────────────────────────────────────────
 
 function App() {
   const [now, setNow] = useState<Date>(() => new Date());
-
-  useEffect(() => {
-    const t = window.setInterval(() => setNow(new Date()), 60_000);
-    return () => window.clearInterval(t);
-  }, []);
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t); }, []);
 
   const year = now.getFullYear();
 
+  // Dark mode
+  const [dark, setDark] = useState<boolean>(() => ls<boolean>("lifeCalendar:darkMode", false));
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    lsSet("lifeCalendar:darkMode", dark);
+  }, [dark]);
+
+  // Calendar config
   const [config, setConfig] = useState<CalendarConfig>(() => loadConfig(new Date().getFullYear()));
+  useEffect(() => { setConfig(loadConfig(year)); }, [year]);
+  useEffect(() => { saveConfig(year, config); }, [year, config]);
 
-  useEffect(() => {
-    setConfig(loadConfig(year));
-  }, [year]);
+  // Milestones
+  const [milestones, setMilestones] = useState<Milestone[]>(() => ls<Milestone[]>("lifeCalendar:milestones", []));
+  useEffect(() => { lsSet("lifeCalendar:milestones", milestones); }, [milestones]);
+  const [milestonePanelOpen, setMilestonePanelOpen] = useState(false);
 
-  useEffect(() => {
-    saveConfig(year, config);
-  }, [year, config]);
+  // Notes
+  const [notes, setNotes] = useState<Record<string,string>>(() => ls<Record<string,string>>("lifeCalendar:notes", {}));
+  const [openNote, setOpenNote] = useState<string|null>(null);
+  const upsertNote = (key: string, text: string) => {
+    setNotes(prev => {
+      const next = { ...prev };
+      if (text.trim()) next[key] = text.trim(); else delete next[key];
+      lsSet("lifeCalendar:notes", next);
+      return next;
+    });
+  };
 
+  // Block goals
+  const [blockGoals, setBlockGoals] = useState<Record<string,BlockGoals>>(() => ls<Record<string,BlockGoals>>("lifeCalendar:goals", {}));
+  useEffect(() => { lsSet("lifeCalendar:goals", blockGoals); }, [blockGoals]);
+  const [editGoalsBlockId, setEditGoalsBlockId] = useState<string|null>(null);
+  const editGoalsBlock = useMemo(() => {
+    if (!editGoalsBlockId) return null;
+    for (const q of config.quarters) { const b = q.blocks.find(b => b.id === editGoalsBlockId); if (b) return b; }
+    return null;
+  }, [editGoalsBlockId, config]);
+
+  const [settingsQuarter, setSettingsQuarter] = useState<number|null>(null);
+
+  // Calendar data
   const weeks = useMemo(() => {
-    const firstMonday = startOfWeekMonday(startOfYear(year));
+    const first = startOfWeekMonday(startOfYear(year));
     return Array.from({ length: TOTAL_WEEKS }, (_, i) => {
-      const weekStart = addDays(firstMonday, i * 7);
-      const days = Array.from({ length: 7 }, (_, j) => addDays(weekStart, j));
-      return { weekStart, days };
+      const weekStart = addDays(first, i*7);
+      return { weekStart, days: Array.from({ length: 7 }, (_, j) => addDays(weekStart, j)) };
     });
   }, [year]);
 
   const yearProgress = useMemo(() => {
-    const start = startOfYear(year).getTime();
-    const end = startOfNextYear(year).getTime();
-    return Math.max(0, Math.min(100, ((now.getTime() - start) / (end - start)) * 100));
+    const s = startOfYear(year).getTime(), e = startOfNextYear(year).getTime();
+    return Math.max(0, Math.min(100, ((now.getTime()-s)/(e-s))*100));
   }, [now, year]);
 
   const todayProgress = useMemo(() => {
-    const start = startOfDay(now).getTime();
-    return Math.max(0, Math.min(100, ((now.getTime() - start) / 86_400_000) * 100));
+    const s = startOfDay(now).getTime();
+    return Math.max(0, Math.min(100, ((now.getTime()-s)/86_400_000)*100));
   }, [now]);
 
   const today = startOfDay(now);
 
-  const currentWeekIndex = useMemo(() => {
-    return weeks.findIndex(({ days }) => days.some((d) => sameDay(d, today)));
-  }, [weeks, today]);
+  const currentWeekIndex = useMemo(() => weeks.findIndex(({ days }) => days.some(d => sameDay(d, today))), [weeks, today]);
 
-  const weekRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const daysCompleted = useMemo(() => {
+    let n = 0;
+    for (const { days } of weeks) for (const d of days) if (d.getFullYear()===year && d<today) n++;
+    return n;
+  }, [weeks, today, year]);
+  const totalDays = (startOfNextYear(year).getTime()-startOfYear(year).getTime())/86_400_000;
+
+  const milestonesMap = useMemo(() => {
+    const m: Record<string,Milestone> = {};
+    for (const ms of milestones) m[ms.date] = ms;
+    return m;
+  }, [milestones]);
+
+  const nextMilestone = useMemo(() => {
+    const todayStr = dateKey(today);
+    return milestones.filter(m => m.date >= todayStr).sort((a,b) => a.date.localeCompare(b.date))[0] ?? null;
+  }, [milestones, today]);
+
+  const nextMilestoneDays = useMemo(() => {
+    if (!nextMilestone) return 0;
+    const [y2,m2,d2] = nextMilestone.date.split("-").map(Number) as [number,number,number];
+    return daysBetween(today, new Date(y2, m2-1, d2));
+  }, [nextMilestone, today]);
+
+  const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
   const didScrollRef = useRef(false);
-
   useEffect(() => {
     if (didScrollRef.current || currentWeekIndex < 0) return;
     const el = weekRefs.current[currentWeekIndex];
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      didScrollRef.current = true;
-    }
+    if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); didScrollRef.current = true; }
   }, [currentWeekIndex]);
 
   const dayState = (d: Date): DayState => {
@@ -165,84 +190,66 @@ function App() {
     return "future";
   };
 
-  const daysCompleted = useMemo(() => {
-    let n = 0;
-    for (const { days } of weeks) for (const d of days) if (d.getFullYear() === year && d < today) n++;
-    return n;
-  }, [weeks, today, year]);
+  const updateQuarter = (qi: number, next: QuarterConfig) => setConfig(prev => { const q = prev.quarters.slice(); q[qi]=next; return { quarters: q }; });
+  const updateBlockLabel = (qi: number, blockId: string, label: string) => setConfig(prev => {
+    const q = prev.quarters.slice();
+    q[qi] = { blocks: q[qi]!.blocks.map(b => b.id===blockId ? { ...b, label } : b) };
+    return { quarters: q };
+  });
+  const toggleGoal = (blockId: string, goalId: string) => setBlockGoals(prev => {
+    const bg = prev[blockId]; if (!bg) return prev;
+    return { ...prev, [blockId]: { ...bg, goals: bg.goals.map(g => g.id===goalId ? { ...g, done: !g.done } : g) } };
+  });
 
-  const totalDays = (startOfNextYear(year).getTime() - startOfYear(year).getTime()) / 86_400_000;
-
-  const [notes, setNotes] = useState<Record<string, string>>(() => loadNotes());
-  const [openNote, setOpenNote] = useState<string | null>(null);
-
-  const upsertNote = (key: string, text: string) => {
-    setNotes((prev) => {
-      const next = { ...prev };
-      if (text.trim()) { next[key] = text.trim(); } else { delete next[key]; }
-      saveNotes(next);
-      return next;
-    });
-  };
-
-  const [settingsQuarter, setSettingsQuarter] = useState<number | null>(null);
-
-  const updateQuarter = (qi: number, next: QuarterConfig) => {
-    setConfig((prev) => {
-      const quarters = prev.quarters.slice();
-      quarters[qi] = next;
-      return { quarters };
-    });
-  };
-
-  const updateBlockLabel = (qi: number, blockId: string, label: string) => {
-    setConfig((prev) => {
-      const quarters = prev.quarters.slice();
-      const q = quarters[qi]!;
-      quarters[qi] = {
-        blocks: q.blocks.map((b) => (b.id === blockId ? { ...b, label } : b)),
-      };
-      return { quarters };
-    });
-  };
+  // Theme-dependent surface values
+  const headerBg = dark ? "rgba(22,22,24,0.90)" : "rgba(245,245,247,0.88)";
+  const cardBg   = dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)";
+  const modalBg  = dark ? "rgba(30,30,32,0.96)" : "rgba(255,255,255,0.93)";
+  const overlayBg = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
 
   return (
     <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-20"
-        style={{
-          background: "rgba(245,245,247,0.85)",
-          backdropFilter: "saturate(180%) blur(20px)",
-          WebkitBackdropFilter: "saturate(180%) blur(20px)",
-          borderBottom: "1px solid var(--border-soft)",
-        }}
-      >
-        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-7 pb-4">
-          <div className="flex items-baseline justify-between">
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>
-              {year}
-            </h1>
-            <div className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>
-              {yearProgress.toFixed(1)}% complete
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
+        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-5 pb-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl sm:text-3xl font-semibold" style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>{year}</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>{yearProgress.toFixed(1)}% complete</span>
+              <IconButton title="Milestones" onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
+              <IconButton title={dark ? "Light mode" : "Dark mode"} onClick={() => setDark(d => !d)} bg={overlayBg}>
+                {dark ? <SunIcon /> : <MoonIcon />}
+              </IconButton>
             </div>
           </div>
 
           <div className="mt-3 h-1.5 w-full overflow-hidden" style={{ background: "var(--border-soft)", borderRadius: 999 }}>
-            <div
-              className="h-full transition-[width] duration-700 ease-out"
-              style={{
-                width: `${yearProgress}%`,
-                background: "linear-gradient(90deg, #5ed47b 0%, #34c759 55%, #28a745 100%)",
-                borderRadius: 999,
-              }}
-            />
+            <div className="h-full transition-[width] duration-700 ease-out" style={{ width: `${yearProgress}%`, background: "linear-gradient(90deg,#5ed47b 0%,#34c759 55%,#28a745 100%)", borderRadius: 999 }} />
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between text-xs tabular-nums" style={{ color: "var(--text-tertiary)" }}>
+          <div className="mt-2 flex items-center justify-between text-xs tabular-nums" style={{ color: "var(--text-tertiary)" }}>
             <span>{daysCompleted} of {totalDays} days</span>
-            <span>{(totalDays - daysCompleted).toFixed(0)} days remaining</span>
+            <span>{(totalDays-daysCompleted).toFixed(0)} days remaining</span>
           </div>
+
+          {/* Milestone countdown */}
+          <AnimatePresence>
+            {nextMilestone && (
+              <motion.div key="ms-countdown" initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }} className="mt-2">
+                <button
+                  onClick={() => setMilestonePanelOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+                  style={{ background: `${nextMilestone.color}1a`, border: `1px solid ${nextMilestone.color}44`, color: nextMilestone.color, cursor: "pointer" }}
+                >
+                  <span style={{ width:6, height:6, borderRadius:999, background: nextMilestone.color, display:"inline-block", flexShrink:0 }} />
+                  <span className="font-semibold">{nextMilestone.label}</span>
+                  <span style={{ opacity:0.65 }}>·</span>
+                  <span>{nextMilestoneDays === 0 ? "Today!" : `${nextMilestoneDays} day${nextMilestoneDays===1?"":"s"} away`}</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </header>
 
@@ -251,74 +258,38 @@ function App() {
         <div className="mb-4 flex items-center gap-3 sm:gap-4 px-1">
           <div className="w-14 sm:w-16 shrink-0" />
           <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1" style={{ color: "var(--text-tertiary)" }}>
-            {WEEKDAYS.map((w, i) => (
-              <div key={i} className="text-center text-[10px] font-medium tracking-widest uppercase">{w}</div>
-            ))}
+            {WEEKDAYS.map((w,i) => <div key={i} className="text-center text-[10px] font-medium tracking-widest uppercase">{w}</div>)}
           </div>
         </div>
 
         <LayoutGroup>
           <div className="flex flex-col gap-6">
-            {[0, 1, 2, 3].map((qi) => {
+            {[0,1,2,3].map(qi => {
               const quarter = QUARTERS[qi]!;
               const startIndex = qi * WEEKS_PER_QUARTER;
               const qConfig = config.quarters[qi]!;
               return (
-                <motion.section
-                  layout
-                  key={qi}
-                  className="overflow-hidden"
-                  style={{
-                    background: quarter.tint,
-                    borderRadius: 18,
-                    borderLeft: `3px solid ${quarter.border}`,
-                  }}
+                <motion.section layout key={qi} className="overflow-hidden"
+                  style={{ background: dark ? quarter.darkTint : quarter.tint, borderRadius: 18, borderLeft: `3px solid ${quarter.border}` }}
                 >
                   <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-2">
                     <div className="flex items-baseline gap-3">
-                      <div className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: quarter.text }}>
-                        {quarter.label}
-                      </div>
-                      <div className="text-[11px] tabular-nums" style={{ color: "var(--text-tertiary)" }}>
-                        Weeks {startIndex + 1}–{startIndex + WEEKS_PER_QUARTER}
-                      </div>
+                      <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: quarter.text }}>{quarter.label}</span>
+                      <span className="text-[11px] tabular-nums" style={{ color: "var(--text-tertiary)" }}>Weeks {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setSettingsQuarter(qi)}
-                      className="flex items-center justify-center"
-                      style={{
-                        width: 28, height: 28,
-                        borderRadius: 8,
-                        background: "rgba(255,255,255,0.6)",
-                        border: "1px solid rgba(0,0,0,0.06)",
-                        color: quarter.text,
-                        transition: "transform 150ms ease, background 150ms ease",
-                      }}
-                      aria-label={`Configure ${quarter.label} sprints`}
-                      title="Configure sprints"
-                      onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.94)")}
-                      onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                    >
-                      <GearIcon />
-                    </button>
+                    <IconButton title="Configure sprints" onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                   </div>
 
                   <div className="px-3 sm:px-4 pb-4 pt-1 flex flex-col gap-2">
                     <BlocksRenderer
-                      qi={qi}
-                      quarter={quarter}
-                      qConfig={qConfig}
-                      startIndex={startIndex}
-                      weeks={weeks}
-                      currentWeekIndex={currentWeekIndex}
-                      todayProgress={todayProgress}
-                      dayState={dayState}
-                      weekRefs={weekRefs}
-                      notes={notes}
-                      onNoteOpen={(key) => setOpenNote(key)}
-                      onLabelChange={(blockId, label) => updateBlockLabel(qi, blockId, label)}
+                      qi={qi} quarter={quarter} qConfig={qConfig} startIndex={startIndex}
+                      weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
+                      dayState={dayState} weekRefs={weekRefs} notes={notes} milestonesMap={milestonesMap}
+                      blockGoals={blockGoals} dark={dark} cardBg={cardBg} overlayBg={overlayBg}
+                      onNoteOpen={k => setOpenNote(k)}
+                      onLabelChange={(bid, lbl) => updateBlockLabel(qi, bid, lbl)}
+                      onGoalToggle={toggleGoal}
+                      onEditGoals={bid => setEditGoalsBlockId(bid)}
                     />
                   </div>
                 </motion.section>
@@ -332,28 +303,47 @@ function App() {
         </footer>
       </main>
 
+      {/* ── Modals ─────────────────────────────────────────────────── */}
       <AnimatePresence>
         {settingsQuarter !== null && (
           <SprintSettingsModal
-            quarterIndex={settingsQuarter}
-            quarter={QUARTERS[settingsQuarter]!}
-            initial={config.quarters[settingsQuarter]!}
+            key="sprint-settings"
+            quarterIndex={settingsQuarter} quarter={QUARTERS[settingsQuarter]!}
+            initial={config.quarters[settingsQuarter]!} dark={dark} modalBg={modalBg}
             onClose={() => setSettingsQuarter(null)}
-            onSave={(next) => {
-              updateQuarter(settingsQuarter, next);
-              setSettingsQuarter(null);
-            }}
+            onSave={next => { updateQuarter(settingsQuarter, next); setSettingsQuarter(null); }}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {openNote !== null && (
-          <NoteModal
-            dateKey={openNote}
-            initial={notes[openNote] ?? ""}
-            onSave={(text) => { upsertNote(openNote, text); setOpenNote(null); }}
+          <NoteModal key="note"
+            dateKey={openNote} initial={notes[openNote] ?? ""} dark={dark} modalBg={modalBg}
+            onSave={text => { upsertNote(openNote, text); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {milestonePanelOpen && (
+          <MilestoneModal key="milestones"
+            milestones={milestones} dark={dark} modalBg={modalBg}
+            onClose={() => setMilestonePanelOpen(false)}
+            onChange={m => { setMilestones(m); }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editGoalsBlockId !== null && editGoalsBlock !== null && (
+          <GoalsModal key="goals"
+            blockId={editGoalsBlockId} blockLabel={editGoalsBlock.label}
+            initial={blockGoals[editGoalsBlockId] ?? { description:"", goals:[] }}
+            dark={dark} modalBg={modalBg}
+            onSave={bg => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); setEditGoalsBlockId(null); }}
+            onClose={() => setEditGoalsBlockId(null)}
           />
         )}
       </AnimatePresence>
@@ -361,139 +351,144 @@ function App() {
   );
 }
 
+// ─── IconButton ───────────────────────────────────────────────────────────────
+
+function IconButton({ children, onClick, title, bg, color }: { children: React.ReactNode; onClick: () => void; title: string; bg: string; color?: string }) {
+  return (
+    <button type="button" onClick={onClick} title={title}
+      style={{ width:30, height:30, borderRadius:8, background:bg, border:"1px solid var(--border-soft)", color: color ?? "var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}
+    >{children}</button>
+  );
+}
+
+// ─── BlocksRenderer ───────────────────────────────────────────────────────────
+
 function BlocksRenderer({
-  qi: _qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress, dayState, weekRefs, notes, onNoteOpen, onLabelChange,
+  qi:_qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress,
+  dayState, weekRefs, notes, milestonesMap, blockGoals, dark, cardBg, overlayBg,
+  onNoteOpen, onLabelChange, onGoalToggle, onEditGoals,
 }: {
-  qi: number;
-  quarter: Quarter;
-  qConfig: QuarterConfig;
-  startIndex: number;
-  weeks: Array<{ weekStart: Date; days: Date[] }>;
-  currentWeekIndex: number;
-  todayProgress: number;
-  dayState: (d: Date) => DayState;
-  weekRefs: React.MutableRefObject<Array<HTMLDivElement | null>>;
-  notes: Record<string, string>;
-  onNoteOpen: (key: string) => void;
-  onLabelChange: (blockId: string, label: string) => void;
+  qi: number; quarter: Quarter; qConfig: QuarterConfig; startIndex: number;
+  weeks: Array<{ weekStart: Date; days: Date[] }>; currentWeekIndex: number; todayProgress: number;
+  dayState: (d: Date) => DayState; weekRefs: React.MutableRefObject<Array<HTMLDivElement|null>>;
+  notes: Record<string,string>; milestonesMap: Record<string,Milestone>;
+  blockGoals: Record<string,BlockGoals>; dark: boolean; cardBg: string; overlayBg: string;
+  onNoteOpen: (key: string) => void; onLabelChange: (blockId: string, label: string) => void;
+  onGoalToggle: (blockId: string, goalId: string) => void; onEditGoals: (blockId: string) => void;
 }) {
   let cursor = 0;
-  const blocks = qConfig.blocks.map((b) => {
-    const range = { start: cursor, end: cursor + b.weeks };
-    cursor += b.weeks;
-    return { ...b, ...range };
-  });
+  const blocks = qConfig.blocks.map(b => { const r = { start:cursor, end:cursor+b.weeks }; cursor+=b.weeks; return { ...b, ...r }; });
 
   return (
     <LayoutGroup>
       <div className="flex flex-col gap-2.5">
         <AnimatePresence initial={false}>
-          {blocks.map((block) => {
-            const blockRows = weeks.slice(startIndex + block.start, startIndex + block.end);
-            const allDays = blockRows.flatMap((r) => r.days);
-            const pastDays = allDays.filter((d) => dayState(d) === "past").length;
-            const hasToday = allDays.some((d) => dayState(d) === "today");
+          {blocks.map(block => {
+            const blockRows = weeks.slice(startIndex+block.start, startIndex+block.end);
+            const allDays = blockRows.flatMap(r => r.days);
+            const pastDays = allDays.filter(d => dayState(d)==="past").length;
+            const hasToday = allDays.some(d => dayState(d)==="today");
             const totalDays = block.weeks * 7;
-            const completedPortion = pastDays + (hasToday ? todayProgress / 100 : 0);
-            const pct = Math.max(0, Math.min(100, (completedPortion / totalDays) * 100));
+            const completedPortion = pastDays + (hasToday ? todayProgress/100 : 0);
+            const timePct = Math.max(0, Math.min(100, (completedPortion/totalDays)*100));
+
+            const bg = blockGoals[block.id];
+            const activeGoals = bg?.goals.filter(g => g.text.trim()) ?? [];
+            const goalPct = activeGoals.length > 0 ? (activeGoals.filter(g => g.done).length/activeGoals.length)*100 : null;
+            const pct = goalPct !== null ? timePct*0.6 + goalPct*0.4 : timePct;
             const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
-            const isFuture = pastDays === 0 && !hasToday;
-            const isComplete = pct >= 100;
+            const isFuture = pastDays===0 && !hasToday;
+            const isComplete = pct >= 99.5;
+            const softColor = dark ? quarter.darkSoft : quarter.soft;
+
             return (
-              <motion.div
-                layout
-                key={block.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ type: "spring", stiffness: 320, damping: 30 }}
-                style={{
-                  background: "rgba(255,255,255,0.55)",
-                  borderRadius: 14,
-                  border: `1px solid ${quarter.soft}`,
-                  backdropFilter: "blur(8px)",
-                  WebkitBackdropFilter: "blur(8px)",
-                  overflow: "hidden",
-                }}
+              <motion.div layout key={block.id}
+                initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
+                transition={{ type:"spring", stiffness:320, damping:30 }}
+                style={{ background:cardBg, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"hidden" }}
               >
+                {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5">
-                  <BlockLabel
-                    value={block.label}
-                    onChange={(v) => onLabelChange(block.id, v)}
-                    color={quarter.text}
-                  />
-                  <div className="text-[10px] tabular-nums" style={{ color: "var(--text-tertiary)" }}>
-                    {block.weeks} {block.weeks === 1 ? "week" : "weeks"}
+                  <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={quarter.text} />
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => onEditGoals(block.id)} title="Sprint goals"
+                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                    ><PencilIcon /></button>
+                    <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{block.weeks} {block.weeks===1?"week":"weeks"}</span>
                   </div>
                 </div>
+
+                {/* Progress strip */}
                 <div className="px-3 sm:px-3.5 pb-2">
                   <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
-                    <span style={{ color: "var(--text-tertiary)" }}>
-                      {pastDays} of {totalDays} days
-                    </span>
-                    <span
-                      style={{
-                        color: isComplete
-                          ? "var(--apple-green)"
-                          : isFuture
-                          ? "var(--text-tertiary)"
-                          : quarter.text,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {pct.toFixed(0)}%
-                    </span>
-                    <span style={{ color: "var(--text-tertiary)" }}>
-                      {isComplete ? "done" : `${daysLeft} left`}
-                    </span>
+                    <span style={{ color:"var(--text-tertiary)" }}>{pastDays} of {totalDays} days</span>
+                    <span style={{ color: isComplete ? "var(--apple-green)" : isFuture ? "var(--text-tertiary)" : quarter.text, fontWeight:600 }}>{pct.toFixed(0)}%</span>
+                    <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? "done" : `${daysLeft} left`}</span>
                   </div>
-                  <div
-                    className="h-1 rounded-full overflow-hidden"
-                    style={{ background: "rgba(0,0,0,0.06)" }}
-                  >
-                    <motion.div
-                      initial={false}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ type: "spring", stiffness: 120, damping: 24 }}
-                      style={{
-                        height: "100%",
-                        background: isComplete
-                          ? "linear-gradient(90deg, #5ed47b, #34c759)"
-                          : `linear-gradient(90deg, ${quarter.text}, ${quarter.border})`,
-                        borderRadius: 999,
-                        boxShadow: pct > 0 ? `0 0 6px ${quarter.soft}` : "none",
-                      }}
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
+                    <motion.div initial={false} animate={{ width:`${pct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
+                      style={{ height:"100%", background: isComplete ? "linear-gradient(90deg,#5ed47b,#34c759)" : `linear-gradient(90deg,${quarter.text},${quarter.border})`, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
                     />
                   </div>
+                  {goalPct !== null && (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)" }}>
+                        <motion.div initial={false} animate={{ width:`${goalPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
+                          style={{ height:"100%", background:quarter.border, borderRadius:999, opacity:0.72 }}
+                        />
+                      </div>
+                      <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
+                        {activeGoals.filter(g=>g.done).length}/{activeGoals.length} goals
+                      </span>
+                    </div>
+                  )}
                 </div>
+
+                {/* Checklist */}
+                {activeGoals.length > 0 && (
+                  <div className="px-3 sm:px-3.5 pb-2">
+                    <div className="flex flex-col gap-1">
+                      {activeGoals.map(goal => (
+                        <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
+                          onClick={() => onGoalToggle(block.id, goal.id)}
+                          style={{ color: goal.done ? "var(--text-tertiary)" : "var(--text-secondary)" }}
+                        >
+                          <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? quarter.border : "transparent", border:`1.5px solid ${goal.done ? quarter.border : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
+                            {goal.done && <CheckIcon />}
+                          </div>
+                          <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
+                            {goal.text}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sprint description */}
+                {bg?.description && (
+                  <div className="px-3 sm:px-3.5 pb-2">
+                    <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${softColor}`, paddingLeft:8 }}>
+                      {bg.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Week rows */}
                 <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const isCurrent = wi === currentWeekIndex;
                     return (
-                      <div
-                        key={wi}
-                        ref={(el) => { weekRefs.current[wi] = el; }}
-                        className="flex items-center gap-3 sm:gap-4"
-                      >
-                        <div
-                          className="w-14 sm:w-16 shrink-0 text-right text-[11px] tabular-nums select-none"
-                          style={{
-                            color: isCurrent ? quarter.text : "var(--text-tertiary)",
-                            fontWeight: isCurrent ? 600 : 500,
-                          }}
-                        >
-                          Week {wi + 1}
-                        </div>
+                      <div key={wi} ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-14 sm:w-16 shrink-0 text-right text-[11px] tabular-nums select-none"
+                          style={{ color: isCurrent ? quarter.text : "var(--text-tertiary)", fontWeight: isCurrent ? 600 : 500 }}
+                        >Week {wi+1}</div>
                         <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                           {days.map((d, di) => (
-                            <DayTile
-                              key={di}
-                              date={d}
-                              state={dayState(d)}
-                              todayProgress={todayProgress}
-                              note={notes[dateKey(d)]}
-                              onOpen={() => { if (dayState(d) !== "out") onNoteOpen(dateKey(d)); }}
+                            <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
+                              note={notes[dateKey(d)]} milestone={milestonesMap[dateKey(d)]}
+                              onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
                             />
                           ))}
                         </div>
@@ -510,330 +505,400 @@ function BlocksRenderer({
   );
 }
 
-function BlockLabel({
-  value, onChange, color,
-}: { value: string; onChange: (v: string) => void; color: string }) {
+// ─── BlockLabel ───────────────────────────────────────────────────────────────
+
+function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: string) => void; color: string }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
+  const ref = useRef<HTMLInputElement|null>(null);
   useEffect(() => { setDraft(value); }, [value]);
-
-  useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-  }, [editing]);
-
-  const commit = () => {
-    const next = draft.trim() || "Untitled sprint";
-    onChange(next);
-    setEditing(false);
-  };
-
+  useEffect(() => { if (editing) { ref.current?.focus(); ref.current?.select(); } }, [editing]);
+  const commit = () => { onChange(draft.trim() || "Untitled sprint"); setEditing(false); };
   if (editing) {
+    return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
+      onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
+      className="text-[12px] font-semibold bg-transparent outline-none"
+      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, minWidth:100, padding:"1px 2px" }}
+    />;
+  }
+  return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color:"var(--text)", letterSpacing:"-0.01em" }} title="Click to rename">{value}</button>;
+}
+
+// ─── DayTile ──────────────────────────────────────────────────────────────────
+
+function DayTile({ date, state, todayProgress, note, milestone, onOpen }: {
+  date: Date; state: DayState; todayProgress: number;
+  note?: string; milestone?: Milestone; onOpen: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const isOut = state==="out", isPast = state==="past", isToday = state==="today";
+  const hasNote = Boolean(note);
+  const dayNumber = date.getDate(), monthAbbr = MONTHS[date.getMonth()];
+
+  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative" };
+
+  if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
+
+  const tooltip = hovered && hasNote ? (
+    <div style={{ position:"absolute", bottom:"calc(100% + 6px)", left:"50%", transform:"translateX(-50%)", zIndex:50, background:"rgba(29,29,31,0.94)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", color:"white", fontSize:11, lineHeight:1.4, borderRadius:8, padding:"6px 9px", whiteSpace:"pre-wrap", maxWidth:180, wordBreak:"break-word", boxShadow:"0 4px 20px rgba(0,0,0,0.22)", pointerEvents:"none" }}>
+      {note}
+      <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"5px solid transparent", borderRight:"5px solid transparent", borderTop:"5px solid rgba(29,29,31,0.94)" }} />
+    </div>
+  ) : null;
+
+  const noteDot = hasNote ? <div style={{ position:"absolute", bottom:4, right:5, width:5, height:5, borderRadius:999, background: isPast ? "rgba(255,255,255,0.78)" : "var(--apple-green)", boxShadow: isPast ? "none" : "0 0 4px rgba(52,199,89,0.7)", zIndex:3 }} /> : null;
+
+  const msBar = milestone ? <div style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"12px 12px 0 0", background:milestone.color, zIndex:4, opacity: isPast ? 0.6 : 1 }} /> : null;
+
+  const hov = { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false), onClick: onOpen };
+
+  if (isPast) {
     return (
-      <input
-        ref={inputRef}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit();
-          if (e.key === "Escape") { setDraft(value); setEditing(false); }
-        }}
-        className="text-[12px] font-semibold bg-transparent outline-none"
-        style={{
-          color: "var(--text)",
-          borderBottom: `1px solid ${color}`,
-          minWidth: 100,
-          padding: "1px 2px",
-        }}
-      />
+      <div className="flex flex-col items-center justify-center" style={{ ...base, background:"linear-gradient(160deg,#5ed47b 0%,#34c759 60%,#2ab84f 100%)", color:"white", boxShadow: hovered ? "0 2px 8px rgba(40,167,69,0.38), inset 0 0 0 0.5px rgba(255,255,255,0.18)" : "0 1px 2px rgba(40,167,69,0.18), inset 0 0 0 0.5px rgba(255,255,255,0.18)" }} {...hov}>
+        {msBar}{tooltip}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
+      </div>
     );
   }
-
+  if (isToday) {
+    return (
+      <div className="flex flex-col items-center justify-center overflow-hidden" style={{ ...base, background:"var(--surface)", border:"1.5px solid var(--apple-green)", boxShadow: hovered ? "0 0 0 4px rgba(52,199,89,0.18),0 4px 18px rgba(52,199,89,0.28)" : "0 0 0 4px rgba(52,199,89,0.12),0 4px 14px rgba(52,199,89,0.18)", color:"var(--text)" }} {...hov}>
+        {msBar}{tooltip}
+        <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:"linear-gradient(180deg,rgba(94,212,123,0.85) 0%,#34c759 100%)" }} />
+        <div className="relative z-10 flex flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+        {noteDot}
+      </div>
+    );
+  }
   return (
-    <button
-      type="button"
-      onClick={() => setEditing(true)}
-      className="text-[12px] font-semibold tracking-tight text-left"
-      style={{ color: "var(--text)", letterSpacing: "-0.01em" }}
-      title="Click to rename"
-    >
-      {value}
-    </button>
+    <div className="flex flex-col items-center justify-center" style={{ ...base, background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }} {...hov}>
+      {msBar}{tooltip}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
+    </div>
   );
 }
 
-function SprintSettingsModal({
-  quarterIndex: _qi, quarter, initial, onClose, onSave,
-}: {
-  quarterIndex: number;
-  quarter: Quarter;
-  initial: QuarterConfig;
-  onClose: () => void;
-  onSave: (next: QuarterConfig) => void;
+// ─── Label ────────────────────────────────────────────────────────────────────
+
+function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto" }) {
+  const nc = tone==="onGreen" ? "white" : "var(--text)";
+  const mc = tone==="onGreen" ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+  return (
+    <div className="flex flex-col items-center justify-center leading-none select-none">
+      <div className="text-base sm:text-lg font-semibold tabular-nums" style={{ color:nc, letterSpacing:"-0.02em" }}>{number}</div>
+      <div className="mt-1 text-[9px] sm:text-[10px] font-medium tracking-widest" style={{ color:mc }}>{month}</div>
+    </div>
+  );
+}
+
+// ─── NoteModal ────────────────────────────────────────────────────────────────
+
+function NoteModal({ dateKey: dk, initial, dark, modalBg, onSave, onClose }: {
+  dateKey: string; initial: string; dark: boolean; modalBg: string;
+  onSave: (text: string) => void; onClose: () => void;
 }) {
-  const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map((b) => ({ ...b })));
-
-  const total = blocks.reduce((a, b) => a + (Number(b.weeks) || 0), 0);
-  const remaining = WEEKS_PER_QUARTER - total;
-  const valid = total === WEEKS_PER_QUARTER && blocks.every((b) => b.weeks >= 1);
-
-  const updateBlock = (id: string, patch: Partial<Block>) => {
-    setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)));
-  };
-  const removeBlock = (id: string) => {
-    setBlocks((prev) => prev.filter((b) => b.id !== id));
-  };
-  const addBlock = () => {
-    setBlocks((prev) => [
-      ...prev,
-      { id: makeId(), weeks: Math.max(1, remaining > 0 ? remaining : 1), label: `Sprint ${prev.length + 1}` },
-    ]);
-  };
-
-  const applyPreset = (parts: number[]) => {
-    setBlocks(parts.map((w, i) => ({ id: makeId(), weeks: w, label: `Sprint ${i + 1}` })));
-  };
+  const [text, setText] = useState(initial);
+  const areaRef = useRef<HTMLTextAreaElement|null>(null);
+  useEffect(() => { areaRef.current?.focus(); }, []);
+  const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
+  const label = new Date(y, m-1, d).toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric" });
+  const handleKey = (e: React.KeyboardEvent) => { if (e.key==="Escape") onClose(); if ((e.metaKey||e.ctrlKey) && e.key==="Enter") onSave(text); };
+  const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        background: "rgba(20,20,25,0.35)",
-        backdropFilter: "blur(14px) saturate(160%)",
-        WebkitBackdropFilter: "blur(14px) saturate(160%)",
-      }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
+    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background:"rgba(0,0,0,0.30)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
       onClick={onClose}
     >
-      <motion.div
-        onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.96, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 4 }}
-        transition={{ type: "spring", stiffness: 360, damping: 32 }}
+      <motion.div initial={{ opacity:0, scale:0.95, y:12 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
+        transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => e.stopPropagation()}
+        style={{ width:"min(90vw,380px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:20, boxShadow:"0 8px 40px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
+      >
+        <div className="px-5 pt-5 pb-3 flex items-start justify-between">
+          <div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Day Note</div>
+            <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{label}</div>
+          </div>
+          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+        </div>
+        <div className="px-5 pb-2">
+          <textarea ref={areaRef} value={text} onChange={e => setText(e.target.value.slice(0,320))} onKeyDown={handleKey}
+            placeholder="Add a note, emoji, or reflection… ✨" maxLength={320} rows={4}
+            style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:12, padding:"10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", color:"var(--text)", boxSizing:"border-box" }}
+          />
+          <div className="text-right text-[10px] tabular-nums mt-1" style={{ color:"var(--text-tertiary)" }}>{text.length} / 320</div>
+        </div>
+        <div className="px-5 pb-5 flex gap-2.5">
+          {initial && <button onClick={() => onSave("")} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"rgba(255,59,48,0.08)", color:"#ff3b30", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Clear</button>}
+          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
+          <button onClick={() => onSave(text)} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>Save <span style={{ opacity:0.65, fontSize:11 }}>⌘↵</span></button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── MilestoneModal ───────────────────────────────────────────────────────────
+
+function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
+  milestones: Milestone[]; dark: boolean; modalBg: string;
+  onClose: () => void; onChange: (m: Milestone[]) => void;
+}) {
+  const [items, setItems] = useState<Milestone[]>(() => [...milestones].sort((a,b) => a.date.localeCompare(b.date)));
+  const [draftLabel, setDraftLabel] = useState("");
+  const [draftDate, setDraftDate] = useState(dateKey(new Date()));
+  const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
+
+  const add = () => {
+    if (!draftLabel.trim()) return;
+    setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor }].sort((a,b)=>a.date.localeCompare(b.date)));
+    setDraftLabel("");
+  };
+
+  const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
+  const inputStyle: React.CSSProperties = { background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.03)", border:`1px solid ${borderColor}`, borderRadius:8, padding:"7px 10px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
+
+  return (
+    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background:"rgba(0,0,0,0.34)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
+      onClick={onClose}
+    >
+      <motion.div initial={{ opacity:0, scale:0.96, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
+        transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md"
-        style={{
-          background: "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(30px) saturate(180%)",
-          WebkitBackdropFilter: "blur(30px) saturate(180%)",
-          borderRadius: 22,
-          boxShadow:
-            "0 30px 80px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.6) inset",
-          border: "1px solid rgba(255,255,255,0.6)",
-        }}
+        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
+      >
+        <div className="px-6 pt-6 pb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>Milestones</h2>
+          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+        </div>
+
+        {/* Color picker + add form */}
+        <div className="px-6 pb-4">
+          <div className="flex gap-1.5 mb-2.5 flex-wrap">
+            {MILESTONE_COLORS.map(c => (
+              <button key={c} onClick={() => setDraftColor(c)}
+                style={{ width:18, height:18, borderRadius:999, background:c, border: draftColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease" }}
+              />
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input value={draftLabel} onChange={e => setDraftLabel(e.target.value)} placeholder="Label…"
+              onKeyDown={e => { if (e.key==="Enter") add(); }}
+              style={{ ...inputStyle, flex:2, width:"auto" }}
+            />
+            <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
+              style={{ ...inputStyle, flex:1, width:"auto" }}
+            />
+            <button onClick={add} disabled={!draftLabel.trim()}
+              style={{ height:36, paddingInline:14, borderRadius:9, background: draftLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: draftLabel.trim()?"white":"var(--text-tertiary)", fontSize:13, fontWeight:600, border:"none", cursor: draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, transition:"background 150ms" }}>
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="px-6 max-h-56 overflow-y-auto">
+          {items.length === 0 && (
+            <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>No milestones yet. Add one above.</div>
+          )}
+          <div className="flex flex-col gap-1.5 pb-3">
+            {items.map(ms => {
+              const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
+              const lbl = new Date(y2,m2-1,d2).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+              return (
+                <div key={ms.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl"
+                  style={{ background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}` }}
+                >
+                  <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
+                  <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
+                  <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
+                  <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
+                    style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 flex gap-2.5 justify-end" style={{ borderTop:`1px solid ${borderColor}` }}>
+          <button onClick={onClose} style={{ height:36, paddingInline:16, borderRadius:10, border:"1px solid var(--border-soft)", background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
+          <button onClick={() => { onChange(items); onClose(); }}
+            style={{ height:36, paddingInline:20, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>Save</button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── GoalsModal ───────────────────────────────────────────────────────────────
+
+function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, onClose }: {
+  blockId: string; blockLabel: string; initial: BlockGoals; dark: boolean; modalBg: string;
+  onSave: (bg: BlockGoals) => void; onClose: () => void;
+}) {
+  const [description, setDescription] = useState(initial.description);
+  const [goals, setGoals] = useState<Goal[]>(() => initial.goals.length > 0 ? initial.goals.map(g=>({...g})) : [{ id:makeId(), text:"", done:false }]);
+  const activeGoals = goals.filter(g => g.text.trim());
+  const canAdd = goals.length < 5;
+
+  const save = () => onSave({ description:description.trim(), goals: goals.filter(g=>g.text.trim()) });
+
+  const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
+  const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)";
+
+  return (
+    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background:"rgba(0,0,0,0.32)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
+      onClick={onClose}
+    >
+      <motion.div initial={{ opacity:0, scale:0.96, y:12 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
+        transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
+        className="w-full max-w-sm"
+        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
+      >
+        <div className="px-5 pt-5 pb-3 flex items-start justify-between">
+          <div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Sprint Goals</div>
+            <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{blockLabel}</div>
+          </div>
+          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+        </div>
+
+        <div className="px-5 pb-3">
+          <textarea value={description} onChange={e => setDescription(e.target.value.slice(0,200))}
+            placeholder="Sprint description (optional)…" rows={2}
+            style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:10, padding:"8px 10px", fontSize:13, lineHeight:1.5, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box" }}
+          />
+        </div>
+
+        <div className="px-5 pb-3">
+          <div className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color:"var(--text-tertiary)" }}>
+            Goals ({activeGoals.length}/5)
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {goals.map((g, idx) => (
+              <div key={g.id} className="flex items-center gap-2">
+                <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
+                <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
+                  placeholder={`Goal ${idx+1}`}
+                  style={{ flex:1, background:inputBg, border:`1px solid ${borderColor}`, borderRadius:8, padding:"6px 9px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit" }}
+                />
+                <button onClick={() => setGoals(prev => prev.filter(x => x.id!==g.id))} disabled={goals.length===1}
+                  style={{ color: goals.length===1?"var(--text-tertiary)":"#ff3b30", background:"none", border:"none", cursor: goals.length===1?"default":"pointer", fontSize:18, lineHeight:1, opacity: goals.length===1?0.3:1, padding:"0 2px", flexShrink:0 }}>×</button>
+              </div>
+            ))}
+          </div>
+          {canAdd && (
+            <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false }])}
+              className="mt-2 text-[12px] font-medium"
+              style={{ padding:"5px 10px", borderRadius:8, background:"rgba(0,122,255,0.09)", color:"#007aff", border:"1px solid rgba(0,122,255,0.18)", cursor:"pointer", fontFamily:"inherit" }}>
+              + Add goal
+            </button>
+          )}
+        </div>
+
+        <div className="px-5 pb-5 flex gap-2.5">
+          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
+          <button onClick={save} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>Save goals</button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── SprintSettingsModal ──────────────────────────────────────────────────────
+
+function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, onClose, onSave }: {
+  quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
+  onClose: () => void; onSave: (next: QuarterConfig) => void;
+}) {
+  const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map(b => ({ ...b })));
+  const total = blocks.reduce((a,b) => a+(Number(b.weeks)||0), 0);
+  const remaining = WEEKS_PER_QUARTER - total;
+  const valid = total===WEEKS_PER_QUARTER && blocks.every(b => b.weeks>=1);
+  const update = (id: string, patch: Partial<Block>) => setBlocks(prev => prev.map(b => b.id===id ? { ...b, ...patch } : b));
+  const applyPreset = (parts: number[]) => setBlocks(parts.map((w,i) => ({ id:makeId(), weeks:w, label:`Sprint ${i+1}` })));
+
+  const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
+
+  return (
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background:"rgba(20,20,25,0.38)", backdropFilter:"blur(14px) saturate(160%)", WebkitBackdropFilter:"blur(14px) saturate(160%)" }}
+      initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}
+      onClick={onClose}
+    >
+      <motion.div onClick={e => e.stopPropagation()} initial={{ opacity:0, scale:0.96, y:8 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:4 }}
+        transition={{ type:"spring", stiffness:360, damping:32 }} className="w-full max-w-md"
+        style={{ background:modalBg, backdropFilter:"blur(30px) saturate(180%)", WebkitBackdropFilter:"blur(30px) saturate(180%)", borderRadius:22, boxShadow:"0 30px 80px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.6)"}` }}
       >
         <div className="px-6 pt-6 pb-3">
           <div className="flex items-center gap-2">
-            <span
-              className="inline-flex items-center justify-center text-[10px] font-semibold uppercase tracking-widest"
-              style={{
-                color: quarter.text,
-                background: quarter.tint,
-                border: `1px solid ${quarter.soft}`,
-                padding: "3px 8px",
-                borderRadius: 999,
-              }}
-            >
-              {quarter.label}
-            </span>
-            <h2 className="text-base font-semibold tracking-tight" style={{ color: "var(--text)", letterSpacing: "-0.01em" }}>
-              Sprint configuration
-            </h2>
+            <span className="inline-flex items-center justify-center text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
+              style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>{quarter.label}</span>
+            <h2 className="text-base font-semibold tracking-tight" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>Sprint configuration</h2>
           </div>
-          <p className="mt-1.5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-            Group the 13 weeks of {quarter.label} into sprints. Each sprint can have its own label.
-          </p>
+          <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)" }}>Group the 13 weeks of {quarter.label} into sprints.</p>
         </div>
 
         <div className="px-6">
           <div className="flex flex-wrap gap-1.5">
-            {[
-              { name: "1 × 13", parts: [13] },
-              { name: "2 + 2 + 2 + 2 + 2 + 2 + 1", parts: [2, 2, 2, 2, 2, 2, 1] },
-              { name: "3 + 3 + 3 + 4", parts: [3, 3, 3, 4] },
-              { name: "4 + 4 + 5", parts: [4, 4, 5] },
-              { name: "6 + 7", parts: [6, 7] },
-            ].map((p) => (
-              <button
-                key={p.name}
-                onClick={() => applyPreset(p.parts)}
-                type="button"
-                className="text-[11px] tabular-nums"
-                style={{
-                  padding: "5px 10px",
-                  borderRadius: 999,
-                  background: "rgba(0,0,0,0.04)",
-                  color: "var(--text-secondary)",
-                  border: "1px solid rgba(0,0,0,0.06)",
-                }}
-              >
-                {p.name}
+            {[{n:"1 × 13",p:[13]},{n:"2+2+2+2+2+2+1",p:[2,2,2,2,2,2,1]},{n:"3+3+3+4",p:[3,3,3,4]},{n:"4+4+5",p:[4,4,5]},{n:"6+7",p:[6,7]}].map(x => (
+              <button key={x.n} onClick={() => applyPreset(x.p)} type="button" className="text-[11px] tabular-nums"
+                style={{ padding:"5px 10px", borderRadius:999, background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.04)", color:"var(--text-secondary)", border:`1px solid ${borderColor}` }}>
+                {x.n}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="px-6 mt-4 max-h-[320px] overflow-auto">
+        <div className="px-6 mt-4 max-h-72 overflow-auto">
           <div className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
               {blocks.map((b, idx) => (
-                <motion.div
-                  layout
-                  key={b.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
+                <motion.div layout key={b.id} initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                   className="flex items-center gap-2"
-                  style={{
-                    background: "rgba(0,0,0,0.025)",
-                    border: "1px solid rgba(0,0,0,0.05)",
-                    borderRadius: 12,
-                    padding: "8px 10px",
-                  }}
+                  style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}`, borderRadius:12, padding:"8px 10px" }}
                 >
-                  <div
-                    className="text-[10px] font-semibold tabular-nums"
-                    style={{
-                      width: 22, height: 22,
-                      borderRadius: 999,
-                      background: quarter.tint,
-                      color: quarter.text,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}
-                  >
-                    {idx + 1}
+                  <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
+                    style={{ width:22, height:22, borderRadius:999, background: dark?quarter.darkTint:quarter.tint, color:quarter.text }}>{idx+1}</div>
+                  <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder="Sprint label"
+                    className="flex-1 bg-transparent outline-none text-[13px]" style={{ color:"var(--text)" }} />
+                  <div className="flex items-center gap-1" style={{ background: dark?"rgba(255,255,255,0.06)":"white", border:`1px solid ${borderColor}`, borderRadius:8, padding:2 }}>
+                    <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>−</button>
+                    <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color:"var(--text)" }}>{b.weeks}</span>
+                    <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>+</button>
                   </div>
-                  <input
-                    type="text"
-                    value={b.label}
-                    onChange={(e) => updateBlock(b.id, { label: e.target.value })}
-                    placeholder="Sprint label"
-                    className="flex-1 bg-transparent outline-none text-[13px]"
-                    style={{ color: "var(--text)" }}
-                  />
-                  <div
-                    className="flex items-center gap-1"
-                    style={{
-                      background: "white",
-                      border: "1px solid rgba(0,0,0,0.08)",
-                      borderRadius: 8,
-                      padding: "2px",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => updateBlock(b.id, { weeks: Math.max(1, b.weeks - 1) })}
-                      className="w-6 h-6 rounded-md text-[14px]"
-                      style={{ color: "var(--text-secondary)" }}
-                      aria-label="Decrease weeks"
-                    >−</button>
-                    <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: "var(--text)" }}>
-                      {b.weeks}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateBlock(b.id, { weeks: Math.min(WEEKS_PER_QUARTER, b.weeks + 1) })}
-                      className="w-6 h-6 rounded-md text-[14px]"
-                      style={{ color: "var(--text-secondary)" }}
-                      aria-label="Increase weeks"
-                    >+</button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeBlock(b.id)}
-                    disabled={blocks.length === 1}
+                  <button type="button" onClick={() => setBlocks(prev => prev.filter(x => x.id!==b.id))} disabled={blocks.length===1}
                     className="w-7 h-7 flex items-center justify-center rounded-md"
-                    style={{
-                      color: blocks.length === 1 ? "var(--text-tertiary)" : "#ff3b30",
-                      opacity: blocks.length === 1 ? 0.4 : 1,
-                    }}
-                    aria-label="Remove sprint"
-                    title="Remove sprint"
-                  >
+                    style={{ color: blocks.length===1?"var(--text-tertiary)":"#ff3b30", opacity: blocks.length===1?0.4:1 }}>
                     <TrashIcon />
                   </button>
                 </motion.div>
               ))}
             </AnimatePresence>
-
-            <button
-              type="button"
-              onClick={addBlock}
-              disabled={remaining < 1}
-              className="text-[12px] font-medium mt-1 self-start"
-              style={{
-                padding: "6px 12px",
-                borderRadius: 10,
-                color: remaining < 1 ? "var(--text-tertiary)" : quarter.text,
-                background: remaining < 1 ? "rgba(0,0,0,0.04)" : quarter.tint,
-                border: `1px solid ${remaining < 1 ? "rgba(0,0,0,0.06)" : quarter.soft}`,
-                opacity: remaining < 1 ? 0.6 : 1,
-              }}
-            >
+            <button type="button" onClick={() => setBlocks(prev => [...prev, { id:makeId(), weeks:Math.max(1,remaining>0?remaining:1), label:`Sprint ${prev.length+1}` }])}
+              disabled={remaining<1} className="text-[12px] font-medium mt-1 self-start"
+              style={{ padding:"6px 12px", borderRadius:10, color: remaining<1?"var(--text-tertiary)":quarter.text, background: remaining<1?(dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)"):(dark?quarter.darkTint:quarter.tint), border:`1px solid ${remaining<1?borderColor:(dark?quarter.darkSoft:quarter.soft)}`, opacity: remaining<1?0.6:1 }}>
               + Add sprint
             </button>
           </div>
         </div>
 
-        <div className="px-6 mt-5">
-          <div
-            className="flex items-center justify-between text-[12px] tabular-nums px-3 py-2.5"
-            style={{
-              background: valid ? "rgba(52,199,89,0.08)" : "rgba(255,59,48,0.07)",
-              color: valid ? "#28a745" : "#c00",
-              borderRadius: 10,
-              border: `1px solid ${valid ? "rgba(52,199,89,0.2)" : "rgba(255,59,48,0.2)"}`,
-            }}
-          >
+        <div className="px-6 mt-4">
+          <div className="flex items-center justify-between text-[12px] tabular-nums px-3 py-2.5 rounded-xl"
+            style={{ background: valid?"rgba(52,199,89,0.08)":"rgba(255,59,48,0.07)", color: valid?"#28a745":"#c00", border:`1px solid ${valid?"rgba(52,199,89,0.2)":"rgba(255,59,48,0.2)"}` }}>
             <span>Total: {total} / {WEEKS_PER_QUARTER} weeks</span>
-            <span>
-              {valid
-                ? "Looks good"
-                : remaining > 0
-                  ? `${remaining} week${remaining === 1 ? "" : "s"} unassigned`
-                  : `${-remaining} week${-remaining === 1 ? "" : "s"} over the limit`}
-            </span>
+            <span>{valid ? "Looks good" : remaining>0 ? `${remaining} week${remaining===1?"":"s"} unassigned` : `${-remaining} week${-remaining===1?"":"s"} over`}</span>
           </div>
         </div>
 
         <div className="px-6 py-5 mt-2 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-[13px] font-medium"
-            style={{
-              padding: "8px 14px",
-              borderRadius: 10,
-              color: "var(--text-secondary)",
-              background: "transparent",
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => valid && onSave({ blocks })}
-            disabled={!valid}
-            className="text-[13px] font-semibold"
-            style={{
-              padding: "8px 16px",
-              borderRadius: 10,
-              color: "white",
-              background: valid
-                ? "linear-gradient(180deg, #5ed47b 0%, #34c759 100%)"
-                : "rgba(0,0,0,0.15)",
-              boxShadow: valid ? "0 1px 2px rgba(40,167,69,0.25)" : "none",
-              cursor: valid ? "pointer" : "not-allowed",
-            }}
-          >
+          <button type="button" onClick={onClose} className="text-[13px] font-medium"
+            style={{ padding:"8px 14px", borderRadius:10, color:"var(--text-secondary)", background:"transparent" }}>Cancel</button>
+          <button type="button" onClick={() => valid && onSave({ blocks })} disabled={!valid} className="text-[13px] font-semibold"
+            style={{ padding:"8px 16px", borderRadius:10, color:"white", background: valid?"linear-gradient(180deg,#5ed47b 0%,#34c759 100%)":"rgba(128,128,128,0.2)", boxShadow: valid?"0 1px 2px rgba(40,167,69,0.25)":"none", cursor: valid?"pointer":"not-allowed" }}>
             Save sprints
           </button>
         </div>
@@ -842,310 +907,28 @@ function SprintSettingsModal({
   );
 }
 
-function DayTile({
-  date, state, todayProgress, note, onOpen,
-}: { date: Date; state: DayState; todayProgress: number; note?: string; onOpen: () => void }) {
-  const [hovered, setHovered] = useState(false);
-  const isOut = state === "out";
-  const isPast = state === "past";
-  const isToday = state === "today";
-  const hasNote = Boolean(note);
-
-  const baseStyle: React.CSSProperties = {
-    borderRadius: 12,
-    aspectRatio: "1 / 1",
-    cursor: isOut ? "default" : "pointer",
-    transition: "transform 150ms ease, box-shadow 200ms ease",
-    position: "relative",
-  };
-
-  const dayNumber = date.getDate();
-  const monthAbbr = MONTHS[date.getMonth()];
-
-  if (isOut) {
-    return <div style={{ ...baseStyle, background: "transparent", border: "1px dashed var(--border-soft)", opacity: 0.5, cursor: "default" }} />;
-  }
-
-  const tooltip = hovered && hasNote ? (
-    <div
-      style={{
-        position: "absolute",
-        bottom: "calc(100% + 6px)",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 50,
-        background: "rgba(29,29,31,0.92)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        color: "white",
-        fontSize: 11,
-        lineHeight: 1.4,
-        borderRadius: 8,
-        padding: "6px 9px",
-        whiteSpace: "pre-wrap",
-        maxWidth: 180,
-        wordBreak: "break-word",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.22)",
-        pointerEvents: "none",
-      }}
-    >
-      {note}
-      <div style={{
-        position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)",
-        width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent",
-        borderTop: "5px solid rgba(29,29,31,0.92)",
-      }} />
-    </div>
-  ) : null;
-
-  const dot = hasNote ? (
-    <div style={{
-      position: "absolute", bottom: 4, right: 5,
-      width: 5, height: 5, borderRadius: 999,
-      background: isPast ? "rgba(255,255,255,0.75)" : "var(--apple-green)",
-      boxShadow: isPast ? "none" : "0 0 4px rgba(52,199,89,0.7)",
-      zIndex: 2,
-    }} />
-  ) : null;
-
-  const hoverHandlers = {
-    onMouseEnter: () => setHovered(true),
-    onMouseLeave: () => setHovered(false),
-    onClick: onOpen,
-  };
-
-  if (isPast) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center"
-        style={{
-          ...baseStyle,
-          background: "linear-gradient(160deg, #5ed47b 0%, #34c759 60%, #2ab84f 100%)",
-          color: "white",
-          boxShadow: hovered
-            ? "0 2px 8px rgba(40,167,69,0.35), inset 0 0 0 0.5px rgba(255,255,255,0.18)"
-            : "0 1px 2px rgba(40,167,69,0.18), inset 0 0 0 0.5px rgba(255,255,255,0.18)",
-        }}
-        {...hoverHandlers}
-      >
-        {tooltip}
-        <Label number={dayNumber} month={monthAbbr} tone="onGreen" />
-        {dot}
-      </div>
-    );
-  }
-
-  if (isToday) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center overflow-hidden"
-        style={{
-          ...baseStyle,
-          background: "var(--surface)",
-          border: "1.5px solid var(--apple-green)",
-          boxShadow: hovered
-            ? "0 0 0 4px rgba(52,199,89,0.18), 0 4px 18px rgba(52,199,89,0.28)"
-            : "0 0 0 4px rgba(52,199,89,0.12), 0 4px 14px rgba(52,199,89,0.18)",
-          color: "var(--text)",
-        }}
-        aria-label={`Today, ${todayProgress.toFixed(0)}% elapsed`}
-        {...hoverHandlers}
-      >
-        {tooltip}
-        <div
-          className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
-          style={{ height: `${todayProgress}%`, background: "linear-gradient(180deg, rgba(94,212,123,0.85) 0%, #34c759 100%)" }}
-        />
-        <div className="relative z-10 flex flex-col items-center justify-center">
-          <Label number={dayNumber} month={monthAbbr} tone="auto" />
-        </div>
-        {dot}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="flex flex-col items-center justify-center"
-      style={{
-        ...baseStyle,
-        background: "var(--surface)",
-        border: "1px solid var(--border-soft)",
-        color: "var(--text-secondary)",
-        boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)",
-      }}
-      {...hoverHandlers}
-    >
-      {tooltip}
-      <Label number={dayNumber} month={monthAbbr} tone="muted" />
-      {dot}
-    </div>
-  );
-}
-
-function NoteModal({
-  dateKey: dk, initial, onSave, onClose,
-}: { dateKey: string; initial: string; onSave: (text: string) => void; onClose: () => void }) {
-  const [text, setText] = useState(initial);
-  const areaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  useEffect(() => { areaRef.current?.focus(); }, []);
-
-  const [y, m, d] = dk.split("-").map(Number) as [number, number, number];
-  const label = new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-
-  const handleKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") onSave(text);
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.28)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "min(90vw, 380px)",
-          background: "rgba(255,255,255,0.88)",
-          backdropFilter: "saturate(180%) blur(24px)",
-          WebkitBackdropFilter: "saturate(180%) blur(24px)",
-          borderRadius: 20,
-          boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.9) inset",
-          border: "1px solid rgba(255,255,255,0.7)",
-          overflow: "hidden",
-        }}
-      >
-        <div className="px-5 pt-5 pb-3 flex items-start justify-between">
-          <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>
-              Day Note
-            </div>
-            <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color: "var(--text)" }}>
-              {label}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 26, height: 26, borderRadius: 99, background: "rgba(0,0,0,0.06)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--text-secondary)", fontSize: 14, border: "none", cursor: "pointer",
-              flexShrink: 0, marginTop: 2,
-            }}
-            aria-label="Close"
-          >✕</button>
-        </div>
-
-        <div className="px-5 pb-2">
-          <textarea
-            ref={areaRef}
-            value={text}
-            onChange={(e) => setText(e.target.value.slice(0, 320))}
-            onKeyDown={handleKey}
-            placeholder="Add a note, emoji, or reflection… ✨"
-            maxLength={320}
-            rows={4}
-            style={{
-              width: "100%", resize: "none", outline: "none", border: "1px solid var(--border-soft)",
-              borderRadius: 12, padding: "10px 12px", fontSize: 14, lineHeight: 1.55,
-              fontFamily: "inherit", background: "rgba(255,255,255,0.7)", color: "var(--text)",
-              boxSizing: "border-box",
-            }}
-          />
-          <div className="text-right text-[10px] tabular-nums mt-1" style={{ color: "var(--text-tertiary)" }}>
-            {text.length} / 320
-          </div>
-        </div>
-
-        <div className="px-5 pb-5 flex gap-2.5">
-          {initial && (
-            <button
-              onClick={() => onSave("")}
-              style={{
-                flex: 1, height: 36, borderRadius: 10, border: "1px solid var(--border-soft)",
-                background: "rgba(255,59,48,0.07)", color: "#ff3b30", fontSize: 13,
-                fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-              }}
-            >
-              Clear
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1, height: 36, borderRadius: 10, border: "1px solid var(--border-soft)",
-              background: "rgba(0,0,0,0.04)", color: "var(--text-secondary)", fontSize: 13,
-              fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onSave(text)}
-            style={{
-              flex: 2, height: 36, borderRadius: 10, border: "none",
-              background: "linear-gradient(135deg, #5ed47b 0%, #34c759 100%)",
-              color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer",
-              fontFamily: "inherit", boxShadow: "0 2px 8px rgba(52,199,89,0.35)",
-            }}
-          >
-            Save  <span style={{ opacity: 0.7, fontSize: 11 }}>⌘↵</span>
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function Label({
-  number, month, tone,
-}: { number: number; month: string; tone: "onGreen" | "muted" | "auto" }) {
-  const numberColor = tone === "onGreen" ? "white" : "var(--text)";
-  const monthColor =
-    tone === "onGreen" ? "rgba(255,255,255,0.85)" :
-    tone === "muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
-  return (
-    <div className="flex flex-col items-center justify-center leading-none select-none">
-      <div className="text-base sm:text-lg font-semibold tabular-nums" style={{ color: numberColor, letterSpacing: "-0.02em" }}>
-        {number}
-      </div>
-      <div className="mt-1 text-[9px] sm:text-[10px] font-medium tracking-widest" style={{ color: monthColor }}>
-        {month}
-      </div>
-    </div>
-  );
-}
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 function GearIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
 }
-
 function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-      <path d="M10 11v6" />
-      <path d="M14 11v6" />
-      <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-    </svg>
-  );
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>;
+}
+function MoonIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>;
+}
+function SunIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
+}
+function FlagIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
+}
+function PencilIcon() {
+  return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
+}
+function CheckIcon() {
+  return <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="2 6 5 9 10 3"/></svg>;
 }
 
 export default App;
