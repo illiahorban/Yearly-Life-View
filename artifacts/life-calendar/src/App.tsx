@@ -395,7 +395,7 @@ function BlocksRenderer({
             const bg = blockGoals[block.id];
             const activeGoals = bg?.goals.filter(g => g.text.trim()) ?? [];
             const goalPct = activeGoals.length > 0 ? (activeGoals.filter(g => g.done).length/activeGoals.length)*100 : null;
-            const pct = goalPct !== null ? timePct*0.6 + goalPct*0.4 : timePct;
+            const pct = timePct;
             const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
             const isFuture = pastDays===0 && !hasToday;
             const isComplete = pct >= 99.5;
