@@ -40,7 +40,7 @@ const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
 type Quarter = { label: string; tint: string; darkTint: string; border: string; text: string; soft: string; darkSoft: string };
-type Block = { id: string; weeks: number; label: string };
+type Block = { id: string; weeks: number; label: string; color?: AppleColorKey };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
 type DayState = "past" | "today" | "future" | "out";
@@ -149,7 +149,8 @@ function App() {
   const [now, setNow] = useState<Date>(() => new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t); }, []);
 
-  const year = now.getFullYear();
+  const MIN_YEAR = 2020, MAX_YEAR = 2030;
+  const [viewYear, setViewYear] = useState(() => now.getFullYear());
 
   // Dark mode
   const [dark, setDark] = useState<boolean>(() => ls<boolean>("lifeCalendar:darkMode", false));
@@ -159,9 +160,9 @@ function App() {
   }, [dark]);
 
   // Calendar config
-  const [config, setConfig] = useState<CalendarConfig>(() => loadConfig(new Date().getFullYear()));
-  useEffect(() => { setConfig(loadConfig(year)); }, [year]);
-  useEffect(() => { saveConfig(year, config); }, [year, config]);
+  const [config, setConfig] = useState<CalendarConfig>(() => loadConfig(now.getFullYear()));
+  useEffect(() => { setConfig(loadConfig(viewYear)); }, [viewYear]);
+  useEffect(() => { saveConfig(viewYear, config); }, [viewYear, config]);
 
   // Milestones
   const [milestones, setMilestones] = useState<Milestone[]>(() => ls<Milestone[]>("lifeCalendar:milestones", []));
@@ -209,17 +210,17 @@ function App() {
 
   // Calendar data
   const weeks = useMemo(() => {
-    const first = startOfWeekMonday(startOfYear(year));
+    const first = startOfWeekMonday(startOfYear(viewYear));
     return Array.from({ length: TOTAL_WEEKS }, (_, i) => {
       const weekStart = addDays(first, i*7);
       return { weekStart, days: Array.from({ length: 7 }, (_, j) => addDays(weekStart, j)) };
     });
-  }, [year]);
+  }, [viewYear]);
 
   const yearProgress = useMemo(() => {
-    const s = startOfYear(year).getTime(), e = startOfNextYear(year).getTime();
+    const s = startOfYear(viewYear).getTime(), e = startOfNextYear(viewYear).getTime();
     return Math.max(0, Math.min(100, ((now.getTime()-s)/(e-s))*100));
-  }, [now, year]);
+  }, [now, viewYear]);
 
   const todayProgress = useMemo(() => {
     const s = startOfDay(now).getTime();
@@ -232,10 +233,10 @@ function App() {
 
   const daysCompleted = useMemo(() => {
     let n = 0;
-    for (const { days } of weeks) for (const d of days) if (d.getFullYear()===year && d<today) n++;
+    for (const { days } of weeks) for (const d of days) if (d.getFullYear()===viewYear && d<today) n++;
     return n;
-  }, [weeks, today, year]);
-  const totalDays = (startOfNextYear(year).getTime()-startOfYear(year).getTime())/86_400_000;
+  }, [weeks, today, viewYear]);
+  const totalDays = (startOfNextYear(viewYear).getTime()-startOfYear(viewYear).getTime())/86_400_000;
 
   const milestonesMap = useMemo(() => {
     const m: Record<string,Milestone> = {};
@@ -256,14 +257,15 @@ function App() {
 
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
   const didScrollRef = useRef(false);
+  useEffect(() => { didScrollRef.current = false; }, [viewYear]);
   useEffect(() => {
-    if (didScrollRef.current || currentWeekIndex < 0) return;
+    if (didScrollRef.current || currentWeekIndex < 0 || viewYear !== now.getFullYear()) return;
     const el = weekRefs.current[currentWeekIndex];
     if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); didScrollRef.current = true; }
-  }, [currentWeekIndex]);
+  }, [currentWeekIndex, viewYear]);
 
   const dayState = (d: Date): DayState => {
-    if (d.getFullYear() !== year) return "out";
+    if (d.getFullYear() !== viewYear) return "out";
     if (sameDay(d, today)) return "today";
     if (d < today) return "past";
     return "future";
@@ -301,7 +303,13 @@ function App() {
       <header className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
         <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-5 pb-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl sm:text-3xl font-semibold" style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>{year}</h1>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setViewYear(y => Math.max(MIN_YEAR, y-1))} disabled={viewYear <= MIN_YEAR}
+                style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear<=MIN_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear<=MIN_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, lineHeight:1, flexShrink:0 }}>‹</button>
+              <h1 className="text-2xl sm:text-3xl font-semibold tabular-nums" style={{ color: "var(--text)", letterSpacing: "-0.02em", minWidth:"3.2ch", textAlign:"center" }}>{viewYear}</h1>
+              <button onClick={() => setViewYear(y => Math.min(MAX_YEAR, y+1))} disabled={viewYear >= MAX_YEAR}
+                style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear>=MAX_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear>=MAX_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, lineHeight:1, flexShrink:0 }}>›</button>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>{yearProgress.toFixed(1)}% complete</span>
               <IconButton title="Milestones" onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
@@ -337,17 +345,18 @@ function App() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Sticky weekday labels */}
+          <div className="mt-3 flex items-center gap-3 sm:gap-4">
+            <div className="w-14 sm:w-16 shrink-0" />
+            <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
+              {WEEKDAYS.map((w,i) => <div key={i} className="text-center text-[10px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
+            </div>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-5 sm:px-8 py-8">
-        {/* Weekday header */}
-        <div className="mb-4 flex items-center gap-3 sm:gap-4 px-1">
-          <div className="w-14 sm:w-16 shrink-0" />
-          <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1" style={{ color: "var(--text-tertiary)" }}>
-            {WEEKDAYS.map((w,i) => <div key={i} className="text-center text-[10px] font-medium tracking-widest uppercase">{w}</div>)}
-          </div>
-        </div>
 
         <LayoutGroup>
           <div className="flex flex-col gap-6">
@@ -484,7 +493,7 @@ function App() {
         </LayoutGroup>
 
         <footer className="mt-12 pb-8 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>
-          Life Calendar · {year}
+          Life Calendar · {viewYear}
         </footer>
       </main>
 
@@ -589,7 +598,8 @@ function BlocksRenderer({
             const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
             const isFuture = pastDays===0 && !hasToday;
             const isComplete = pct >= 99.5;
-            const softColor = dark ? quarter.darkSoft : quarter.soft;
+            const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : quarter;
+            const softColor = dark ? effectiveQ.darkSoft : effectiveQ.soft;
 
             return (
               <motion.div layout key={block.id}
@@ -599,7 +609,7 @@ function BlocksRenderer({
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5">
-                  <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={quarter.text} />
+                  <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.text} />
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => onEditGoals(block.id)} title="Sprint goals"
                       style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
@@ -612,19 +622,19 @@ function BlocksRenderer({
                 <div className="px-3 sm:px-3.5 pb-2">
                   <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
                     <span style={{ color:"var(--text-tertiary)" }}>{pastDays} of {totalDays} days</span>
-                    <span style={{ color: isComplete ? "var(--apple-green)" : isFuture ? "var(--text-tertiary)" : quarter.text, fontWeight:600 }}>{pct.toFixed(0)}%</span>
+                    <span style={{ color: isComplete ? "var(--apple-green)" : isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:600 }}>{pct.toFixed(0)}%</span>
                     <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? "done" : `${daysLeft} left`}</span>
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                     <motion.div initial={false} animate={{ width:`${pct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                      style={{ height:"100%", background: isComplete ? "linear-gradient(90deg,#5ed47b,#34c759)" : `linear-gradient(90deg,${quarter.text},${quarter.border})`, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
+                      style={{ height:"100%", background: isComplete ? "linear-gradient(90deg,#5ed47b,#34c759)" : `linear-gradient(90deg,${effectiveQ.text},${effectiveQ.border})`, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
                     />
                   </div>
                   {goalPct !== null && (
                     <div className="mt-1.5 flex items-center gap-2">
                       <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)" }}>
                         <motion.div initial={false} animate={{ width:`${goalPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                          style={{ height:"100%", background:quarter.border, borderRadius:999, opacity:0.72 }}
+                          style={{ height:"100%", background:effectiveQ.border, borderRadius:999, opacity:0.72 }}
                         />
                       </div>
                       <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
@@ -643,7 +653,7 @@ function BlocksRenderer({
                           onClick={() => onGoalToggle(block.id, goal.id)}
                           style={{ color: goal.done ? "var(--text-tertiary)" : "var(--text-secondary)" }}
                         >
-                          <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? quarter.border : "transparent", border:`1.5px solid ${goal.done ? quarter.border : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
+                          <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? effectiveQ.border : "transparent", border:`1.5px solid ${goal.done ? effectiveQ.border : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
                             {goal.done && <CheckIcon />}
                           </div>
                           <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
@@ -1074,6 +1084,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   const valid = total===WEEKS_PER_QUARTER && blocks.every(b => b.weeks>=1);
   const update = (id: string, patch: Partial<Block>) => setBlocks(prev => prev.map(b => b.id===id ? { ...b, ...patch } : b));
   const applyPreset = (parts: number[]) => setBlocks(parts.map((w,i) => ({ id:makeId(), weeks:w, label:`Sprint ${i+1}` })));
+  const [colorPickerId, setColorPickerId] = useState<string|null>(null);
 
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -1107,30 +1118,63 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
           </div>
         </div>
 
+        {colorPickerId !== null && <div style={{ position:"fixed", inset:0, zIndex:49 }} onClick={() => setColorPickerId(null)} />}
         <div className="px-6 mt-4 max-h-72 overflow-auto">
           <div className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
-              {blocks.map((b, idx) => (
+              {blocks.map((b, idx) => {
+                const bAc = b.color ? APPLE_COLORS.find(c => c.key === b.color) : null;
+                const bHex = bAc ? (dark ? bAc.dark : bAc.light) : (dark ? quarter.darkSoft : quarter.soft);
+                return (
                 <motion.div layout key={b.id} initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
-                  className="flex items-center gap-2"
-                  style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}`, borderRadius:12, padding:"8px 10px" }}
+                  className="flex items-center gap-2" style={{ position:"relative" }}
                 >
-                  <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
-                    style={{ width:22, height:22, borderRadius:999, background: dark?quarter.darkTint:quarter.tint, color:quarter.text }}>{idx+1}</div>
-                  <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder="Sprint label"
-                    className="flex-1 bg-transparent outline-none text-[13px]" style={{ color:"var(--text)" }} />
-                  <div className="flex items-center gap-1" style={{ background: dark?"rgba(255,255,255,0.06)":"white", border:`1px solid ${borderColor}`, borderRadius:8, padding:2 }}>
-                    <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>−</button>
-                    <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color:"var(--text)" }}>{b.weeks}</span>
-                    <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>+</button>
+                  <div style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", alignItems:"center", gap:8, flex:1 }}>
+                    {/* Color dot */}
+                    <div style={{ position:"relative", flexShrink:0 }}>
+                      <button type="button" onClick={() => setColorPickerId(colorPickerId === b.id ? null : b.id)}
+                        title="Sprint color"
+                        style={{ width:16, height:16, borderRadius:999, background: bHex, border:`2px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", display:"block" }}
+                      />
+                      <AnimatePresence>
+                        {colorPickerId === b.id && (
+                          <motion.div initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
+                            transition={{ type:"spring", stiffness:420, damping:28 }}
+                            onClick={e => e.stopPropagation()}
+                            style={{ position:"absolute", top:"calc(100% + 6px)", left:0, zIndex:55, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.26)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:160 }}
+                          >
+                            <button type="button" onClick={() => { update(b.id, { color: undefined }); setColorPickerId(null); }}
+                              title="Quarter default"
+                              style={{ width:20, height:20, borderRadius:999, background:"transparent", border: !b.color ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</button>
+                            {APPLE_COLORS.map(ac => (
+                              <button key={ac.key} type="button" onClick={() => { update(b.id, { color: ac.key }); setColorPickerId(null); }}
+                                title={ac.label}
+                                style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: b.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease" }}
+                              />
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    {/* Number badge */}
+                    <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
+                      style={{ width:20, height:20, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>{idx+1}</div>
+                    <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder="Sprint label"
+                      className="flex-1 bg-transparent outline-none text-[13px]" style={{ color:"var(--text)" }} />
+                    <div className="flex items-center gap-1" style={{ background: dark?"rgba(255,255,255,0.06)":"white", border:`1px solid ${borderColor}`, borderRadius:8, padding:2 }}>
+                      <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>−</button>
+                      <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color:"var(--text)" }}>{b.weeks}</span>
+                      <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>+</button>
+                    </div>
+                    <button type="button" onClick={() => setBlocks(prev => prev.filter(x => x.id!==b.id))} disabled={blocks.length===1}
+                      className="w-7 h-7 flex items-center justify-center rounded-md"
+                      style={{ color: blocks.length===1?"var(--text-tertiary)":"#ff3b30", opacity: blocks.length===1?0.4:1 }}>
+                      <TrashIcon />
+                    </button>
                   </div>
-                  <button type="button" onClick={() => setBlocks(prev => prev.filter(x => x.id!==b.id))} disabled={blocks.length===1}
-                    className="w-7 h-7 flex items-center justify-center rounded-md"
-                    style={{ color: blocks.length===1?"var(--text-tertiary)":"#ff3b30", opacity: blocks.length===1?0.4:1 }}>
-                    <TrashIcon />
-                  </button>
                 </motion.div>
-              ))}
+                );
+              })}
             </AnimatePresence>
             <button type="button" onClick={() => setBlocks(prev => [...prev, { id:makeId(), weeks:Math.max(1,remaining>0?remaining:1), label:`Sprint ${prev.length+1}` }])}
               disabled={remaining<1} className="text-[12px] font-medium mt-1 self-start"
