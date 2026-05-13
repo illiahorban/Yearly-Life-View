@@ -346,8 +346,8 @@ function App() {
             )}
           </AnimatePresence>
 
-          {/* Sticky weekday labels */}
-          <div className="mt-3 flex items-center gap-3 sm:gap-4">
+          {/* Sticky weekday labels — pl/pr must match main's px-3+px-2.5 (22px mobile) / px-4+px-3 (28px sm) nesting */}
+          <div className="mt-1.5 pb-0.5 pl-[22px] pr-[22px] sm:pl-7 sm:pr-7 flex items-center gap-3 sm:gap-4">
             <div className="w-14 sm:w-16 shrink-0" />
             <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
               {WEEKDAYS.map((w,i) => <div key={i} className="text-center text-[10px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
