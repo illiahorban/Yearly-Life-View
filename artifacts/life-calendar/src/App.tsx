@@ -356,7 +356,7 @@ function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 sm:px-8 pt-2 pb-8">
+      <main className="mx-auto max-w-3xl px-5 sm:px-8 py-8">
 
         <LayoutGroup>
           <div className="flex flex-col gap-6">
