@@ -262,7 +262,7 @@ function App() {
     return milestones
       .filter(m => m.date >= todayStr)
       .sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label))
-      .slice(0, 7);
+      .slice(0, 10);
   }, [milestones, today]);
 
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
@@ -1007,6 +1007,29 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
   const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
   const [draftDesc, setDraftDesc] = useState("");
 
+  const [editId, setEditId] = useState<string|null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editColor, setEditColor] = useState(MILESTONE_COLORS[0]!);
+  const [editDesc, setEditDesc] = useState("");
+
+  const startEdit = (ms: Milestone) => {
+    setEditId(ms.id);
+    setEditLabel(ms.label);
+    setEditDate(ms.date);
+    setEditColor(ms.color);
+    setEditDesc(ms.description ?? "");
+  };
+  const cancelEdit = () => setEditId(null);
+  const saveEdit = () => {
+    if (!editLabel.trim()) return;
+    setItems(prev => prev.map(ms => ms.id === editId
+      ? { ...ms, label: editLabel.trim(), date: editDate, color: editColor, description: editDesc.trim() || undefined }
+      : ms
+    ).sort((a,b) => a.date.localeCompare(b.date)));
+    setEditId(null);
+  };
+
   const add = () => {
     if (!draftLabel.trim()) return;
     setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined }].sort((a,b)=>a.date.localeCompare(b.date)));
@@ -1067,7 +1090,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
         </div>
 
         {/* List */}
-        <div className="px-6 max-h-56 overflow-y-auto">
+        <div className="px-6 max-h-64 overflow-y-auto">
           {items.length === 0 && (
             <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>No milestones yet. Add one above.</div>
           )}
@@ -1075,19 +1098,67 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
             {items.map(ms => {
               const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
               const lbl = new Date(y2,m2-1,d2).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+              const isEditing = editId === ms.id;
               return (
-                <div key={ms.id} className="flex flex-col gap-1 px-2.5 py-2 rounded-xl"
-                  style={{ background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}` }}
+                <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
+                  style={{ background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.025)", border:`1px solid ${isEditing ? ms.color+"66" : borderColor}`, transition:"border 150ms" }}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
-                    <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
-                    <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
-                    <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
-                      style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
-                  </div>
-                  {ms.description && (
-                    <p className="text-[11px] leading-snug ml-5" style={{ color:"var(--text-tertiary)", margin:0 }}>{ms.description}</p>
+                  {isEditing ? (
+                    <div className="flex flex-col gap-2">
+                      {/* Edit color row */}
+                      <div className="flex gap-1 flex-wrap">
+                        {MILESTONE_COLORS.map(c => (
+                          <button key={c} onClick={() => setEditColor(c)}
+                            style={{ width:16, height:16, borderRadius:999, background:c, border: editColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms" }}
+                          />
+                        ))}
+                      </div>
+                      {/* Edit label + date row */}
+                      <div className="flex gap-2">
+                        <input value={editLabel} onChange={e => setEditLabel(e.target.value)}
+                          onKeyDown={e => { if (e.key==="Enter") saveEdit(); if (e.key==="Escape") cancelEdit(); }}
+                          placeholder="Label…" autoFocus
+                          style={{ ...inputStyle, flex:2, width:"auto" }}
+                        />
+                        <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                          style={{ ...inputStyle, flex:1, width:"auto" }}
+                        />
+                      </div>
+                      {/* Edit description */}
+                      <div style={{ position:"relative" }}>
+                        <textarea value={editDesc} onChange={e => setEditDesc(e.target.value.slice(0,300))}
+                          placeholder="Description (optional)…" rows={2}
+                          style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px", paddingBottom:18 }}
+                        />
+                        <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{editDesc.length}/300</span>
+                      </div>
+                      {/* Edit action row */}
+                      <div className="flex gap-2">
+                        <button onClick={cancelEdit}
+                          style={{ flex:1, height:30, borderRadius:8, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>
+                          Cancel
+                        </button>
+                        <button onClick={saveEdit} disabled={!editLabel.trim()}
+                          style={{ flex:2, height:30, borderRadius:8, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>
+                          Save changes
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2.5">
+                        <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
+                        <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
+                        <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
+                        <button onClick={() => startEdit(ms)} title="Edit"
+                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7 }}>✎</button>
+                        <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
+                          style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                      </div>
+                      {ms.description && (
+                        <p className="text-[11px] leading-snug ml-5" style={{ color:"var(--text-tertiary)", margin:0 }}>{ms.description}</p>
+                      )}
+                    </>
                   )}
                 </div>
               );
