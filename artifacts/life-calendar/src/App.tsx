@@ -47,6 +47,7 @@ type DayState = "past" | "today" | "future" | "out";
 type Milestone = { id: string; label: string; date: string; color: string; description?: string };
 type Goal = { id: string; text: string; done: boolean };
 type BlockGoals = { description: string; goals: Goal[] };
+type NoteEntry = { id: string; text: string; createdAt: number };
 
 const APPLE_COLORS = [
   { key:"blue",   label:"Blue",   light:"#007aff", dark:"#0a84ff" },
@@ -170,12 +171,24 @@ function App() {
   const [milestonePanelOpen, setMilestonePanelOpen] = useState(false);
 
   // Notes
-  const [notes, setNotes] = useState<Record<string,string>>(() => ls<Record<string,string>>("lifeCalendar:notes", {}));
+  const [notes, setNotes] = useState<Record<string, NoteEntry[]>>(() => {
+    const raw = ls<Record<string, unknown>>("lifeCalendar:notes", {});
+    const migrated: Record<string, NoteEntry[]> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      if (typeof v === "string") {
+        if ((v as string).trim()) migrated[k] = [{ id: makeId(), text: v as string, createdAt: Date.now() }];
+      } else if (Array.isArray(v)) {
+        migrated[k] = v as NoteEntry[];
+      }
+    }
+    return migrated;
+  });
   const [openNote, setOpenNote] = useState<string|null>(null);
-  const upsertNote = (key: string, text: string) => {
+  const upsertNotes = (key: string, entries: NoteEntry[]) => {
     setNotes(prev => {
       const next = { ...prev };
-      if (text.trim()) next[key] = text.trim(); else delete next[key];
+      const valid = entries.filter(e => e.text.trim());
+      if (valid.length > 0) next[key] = valid; else delete next[key];
       lsSet("lifeCalendar:notes", next);
       return next;
     });
@@ -476,8 +489,8 @@ function App() {
       <AnimatePresence>
         {openNote !== null && (
           <NoteModal key="note"
-            dateKey={openNote} initial={notes[openNote] ?? ""} dark={dark} modalBg={modalBg}
-            onSave={text => { upsertNote(openNote, text); setOpenNote(null); }}
+            dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
+            onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
           />
         )}
@@ -529,7 +542,7 @@ function BlocksRenderer({
   qi: number; quarter: Quarter; qConfig: QuarterConfig; startIndex: number;
   weeks: Array<{ weekStart: Date; days: Date[] }>; currentWeekIndex: number; todayProgress: number;
   dayState: (d: Date) => DayState; weekRefs: React.MutableRefObject<Array<HTMLDivElement|null>>;
-  notes: Record<string,string>; milestonesMap: Record<string,Milestone>;
+  notes: Record<string,NoteEntry[]>; milestonesMap: Record<string,Milestone>;
   blockGoals: Record<string,BlockGoals>; dark: boolean; cardBg: string; overlayBg: string;
   weekSel: { qi: number; anchor: number; focus: number }|null;
   onNoteOpen: (key: string) => void; onLabelChange: (blockId: string, label: string) => void;
@@ -672,7 +685,7 @@ function BlocksRenderer({
                           <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
-                                note={notes[dateKey(d)]} milestone={milestonesMap[dateKey(d)]}
+                                notes={notes[dateKey(d)]} milestone={milestonesMap[dateKey(d)]}
                                 accentColor={effectiveQ.border}
                                 onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
                               />
@@ -769,13 +782,15 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-function DayTile({ date, state, todayProgress, note, milestone, accentColor, onOpen }: {
+function DayTile({ date, state, todayProgress, notes: dayNotes, milestone, accentColor, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  note?: string; milestone?: Milestone; accentColor: string; onOpen: () => void;
+  notes?: NoteEntry[]; milestone?: Milestone; accentColor: string; onOpen: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
-  const hasNote = Boolean(note);
+  const activeNotes = dayNotes?.filter(n => n.text.trim()) ?? [];
+  const hasNote = activeNotes.length > 0;
+  const noteCount = activeNotes.length;
   const dayNumber = date.getDate(), monthAbbr = MONTHS[date.getMonth()];
 
   const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative" };
@@ -783,13 +798,22 @@ function DayTile({ date, state, todayProgress, note, milestone, accentColor, onO
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
   const tooltip = hovered && hasNote ? (
-    <div style={{ position:"absolute", bottom:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50, background:"rgba(29,29,31,0.96)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", color:"rgba(255,255,255,0.92)", fontSize:12, lineHeight:1.55, borderRadius:12, padding:"10px 12px", whiteSpace:"pre-wrap", width:240, wordBreak:"break-word", boxShadow:"0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset", border:"1px solid rgba(255,255,255,0.08)", pointerEvents:"none" }}>
-      {note}
+    <div style={{ position:"absolute", bottom:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50, background:"rgba(29,29,31,0.96)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", color:"rgba(255,255,255,0.92)", fontSize:12, lineHeight:1.55, borderRadius:12, padding:"10px 12px", width:240, wordBreak:"break-word", boxShadow:"0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset", border:"1px solid rgba(255,255,255,0.08)", pointerEvents:"none" }}>
+      {activeNotes.map((n, i) => (
+        <React.Fragment key={n.id}>
+          {i > 0 && <div style={{ borderTop:"1px solid rgba(255,255,255,0.1)", margin:"6px 0" }} />}
+          <div style={{ whiteSpace:"pre-wrap" }}>{n.text}</div>
+        </React.Fragment>
+      ))}
       <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />
     </div>
   ) : null;
 
-  const noteDot = hasNote ? <div style={{ position:"absolute", top:5, right:5, width:6, height:6, borderRadius:999, background:"#007aff", boxShadow:"0 0 4px rgba(0,122,255,0.65)", zIndex:5 }} /> : null;
+  const noteDot = hasNote ? (
+    <div style={{ position:"absolute", top:4, right:4, minWidth:14, height:14, borderRadius:999, background:"#007aff", boxShadow:"0 0 4px rgba(0,122,255,0.65)", zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", padding: noteCount > 1 ? "0 3px" : 0 }}>
+      {noteCount > 1 && <span style={{ fontSize:8, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>}
+    </div>
+  ) : null;
 
   const msBar = milestone ? <div style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"12px 12px 0 0", background:milestone.color, zIndex:4, opacity: isPast ? 0.6 : 1 }} /> : null;
 
@@ -835,45 +859,104 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
 function NoteModal({ dateKey: dk, initial, dark, modalBg, onSave, onClose }: {
-  dateKey: string; initial: string; dark: boolean; modalBg: string;
-  onSave: (text: string) => void; onClose: () => void;
+  dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
+  onSave: (entries: NoteEntry[]) => void; onClose: () => void;
 }) {
-  const [text, setText] = useState(initial);
-  const areaRef = useRef<HTMLTextAreaElement|null>(null);
-  useEffect(() => { areaRef.current?.focus(); }, []);
+  const [entries, setEntries] = useState<NoteEntry[]>(() =>
+    initial.length > 0 ? initial : [{ id: makeId(), text: "", createdAt: Date.now() }]
+  );
+  const [focusId, setFocusId] = useState<string|null>(initial.length === 0 ? (entries[0]?.id ?? null) : null);
+  const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
+
+  useEffect(() => {
+    if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+  }, [focusId]);
+
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
   const label = new Date(y, m-1, d).toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric" });
-  const handleKey = (e: React.KeyboardEvent) => { if (e.key==="Escape") onClose(); if ((e.metaKey||e.ctrlKey) && e.key==="Enter") onSave(text); };
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
+  const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
+
+  const addEntry = () => {
+    const id = makeId();
+    setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
+    setFocusId(id);
+  };
+  const updateEntry = (id: string, text: string) =>
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, text: text.slice(0, 320) } : e));
+  const deleteEntry = (id: string) =>
+    setEntries(prev => prev.filter(e => e.id !== id));
+  const handleSave = () => { onSave(entries); onClose(); };
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleSave();
+  };
 
   return (
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background:"rgba(0,0,0,0.30)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background:"rgba(0,0,0,0.32)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
       onClick={onClose}
     >
-      <motion.div initial={{ opacity:0, scale:0.95, y:12 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
+      <motion.div initial={{ opacity:0, scale:0.95, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
         transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => e.stopPropagation()}
-        style={{ width:"min(90vw,380px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:20, boxShadow:"0 8px 40px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
+        style={{ width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"85vh" }}
       >
-        <div className="px-5 pt-5 pb-3 flex items-start justify-between">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
           <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Day Note</div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Day Notes</div>
             <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{label}</div>
           </div>
-          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
-        <div className="px-5 pb-2">
-          <textarea ref={areaRef} value={text} onChange={e => setText(e.target.value.slice(0,320))} onKeyDown={handleKey}
-            placeholder="Add a note, emoji, or reflection… ✨" maxLength={320} rows={4}
-            style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:12, padding:"10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", color:"var(--text)", boxSizing:"border-box" }}
-          />
-          <div className="text-right text-[10px] tabular-nums mt-1" style={{ color:"var(--text-tertiary)" }}>{text.length} / 320</div>
+
+        {/* Scrollable notes list */}
+        <div className="px-5 pb-2 flex flex-col gap-3 overflow-y-auto">
+          <AnimatePresence initial={false}>
+            {entries.map((entry, idx) => (
+              <motion.div key={entry.id}
+                initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
+                transition={{ type:"spring", stiffness:360, damping:28 }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-medium" style={{ color:"var(--text-tertiary)" }}>
+                    {entries.length > 1 ? `Note ${idx + 1}` : "Note"}
+                  </span>
+                  {entries.length > 1 && (
+                    <button onClick={() => deleteEntry(entry.id)}
+                      style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  ref={el => { areaRefs.current[entry.id] = el; }}
+                  value={entry.text}
+                  onChange={e => updateEntry(entry.id, e.target.value)}
+                  onKeyDown={handleKey}
+                  placeholder={idx === 0 ? "Add a note, emoji, or reflection… ✨" : "Another note…"}
+                  rows={3}
+                  style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:12, padding:"10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box", display:"block" }}
+                />
+                <div className="text-right text-[10px] tabular-nums mt-0.5" style={{ color:"var(--text-tertiary)" }}>{entry.text.length} / 320</div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
-        <div className="px-5 pb-5 flex gap-2.5">
-          {initial && <button onClick={() => onSave("")} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"rgba(255,59,48,0.08)", color:"#ff3b30", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Clear</button>}
+
+        {/* Add note button */}
+        <div className="px-5 pb-3 shrink-0">
+          <button onClick={addEntry}
+            style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+            <span style={{ fontSize:16, lineHeight:1 }}>+</span> Add another note
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 pb-5 flex gap-2.5 shrink-0">
           <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
-          <button onClick={() => onSave(text)} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>Save <span style={{ opacity:0.65, fontSize:11 }}>⌘↵</span></button>
+          <button onClick={handleSave} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"#007aff", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,122,255,0.35)" }}>Save <span style={{ opacity:0.65, fontSize:11 }}>⌘↵</span></button>
         </div>
       </motion.div>
     </motion.div>
