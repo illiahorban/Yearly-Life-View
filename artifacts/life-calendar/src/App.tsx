@@ -495,6 +495,7 @@ function App() {
           <NoteModal key="note"
             dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
             dayMilestones={milestonesMap[openNote] ?? []}
+            onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
           />
@@ -867,9 +868,10 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMilestoneUpdate, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
+  onMilestoneUpdate: (updated: Milestone) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() =>
@@ -882,10 +884,29 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onSave,
     if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }, [focusId]);
 
+  // Milestone inline edit state
+  const [msEditId, setMsEditId] = useState<string|null>(null);
+  const [msEditLabel, setMsEditLabel] = useState("");
+  const [msEditDate, setMsEditDate] = useState("");
+  const [msEditColor, setMsEditColor] = useState(MILESTONE_COLORS[0]!);
+  const [msEditDesc, setMsEditDesc] = useState("");
+
+  const startMsEdit = (ms: Milestone) => {
+    setMsEditId(ms.id); setMsEditLabel(ms.label);
+    setMsEditDate(ms.date); setMsEditColor(ms.color); setMsEditDesc(ms.description ?? "");
+  };
+  const saveMsEdit = () => {
+    if (!msEditLabel.trim() || !msEditId) return;
+    const orig = dayMilestones.find(m => m.id === msEditId);
+    if (orig) onMilestoneUpdate({ ...orig, label: msEditLabel.trim(), date: msEditDate, color: msEditColor, description: msEditDesc.trim() || undefined });
+    setMsEditId(null);
+  };
+
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
   const label = new Date(y, m-1, d).toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric" });
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
+  const inputStyleMs: React.CSSProperties = { background: inputBg, border:`1px solid ${borderColor}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
 
   const addEntry = () => {
     const id = makeId();
@@ -928,16 +949,53 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onSave,
           <div className="px-5 pb-3 shrink-0">
             <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>Events</div>
             <div className="flex flex-col gap-1.5">
-              {dayMilestones.map(ms => (
-                <div key={ms.id} className="flex items-start gap-2 px-2.5 py-2 rounded-xl"
-                  style={{ background:`${ms.color}18`, border:`1px solid ${ms.color}33` }}>
-                  <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop:3 }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>{ms.label}</div>
-                    {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
+              {dayMilestones.map(ms => {
+                const isEditing = msEditId === ms.id;
+                return (
+                  <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2 rounded-xl"
+                    style={{ background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${isEditing ? ms.color+"55" : ms.color+"33"}`, transition:"border 150ms" }}>
+                    {isEditing ? (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex gap-1 flex-wrap">
+                          {MILESTONE_COLORS.map(c => (
+                            <button key={c} onClick={() => setMsEditColor(c)}
+                              style={{ width:14, height:14, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms" }} />
+                          ))}
+                        </div>
+                        <div className="flex gap-1.5">
+                          <input value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
+                            onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
+                            placeholder="Label…" autoFocus style={{ ...inputStyleMs, flex:2, width:"auto" }} />
+                          <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
+                            style={{ ...inputStyleMs, flex:1, width:"auto" }} />
+                        </div>
+                        <div style={{ position:"relative" }}>
+                          <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value.slice(0,300))}
+                            placeholder="Description (optional)…" rows={2}
+                            style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"6px 9px", paddingBottom:16, display:"block" }} />
+                          <span style={{ position:"absolute", bottom:4, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{msEditDesc.length}/300</span>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <button onClick={() => setMsEditId(null)}
+                            style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
+                          <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
+                            style={{ flex:2, height:28, borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>Save changes</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-2">
+                        <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop:3 }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>{ms.label}</div>
+                          {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
+                        </div>
+                        <button onClick={() => startMsEdit(ms)} title="Edit"
+                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.6, flexShrink:0, transform:"scaleX(-1)" }}>✎</button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-3 mb-0 h-px" style={{ background:"var(--border-soft)" }} />
           </div>
