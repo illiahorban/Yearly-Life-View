@@ -252,21 +252,18 @@ function App() {
   const totalDays = (startOfNextYear(viewYear).getTime()-startOfYear(viewYear).getTime())/86_400_000;
 
   const milestonesMap = useMemo(() => {
-    const m: Record<string,Milestone> = {};
-    for (const ms of milestones) m[ms.date] = ms;
+    const m: Record<string, Milestone[]> = {};
+    for (const ms of milestones) { if (!m[ms.date]) m[ms.date] = []; m[ms.date]!.push(ms); }
     return m;
   }, [milestones]);
 
-  const nextMilestone = useMemo(() => {
+  const nextMilestones = useMemo(() => {
     const todayStr = dateKey(today);
-    return milestones.filter(m => m.date >= todayStr).sort((a,b) => a.date.localeCompare(b.date))[0] ?? null;
+    return milestones
+      .filter(m => m.date >= todayStr)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label))
+      .slice(0, 7);
   }, [milestones, today]);
-
-  const nextMilestoneDays = useMemo(() => {
-    if (!nextMilestone) return 0;
-    const [y2,m2,d2] = nextMilestone.date.split("-").map(Number) as [number,number,number];
-    return daysBetween(today, new Date(y2, m2-1, d2));
-  }, [nextMilestone, today]);
 
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
   const didScrollRef = useRef(false);
@@ -341,20 +338,27 @@ function App() {
             <span>{(totalDays-daysCompleted).toFixed(0)} days remaining</span>
           </div>
 
-          {/* Milestone countdown */}
+          {/* Milestone countdown — up to 7 upcoming */}
           <AnimatePresence>
-            {nextMilestone && (
-              <motion.div key="ms-countdown" initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }} className="mt-2">
-                <button
-                  onClick={() => setMilestonePanelOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                  style={{ background: `${nextMilestone.color}1a`, border: `1px solid ${nextMilestone.color}44`, color: nextMilestone.color, cursor: "pointer" }}
-                >
-                  <span style={{ width:6, height:6, borderRadius:999, background: nextMilestone.color, display:"inline-block", flexShrink:0 }} />
-                  <span className="font-semibold">{nextMilestone.label}</span>
-                  <span style={{ opacity:0.65 }}>·</span>
-                  <span>{nextMilestoneDays === 0 ? "Today!" : `${nextMilestoneDays} day${nextMilestoneDays===1?"":"s"} away`}</span>
-                </button>
+            {nextMilestones.length > 0 && (
+              <motion.div key="ms-countdown" initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
+                className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth:"none" }}>
+                {nextMilestones.map(ms => {
+                  const [y2, m2, d2] = ms.date.split("-").map(Number) as [number,number,number];
+                  const days = daysBetween(today, new Date(y2, m2-1, d2));
+                  return (
+                    <button key={ms.id}
+                      onClick={() => setMilestonePanelOpen(true)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
+                      style={{ background:`${ms.color}1a`, border:`1px solid ${ms.color}44`, color:ms.color, cursor:"pointer" }}
+                    >
+                      <span style={{ width:6, height:6, borderRadius:999, background:ms.color, display:"inline-block", flexShrink:0 }} />
+                      <span className="font-semibold">{ms.label}</span>
+                      <span style={{ opacity:0.65 }}>·</span>
+                      <span>{days === 0 ? "Today!" : `${days}d`}</span>
+                    </button>
+                  );
+                })}
               </motion.div>
             )}
           </AnimatePresence>
@@ -490,6 +494,7 @@ function App() {
         {openNote !== null && (
           <NoteModal key="note"
             dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
+            dayMilestones={milestonesMap[openNote] ?? []}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
           />
@@ -542,7 +547,7 @@ function BlocksRenderer({
   qi: number; quarter: Quarter; qConfig: QuarterConfig; startIndex: number;
   weeks: Array<{ weekStart: Date; days: Date[] }>; currentWeekIndex: number; todayProgress: number;
   dayState: (d: Date) => DayState; weekRefs: React.MutableRefObject<Array<HTMLDivElement|null>>;
-  notes: Record<string,NoteEntry[]>; milestonesMap: Record<string,Milestone>;
+  notes: Record<string,NoteEntry[]>; milestonesMap: Record<string,Milestone[]>;
   blockGoals: Record<string,BlockGoals>; dark: boolean; cardBg: string; overlayBg: string;
   weekSel: { qi: number; anchor: number; focus: number }|null;
   onNoteOpen: (key: string) => void; onLabelChange: (blockId: string, label: string) => void;
@@ -685,7 +690,7 @@ function BlocksRenderer({
                           <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
-                                notes={notes[dateKey(d)]} milestone={milestonesMap[dateKey(d)]}
+                                notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 accentColor={effectiveQ.border}
                                 onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
                               />
@@ -782,9 +787,9 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-function DayTile({ date, state, todayProgress, notes: dayNotes, milestone, accentColor, onOpen }: {
+function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, accentColor, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  notes?: NoteEntry[]; milestone?: Milestone; accentColor: string; onOpen: () => void;
+  notes?: NoteEntry[]; milestones: Milestone[]; accentColor: string; onOpen: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
@@ -815,7 +820,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestone, accen
     </div>
   ) : null;
 
-  const msBar = milestone ? <div style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"12px 12px 0 0", background:milestone.color, zIndex:4, opacity: isPast ? 0.6 : 1 }} /> : null;
+  const msBar = dayMilestones.length > 0 ? (
+    <div style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: isPast ? 0.6 : 1 }}>
+      {dayMilestones.map(ms => <div key={ms.id} style={{ flex:1, background:ms.color }} />)}
+    </div>
+  ) : null;
 
   const hov = { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false), onClick: onOpen };
 
@@ -858,8 +867,9 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
+  dayMilestones: Milestone[];
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() =>
@@ -905,11 +915,33 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, onSave, onClose }: {
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
           <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Day Notes</div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
+              {dayMilestones.length > 0 ? "Events & Notes" : "Day Notes"}
+            </div>
             <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{label}</div>
           </div>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
+
+        {/* Milestones for this day */}
+        {dayMilestones.length > 0 && (
+          <div className="px-5 pb-3 shrink-0">
+            <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>Events</div>
+            <div className="flex flex-col gap-1.5">
+              {dayMilestones.map(ms => (
+                <div key={ms.id} className="flex items-start gap-2 px-2.5 py-2 rounded-xl"
+                  style={{ background:`${ms.color}18`, border:`1px solid ${ms.color}33` }}>
+                  <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop:3 }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>{ms.label}</div>
+                    {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 mb-0 h-px" style={{ background:"var(--border-soft)" }} />
+          </div>
+        )}
 
         {/* Scrollable notes list */}
         <div className="px-5 pb-2 flex flex-col gap-3 overflow-y-auto">
