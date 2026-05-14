@@ -605,7 +605,7 @@ function BlocksRenderer({
               <motion.div layout key={block.id}
                 initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                 transition={{ type:"spring", stiffness:320, damping:30 }}
-                style={{ background:cardBg, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"hidden" }}
+                style={{ background:softColor, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"hidden" }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5">
@@ -710,6 +710,7 @@ function BlocksRenderer({
                           {days.map((d, di) => (
                             <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                               note={notes[dateKey(d)]} milestone={milestonesMap[dateKey(d)]}
+                              accentColor={effectiveQ.border}
                               onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
                             />
                           ))}
@@ -772,9 +773,9 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-function DayTile({ date, state, todayProgress, note, milestone, onOpen }: {
+function DayTile({ date, state, todayProgress, note, milestone, accentColor, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  note?: string; milestone?: Milestone; onOpen: () => void;
+  note?: string; milestone?: Milestone; accentColor: string; onOpen: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
@@ -792,9 +793,7 @@ function DayTile({ date, state, todayProgress, note, milestone, onOpen }: {
     </div>
   ) : null;
 
-  const dotColor = (isPast || isToday) ? "#007aff" : "#34c759";
-  const dotGlow  = (isPast || isToday) ? "0 0 4px rgba(0,122,255,0.65)" : "0 0 4px rgba(52,199,89,0.65)";
-  const noteDot = hasNote ? <div style={{ position:"absolute", top:5, right:5, width:6, height:6, borderRadius:999, background:dotColor, boxShadow:dotGlow, zIndex:5 }} /> : null;
+  const noteDot = hasNote ? <div style={{ position:"absolute", top:5, right:5, width:6, height:6, borderRadius:999, background:"#007aff", boxShadow:"0 0 4px rgba(0,122,255,0.65)", zIndex:5 }} /> : null;
 
   const msBar = milestone ? <div style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"12px 12px 0 0", background:milestone.color, zIndex:4, opacity: isPast ? 0.6 : 1 }} /> : null;
 
@@ -802,16 +801,16 @@ function DayTile({ date, state, todayProgress, note, milestone, onOpen }: {
 
   if (isPast) {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ ...base, background:"linear-gradient(160deg,#5ed47b 0%,#34c759 60%,#2ab84f 100%)", color:"white", boxShadow: hovered ? "0 2px 8px rgba(40,167,69,0.38), inset 0 0 0 0.5px rgba(255,255,255,0.18)" : "0 1px 2px rgba(40,167,69,0.18), inset 0 0 0 0.5px rgba(255,255,255,0.18)" }} {...hov}>
+      <div className="flex flex-col items-center justify-center" style={{ ...base, background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }} {...hov}>
         {msBar}{tooltip}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
       </div>
     );
   }
   if (isToday) {
     return (
-      <div className="flex flex-col items-center justify-center overflow-hidden" style={{ ...base, background:"var(--surface)", border:"1.5px solid var(--apple-green)", boxShadow: hovered ? "0 0 0 4px rgba(52,199,89,0.18),0 4px 18px rgba(52,199,89,0.28)" : "0 0 0 4px rgba(52,199,89,0.12),0 4px 14px rgba(52,199,89,0.18)", color:"var(--text)" }} {...hov}>
+      <div className="flex flex-col items-center justify-center overflow-hidden" style={{ ...base, background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }} {...hov}>
         {msBar}{tooltip}
-        <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:"linear-gradient(180deg,rgba(94,212,123,0.85) 0%,#34c759 100%)" }} />
+        <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
         <div className="relative z-10 flex flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
         {noteDot}
       </div>
