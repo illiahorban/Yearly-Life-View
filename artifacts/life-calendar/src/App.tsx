@@ -1151,7 +1151,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                         <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
                         <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
                         <button onClick={() => startEdit(ms)} title="Edit"
-                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7 }}>✎</button>
+                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
                         <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
                           style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
                       </div>
