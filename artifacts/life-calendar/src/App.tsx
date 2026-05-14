@@ -48,6 +48,8 @@ type Milestone = { id: string; label: string; date: string; color: string; descr
 type Goal = { id: string; text: string; done: boolean };
 type BlockGoals = { description: string; goals: Goal[] };
 type NoteEntry = { id: string; text: string; createdAt: number };
+type LifeSettings = { birthDate: string; lifespan: number };
+type LifeView = "years" | "months" | "weeks" | "days";
 
 const APPLE_COLORS = [
   { key:"blue",   label:"Blue",   light:"#007aff", dark:"#0a84ff" },
@@ -96,6 +98,11 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
 }
 
 const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa"];
+const LIFE_ACCENT = "#5856d6";
+
+function LifeIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="7" r="4"/><path d="M5.5 21v-1.5A6.5 6.5 0 0 1 12 13a6.5 6.5 0 0 1 6.5 6.5V21"/></svg>;
+}
 
 // ─── Config helpers ───────────────────────────────────────────────────────────
 
@@ -169,6 +176,9 @@ function App() {
   const [milestones, setMilestones] = useState<Milestone[]>(() => ls<Milestone[]>("lifeCalendar:milestones", []));
   useEffect(() => { lsSet("lifeCalendar:milestones", milestones); }, [milestones]);
   const [milestonePanelOpen, setMilestonePanelOpen] = useState(false);
+  const [lifeCalendarOpen, setLifeCalendarOpen] = useState(false);
+  const [lifeSettings, setLifeSettings] = useState<LifeSettings>(() => ls<LifeSettings>("lifeCalendar:lifeSettings", { birthDate: "", lifespan: 80 }));
+  useEffect(() => { lsSet("lifeCalendar:lifeSettings", lifeSettings); }, [lifeSettings]);
 
   // Notes
   const [notes, setNotes] = useState<Record<string, NoteEntry[]>>(() => {
@@ -326,6 +336,8 @@ function App() {
               <IconButton title={dark ? "Light mode" : "Dark mode"} onClick={() => setDark(d => !d)} bg={overlayBg}>
                 {dark ? <SunIcon /> : <MoonIcon />}
               </IconButton>
+              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
+              <IconButton title="Life Calendar" onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
             </div>
           </div>
 
@@ -520,6 +532,17 @@ function App() {
             dark={dark} modalBg={modalBg}
             onSave={bg => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); setEditGoalsBlockId(null); }}
             onClose={() => setEditGoalsBlockId(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {lifeCalendarOpen && (
+          <LifeCalendarModal key="life-cal"
+            dark={dark} modalBg={modalBg}
+            settings={lifeSettings}
+            onSettingsChange={setLifeSettings}
+            onClose={() => setLifeCalendarOpen(false)}
           />
         )}
       </AnimatePresence>
@@ -1439,6 +1462,166 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
             Save sprints
           </button>
         </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── LifeCalendarModal ────────────────────────────────────────────────────────
+
+function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose }: {
+  dark: boolean; modalBg: string;
+  settings: LifeSettings;
+  onSettingsChange: (s: LifeSettings) => void;
+  onClose: () => void;
+}) {
+  const [view, setView] = useState<LifeView>("weeks");
+
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const birthDate = useMemo(() => {
+    if (!settings.birthDate) return null;
+    return startOfDay(new Date(settings.birthDate + "T00:00:00"));
+  }, [settings.birthDate]);
+
+  const ageDays = useMemo(() => birthDate ? Math.max(0, daysBetween(birthDate, today)) : 0, [birthDate, today]);
+  const lifespanDays = settings.lifespan * 365.25;
+  const pct = Math.min(100, (ageDays / lifespanDays) * 100);
+  const ageYears = Math.floor(ageDays / 365.25);
+  const ageMonths = Math.floor((ageDays % 365.25) / 30.44);
+  const remainingDays = Math.max(0, lifespanDays - ageDays);
+  const remainingYears = Math.floor(remainingDays / 365.25);
+  const remainingMonths = Math.floor((remainingDays % 365.25) / 30.44);
+
+  const { cols, cellPx, gapPx, totalUnits, currentUnit } = useMemo(() => {
+    switch (view) {
+      case "years":  return { cols: 10, cellPx: 28, gapPx: 3,   totalUnits: settings.lifespan,       currentUnit: Math.floor(ageDays / 365.25) };
+      case "months": return { cols: 12, cellPx: 21, gapPx: 2,   totalUnits: settings.lifespan * 12,  currentUnit: Math.floor(ageDays / 30.44) };
+      case "weeks":  return { cols: 52, cellPx: 7,  gapPx: 1,   totalUnits: settings.lifespan * 52,  currentUnit: Math.floor(ageDays / 7) };
+      case "days":   return { cols: 52, cellPx: 3,  gapPx: 0.5, totalUnits: settings.lifespan * 365, currentUnit: ageDays };
+    }
+  }, [view, settings.lifespan, ageDays]);
+
+  const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
+  const inputStyle: React.CSSProperties = {
+    background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)",
+    border: `1px solid ${borderColor}`,
+    borderRadius: 8, padding: "7px 10px", fontSize: 13,
+    color: "var(--text)", outline: "none", fontFamily: "inherit", boxSizing: "border-box",
+  };
+
+  const viewLabels: Record<LifeView, string> = { years: "Years", months: "Months", weeks: "Weeks", days: "Days" };
+
+  return (
+    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background:"rgba(0,0,0,0.40)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)" }}
+      onClick={onClose}
+    >
+      <motion.div initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
+        transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
+        style={{ width:"min(96vw,560px)", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"88vh" }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
+          <div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Overview</div>
+            <h2 className="text-[17px] font-semibold mt-0.5" style={{ color:"var(--text)", letterSpacing:"-0.02em" }}>Life Calendar</h2>
+          </div>
+          <button onClick={onClose} style={{ width:28, height:28, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+        </div>
+
+        {/* Settings row */}
+        <div className="px-6 pb-4 shrink-0">
+          <div className="flex gap-2">
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>Date of Birth</label>
+              <input type="date" value={settings.birthDate}
+                onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
+                style={{ ...inputStyle, width:"100%" }}
+              />
+            </div>
+            <div className="flex flex-col gap-1" style={{ width:130 }}>
+              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>Life Expectancy</label>
+              <div className="flex items-center gap-1.5">
+                <input type="number" value={settings.lifespan} min={20} max={120}
+                  onChange={e => onSettingsChange({ ...settings, lifespan: Math.max(20, Math.min(120, Number(e.target.value) || 80)) })}
+                  style={{ ...inputStyle, flex:1, textAlign:"center" }}
+                />
+                <span className="text-[12px] shrink-0" style={{ color:"var(--text-tertiary)" }}>yr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {birthDate ? (
+          <>
+            {/* Stats card */}
+            <div className="px-6 pb-4 shrink-0">
+              <div className="rounded-2xl px-4 py-3" style={{ background:`${LIFE_ACCENT}12`, border:`1px solid ${LIFE_ACCENT}28` }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[13px] font-semibold" style={{ color:LIFE_ACCENT }}>
+                    Age: {ageYears} yr{ageMonths > 0 ? ` ${ageMonths} mo` : ""}
+                  </span>
+                  <span className="text-[13px] font-semibold tabular-nums" style={{ color:LIFE_ACCENT }}>{pct.toFixed(1)}%</span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.08)" }}>
+                  <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${LIFE_ACCENT}cc,${LIFE_ACCENT})`, borderRadius:999, transition:"width 700ms ease" }} />
+                </div>
+                <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
+                  {remainingYears > 0 ? `${remainingYears} yr ${remainingMonths} mo remaining · ` : ""}Born {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
+                </div>
+              </div>
+            </div>
+
+            {/* View switcher */}
+            <div className="px-6 pb-3 shrink-0">
+              <div className="flex gap-1 p-1 rounded-xl" style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.05)" }}>
+                {(["years","months","weeks","days"] as LifeView[]).map(v => (
+                  <button key={v} onClick={() => setView(v)}
+                    className="flex-1 py-1.5 rounded-lg text-[12px] transition-all"
+                    style={{
+                      background: view===v ? (dark?"rgba(255,255,255,0.13)":"rgba(255,255,255,0.9)") : "transparent",
+                      color: view===v ? "var(--text)" : "var(--text-secondary)",
+                      border:"none", cursor:"pointer", fontFamily:"inherit",
+                      boxShadow: view===v ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
+                      fontWeight: view===v ? 600 : 400,
+                    }}
+                  >{viewLabels[v]}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Grid */}
+            <div className="overflow-y-auto px-6 pb-6" style={{ scrollbarWidth:"thin" }}>
+              <div className="text-[10px] mb-2 tabular-nums" style={{ color:"var(--text-tertiary)" }}>
+                {Math.min(currentUnit, totalUnits).toLocaleString()} of {totalUnits.toLocaleString()} {view} elapsed
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"fit-content" }}>
+                {Array.from({ length: totalUnits }, (_, i) => {
+                  const isPast = i < currentUnit;
+                  const isCurrent = i === currentUnit;
+                  const radius = view==="years" ? 6 : view==="months" ? 4 : 2;
+                  return (
+                    <div key={i} style={{
+                      width: cellPx, height: cellPx, borderRadius: radius, flexShrink:0,
+                      background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}88` : "transparent",
+                      border: isCurrent
+                        ? `${Math.max(1, Math.round(cellPx/5))}px solid ${LIFE_ACCENT}`
+                        : `1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.13)"}`,
+                      boxShadow: isCurrent ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
+                    }} />
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="px-6 pb-12 flex flex-col items-center justify-center text-center" style={{ flex:1, minHeight:200 }}>
+            <div className="text-4xl mb-3">🗓️</div>
+            <div className="text-[15px] font-semibold" style={{ color:"var(--text)" }}>Enter your date of birth</div>
+            <div className="mt-1 text-[13px]" style={{ color:"var(--text-tertiary)" }}>We'll map your life's journey across time</div>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
