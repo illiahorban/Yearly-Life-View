@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 
 // ─── Tiny localStorage helpers ────────────────────────────────────────────────
@@ -445,47 +445,10 @@ function App() {
                       onGoalToggle={toggleGoal}
                       onEditGoals={bid => setEditGoalsBlockId(bid)}
                       onWeekLabelClick={handleWeekLabelClick}
+                      onCreateSprint={(selStart, selEnd) => { updateQuarter(qi, createSprintFromSelection(config.quarters[qi]!, selStart, selEnd)); setWeekSel(null); }}
+                      onCancelSel={() => setWeekSel(null)}
                     />
                   </div>
-
-                  {/* Sprint-from-selection action bar */}
-                  <AnimatePresence>
-                    {weekSel && weekSel.qi === qi && (
-                      <motion.div
-                        initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:4 }}
-                        transition={{ type:"spring", stiffness:380, damping:28 }}
-                        className="mx-3 sm:mx-4 mb-3 px-4 py-2.5 rounded-2xl flex items-center justify-between gap-3"
-                        style={{ background: dark ? quarter.darkSoft : quarter.soft, border:`1px solid ${quarter.border}55` }}
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[12px] font-semibold" style={{ color: quarter.text }}>
-                            {Math.abs(weekSel.focus - weekSel.anchor) + 1 === 1
-                              ? `Week ${Math.min(weekSel.anchor, weekSel.focus) + startIndex + 1}`
-                              : `Weeks ${Math.min(weekSel.anchor, weekSel.focus) + startIndex + 1}–${Math.max(weekSel.anchor, weekSel.focus) + startIndex + 1}`
-                            }
-                          </span>
-                          <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                            {Math.abs(weekSel.focus - weekSel.anchor) + 1} week{Math.abs(weekSel.focus - weekSel.anchor) + 1 !== 1 ? "s" : ""} · click another week number to adjust
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button onClick={() => setWeekSel(null)}
-                            style={{ height:30, paddingInline:12, borderRadius:9, border:`1px solid ${quarter.border}44`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
-                            Cancel
-                          </button>
-                          <button onClick={() => {
-                            const selStart = Math.min(weekSel.anchor, weekSel.focus);
-                            const selEnd   = Math.max(weekSel.anchor, weekSel.focus);
-                            updateQuarter(qi, createSprintFromSelection(config.quarters[qi]!, selStart, selEnd));
-                            setWeekSel(null);
-                          }}
-                            style={{ height:30, paddingInline:14, borderRadius:9, border:"none", background: quarter.border, color:"white", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:`0 2px 8px ${quarter.border}55` }}>
-                            Create Sprint
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </motion.section>
               );
             })}
@@ -561,6 +524,7 @@ function BlocksRenderer({
   qi:_qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress,
   dayState, weekRefs, notes, milestonesMap, blockGoals, dark, cardBg, overlayBg,
   weekSel, onNoteOpen, onLabelChange, onGoalToggle, onEditGoals, onWeekLabelClick,
+  onCreateSprint, onCancelSel,
 }: {
   qi: number; quarter: Quarter; qConfig: QuarterConfig; startIndex: number;
   weeks: Array<{ weekStart: Date; days: Date[] }>; currentWeekIndex: number; todayProgress: number;
@@ -571,6 +535,8 @@ function BlocksRenderer({
   onNoteOpen: (key: string) => void; onLabelChange: (blockId: string, label: string) => void;
   onGoalToggle: (blockId: string, goalId: string) => void; onEditGoals: (blockId: string) => void;
   onWeekLabelClick: (qi: number, qOffset: number) => void;
+  onCreateSprint: (selStart: number, selEnd: number) => void;
+  onCancelSel: () => void;
 }) {
   let cursor = 0;
   const blocks = qConfig.blocks.map(b => { const r = { start:cursor, end:cursor+b.weeks }; cursor+=b.weeks; return { ...b, ...r }; });
@@ -678,44 +644,74 @@ function BlocksRenderer({
                 <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
+                    const qOffset = block.start + ri;
                     const isCurrent = wi === currentWeekIndex;
+                    const isSel = qOffset >= selMin && qOffset <= selMax;
+                    const isAnchor = hasSelection && (weekSel!.anchor === qOffset || weekSel!.focus === qOffset);
                     return (
-                      <div key={wi} ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
-                        {(() => {
-                          const qOffset = block.start + ri;
-                          const isSel = qOffset >= selMin && qOffset <= selMax;
-                          const isAnchor = hasSelection && (weekSel!.anchor === qOffset || weekSel!.focus === qOffset);
-                          return (
-                            <button type="button"
-                              onClick={() => onWeekLabelClick(_qi, qOffset)}
-                              title={hasSelection ? (isSel ? "Click to move end of selection" : "Extend selection here") : "Click to start sprint selection"}
-                              className="w-14 sm:w-16 shrink-0 text-right text-[11px] tabular-nums"
-                              style={{
-                                color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
-                                fontWeight: isSel || isCurrent ? 600 : 500,
-                                background: isSel ? (dark ? quarter.darkSoft : quarter.soft) : "transparent",
-                                borderRadius: 6,
-                                padding: "2px 6px",
-                                border: isAnchor ? `1.5px solid ${quarter.border}` : "1.5px solid transparent",
-                                cursor: "pointer",
-                                fontFamily: "inherit",
-                                outline: "none",
-                                transition: "background 120ms, border 120ms, color 120ms",
-                                opacity: hasSelection && !isSel ? 0.55 : 1,
-                              }}
-                            >Week {wi+1}</button>
-                          );
-                        })()}
-                        <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
-                          {days.map((d, di) => (
-                            <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
-                              note={notes[dateKey(d)]} milestone={milestonesMap[dateKey(d)]}
-                              accentColor={effectiveQ.border}
-                              onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
-                            />
-                          ))}
+                      <React.Fragment key={wi}>
+                        <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
+                          <button type="button"
+                            onClick={() => onWeekLabelClick(_qi, qOffset)}
+                            title={hasSelection ? (isSel ? "Click to move end of selection" : "Extend selection here") : "Click to start sprint selection"}
+                            className="w-14 sm:w-16 shrink-0 text-right text-[11px] tabular-nums"
+                            style={{
+                              color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
+                              fontWeight: isSel || isCurrent ? 600 : 500,
+                              background: isSel ? (dark ? quarter.darkSoft : quarter.soft) : "transparent",
+                              borderRadius: 6,
+                              padding: "2px 6px",
+                              border: isAnchor ? `1.5px solid ${quarter.border}` : "1.5px solid transparent",
+                              cursor: "pointer",
+                              fontFamily: "inherit",
+                              outline: "none",
+                              transition: "background 120ms, border 120ms, color 120ms",
+                              opacity: hasSelection && !isSel ? 0.55 : 1,
+                            }}
+                          >Week {wi+1}</button>
+                          <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
+                            {days.map((d, di) => (
+                              <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
+                                note={notes[dateKey(d)]} milestone={milestonesMap[dateKey(d)]}
+                                accentColor={effectiveQ.border}
+                                onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                        <AnimatePresence>
+                          {hasSelection && qOffset === selMax && (
+                            <motion.div
+                              key="sprint-action"
+                              initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
+                              transition={{ type:"spring", stiffness:380, damping:28 }}
+                              className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
+                              style={{ background: dark ? quarter.darkSoft : quarter.soft, border:`1px solid ${quarter.border}55` }}
+                            >
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <span className="text-[12px] font-semibold truncate" style={{ color: quarter.text }}>
+                                  {selMin === selMax
+                                    ? `Week ${selMin + startIndex + 1}`
+                                    : `Weeks ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
+                                </span>
+                                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+                                  {selMax - selMin + 1} week{selMax - selMin + 1 !== 1 ? "s" : ""} · click week number to adjust
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button onClick={onCancelSel}
+                                  style={{ height:28, paddingInline:10, borderRadius:8, border:`1px solid ${quarter.border}44`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
+                                  Cancel
+                                </button>
+                                <button onClick={() => onCreateSprint(selMin, selMax)}
+                                  style={{ height:28, paddingInline:12, borderRadius:8, border:"none", background: quarter.border, color:"white", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:`0 2px 8px ${quarter.border}55` }}>
+                                  Create Sprint
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </React.Fragment>
                     );
                   })}
                 </div>
