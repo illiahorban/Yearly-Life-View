@@ -154,7 +154,7 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
 }
 
 const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa"];
-const LIFE_ACCENT = "#5856d6";
+const LIFE_ACCENT = "#007aff";
 
 function LifeIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="7" r="4"/><path d="M5.5 21v-1.5A6.5 6.5 0 0 1 12 13a6.5 6.5 0 0 1 6.5 6.5V21"/></svg>;
@@ -1664,12 +1664,21 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingMonths = Math.floor((remainingDays % 365.25) / 30.44);
 
   const { cols, cellPx, gapPx, totalUnits, currentUnit } = useMemo(() => {
+    const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320);
+    const gridW = Math.max(200, Math.min(window.innerWidth * 0.94, 560) - 48);
+    const ls = settings.lifespan;
+    let c: number, gap: number, total: number, curr: number;
     switch (view) {
-      case "years":  return { cols: 10, cellPx: 28, gapPx: 3,   totalUnits: settings.lifespan,       currentUnit: Math.floor(ageDays / 365.25) };
-      case "months": return { cols: 12, cellPx: 21, gapPx: 2,   totalUnits: settings.lifespan * 12,  currentUnit: Math.floor(ageDays / 30.44) };
-      case "weeks":  return { cols: 52, cellPx: 7,  gapPx: 1,   totalUnits: settings.lifespan * 52,  currentUnit: Math.floor(ageDays / 7) };
-      case "days":   return { cols: 52, cellPx: 3,  gapPx: 0.5, totalUnits: settings.lifespan * 365, currentUnit: ageDays };
+      case "years":  c = 10;  gap = 3; total = ls;       curr = Math.floor(ageDays / 365.25); break;
+      case "months": c = 12;  gap = 1; total = ls * 12;  curr = Math.floor(ageDays / 30.44);  break;
+      case "weeks":  c = 52;  gap = 1; total = ls * 52;  curr = Math.floor(ageDays / 7);      break;
+      default:       c = 365; gap = 0; total = ls * 365; curr = ageDays;                      break;
     }
+    const rows = Math.ceil(total / c);
+    const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
+    const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
+    const cell = Math.max(1, Math.floor(Math.min(fromH, fromW)));
+    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr };
   }, [view, settings.lifespan, ageDays]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
@@ -1690,7 +1699,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     >
       <motion.div initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
-        style={{ width:"min(96vw,560px)", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"88vh" }}
+        style={{ width:"min(96vw,560px)", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"96vh" }}
       >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
@@ -1768,23 +1777,24 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="overflow-y-auto px-6 pb-6" style={{ scrollbarWidth:"thin" }}>
+            <div className="px-6 pb-5 shrink-0">
               <div className="text-[10px] mb-2 tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                 {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"fit-content" }}>
+              <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px` }}>
                 {Array.from({ length: totalUnits }, (_, i) => {
                   const isPast = i < currentUnit;
                   const isCurrent = i === currentUnit;
-                  const radius = view==="years" ? 6 : view==="months" ? 4 : 2;
+                  const radius = Math.max(0, Math.floor(cellPx / 5));
+                  const showBorder = cellPx >= 3;
                   return (
                     <div key={i} style={{
-                      width: cellPx, height: cellPx, borderRadius: radius, flexShrink:0,
-                      background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}88` : "transparent",
-                      border: isCurrent
-                        ? `${Math.max(1, Math.round(cellPx/5))}px solid ${LIFE_ACCENT}`
-                        : `1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.13)"}`,
-                      boxShadow: isCurrent ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
+                      width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
+                      background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
+                      border: showBorder
+                        ? (isCurrent ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
+                        : "none",
+                      boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
                     }} />
                   );
                 })}
