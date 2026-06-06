@@ -44,7 +44,7 @@ type Block = { id: string; weeks: number; label: string; color?: AppleColorKey }
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
 type DayState = "past" | "today" | "future" | "out";
-type Milestone = { id: string; label: string; date: string; color: string; description?: string };
+type Milestone = { id: string; label: string; date: string; color: string; description?: string; recurring?: boolean };
 type Goal = { id: string; text: string; done: boolean };
 type BlockGoals = { description: string; goals: Goal[] };
 type NoteEntry = { id: string; text: string; createdAt: number };
@@ -157,7 +157,7 @@ function App() {
   const [now, setNow] = useState<Date>(() => new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t); }, []);
 
-  const MIN_YEAR = 2020, MAX_YEAR = 2030;
+  const MIN_YEAR = 2020, MAX_YEAR = 2040;
   const [viewYear, setViewYear] = useState(() => now.getFullYear());
 
   // Dark mode
@@ -263,16 +263,37 @@ function App() {
 
   const milestonesMap = useMemo(() => {
     const m: Record<string, Milestone[]> = {};
-    for (const ms of milestones) { if (!m[ms.date]) m[ms.date] = []; m[ms.date]!.push(ms); }
+    for (const ms of milestones) {
+      if (!m[ms.date]) m[ms.date] = [];
+      m[ms.date]!.push(ms);
+      if (ms.recurring) {
+        const parts = ms.date.split("-");
+        const key = `${viewYear}-${parts[1]}-${parts[2]}`;
+        if (key !== ms.date) {
+          if (!m[key]) m[key] = [];
+          m[key]!.push({ ...ms, date: key });
+        }
+      }
+    }
     return m;
-  }, [milestones]);
+  }, [milestones, viewYear]);
 
   const nextMilestones = useMemo(() => {
     const todayStr = dateKey(today);
-    return milestones
-      .filter(m => m.date >= todayStr)
-      .sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label))
-      .slice(0, 10);
+    const thisYear = today.getFullYear();
+    const list: Milestone[] = [];
+    for (const ms of milestones) {
+      if (ms.recurring) {
+        const parts = ms.date.split("-");
+        for (const yr of [thisYear, thisYear + 1]) {
+          const key = `${yr}-${parts[1]}-${parts[2]}`;
+          if (key >= todayStr) { list.push({ ...ms, date: key }); break; }
+        }
+      } else {
+        if (ms.date >= todayStr) list.push(ms);
+      }
+    }
+    return list.sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label)).slice(0, 10);
   }, [milestones, today]);
 
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
@@ -283,6 +304,24 @@ function App() {
     const el = weekRefs.current[currentWeekIndex];
     if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); didScrollRef.current = true; }
   }, [currentWeekIndex, viewYear]);
+
+  const [showTodayBtn, setShowTodayBtn] = useState(false);
+  const scrollToToday = () => {
+    if (viewYear !== now.getFullYear()) {
+      setViewYear(now.getFullYear());
+    } else {
+      weekRefs.current[currentWeekIndex]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+  useEffect(() => {
+    if (viewYear !== now.getFullYear()) { setShowTodayBtn(true); return; }
+    if (currentWeekIndex < 0) { setShowTodayBtn(false); return; }
+    const el = weekRefs.current[currentWeekIndex];
+    if (!el) { setShowTodayBtn(false); return; }
+    const obs = new IntersectionObserver(([e]) => setShowTodayBtn(!e!.isIntersecting), { threshold: 0.5 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [viewYear, currentWeekIndex]);
 
   const dayState = (d: Date): DayState => {
     if (d.getFullYear() !== viewYear) return "out";
@@ -544,6 +583,20 @@ function App() {
             onSettingsChange={setLifeSettings}
             onClose={() => setLifeCalendarOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showTodayBtn && (
+          <motion.button
+            initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:6 }}
+            transition={{ duration:0.18 }}
+            onClick={scrollToToday}
+            style={{ position:"fixed", bottom:20, right:20, zIndex:15, height:28, paddingInline:10, borderRadius:999, background: dark?"rgba(36,36,40,0.88)":"rgba(242,242,247,0.88)", backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)", border:`1px solid ${dark?"rgba(255,255,255,0.11)":"rgba(0,0,0,0.08)"}`, color:"var(--text-secondary)", fontSize:11, fontWeight:500, cursor:"pointer", display:"flex", alignItems:"center", gap:5, boxShadow:"0 2px 10px rgba(0,0,0,0.10)" }}
+          >
+            <span style={{ width:5, height:5, borderRadius:999, background:"var(--text-tertiary)", flexShrink:0 }} />
+            Today
+          </motion.button>
         )}
       </AnimatePresence>
     </div>
@@ -1090,11 +1143,14 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
   const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
   const [draftDesc, setDraftDesc] = useState("");
 
+  const [draftRecurring, setDraftRecurring] = useState(false);
+
   const [editId, setEditId] = useState<string|null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editColor, setEditColor] = useState(MILESTONE_COLORS[0]!);
   const [editDesc, setEditDesc] = useState("");
+  const [editRecurring, setEditRecurring] = useState(false);
 
   const startEdit = (ms: Milestone) => {
     setEditId(ms.id);
@@ -1102,12 +1158,13 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
     setEditDate(ms.date);
     setEditColor(ms.color);
     setEditDesc(ms.description ?? "");
+    setEditRecurring(ms.recurring ?? false);
   };
   const cancelEdit = () => setEditId(null);
   const saveEdit = () => {
     if (!editLabel.trim()) return;
     setItems(prev => prev.map(ms => ms.id === editId
-      ? { ...ms, label: editLabel.trim(), date: editDate, color: editColor, description: editDesc.trim() || undefined }
+      ? { ...ms, label: editLabel.trim(), date: editDate, color: editColor, description: editDesc.trim() || undefined, recurring: editRecurring || undefined }
       : ms
     ).sort((a,b) => a.date.localeCompare(b.date)));
     setEditId(null);
@@ -1115,9 +1172,10 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
 
   const add = () => {
     if (!draftLabel.trim()) return;
-    setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined }].sort((a,b)=>a.date.localeCompare(b.date)));
+    setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined, recurring: draftRecurring || undefined }].sort((a,b)=>a.date.localeCompare(b.date)));
     setDraftLabel("");
     setDraftDesc("");
+    setDraftRecurring(false);
   };
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
@@ -1170,6 +1228,12 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
               {draftDesc.length}/300
             </span>
           </div>
+          <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none" style={{ width:"fit-content" }}>
+            <input type="checkbox" checked={draftRecurring} onChange={e => setDraftRecurring(e.target.checked)}
+              style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
+            />
+            <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>↻ Repeat yearly</span>
+          </label>
         </div>
 
         {/* List */}
@@ -1215,6 +1279,12 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                         />
                         <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{editDesc.length}/300</span>
                       </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
+                        <input type="checkbox" checked={editRecurring} onChange={e => setEditRecurring(e.target.checked)}
+                          style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
+                        />
+                        <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>↻ Repeat yearly</span>
+                      </label>
                       {/* Edit action row */}
                       <div className="flex gap-2">
                         <button onClick={cancelEdit}
@@ -1232,6 +1302,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                       <div className="flex items-center gap-2.5">
                         <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
                         <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
+                        {ms.recurring && <span title="Repeats yearly" style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
                         <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
                         <button onClick={() => startEdit(ms)} title="Edit"
                           style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
