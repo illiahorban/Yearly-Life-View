@@ -841,7 +841,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const noteDot = hasNote ? (
     <div
       style={{ position:"absolute", top:4, right:4, minWidth:14, height:14, borderRadius:999, background:"#007aff", boxShadow:"0 0 4px rgba(0,122,255,0.65)", zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", padding: noteCount > 1 ? "0 3px" : 0 }}
-      className="rounded-tl-[99px] rounded-tr-[99px] rounded-br-[99px] rounded-bl-[99px]">
+      className="rounded-tl-[999px] rounded-tr-[999px] rounded-br-[999px] rounded-bl-[999px]">
       {noteCount > 1 && <span style={{ fontSize:8, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>}
     </div>
   ) : null;
