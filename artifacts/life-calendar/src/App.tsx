@@ -36,6 +36,62 @@ function daysBetween(a: Date, b: Date) { return Math.round((b.getTime()-a.getTim
 
 const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 const WEEKDAYS = ["M","T","W","T","F","S","S"];
+
+type Lang = "en" | "ru";
+const MONTHS_I18N: Record<Lang, string[]> = {
+  en: ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"],
+  ru: ["ЯНВ","ФЕВ","МАР","АПР","МАЙ","ИЮН","ИЮЛ","АВГ","СЕН","ОКТ","НОЯ","ДЕК"],
+};
+const WEEKDAYS_I18N: Record<Lang, string[]> = {
+  en: ["M","T","W","T","F","S","S"],
+  ru: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
+};
+const I18N: Record<Lang, Record<string, string>> = {
+  en: {
+    complete:"complete", daysOf:"days", of:"of", daysRemaining:"days remaining",
+    milestones:"Milestones", darkMode:"Dark mode", lightMode:"Light mode",
+    lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress",
+    dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
+    note:"Note", addNote:"Add note", save:"Save",
+    notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
+    remove:"Remove", noMilestones:"No milestones yet. Add one above.",
+    labelPlaceholder:"Label…", add:"Add",
+    descPlaceholder:"Description (optional, up to 300 chars)…",
+    repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
+    editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
+    today:"Today", week:"Week", done:"done", left:"left", goals:"goals",
+    sprintGoals:"Sprint Goals", addGoal:"+ Add goal", saveGoals:"Save goals",
+    overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
+    years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
+    yr:"yr", mo:"mo", remaining:"remaining", born:"Born", age:"Age",
+    sprintConfig:"Sprint configuration", saveSprints:"Save sprints", addSprint:"+ Add sprint",
+    looksGood:"Looks good", unassigned:"unassigned", over:"over", total:"Total",
+    q1:"Q1", q2:"Q2", q3:"Q3", q4:"Q4", todayCountdown:"Today!", daysShort:"d",
+  },
+  ru: {
+    complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
+    milestones:"События", darkMode:"Тёмная тема", lightMode:"Светлая тема",
+    lifeCalendarBtn:"Жизнь", quarterProgress:"Прогресс квартала",
+    dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
+    note:"Заметка", addNote:"Добавить заметку", save:"Сохранить",
+    notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
+    remove:"Удалить", noMilestones:"Нет событий. Добавьте выше.",
+    labelPlaceholder:"Название…", add:"Добавить",
+    descPlaceholder:"Описание (необязательно, до 300 символов)…",
+    repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
+    editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
+    today:"Сегодня", week:"Неделя", done:"готово", left:"осталось", goals:"целей",
+    sprintGoals:"Цели спринта", addGoal:"+ Добавить цель", saveGoals:"Сохранить цели",
+    overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
+    years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
+    yr:"лет", mo:"мес", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
+    sprintConfig:"Настройка спринтов", saveSprints:"Сохранить", addSprint:"+ Спринт",
+    looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
+    q1:"К1", q2:"К2", q3:"К3", q4:"К4", todayCountdown:"Сегодня!", daysShort:"д",
+  },
+};
+type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
+const LangContext = React.createContext<LangCtx>({ t: k => I18N.en[k] ?? k, months: MONTHS_I18N.en, weekdays: WEEKDAYS_I18N.en, lang: "en" });
 const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
@@ -166,6 +222,12 @@ function App() {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     lsSet("lifeCalendar:darkMode", dark);
   }, [dark]);
+
+  const [lang, setLang] = useState<Lang>(() => ls<string>("lifeCalendar:lang", "en") === "ru" ? "ru" : "en");
+  useEffect(() => { lsSet("lifeCalendar:lang", lang); }, [lang]);
+  const t = (k: string) => I18N[lang][k] ?? I18N.en[k] ?? k;
+  const months = MONTHS_I18N[lang];
+  const weekdays = WEEKDAYS_I18N[lang];
 
   // Calendar config
   const [config, setConfig] = useState<CalendarConfig>(() => loadConfig(now.getFullYear()));
@@ -356,6 +418,7 @@ function App() {
   const overlayBg = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
 
   return (
+    <LangContext.Provider value={{ t, months, weekdays, lang }}>
     <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
 
       {/* ── Header ─────────────────────────────────────────────────── */}
@@ -370,13 +433,17 @@ function App() {
                 style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear>=MAX_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear>=MAX_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, lineHeight:1, flexShrink:0 }}>›</button>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>{yearProgress.toFixed(1)}% complete</span>
+              <span className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>{yearProgress.toFixed(1)}% {t("complete")}</span>
               <IconButton title="Milestones" onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <IconButton title={dark ? "Light mode" : "Dark mode"} onClick={() => setDark(d => !d)} bg={overlayBg}>
                 {dark ? <SunIcon /> : <MoonIcon />}
               </IconButton>
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
               <IconButton title="Life Calendar" onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
+              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
+              <IconButton title={lang==="en"?"Switch to Russian":"Переключить на английский"} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
+                <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
+              </IconButton>
             </div>
           </div>
 
@@ -385,8 +452,8 @@ function App() {
           </div>
 
           <div className="mt-2 flex items-center justify-between text-xs tabular-nums" style={{ color: "var(--text-tertiary)" }}>
-            <span>{daysCompleted} of {totalDays} days</span>
-            <span>{(totalDays-daysCompleted).toFixed(0)} days remaining</span>
+            <span>{daysCompleted} {t("of")} {totalDays} {t("daysOf")}</span>
+            <span>{(totalDays-daysCompleted).toFixed(0)} {t("daysRemaining")}</span>
           </div>
 
           {/* Milestone countdown — up to 7 upcoming */}
@@ -406,7 +473,7 @@ function App() {
                       <span style={{ width:6, height:6, borderRadius:999, background:ms.color, display:"inline-block", flexShrink:0 }} />
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
-                      <span>{days === 0 ? "Today!" : `${days}d`}</span>
+                      <span>{days === 0 ? t("todayCountdown") : `${days}${t("daysShort")}`}</span>
                     </button>
                   );
                 })}
@@ -416,9 +483,9 @@ function App() {
 
           {/* Sticky weekday labels */}
           <div className="mt-3 flex items-center gap-3 sm:gap-4 pl-[26px] pr-[23px] sm:pl-[32px] sm:pr-[29px]">
-            <div className="w-14 sm:w-16 shrink-0" />
+            <div className="w-16 sm:w-20 shrink-0" />
             <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
-              {WEEKDAYS.map((w,i) => <div key={i} className="text-center text-[10px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
+              {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
           </div>
         </div>
@@ -524,7 +591,7 @@ function App() {
         </LayoutGroup>
 
         <footer className="mt-12 pb-8 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>
-          Life Calendar · {viewYear}
+          {t("footerBase")} · {viewYear}
         </footer>
       </main>
 
@@ -595,11 +662,12 @@ function App() {
             style={{ position:"fixed", bottom:20, right:20, zIndex:15, height:28, paddingInline:10, borderRadius:999, background: dark?"rgba(36,36,40,0.88)":"rgba(242,242,247,0.88)", backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)", border:`1px solid ${dark?"rgba(255,255,255,0.11)":"rgba(0,0,0,0.08)"}`, color:"var(--text-secondary)", fontSize:11, fontWeight:500, cursor:"pointer", display:"flex", alignItems:"center", gap:5, boxShadow:"0 2px 10px rgba(0,0,0,0.10)" }}
           >
             <span style={{ width:5, height:5, borderRadius:999, background:"var(--text-tertiary)", flexShrink:0 }} />
-            Today
+            {t("today")}
           </motion.button>
         )}
       </AnimatePresence>
     </div>
+    </LangContext.Provider>
   );
 }
 
@@ -633,6 +701,7 @@ function BlocksRenderer({
   onCreateSprint: (selStart: number, selEnd: number) => void;
   onCancelSel: () => void;
 }) {
+  const { t } = React.useContext(LangContext);
   let cursor = 0;
   const blocks = qConfig.blocks.map(b => { const r = { start:cursor, end:cursor+b.weeks }; cursor+=b.weeks; return { ...b, ...r }; });
   const selMin = weekSel?.qi === _qi ? Math.min(weekSel.anchor, weekSel.focus) : -1;
@@ -675,16 +744,16 @@ function BlocksRenderer({
                     <button type="button" onClick={() => onEditGoals(block.id)} title="Sprint goals"
                       style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                     ><PencilIcon /></button>
-                    <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{block.weeks} {block.weeks===1?"week":"weeks"}</span>
+                    <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{block.weeks} {t("week")}</span>
                   </div>
                 </div>
 
                 {/* Progress strip */}
                 <div className="px-3 sm:px-3.5 pb-2">
                   <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
-                    <span style={{ color:"var(--text-tertiary)" }}>{pastDays} of {totalDays} days</span>
+                    <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
                     <span style={{ color: isComplete ? "var(--apple-green)" : isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:600 }}>{pct.toFixed(0)}%</span>
-                    <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? "done" : `${daysLeft} left`}</span>
+                    <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                     <motion.div initial={false} animate={{ width:`${pct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
@@ -699,7 +768,7 @@ function BlocksRenderer({
                         />
                       </div>
                       <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
-                        {activeGoals.filter(g=>g.done).length}/{activeGoals.length} goals
+                        {activeGoals.filter(g=>g.done).length}/{activeGoals.length} {t("goals")}
                       </span>
                     </div>
                   )}
@@ -749,7 +818,7 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? "Click to move end of selection" : "Extend selection here") : "Click to start sprint selection"}
-                            className="w-14 sm:w-16 shrink-0 text-right text-[11px] tabular-nums"
+                            className="w-16 sm:w-20 shrink-0 text-right text-[17px] tabular-nums"
                             style={{
                               color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
                               fontWeight: isSel || isCurrent ? 600 : 500,
@@ -763,7 +832,7 @@ function BlocksRenderer({
                               transition: "background 120ms, border 120ms, color 120ms",
                               opacity: hasSelection && !isSel ? 0.55 : 1,
                             }}
-                          >Week {wi+1}</button>
+                          >{t("week")} {wi+1}</button>
                           <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
@@ -786,8 +855,8 @@ function BlocksRenderer({
                               <div className="flex flex-col gap-0.5 min-w-0">
                                 <span className="text-[12px] font-semibold truncate" style={{ color: quarter.text }}>
                                   {selMin === selMax
-                                    ? `Week ${selMin + startIndex + 1}`
-                                    : `Weeks ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
+                                    ? `${t("week")} ${selMin + startIndex + 1}`
+                                    : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
                                 </span>
                                 <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
                                   {selMax - selMin + 1} week{selMax - selMin + 1 !== 1 ? "s" : ""} · click week number to adjust
@@ -873,7 +942,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const activeNotes = dayNotes?.filter(n => n.text.trim()) ?? [];
   const hasNote = activeNotes.length > 0;
   const noteCount = activeNotes.length;
-  const dayNumber = date.getDate(), monthAbbr = MONTHS[date.getMonth()];
+  const { months: ctxMonths } = React.useContext(LangContext);
+  const dayNumber = date.getDate(), monthAbbr = ctxMonths[date.getMonth()]!;
 
   const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative" };
 
@@ -893,14 +963,14 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const noteDot = hasNote ? (
     <div
-      style={{ position:"absolute", top:4, right:4, minWidth:14, height:14, borderRadius:999, background:"#007aff", boxShadow:"0 0 4px rgba(0,122,255,0.65)", zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", padding: noteCount > 1 ? "0 3px" : 0 }}
+      style={{ position:"absolute", top:4, right:4, minWidth:11, height:11, borderRadius:999, background:"#007aff", boxShadow:"0 0 3px rgba(0,122,255,0.65)", zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", padding: noteCount > 1 ? "0 2px" : 0 }}
       className="rounded-tl-[999px] rounded-tr-[999px] rounded-br-[999px] rounded-bl-[999px]">
-      {noteCount > 1 && <span style={{ fontSize:8, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>}
+      {noteCount > 1 && <span style={{ fontSize:7, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>}
     </div>
   ) : null;
 
   const msBar = dayMilestones.length > 0 ? (
-    <div style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: isPast ? 0.6 : 1 }}>
+    <div style={{ position:"absolute", top:0, left:0, right:0, height:6, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: isPast ? 0.6 : 1 }}>
       {dayMilestones.map(ms => <div key={ms.id} style={{ flex:1, background:ms.color }} />)}
     </div>
   ) : null;
@@ -938,8 +1008,8 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
   const mc = tone==="onGreen" ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
   return (
     <div className="flex flex-col items-center justify-center leading-none select-none">
-      <div className="text-base sm:text-lg font-semibold tabular-nums" style={{ color:nc, letterSpacing:"-0.02em" }}>{number}</div>
-      <div className="mt-1 text-[9px] sm:text-[10px] font-medium tracking-widest" style={{ color:mc }}>{month}</div>
+      <div className="text-[21px] sm:text-[24px] font-semibold tabular-nums" style={{ color:nc, letterSpacing:"-0.02em" }}>{number}</div>
+      <div className="mt-1 text-[12px] sm:text-[13px] font-medium tracking-widest" style={{ color:mc }}>{month}</div>
     </div>
   );
 }
@@ -962,21 +1032,25 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
     if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }, [focusId]);
 
+  const { t } = React.useContext(LangContext);
+
   // Milestone inline edit state
   const [msEditId, setMsEditId] = useState<string|null>(null);
   const [msEditLabel, setMsEditLabel] = useState("");
   const [msEditDate, setMsEditDate] = useState("");
   const [msEditColor, setMsEditColor] = useState(MILESTONE_COLORS[0]!);
   const [msEditDesc, setMsEditDesc] = useState("");
+  const [msEditRecurring, setMsEditRecurring] = useState(false);
 
   const startMsEdit = (ms: Milestone) => {
     setMsEditId(ms.id); setMsEditLabel(ms.label);
     setMsEditDate(ms.date); setMsEditColor(ms.color); setMsEditDesc(ms.description ?? "");
+    setMsEditRecurring(ms.recurring ?? false);
   };
   const saveMsEdit = () => {
     if (!msEditLabel.trim() || !msEditId) return;
     const orig = dayMilestones.find(m => m.id === msEditId);
-    if (orig) onMilestoneUpdate({ ...orig, label: msEditLabel.trim(), date: msEditDate, color: msEditColor, description: msEditDesc.trim() || undefined });
+    if (orig) onMilestoneUpdate({ ...orig, label: msEditLabel.trim(), date: msEditDate, color: msEditColor, description: msEditDesc.trim() || undefined, recurring: msEditRecurring || undefined });
     setMsEditId(null);
   };
 
@@ -1015,7 +1089,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
           <div>
             <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
-              {dayMilestones.length > 0 ? "Events & Notes" : "Day Notes"}
+              {dayMilestones.length > 0 ? t("eventsAndNotes") : t("dayNotes")}
             </div>
             <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{label}</div>
           </div>
@@ -1025,7 +1099,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
         {/* Milestones for this day */}
         {dayMilestones.length > 0 && (
           <div className="px-5 pb-3 shrink-0">
-            <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>Events</div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("events")}</div>
             <div className="flex flex-col gap-1.5">
               {dayMilestones.map(ms => {
                 const isEditing = msEditId === ms.id;
@@ -1043,7 +1117,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
                         <div className="flex gap-1.5">
                           <input value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
                             onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
-                            placeholder="Label…" autoFocus style={{ ...inputStyleMs, flex:2, width:"auto" }} />
+                            placeholder={t("labelPlaceholder")} autoFocus style={{ ...inputStyleMs, flex:2, width:"auto" }} />
                           <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
                             style={{ ...inputStyleMs, flex:1, width:"auto" }} />
                         </div>
@@ -1053,18 +1127,26 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
                             style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"6px 9px", paddingBottom:16, display:"block" }} />
                           <span style={{ position:"absolute", bottom:4, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{msEditDesc.length}/300</span>
                         </div>
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
+                          <input type="checkbox" checked={msEditRecurring} onChange={e => setMsEditRecurring(e.target.checked)}
+                            style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }} />
+                          <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
+                        </label>
                         <div className="flex gap-1.5">
                           <button onClick={() => setMsEditId(null)}
-                            style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
+                            style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
                           <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
-                            style={{ flex:2, height:28, borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>Save changes</button>
+                            style={{ flex:2, height:28, borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("saveChanges")}</button>
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-start gap-2">
                         <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop:3 }} />
                         <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>{ms.label}</div>
+                          <div className="flex items-center gap-1 text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>
+                            {ms.label}
+                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7 }}>↻</span>}
+                          </div>
                           {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
                         </div>
                         <button onClick={() => startMsEdit(ms)} title="Edit"
@@ -1089,12 +1171,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-medium" style={{ color:"var(--text-tertiary)" }}>
-                    {entries.length > 1 ? `Note ${idx + 1}` : "Note"}
+                    {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
                   </span>
                   {entries.length > 1 && (
                     <button onClick={() => deleteEntry(entry.id)}
                       style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                      Remove
+                      {t("remove")}
                     </button>
                   )}
                 </div>
@@ -1103,7 +1185,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
                   value={entry.text}
                   onChange={e => updateEntry(entry.id, e.target.value)}
                   onKeyDown={handleKey}
-                  placeholder={idx === 0 ? "Add a note, emoji, or reflection… ✨" : "Another note…"}
+                  placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                   rows={3}
                   style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:12, padding:"10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box", display:"block" }}
                 />
@@ -1117,14 +1199,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
         <div className="px-5 pb-3 shrink-0">
           <button onClick={addEntry}
             style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
-            <span style={{ fontSize:16, lineHeight:1 }}>+</span> Add another note
+            <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addNote")}
           </button>
         </div>
 
         {/* Footer */}
         <div className="px-5 pb-5 flex gap-2.5 shrink-0">
-          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
-          <button onClick={handleSave} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"#007aff", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,122,255,0.35)" }}>Save <span style={{ opacity:0.65, fontSize:11 }}>⌘↵</span></button>
+          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
+          <button onClick={handleSave} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"#007aff", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,122,255,0.35)" }}>{t("save")} <span style={{ opacity:0.65, fontSize:11 }}>⌘↵</span></button>
         </div>
       </motion.div>
     </motion.div>
@@ -1137,6 +1219,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
   milestones: Milestone[]; dark: boolean; modalBg: string;
   onClose: () => void; onChange: (m: Milestone[]) => void;
 }) {
+  const { t } = React.useContext(LangContext);
   const [items, setItems] = useState<Milestone[]>(() => [...milestones].sort((a,b) => a.date.localeCompare(b.date)));
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
@@ -1207,7 +1290,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
             ))}
           </div>
           <div className="flex gap-2 mb-2">
-            <input value={draftLabel} onChange={e => setDraftLabel(e.target.value)} placeholder="Label…"
+            <input value={draftLabel} onChange={e => setDraftLabel(e.target.value)} placeholder={t("labelPlaceholder")}
               onKeyDown={e => { if (e.key==="Enter") add(); }}
               style={{ ...inputStyle, flex:2, width:"auto" }}
             />
@@ -1216,12 +1299,12 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
             />
             <button onClick={add} disabled={!draftLabel.trim()}
               style={{ height:36, paddingInline:14, borderRadius:9, background: draftLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: draftLabel.trim()?"white":"var(--text-tertiary)", fontSize:13, fontWeight:600, border:"none", cursor: draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, transition:"background 150ms" }}>
-              Add
+              {t("add")}
             </button>
           </div>
           <div style={{ position:"relative" }}>
             <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value.slice(0,300))}
-              placeholder="Description (optional, up to 300 chars)…" rows={2}
+              placeholder={t("descPlaceholder")} rows={2}
               style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px", paddingBottom:18 }}
             />
             <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>
@@ -1232,24 +1315,34 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
             <input type="checkbox" checked={draftRecurring} onChange={e => setDraftRecurring(e.target.checked)}
               style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
             />
-            <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>↻ Repeat yearly</span>
+            <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
           </label>
         </div>
 
         {/* List */}
         <div className="px-6 max-h-64 overflow-y-auto">
           {items.length === 0 && (
-            <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>No milestones yet. Add one above.</div>
+            <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("noMilestones")}</div>
           )}
           <div className="flex flex-col gap-1.5 pb-3">
-            {items.map(ms => {
+            {items.map((ms, _msIdx) => {
               const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
               const lbl = new Date(y2,m2-1,d2).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
               const isEditing = editId === ms.id;
+              const _q = Math.ceil(m2 / 3);
+              const _prevMs = items[_msIdx - 1];
+              const _prevQ = _prevMs ? Math.ceil(parseInt(_prevMs.date.split("-")[1]!, 10) / 3) : -1;
+              const _showQHeader = _q !== _prevQ;
               return (
-                <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                  style={{ background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.025)", border:`1px solid ${isEditing ? ms.color+"66" : borderColor}`, transition:"border 150ms" }}
-                >
+                <React.Fragment key={ms.id}>
+                  {_showQHeader && (
+                    <div className="text-[10px] font-semibold tracking-widest uppercase pt-1.5 pb-0 px-0.5" style={{ color:"var(--text-tertiary)" }}>
+                      {t("q" + String(_q))}
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
+                    style={{ background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.025)", border:`1px solid ${isEditing ? ms.color+"66" : borderColor}`, transition:"border 150ms" }}
+                  >
                   {isEditing ? (
                     <div className="flex flex-col gap-2">
                       {/* Edit color row */}
@@ -1264,7 +1357,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                       <div className="flex gap-2">
                         <input value={editLabel} onChange={e => setEditLabel(e.target.value)}
                           onKeyDown={e => { if (e.key==="Enter") saveEdit(); if (e.key==="Escape") cancelEdit(); }}
-                          placeholder="Label…" autoFocus
+                          placeholder={t("labelPlaceholder")} autoFocus
                           style={{ ...inputStyle, flex:2, width:"auto" }}
                         />
                         <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
@@ -1314,16 +1407,17 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                       )}
                     </>
                   )}
-                </div>
+                  </div>
+                </React.Fragment>
               );
             })}
           </div>
         </div>
 
         <div className="px-6 py-4 flex gap-2.5 justify-end" style={{ borderTop:`1px solid ${borderColor}` }}>
-          <button onClick={onClose} style={{ height:36, paddingInline:16, borderRadius:10, border:"1px solid var(--border-soft)", background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
+          <button onClick={onClose} style={{ height:36, paddingInline:16, borderRadius:10, border:"1px solid var(--border-soft)", background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
           <button onClick={() => { onChange(items); onClose(); }}
-            style={{ height:36, paddingInline:20, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>Save</button>
+            style={{ height:36, paddingInline:20, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>{t("save")}</button>
         </div>
       </motion.div>
     </motion.div>
@@ -1336,6 +1430,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
   blockId: string; blockLabel: string; initial: BlockGoals; dark: boolean; modalBg: string;
   onSave: (bg: BlockGoals) => void; onClose: () => void;
 }) {
+  const { t } = React.useContext(LangContext);
   const [description, setDescription] = useState(initial.description);
   const [goals, setGoals] = useState<Goal[]>(() => initial.goals.length > 0 ? initial.goals.map(g=>({...g})) : [{ id:makeId(), text:"", done:false }]);
   const activeGoals = goals.filter(g => g.text.trim());
@@ -1359,7 +1454,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
       >
         <div className="px-5 pt-5 pb-3 flex items-start justify-between">
           <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Sprint Goals</div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("sprintGoals")}</div>
             <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{blockLabel}</div>
           </div>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
@@ -1393,14 +1488,14 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
             <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false }])}
               className="mt-2 text-[12px] font-medium"
               style={{ padding:"5px 10px", borderRadius:8, background:"rgba(0,122,255,0.09)", color:"#007aff", border:"1px solid rgba(0,122,255,0.18)", cursor:"pointer", fontFamily:"inherit" }}>
-              + Add goal
+              + {t("addGoal")}
             </button>
           )}
         </div>
 
         <div className="px-5 pb-5 flex gap-2.5">
-          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>Cancel</button>
-          <button onClick={save} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>Save goals</button>
+          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
+          <button onClick={save} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>{t("saveGoals")}</button>
         </div>
       </motion.div>
     </motion.div>
@@ -1413,6 +1508,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
   onClose: () => void; onSave: (next: QuarterConfig) => void;
 }) {
+  const { t } = React.useContext(LangContext);
   const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map(b => ({ ...b })));
   const total = blocks.reduce((a,b) => a+(Number(b.weeks)||0), 0);
   const remaining = WEEKS_PER_QUARTER - total;
@@ -1437,7 +1533,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center justify-center text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
               style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>{quarter.label}</span>
-            <h2 className="text-base font-semibold tracking-tight" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>Sprint configuration</h2>
+            <h2 className="text-base font-semibold tracking-tight" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("sprintConfig")}</h2>
           </div>
           <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)" }}>Group the 13 weeks of {quarter.label} into sprints.</p>
         </div>
@@ -1514,7 +1610,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
             <button type="button" onClick={() => setBlocks(prev => [...prev, { id:makeId(), weeks:Math.max(1,remaining>0?remaining:1), label:`Sprint ${prev.length+1}` }])}
               disabled={remaining<1} className="text-[12px] font-medium mt-1 self-start"
               style={{ padding:"6px 12px", borderRadius:10, color: remaining<1?"var(--text-tertiary)":quarter.text, background: remaining<1?(dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)"):(dark?quarter.darkTint:quarter.tint), border:`1px solid ${remaining<1?borderColor:(dark?quarter.darkSoft:quarter.soft)}`, opacity: remaining<1?0.6:1 }}>
-              + Add sprint
+              + {t("addSprint")}
             </button>
           </div>
         </div>
@@ -1522,17 +1618,17 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
         <div className="px-6 mt-4">
           <div className="flex items-center justify-between text-[12px] tabular-nums px-3 py-2.5 rounded-xl"
             style={{ background: valid?"rgba(52,199,89,0.08)":"rgba(255,59,48,0.07)", color: valid?"#28a745":"#c00", border:`1px solid ${valid?"rgba(52,199,89,0.2)":"rgba(255,59,48,0.2)"}` }}>
-            <span>Total: {total} / {WEEKS_PER_QUARTER} weeks</span>
-            <span>{valid ? "Looks good" : remaining>0 ? `${remaining} week${remaining===1?"":"s"} unassigned` : `${-remaining} week${-remaining===1?"":"s"} over`}</span>
+            <span>{t("total")}: {total} / {WEEKS_PER_QUARTER} {t("week")}</span>
+            <span>{valid ? t("looksGood") : remaining>0 ? `${remaining} ${t("week")} ${t("unassigned")}` : `${-remaining} ${t("week")} ${t("over")}`}</span>
           </div>
         </div>
 
         <div className="px-6 py-5 mt-2 flex items-center justify-end gap-2">
           <button type="button" onClick={onClose} className="text-[13px] font-medium"
-            style={{ padding:"8px 14px", borderRadius:10, color:"var(--text-secondary)", background:"transparent" }}>Cancel</button>
+            style={{ padding:"8px 14px", borderRadius:10, color:"var(--text-secondary)", background:"transparent" }}>{t("cancel")}</button>
           <button type="button" onClick={() => valid && onSave({ blocks })} disabled={!valid} className="text-[13px] font-semibold"
             style={{ padding:"8px 16px", borderRadius:10, color:"white", background: valid?"linear-gradient(180deg,#5ed47b 0%,#34c759 100%)":"rgba(128,128,128,0.2)", boxShadow: valid?"0 1px 2px rgba(40,167,69,0.25)":"none", cursor: valid?"pointer":"not-allowed" }}>
-            Save sprints
+            {t("saveSprints")}
           </button>
         </div>
       </motion.div>
@@ -1548,6 +1644,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   onSettingsChange: (s: LifeSettings) => void;
   onClose: () => void;
 }) {
+  const { t } = React.useContext(LangContext);
   const [view, setView] = useState<LifeView>("weeks");
 
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -1582,7 +1679,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     color: "var(--text)", outline: "none", fontFamily: "inherit", boxSizing: "border-box",
   };
 
-  const viewLabels: Record<LifeView, string> = { years: "Years", months: "Months", weeks: "Weeks", days: "Days" };
+  const viewLabels: Record<LifeView, string> = { years: t("years"), months: t("months"), weeks: t("weeks"), days: t("days") };
 
   return (
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
@@ -1597,8 +1694,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
           <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>Overview</div>
-            <h2 className="text-[17px] font-semibold mt-0.5" style={{ color:"var(--text)", letterSpacing:"-0.02em" }}>Life Calendar</h2>
+            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("overview")}</div>
+            <h2 className="text-[17px] font-semibold mt-0.5" style={{ color:"var(--text)", letterSpacing:"-0.02em" }}>{t("lifeCalendarBtn")}</h2>
           </div>
           <button onClick={onClose} style={{ width:28, height:28, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
         </div>
@@ -1607,20 +1704,20 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
         <div className="px-6 pb-4 shrink-0">
           <div className="flex gap-2">
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>Date of Birth</label>
+              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
               <input type="date" value={settings.birthDate}
                 onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
                 style={{ ...inputStyle, width:"100%" }}
               />
             </div>
             <div className="flex flex-col gap-1" style={{ width:130 }}>
-              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>Life Expectancy</label>
+              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("lifeExpectancy")}</label>
               <div className="flex items-center gap-1.5">
                 <input type="number" value={settings.lifespan} min={20} max={120}
                   onChange={e => onSettingsChange({ ...settings, lifespan: Math.max(20, Math.min(120, Number(e.target.value) || 80)) })}
                   style={{ ...inputStyle, flex:1, textAlign:"center" }}
                 />
-                <span className="text-[12px] shrink-0" style={{ color:"var(--text-tertiary)" }}>yr</span>
+                <span className="text-[12px] shrink-0" style={{ color:"var(--text-tertiary)" }}>{t("yr")}</span>
               </div>
             </div>
           </div>
@@ -1633,7 +1730,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
               <div className="rounded-2xl px-4 py-3" style={{ background:`${LIFE_ACCENT}12`, border:`1px solid ${LIFE_ACCENT}28` }}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[13px] font-semibold" style={{ color:LIFE_ACCENT }}>
-                    Age: {ageYears} yr{ageMonths > 0 ? ` ${ageMonths} mo` : ""}
+                    {t("age")}: {ageYears} {t("yr")}{ageMonths > 0 ? ` ${ageMonths} ${t("mo")}` : ""}
                   </span>
                   <span className="text-[13px] font-semibold tabular-nums" style={{ color:LIFE_ACCENT }}>{pct.toFixed(1)}%</span>
                 </div>
@@ -1641,7 +1738,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${LIFE_ACCENT}cc,${LIFE_ACCENT})`, borderRadius:999, transition:"width 700ms ease" }} />
                 </div>
                 <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
-                  {remainingYears > 0 ? `${remainingYears} yr ${remainingMonths} mo remaining · ` : ""}Born {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
+                  {remainingYears > 0 ? `${remainingYears} ${t("yr")} ${remainingMonths} ${t("mo")} ${t("remaining")} · ` : ""}{t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
                 </div>
               </div>
             </div>
@@ -1667,7 +1764,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             {/* Grid */}
             <div className="overflow-y-auto px-6 pb-6" style={{ scrollbarWidth:"thin" }}>
               <div className="text-[10px] mb-2 tabular-nums" style={{ color:"var(--text-tertiary)" }}>
-                {Math.min(currentUnit, totalUnits).toLocaleString()} of {totalUnits.toLocaleString()} {view} elapsed
+                {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
               </div>
               <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"fit-content" }}>
                 {Array.from({ length: totalUnits }, (_, i) => {
