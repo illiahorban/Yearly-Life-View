@@ -1664,20 +1664,28 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingMonths = Math.floor((remainingDays % 365.25) / 30.44);
 
   const { cols, cellPx, gapPx, totalUnits, currentUnit } = useMemo(() => {
-    const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320);
     const gridW = Math.max(200, Math.min(window.innerWidth * 0.94, 560) - 48);
     const ls = settings.lifespan;
-    let c: number, gap: number, total: number, curr: number;
+    let c: number, gap: number, total: number, curr: number, cell: number;
     switch (view) {
-      case "years":  c = 10;  gap = 3; total = ls;       curr = Math.floor(ageDays / 365.25); break;
-      case "months": c = 12;  gap = 1; total = ls * 12;  curr = Math.floor(ageDays / 30.44);  break;
-      case "weeks":  c = 52;  gap = 1; total = ls * 52;  curr = Math.floor(ageDays / 7);      break;
-      default:       c = 365; gap = 0; total = ls * 365; curr = ageDays;                      break;
+      case "years":
+        c = 10; gap = 3; total = ls; curr = Math.floor(ageDays / 365.25);
+        cell = Math.max(4, Math.floor((gridW - gap * (c - 1)) / c));
+        break;
+      case "months":
+        c = 12; gap = 1; total = ls * 12; curr = Math.floor(ageDays / 30.44);
+        cell = Math.max(2, Math.floor((gridW - gap * (c - 1)) / c));
+        break;
+      case "weeks":
+        c = 52; gap = 1; total = ls * 52; curr = Math.floor(ageDays / 7);
+        cell = Math.max(1, Math.floor((gridW - gap * (c - 1)) / c));
+        break;
+      default: // days
+        cell = 2; gap = 0;
+        c = Math.max(1, Math.floor(gridW / cell));
+        total = ls * 365; curr = ageDays;
+        break;
     }
-    const rows = Math.ceil(total / c);
-    const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
-    const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
-    const cell = Math.max(1, Math.floor(Math.min(fromH, fromW)));
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr };
   }, [view, settings.lifespan, ageDays]);
 
@@ -1693,13 +1701,13 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
   return (
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background:"rgba(0,0,0,0.40)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)" }}
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto"
+      style={{ background:"rgba(0,0,0,0.40)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)", padding:"16px" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
-        style={{ width:"min(96vw,560px)", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"96vh" }}
+        style={{ width:"min(96vw,560px)", flexShrink:0, background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column" }}
       >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
