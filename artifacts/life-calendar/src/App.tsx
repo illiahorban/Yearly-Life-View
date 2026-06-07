@@ -1663,12 +1663,9 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingYears = Math.floor(remainingDays / 365.25);
   const remainingMonths = Math.floor((remainingDays % 365.25) / 30.44);
 
-  const { cols, cellPx, gapPx, totalUnits, currentUnit, gridPadPx } = useMemo(() => {
-    const isDay = view === "days";
-    const padPx = isDay ? 6 : 24;
-    const modalW = isDay ? window.innerWidth * 0.99 : Math.min(window.innerWidth * 0.96, 560);
+  const { cols, cellPx, gapPx, totalUnits, currentUnit } = useMemo(() => {
     const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320);
-    const gridW = Math.max(200, Math.floor(modalW) - padPx * 2);
+    const gridW = Math.max(200, Math.min(window.innerWidth * 0.94, 560) - 48);
     const ls = settings.lifespan;
     let c: number, gap: number, total: number, curr: number;
     switch (view) {
@@ -1681,7 +1678,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
     const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
     const cell = Math.max(1, Math.floor(Math.min(fromH, fromW)));
-    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, gridPadPx: padPx };
+    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr };
   }, [view, settings.lifespan, ageDays]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
@@ -1702,7 +1699,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     >
       <motion.div initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
-        style={{ width: view === "days" ? "min(99vw, 100vw)" : "min(96vw, 560px)", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"96vh" }}
+        style={{ width:"min(96vw,560px)", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"96vh" }}
       >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
@@ -1780,7 +1777,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="pb-5 shrink-0" style={{ paddingLeft: gridPadPx, paddingRight: gridPadPx }}>
+            <div className="px-6 pb-5 shrink-0">
               <div className="text-[10px] mb-2 tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                 {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
               </div>
