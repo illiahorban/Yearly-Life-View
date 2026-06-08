@@ -1169,7 +1169,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
   };
 
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
-  const label = new Date(y, m-1, d).toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric" });
+  const label = new Date(y, m-1, d).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { weekday:"long", month:"long", day:"numeric" });
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
   const inputStyleMs: React.CSSProperties = { background: inputBg, border:`1px solid ${borderColor}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
