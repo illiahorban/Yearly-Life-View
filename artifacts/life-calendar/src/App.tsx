@@ -1069,7 +1069,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   }
   if (isToday) {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ ...base, background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }} {...hov}>
+      <div className="flex flex-col items-center justify-center" style={{ ...base, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }} {...hov}>
         {msBar}{tooltip}
         <div className="relative w-full h-full overflow-hidden rounded-[12px]">
           <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
