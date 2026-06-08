@@ -1129,7 +1129,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
     if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }, [focusId]);
 
-  const { t } = React.useContext(LangContext);
+  const { t, lang } = React.useContext(LangContext);
 
   // Milestone inline edit state
   const [msEditId, setMsEditId] = useState<string|null>(null);
@@ -1216,7 +1216,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
                             onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
                             placeholder={t("labelPlaceholder")} autoFocus style={{ ...inputStyleMs, flex:2, width:"auto" }} />
                           <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
-                            style={{ ...inputStyleMs, flex:1, width:"auto" }} />
+                            lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto" }} />
                         </div>
                         <div style={{ position:"relative" }}>
                           <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value.slice(0,300))}
@@ -1316,7 +1316,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
   milestones: Milestone[]; dark: boolean; modalBg: string;
   onClose: () => void; onChange: (m: Milestone[]) => void;
 }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang } = React.useContext(LangContext);
   const [items, setItems] = useState<Milestone[]>(() => [...milestones].sort((a,b) => a.date.localeCompare(b.date)));
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
@@ -1392,7 +1392,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
               style={{ ...inputStyle, flex:2, width:"auto" }}
             />
             <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-              style={{ ...inputStyle, flex:1, width:"auto" }}
+              lang={lang} style={{ ...inputStyle, flex:1, width:"auto" }}
             />
             <button onClick={add} disabled={!draftLabel.trim()}
               style={{ height:36, paddingInline:14, borderRadius:9, background: draftLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: draftLabel.trim()?"white":"var(--text-tertiary)", fontSize:13, fontWeight:600, border:"none", cursor: draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, transition:"background 150ms" }}>
@@ -1458,7 +1458,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                           style={{ ...inputStyle, flex:2, width:"auto" }}
                         />
                         <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                          style={{ ...inputStyle, flex:1, width:"auto" }}
+                          lang={lang} style={{ ...inputStyle, flex:1, width:"auto" }}
                         />
                       </div>
                       {/* Edit description */}
@@ -1765,7 +1765,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   onSettingsChange: (s: LifeSettings) => void;
   onClose: () => void;
 }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang } = React.useContext(LangContext);
   const [view, setView] = useState<LifeView>("weeks");
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
 
@@ -1838,7 +1838,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
               <input type="date" value={settings.birthDate}
                 onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
-                style={{ ...inputStyle, width:"100%" }}
+                lang={lang} style={{ ...inputStyle, width:"100%" }}
               />
             </div>
             <div className="flex flex-col gap-1" style={{ width:130 }}>
