@@ -1075,7 +1075,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   if (isPast) {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ ...base, background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }} {...hov}>
+      <div className="flex flex-col items-center justify-center" style={{ ...base, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }} {...hov}>
         {msBar}{tooltip}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
       </div>
     );
@@ -1093,7 +1093,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     );
   }
   return (
-    <div className="flex flex-col items-center justify-center" style={{ ...base, background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }} {...hov}>
+    <div className="flex flex-col items-center justify-center" style={{ ...base, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }} {...hov}>
       {msBar}{tooltip}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
     </div>
   );
