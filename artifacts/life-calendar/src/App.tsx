@@ -316,7 +316,7 @@ function App() {
   }, [dark]);
 
   const [lang, setLang] = useState<Lang>(() => ls<string>("lifeCalendar:lang", "en") === "ru" ? "ru" : "en");
-  useEffect(() => { lsSet("lifeCalendar:lang", lang); }, [lang]);
+  useEffect(() => { lsSet("lifeCalendar:lang", lang); document.documentElement.lang = lang; }, [lang]);
   const t = (k: string) => I18N[lang][k] ?? I18N.en[k] ?? k;
   const months = MONTHS_I18N[lang];
   const weekdays = WEEKDAYS_I18N[lang];
