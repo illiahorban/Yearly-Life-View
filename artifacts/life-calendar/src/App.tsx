@@ -53,7 +53,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     milestones:"Milestones", darkMode:"Dark mode", lightMode:"Light mode",
     lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress",
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
-    note:"Note", addNote:"Add note", save:"Save",
+    note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
     remove:"Remove", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
@@ -90,7 +90,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     milestones:"События", darkMode:"Тёмная тема", lightMode:"Светлая тема",
     lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
-    note:"Заметка", addNote:"Добавить заметку", save:"Сохранить",
+    note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
     remove:"Удалить", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
@@ -707,6 +707,7 @@ function App() {
             dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
             dayMilestones={milestonesMap[openNote] ?? []}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
+            onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
           />
@@ -1113,10 +1114,11 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMilestoneUpdate, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMilestoneUpdate, onMilestoneAdd, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   onMilestoneUpdate: (updated: Milestone) => void;
+  onMilestoneAdd: (ms: Milestone) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() =>
@@ -1138,6 +1140,21 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
   const [msEditColor, setMsEditColor] = useState(MILESTONE_COLORS[0]!);
   const [msEditDesc, setMsEditDesc] = useState("");
   const [msEditRecurring, setMsEditRecurring] = useState(false);
+
+  // New event form state
+  const [addEventOpen, setAddEventOpen] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [newDate, setNewDate] = useState(dk);
+  const [newColor, setNewColor] = useState(MILESTONE_COLORS[4]!);
+  const [newDesc, setNewDesc] = useState("");
+  const [newRecurring, setNewRecurring] = useState(false);
+
+  const submitNewEvent = () => {
+    if (!newLabel.trim()) return;
+    onMilestoneAdd({ id: makeId(), label: newLabel.trim(), date: newDate, color: newColor, description: newDesc.trim() || undefined, recurring: newRecurring || undefined });
+    setNewLabel(""); setNewDesc(""); setNewRecurring(false); setNewColor(MILESTONE_COLORS[4]!); setNewDate(dk);
+    setAddEventOpen(false);
+  };
 
   const startMsEdit = (ms: Milestone) => {
     setMsEditId(ms.id); setMsEditLabel(ms.label);
@@ -1257,6 +1274,52 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
             <div className="mt-3 mb-0 h-px" style={{ background:"var(--border-soft)" }} />
           </div>
         )}
+
+        {/* Add event form */}
+        <div className="px-5 pb-3 shrink-0">
+          {!addEventOpen ? (
+            <button onClick={() => setAddEventOpen(true)}
+              style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+              <span style={{ fontSize:14, lineHeight:1 }}>+</span> {t("addEvent")}
+            </button>
+          ) : (
+            <div style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"}`, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
+              <div className="flex gap-1 flex-wrap">
+                {MILESTONE_COLORS.map(c => (
+                  <button key={c} onClick={() => setNewColor(c)}
+                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms" }} />
+                ))}
+              </div>
+              <div className="flex gap-1.5">
+                <input value={newLabel} onChange={e => setNewLabel(e.target.value)}
+                  onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
+                  placeholder={t("labelPlaceholder")} autoFocus
+                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:2, width:"auto" }} />
+                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+                  lang={lang}
+                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:1, width:"auto" }} />
+              </div>
+              <div style={{ position:"relative" }}>
+                <textarea value={newDesc} onChange={e => setNewDesc(e.target.value.slice(0,300))}
+                  placeholder={t("descPlaceholder")} rows={2}
+                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", paddingBottom:16, fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
+                <span style={{ position:"absolute", bottom:4, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{newDesc.length}/300</span>
+              </div>
+              <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
+                <input type="checkbox" checked={newRecurring} onChange={e => setNewRecurring(e.target.checked)}
+                  style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }} />
+                <span style={{ fontSize:12, color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
+              </label>
+              <div className="flex gap-1.5">
+                <button onClick={() => setAddEventOpen(false)}
+                  style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
+                <button onClick={submitNewEvent} disabled={!newLabel.trim()}
+                  style={{ flex:2, height:28, borderRadius:7, border:"none", background: newLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: newLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
+              </div>
+            </div>
+          )}
+          {(dayMilestones.length > 0 || addEventOpen) && <div className="mt-3 h-px" style={{ background:"var(--border-soft)" }} />}
+        </div>
 
         {/* Scrollable notes list */}
         <div className="px-5 pb-2 flex flex-col gap-3 overflow-y-auto">
