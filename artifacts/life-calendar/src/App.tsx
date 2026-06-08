@@ -899,7 +899,7 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`w-20 sm:w-24 shrink-0 text-[15px] tabular-nums whitespace-nowrap ${lang === "en" ? "flex items-center justify-end gap-[0.5ch]" : "text-right"}`}
+                            className="w-20 sm:w-24 shrink-0 text-right text-[15px] tabular-nums whitespace-nowrap"
                             style={{
                               color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
                               fontWeight: isSel || isCurrent ? 600 : 500,
@@ -913,7 +913,7 @@ function BlocksRenderer({
                               transition: "background 120ms, border 120ms, color 120ms",
                               opacity: hasSelection && !isSel ? 0.55 : 1,
                             }}
-                          >{lang === "en" ? <><span>{t("week")}</span><span>{wi+1}</span></> : <>{t("week")} {wi+1}</>}</button>
+                          >{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</button>
                           <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
