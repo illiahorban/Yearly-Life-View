@@ -782,7 +782,7 @@ function BlocksRenderer({
   onCreateSprint: (selStart: number, selEnd: number) => void;
   onCancelSel: () => void;
 }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang } = React.useContext(LangContext);
   let cursor = 0;
   const blocks = qConfig.blocks.map(b => { const r = { start:cursor, end:cursor+b.weeks }; cursor+=b.weeks; return { ...b, ...r }; });
   const selMin = weekSel?.qi === _qi ? Math.min(weekSel.anchor, weekSel.focus) : -1;
@@ -899,7 +899,7 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className="w-20 sm:w-24 shrink-0 text-right text-[15px] tabular-nums whitespace-nowrap"
+                            className={`w-20 sm:w-24 shrink-0 text-[15px] tabular-nums whitespace-nowrap ${lang === "en" ? "flex items-center justify-between" : "text-right"}`}
                             style={{
                               color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
                               fontWeight: isSel || isCurrent ? 600 : 500,
@@ -913,7 +913,7 @@ function BlocksRenderer({
                               transition: "background 120ms, border 120ms, color 120ms",
                               opacity: hasSelection && !isSel ? 0.55 : 1,
                             }}
-                          >{t("week")} {wi+1}</button>
+                          >{lang === "en" ? <><span>{t("week")}</span><span>{wi+1}</span></> : <>{t("week")} {wi+1}</>}</button>
                           <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
