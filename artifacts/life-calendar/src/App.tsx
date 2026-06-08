@@ -78,6 +78,10 @@ const I18N: Record<Lang, Record<string, string>> = {
     clickStartSprintSelection: "Click to start sprint selection",
     clickMoveEndSelection: "Click to move end of selection",
     extendSelectionHere: "Extend selection here",
+    createSprint: "Create Sprint",
+    clickWeekToAdjust: "click week number to adjust",
+    sprintLabel: "Sprint",
+    allWeeks: "All weeks",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -109,6 +113,10 @@ const I18N: Record<Lang, Record<string, string>> = {
     clickStartSprintSelection: "Нажмите, чтобы начать выбор спринта",
     clickMoveEndSelection: "Нажмите, чтобы переместить конец выделения",
     extendSelectionHere: "Расширить выделение здесь",
+    createSprint: "Создать спринт",
+    clickWeekToAdjust: "нажмите номер недели",
+    sprintLabel: "Спринт",
+    allWeeks: "Все недели",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -245,7 +253,7 @@ function LifeIcon() {
 function makeId() { return Math.random().toString(36).slice(2,10); }
 function defaultBlock(): Block { return { id: makeId(), weeks: WEEKS_PER_QUARTER, label: "All weeks" }; }
 
-function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, selEnd: number): QuarterConfig {
+function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, selEnd: number, sprintLabel: string): QuarterConfig {
   const selEndExcl = selEnd + 1;
   const newBlocks: Block[] = [];
   let cursor = 0;
@@ -260,7 +268,7 @@ function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, sel
       const beforeWeeks = selStart - bStart;
       if (beforeWeeks > 0) newBlocks.push({ id: makeId(), weeks: beforeWeeks, label: block.label });
       if (!sprintAdded) {
-        newBlocks.push({ id: makeId(), weeks: selEndExcl - selStart, label: "Sprint" });
+        newBlocks.push({ id: makeId(), weeks: selEndExcl - selStart, label: sprintLabel });
         sprintAdded = true;
       }
       const afterWeeks = bEnd - selEndExcl;
@@ -661,7 +669,7 @@ function App() {
                       onGoalToggle={toggleGoal}
                       onEditGoals={bid => setEditGoalsBlockId(bid)}
                       onWeekLabelClick={handleWeekLabelClick}
-                      onCreateSprint={(selStart, selEnd) => { updateQuarter(qi, createSprintFromSelection(config.quarters[qi]!, selStart, selEnd)); setWeekSel(null); }}
+                      onCreateSprint={(selStart, selEnd) => { updateQuarter(qi, createSprintFromSelection(config.quarters[qi]!, selStart, selEnd, t("sprintLabel"))); setWeekSel(null); }}
                       onCancelSel={() => setWeekSel(null)}
                     />
                   </div>
@@ -940,17 +948,17 @@ function BlocksRenderer({
                                     : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
                                 </span>
                                 <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                                  {selMax - selMin + 1} week{selMax - selMin + 1 !== 1 ? "s" : ""} · click week number to adjust
+                                  {selMax - selMin + 1} {t("week")}{lang === "en" && selMax - selMin + 1 !== 1 ? "s" : ""} · {t("clickWeekToAdjust")}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
                                 <button onClick={onCancelSel}
                                   style={{ height:28, paddingInline:10, borderRadius:8, border:`1px solid ${quarter.border}44`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
-                                  Cancel
+                                  {t("cancel")}
                                 </button>
                                 <button onClick={() => onCreateSprint(selMin, selMax)}
                                   style={{ height:28, paddingInline:12, borderRadius:8, border:"none", background: quarter.border, color:"white", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:`0 2px 8px ${quarter.border}55` }}>
-                                  Create Sprint
+                                  {t("createSprint")}
                                 </button>
                               </div>
                             </motion.div>
@@ -1452,7 +1460,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                       {/* Edit description */}
                       <div style={{ position:"relative" }}>
                         <textarea value={editDesc} onChange={e => setEditDesc(e.target.value.slice(0,300))}
-                          placeholder="Description (optional)…" rows={2}
+                          placeholder={t("editDescPlaceholder")} rows={2}
                           style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px", paddingBottom:18 }}
                         />
                         <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{editDesc.length}/300</span>
@@ -1461,17 +1469,17 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                         <input type="checkbox" checked={editRecurring} onChange={e => setEditRecurring(e.target.checked)}
                           style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
                         />
-                        <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>↻ Repeat yearly</span>
+                        <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
                       </label>
                       {/* Edit action row */}
                       <div className="flex gap-2">
                         <button onClick={cancelEdit}
                           style={{ flex:1, height:30, borderRadius:8, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>
-                          Cancel
+                          {t("cancel")}
                         </button>
                         <button onClick={saveEdit} disabled={!editLabel.trim()}
                           style={{ flex:2, height:30, borderRadius:8, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>
-                          Save changes
+                          {t("saveChanges")}
                         </button>
                       </div>
                     </div>
@@ -1599,7 +1607,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   const remaining = WEEKS_PER_QUARTER - total;
   const valid = total===WEEKS_PER_QUARTER && blocks.every(b => b.weeks>=1);
   const update = (id: string, patch: Partial<Block>) => setBlocks(prev => prev.map(b => b.id===id ? { ...b, ...patch } : b));
-  const applyPreset = (parts: number[]) => setBlocks(parts.map((w,i) => ({ id:makeId(), weeks:w, label:`Sprint ${i+1}` })));
+  const applyPreset = (parts: number[]) => setBlocks(parts.map((w,i) => ({ id:makeId(), weeks:w, label:`${t("sprintLabel")} ${i+1}` })));
   const [colorPickerAnchor, setColorPickerAnchor] = useState<{ id:string; rect: DOMRect } | null>(null);
   const activeColorPickerBlock = colorPickerAnchor ? blocks.find(b => b.id === colorPickerAnchor.id) : null;
 
@@ -1716,7 +1724,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 </motion.div>
               </AnimatePresence>, document.body)
             }
-            <button type="button" onClick={() => setBlocks(prev => [...prev, { id:makeId(), weeks:Math.max(1,remaining>0?remaining:1), label:`Sprint ${prev.length+1}` }])}
+            <button type="button" onClick={() => setBlocks(prev => [...prev, { id:makeId(), weeks:Math.max(1,remaining>0?remaining:1), label:`${t("sprintLabel")} ${prev.length+1}` }])}
               disabled={remaining<1} className="text-[12px] font-medium mt-1 self-start"
               style={{ padding:"6px 12px", borderRadius:10, color: remaining<1?"var(--text-tertiary)":quarter.text, background: remaining<1?(dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)"):(dark?quarter.darkTint:quarter.tint), border:`1px solid ${remaining<1?borderColor:(dark?quarter.darkSoft:quarter.soft)}`, opacity: remaining<1?0.6:1 }}>
               + {t("addSprint")}
