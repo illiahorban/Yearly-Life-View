@@ -899,7 +899,7 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`w-20 sm:w-24 shrink-0 text-[15px] tabular-nums whitespace-nowrap ${lang === "en" ? "flex items-center justify-between" : "text-right"}`}
+                            className={`w-20 sm:w-24 shrink-0 text-[15px] tabular-nums whitespace-nowrap ${lang === "en" ? "flex items-center justify-end gap-[0.5ch]" : "text-right"}`}
                             style={{
                               color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
                               fontWeight: isSel || isCurrent ? 600 : 500,
