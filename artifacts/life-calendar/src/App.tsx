@@ -82,6 +82,8 @@ const I18N: Record<Lang, Record<string, string>> = {
     clickWeekToAdjust: "click week number to adjust",
     sprintLabel: "Sprint",
     allWeeks: "All weeks",
+    enterBirthDate: "Enter your date of birth",
+    birthDateSubtitle: "We'll map your life's journey across time",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -117,6 +119,8 @@ const I18N: Record<Lang, Record<string, string>> = {
     clickWeekToAdjust: "нажмите номер недели",
     sprintLabel: "Спринт",
     allWeeks: "Все недели",
+    enterBirthDate: "Введите дату рождения",
+    birthDateSubtitle: "Мы покажем ваш жизненный путь во времени",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1369,7 +1373,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
         style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>Milestones</h2>
+          <h2 className="text-base font-semibold" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("milestones")}</h2>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
         </div>
 
@@ -1921,8 +1925,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
         ) : (
           <div className="px-6 pb-12 flex flex-col items-center justify-center text-center" style={{ flex:1, minHeight:200 }}>
             <div className="text-4xl mb-3">🗓️</div>
-            <div className="text-[15px] font-semibold" style={{ color:"var(--text)" }}>Enter your date of birth</div>
-            <div className="mt-1 text-[13px]" style={{ color:"var(--text-tertiary)" }}>We'll map your life's journey across time</div>
+            <div className="text-[15px] font-semibold" style={{ color:"var(--text)" }}>{t("enterBirthDate")}</div>
+            <div className="mt-1 text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("birthDateSubtitle")}</div>
           </div>
         )}
       </motion.div>
