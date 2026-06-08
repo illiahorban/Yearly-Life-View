@@ -1058,9 +1058,9 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const noteDot = hasNote ? (
     <div
-      style={{ position:"absolute", top:4, right:4, width:"11px", height:"11px", minWidth:"11px", minHeight:"11px", background:"#007aff", boxShadow:"0 0 3px rgba(0,122,255,0.65)", zIndex:5 }}
+      style={{ position:"absolute", top:4, right:4, width:"12px", height:"12px", minWidth:"12px", minHeight:"12px", background:"#007aff", boxShadow:"0 0 3px rgba(0,122,255,0.65)", zIndex:5 }}
       className="absolute top-1 right-1 flex flex-shrink-0 items-center justify-center rounded-full bg-[#007aff]">
-      <span style={{ fontSize:5, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>
+      <span style={{ fontSize:7, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>
     </div>
   ) : null;
 
