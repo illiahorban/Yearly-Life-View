@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 
 // ─── Tiny localStorage helpers ────────────────────────────────────────────────
@@ -64,14 +65,24 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     yr:"yr", mo:"mo", remaining:"remaining", born:"Born", age:"Age",
-    sprintConfig:"Sprint configuration", saveSprints:"Save sprints", addSprint:"+ Add sprint",
+    sprintConfig:"Sprint configuration", sprintConfigDescription:"Group the 13 weeks of {quarter} into sprints.", saveSprints:"Save sprints", addSprint:"Add sprint",
     looksGood:"Looks good", unassigned:"unassigned", over:"over", total:"Total",
     q1:"Q1", q2:"Q2", q3:"Q3", q4:"Q4", todayCountdown:"Today!", daysShort:"d",
+    chooseColor: "Choose color",
+    clickToRename: "Click to rename",
+    edit: "Edit",
+    switchToRussian: "Switch to Russian",
+    switchToEnglish: "Switch to English",
+    sprintColor: "Sprint color",
+    quarterDefault: "Quarter default",
+    clickStartSprintSelection: "Click to start sprint selection",
+    clickMoveEndSelection: "Click to move end of selection",
+    extendSelectionHere: "Extend selection here",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
     milestones:"События", darkMode:"Тёмная тема", lightMode:"Светлая тема",
-    lifeCalendarBtn:"Жизнь", quarterProgress:"Прогресс квартала",
+    lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
@@ -85,9 +96,19 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     yr:"лет", mo:"мес", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
-    sprintConfig:"Настройка спринтов", saveSprints:"Сохранить", addSprint:"+ Спринт",
+    sprintConfig:"Настройка спринтов", sprintConfigDescription:"Сгруппируйте 13 недель {quarter} в спринты.", saveSprints:"Сохранить", addSprint:"Спринт",
     looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
     q1:"К1", q2:"К2", q3:"К3", q4:"К4", todayCountdown:"Сегодня!", daysShort:"д",
+    chooseColor: "Выбрать цвет",
+    clickToRename: "Нажмите для переименования",
+    edit: "Изменить",
+    switchToRussian: "Переключить на русский",
+    switchToEnglish: "Переключить на английский",
+    sprintColor: "Цвет спринта",
+    quarterDefault: "По умолчанию для квартала",
+    clickStartSprintSelection: "Нажмите, чтобы начать выбор спринта",
+    clickMoveEndSelection: "Нажмите, чтобы переместить конец выделения",
+    extendSelectionHere: "Расширить выделение здесь",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -95,7 +116,7 @@ const LangContext = React.createContext<LangCtx>({ t: k => I18N.en[k] ?? k, mont
 const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
-type Quarter = { label: string; tint: string; darkTint: string; border: string; text: string; soft: string; darkSoft: string };
+type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; text: string; soft: string; darkSoft: string };
 type Block = { id: string; weeks: number; label: string; color?: AppleColorKey };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
@@ -133,9 +154,67 @@ function hexToRgb(hex: string): [number,number,number] {
   return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
 }
 
+// ─── Color helpers: RGB <-> HSL and saturation adjust ──────────────────────
+function rgbToHsl(r: number, g: number, b: number) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h = 0, s = 0, l = (max+min)/2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return { h, s, l };
+}
+function hslToRgb(h: number, s: number, l: number) {
+  let r: number, g: number, b: number;
+  if (s === 0) { r = g = b = l; }
+  else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+function saturateRgbaString(rgba: string, factor: number) {
+  const m = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/);
+  if (!m) return rgba;
+  const r = Number(m[1]), g = Number(m[2]), b = Number(m[3]);
+  const a = m[4] !== undefined ? Number(m[4]) : 1;
+  const { h, s, l } = rgbToHsl(r, g, b);
+  const ns = Math.min(1, s * factor);
+  const [nr, ng, nb] = hslToRgb(h, ns, l);
+  return `rgba(${nr},${ng},${nb},${a})`;
+}
+
+const LIGHT_SAT_FACTOR = 1.2;
+function hexSaturate(hex: string, factor: number) {
+  const [r,g,b] = hexToRgb(hex);
+  const { h, s, l } = rgbToHsl(r,g,b);
+  const ns = Math.min(1, s * factor);
+  const [nr, ng, nb] = hslToRgb(h, ns, l);
+  const toHex = (n: number) => n.toString(16).padStart(2, "0");
+  return `#${toHex(nr)}${toHex(ng)}${toHex(nb)}`;
+}
+
 function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   const ac = APPLE_COLORS.find(c => c.key === meta.colorKey) ?? APPLE_COLORS[0]!;
-  const hex = dark ? ac.dark : ac.light;
+  const rawHex = dark ? ac.dark : ac.light;
+  const hex = (!dark) ? hexSaturate(rawHex, LIGHT_SAT_FACTOR) : rawHex;
   const [r,g,b] = hexToRgb(hex);
   // Adjust text color for low-contrast hues in light mode
   const textHex = (!dark && meta.colorKey==="yellow") ? "#9a7400"
@@ -143,6 +222,7 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
                 : (!dark && meta.colorKey==="teal")   ? "#007ea5"
                 : hex;
   return {
+    key: meta.colorKey,
     label: meta.name,
     tint:     `rgba(${r},${g},${b},0.07)`,
     darkTint: `rgba(${r},${g},${b},0.14)`,
@@ -412,10 +492,11 @@ function App() {
     setQuarterMeta(prev => prev.map((m, i) => i===qi ? { ...m, ...patch } : m));
 
   // Theme-dependent surface values
-  const headerBg = dark ? "rgba(22,22,24,0.90)" : "rgba(245,245,247,0.88)";
-  const cardBg   = dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)";
-  const modalBg  = dark ? "rgba(30,30,32,0.96)" : "rgba(255,255,255,0.93)";
-  const overlayBg = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
+  const SAT_FACTOR = 1.2; // increase saturation in light mode by 20%
+  const headerBg = dark ? "rgba(22,22,24,0.90)" : saturateRgbaString("rgba(245,245,247,0.88)", SAT_FACTOR);
+  const cardBg   = dark ? "rgba(255,255,255,0.06)" : saturateRgbaString("rgba(255,255,255,0.55)", SAT_FACTOR);
+  const modalBg  = dark ? "rgba(30,30,32,0.96)" : saturateRgbaString("rgba(255,255,255,0.93)", SAT_FACTOR);
+  const overlayBg = dark ? "rgba(255,255,255,0.08)" : saturateRgbaString("rgba(0,0,0,0.05)", SAT_FACTOR);
 
   return (
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
@@ -434,14 +515,14 @@ function App() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>{yearProgress.toFixed(1)}% {t("complete")}</span>
-              <IconButton title="Milestones" onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
-              <IconButton title={dark ? "Light mode" : "Dark mode"} onClick={() => setDark(d => !d)} bg={overlayBg}>
+              <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
+              <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
                 {dark ? <SunIcon /> : <MoonIcon />}
               </IconButton>
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
-              <IconButton title="Life Calendar" onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
+              <IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
-              <IconButton title={lang==="en"?"Switch to Russian":"Переключить на английский"} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
+              <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
                 <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
               </IconButton>
             </div>
@@ -517,7 +598,7 @@ function App() {
 
               return (
                 <motion.section layout key={qi} className="overflow-hidden"
-                  style={{ background: dark ? quarter.darkTint : quarter.tint, borderRadius: 18, borderLeft: `3px solid ${quarter.border}` }}
+                  style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, borderLeft: `3px solid ${quarter.border}` }}
                 >
                   {/* Quarter header */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-1.5">
@@ -526,7 +607,7 @@ function App() {
                       <div style={{ position:"relative" }}>
                         <button
                           onClick={() => setColorPickerQi(colorPickerQi === qi ? null : qi)}
-                          title="Choose color"
+                          title={t("chooseColor")}
                           style={{ width:13, height:13, borderRadius:999, background:quarter.border, border:`2px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)"}`, cursor:"pointer", display:"block", flexShrink:0 }}
                         />
                         <AnimatePresence>
@@ -550,16 +631,16 @@ function App() {
 
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
-                      <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>Weeks {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
+                      <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
                     </div>
-                    <IconButton title="Configure sprints" onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
+                    <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                   </div>
 
                   {/* Quarter progress bar */}
                   <div className="px-4 sm:px-5 pb-2.5">
                     <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
-                      <span style={{ color:"var(--text-tertiary)" }}>Quarter progress</span>
-                      <span style={{ color: quarter.text, fontWeight:600 }}>{qPct.toFixed(0)}%</span>
+                      <span style={{ color:"var(--text-tertiary)" }}>{t("quarterProgress")}</span>
+                      <span style={{ color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text, fontWeight:700 }}>{qPct.toFixed(0)}%</span>
                     </div>
                     <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                       <motion.div initial={false} animate={{ width:`${qPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
@@ -741,7 +822,7 @@ function BlocksRenderer({
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5">
                   <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.text} />
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => onEditGoals(block.id)} title="Sprint goals"
+                    <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
                       style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                     ><PencilIcon /></button>
                     <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{block.weeks} {t("week")}</span>
@@ -752,7 +833,7 @@ function BlocksRenderer({
                 <div className="px-3 sm:px-3.5 pb-2">
                   <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
                     <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
-                    <span style={{ color: isComplete ? "var(--apple-green)" : isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:600 }}>{pct.toFixed(0)}%</span>
+                    <span style={{ color: dark ? (isComplete ? "var(--apple-green)" : isFuture ? "var(--text-tertiary)" : effectiveQ.text) : (isComplete ? "var(--apple-green-deep)" : isFuture ? "var(--text-tertiary)" : (effectiveQ.key === "green" ? "var(--apple-green-deep)" : effectiveQ.text)), fontWeight:700 }}>{pct.toFixed(0)}%</span>
                     <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
@@ -817,8 +898,8 @@ function BlocksRenderer({
                         <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
-                            title={hasSelection ? (isSel ? "Click to move end of selection" : "Extend selection here") : "Click to start sprint selection"}
-                            className="w-16 sm:w-20 shrink-0 text-right text-[17px] tabular-nums"
+                            title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
+                            className="w-16 sm:w-18 shrink-0 text-right text-[15px] tabular-nums whitespace-nowrap"
                             style={{
                               color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
                               fontWeight: isSel || isCurrent ? 600 : 500,
@@ -891,6 +972,7 @@ function BlocksRenderer({
 // ─── QuarterNameEditor ────────────────────────────────────────────────────────
 
 function QuarterNameEditor({ value, onChange, color }: { value: string; onChange: (v: string) => void; color: string }) {
+  const { t } = React.useContext(LangContext);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const ref = useRef<HTMLInputElement|null>(null);
@@ -907,7 +989,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   return (
     <button type="button" onClick={() => setEditing(true)}
       className="text-[11px] font-semibold tracking-widest uppercase"
-      style={{ color }} title="Click to rename"
+      style={{ color }} title={t("clickToRename")}
     >{value}</button>
   );
 }
@@ -915,6 +997,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
 // ─── BlockLabel ───────────────────────────────────────────────────────────────
 
 function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: string) => void; color: string }) {
+  const { t } = React.useContext(LangContext);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const ref = useRef<HTMLInputElement|null>(null);
@@ -928,7 +1011,7 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
       style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, minWidth:100, padding:"1px 2px" }}
     />;
   }
-  return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color:"var(--text)", letterSpacing:"-0.01em" }} title="Click to rename">{value}</button>;
+  return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color:"var(--text)", letterSpacing:"-0.01em" }} title={t("clickToRename")}>{value}</button>;
 }
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
@@ -963,9 +1046,9 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const noteDot = hasNote ? (
     <div
-      style={{ position:"absolute", top:4, right:4, minWidth:11, height:11, borderRadius:999, background:"#007aff", boxShadow:"0 0 3px rgba(0,122,255,0.65)", zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", padding: noteCount > 1 ? "0 2px" : 0 }}
-      className="rounded-tl-[999px] rounded-tr-[999px] rounded-br-[999px] rounded-bl-[999px]">
-      {noteCount > 1 && <span style={{ fontSize:7, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>}
+      style={{ position:"absolute", top:4, right:4, width:"16px", height:"16px", minWidth:"16px", minHeight:"16px", background:"#007aff", boxShadow:"0 0 3px rgba(0,122,255,0.65)", zIndex:5 }}
+      className="absolute top-1 right-1 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#007aff]">
+      <span style={{ fontSize:7, color:"white", fontWeight:700, lineHeight:1 }}>{noteCount}</span>
     </div>
   ) : null;
 
@@ -986,10 +1069,12 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   }
   if (isToday) {
     return (
-      <div className="flex flex-col items-center justify-center overflow-hidden" style={{ ...base, background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }} {...hov}>
+      <div className="flex flex-col items-center justify-center" style={{ ...base, background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }} {...hov}>
         {msBar}{tooltip}
-        <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
-        <div className="relative z-10 flex flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+        <div className="relative w-full h-full overflow-hidden rounded-[12px]">
+          <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
+          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+        </div>
         {noteDot}
       </div>
     );
@@ -1149,7 +1234,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
                           </div>
                           {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
                         </div>
-                        <button onClick={() => startMsEdit(ms)} title="Edit"
+                        <button onClick={() => startMsEdit(ms)} title={t("edit")}
                           style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.6, flexShrink:0, transform:"scaleX(-1)" }}>✎</button>
                       </div>
                     )}
@@ -1395,9 +1480,9 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                       <div className="flex items-center gap-2.5">
                         <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
                         <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
-                        {ms.recurring && <span title="Repeats yearly" style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
+                        {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
                         <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
-                        <button onClick={() => startEdit(ms)} title="Edit"
+                        <button onClick={() => startEdit(ms)} title={t("edit")}
                           style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
                         <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
                           style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
@@ -1515,7 +1600,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   const valid = total===WEEKS_PER_QUARTER && blocks.every(b => b.weeks>=1);
   const update = (id: string, patch: Partial<Block>) => setBlocks(prev => prev.map(b => b.id===id ? { ...b, ...patch } : b));
   const applyPreset = (parts: number[]) => setBlocks(parts.map((w,i) => ({ id:makeId(), weeks:w, label:`Sprint ${i+1}` })));
-  const [colorPickerId, setColorPickerId] = useState<string|null>(null);
+  const [colorPickerAnchor, setColorPickerAnchor] = useState<{ id:string; rect: DOMRect } | null>(null);
+  const activeColorPickerBlock = colorPickerAnchor ? blocks.find(b => b.id === colorPickerAnchor.id) : null;
 
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -1535,7 +1621,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>{quarter.label}</span>
             <h2 className="text-base font-semibold tracking-tight" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("sprintConfig")}</h2>
           </div>
-          <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)" }}>Group the 13 weeks of {quarter.label} into sprints.</p>
+          <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)" }}>{t("sprintConfigDescription").replace("{quarter}", quarter.label)}</p>
         </div>
 
         <div className="px-6">
@@ -1549,7 +1635,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
           </div>
         </div>
 
-        {colorPickerId !== null && <div style={{ position:"fixed", inset:0, zIndex:49 }} onClick={() => setColorPickerId(null)} />}
+        {colorPickerAnchor !== null && <div style={{ position:"fixed", inset:0, zIndex:49 }} onClick={() => setColorPickerAnchor(null)} />}
         <div className="px-6 mt-4 max-h-72 overflow-auto">
           <div className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
@@ -1563,29 +1649,13 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   <div style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", alignItems:"center", gap:8, flex:1 }}>
                     {/* Color dot */}
                     <div style={{ position:"relative", flexShrink:0 }}>
-                      <button type="button" onClick={() => setColorPickerId(colorPickerId === b.id ? null : b.id)}
-                        title="Sprint color"
+                      <button type="button" onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setColorPickerAnchor(prev => prev?.id === b.id ? null : { id: b.id, rect });
+                      }}
+                        title={t("sprintColor")}
                         style={{ width:16, height:16, borderRadius:999, background: bHex, border:`2px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", display:"block" }}
                       />
-                      <AnimatePresence>
-                        {colorPickerId === b.id && (
-                          <motion.div initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
-                            transition={{ type:"spring", stiffness:420, damping:28 }}
-                            onClick={e => e.stopPropagation()}
-                            style={{ position:"absolute", top:"calc(100% + 6px)", left:0, zIndex:55, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.26)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:160 }}
-                          >
-                            <button type="button" onClick={() => { update(b.id, { color: undefined }); setColorPickerId(null); }}
-                              title="Quarter default"
-                              style={{ width:20, height:20, borderRadius:999, background:"transparent", border: !b.color ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</button>
-                            {APPLE_COLORS.map(ac => (
-                              <button key={ac.key} type="button" onClick={() => { update(b.id, { color: ac.key }); setColorPickerId(null); }}
-                                title={ac.label}
-                                style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: b.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease" }}
-                              />
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                     {/* Number badge */}
                     <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
@@ -1607,6 +1677,45 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 );
               })}
             </AnimatePresence>
+            {colorPickerAnchor && activeColorPickerBlock && typeof document !== "undefined" && ReactDOM.createPortal(
+              <AnimatePresence>
+                <motion.div initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
+                  transition={{ type:"spring", stiffness:420, damping:28 }} onClick={e => e.stopPropagation()}
+                  style={{
+                    position:"fixed",
+                    top: (() => {
+                      const below = colorPickerAnchor.rect.bottom + 6;
+                      const popupHeight = 220;
+                      if (below + popupHeight <= window.innerHeight) return Math.max(8, below);
+                      return Math.max(8, Math.min(colorPickerAnchor.rect.top - popupHeight - 6, window.innerHeight - popupHeight - 8));
+                    })(),
+                    left: Math.min(Math.max(8, colorPickerAnchor.rect.left), window.innerWidth - 168),
+                    zIndex:60,
+                    background:modalBg,
+                    backdropFilter:"blur(20px)",
+                    WebkitBackdropFilter:"blur(20px)",
+                    borderRadius:12,
+                    padding:8,
+                    boxShadow:"0 8px 32px rgba(0,0,0,0.26)",
+                    border:"1px solid var(--border-soft)",
+                    display:"flex",
+                    flexWrap:"wrap",
+                    gap:5,
+                    width:160,
+                  }}
+                >
+                  <button type="button" onClick={() => { update(activeColorPickerBlock.id, { color: undefined }); setColorPickerAnchor(null); }}
+                    title={t("quarterDefault")}
+                    style={{ width:20, height:20, borderRadius:999, background:"transparent", border: !activeColorPickerBlock.color ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</button>
+                  {APPLE_COLORS.map(ac => (
+                    <button key={ac.key} type="button" onClick={() => { update(activeColorPickerBlock.id, { color: ac.key }); setColorPickerAnchor(null); }}
+                      title={ac.label}
+                      style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: activeColorPickerBlock.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease" }}
+                    />
+                  ))}
+                </motion.div>
+              </AnimatePresence>, document.body)
+            }
             <button type="button" onClick={() => setBlocks(prev => [...prev, { id:makeId(), weeks:Math.max(1,remaining>0?remaining:1), label:`Sprint ${prev.length+1}` }])}
               disabled={remaining<1} className="text-[12px] font-medium mt-1 self-start"
               style={{ padding:"6px 12px", borderRadius:10, color: remaining<1?"var(--text-tertiary)":quarter.text, background: remaining<1?(dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)"):(dark?quarter.darkTint:quarter.tint), border:`1px solid ${remaining<1?borderColor:(dark?quarter.darkSoft:quarter.soft)}`, opacity: remaining<1?0.6:1 }}>
