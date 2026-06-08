@@ -1151,8 +1151,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
     setMsEditId(null);
   };
 
+  const { lang: noteModalLang } = React.useContext(LangContext);
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
-  const label = new Date(y, m-1, d).toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric" });
+  const label = new Date(y, m-1, d).toLocaleDateString(noteModalLang, { weekday:"long", month:"long", day:"numeric" });
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
   const inputStyleMs: React.CSSProperties = { background: inputBg, border:`1px solid ${borderColor}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
@@ -1316,7 +1317,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
   milestones: Milestone[]; dark: boolean; modalBg: string;
   onClose: () => void; onChange: (m: Milestone[]) => void;
 }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang: msLang } = React.useContext(LangContext);
   const [items, setItems] = useState<Milestone[]>(() => [...milestones].sort((a,b) => a.date.localeCompare(b.date)));
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
@@ -1424,7 +1425,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
           <div className="flex flex-col gap-1.5 pb-3">
             {items.map((ms, _msIdx) => {
               const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
-              const lbl = new Date(y2,m2-1,d2).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+              const lbl = new Date(y2,m2-1,d2).toLocaleDateString(msLang, { month:"short", day:"numeric", year:"numeric" });
               const isEditing = editId === ms.id;
               const _q = Math.ceil(m2 / 3);
               const _prevMs = items[_msIdx - 1];
@@ -1765,7 +1766,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   onSettingsChange: (s: LifeSettings) => void;
   onClose: () => void;
 }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang: lcLang } = React.useContext(LangContext);
   const [view, setView] = useState<LifeView>("weeks");
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
 
@@ -1874,7 +1875,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${LIFE_ACCENT}cc,${LIFE_ACCENT})`, borderRadius:999, transition:"width 700ms ease" }} />
                 </div>
                 <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
-                  {remainingYears > 0 ? `${remainingYears} ${t("yr")} ${remainingMonths} ${t("mo")} ${t("remaining")} · ` : ""}{t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
+                  {remainingYears > 0 ? `${remainingYears} ${t("yr")} ${remainingMonths} ${t("mo")} ${t("remaining")} · ` : ""}{t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(lcLang, { year:"numeric", month:"long", day:"numeric" })}
                 </div>
               </div>
             </div>
