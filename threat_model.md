@@ -4,6 +4,8 @@
 
 This repository is a pnpm workspace monorepo with a small production footprint. The likely production application is the `artifacts/life-calendar` React/Vite frontend plus the `artifacts/api-server` Express 5 API server. The API currently exposes only `/api/healthz`, and the shared database package (`lib/db`) provides a PostgreSQL/Drizzle connection but no defined tables or production query logic yet.
 
+The current deployment is publicly reachable, so the static frontend and `/api/healthz` should be treated as internet-accessible production surface rather than private infrastructure.
+
 Production assumptions for future scans:
 - `NODE_ENV=production` in deployed environments.
 - Replit-managed TLS protects browser-to-server traffic.
