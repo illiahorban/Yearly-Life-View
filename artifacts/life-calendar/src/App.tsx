@@ -471,6 +471,30 @@ function App() {
     return result;
   }, [searchQuery, notes, milestones]);
 
+  const matchedDatesArray = useMemo(() => Array.from(matchedDates).sort(), [matchedDates]);
+  const [searchIndex, setSearchIndex] = useState(0);
+  useEffect(() => { setSearchIndex(0); }, [matchedDatesArray]);
+
+  const scrollToMatch = React.useCallback((idx: number) => {
+    const key = matchedDatesArray[idx];
+    if (!key) return;
+    const el = document.querySelector<HTMLElement>(`[data-datekey="${key}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.animate([
+        { boxShadow: "0 0 0 4px #ff9f0a, 0 0 20px 6px rgba(255,159,10,0.6)" },
+        { boxShadow: "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)" },
+      ], { duration: 600, easing: "ease-out" });
+    }
+  }, [matchedDatesArray]);
+
+  const navigateMatch = React.useCallback((dir: 1 | -1) => {
+    if (!matchedDatesArray.length) return;
+    const next = (searchIndex + dir + matchedDatesArray.length) % matchedDatesArray.length;
+    setSearchIndex(next);
+    scrollToMatch(next);
+  }, [searchIndex, matchedDatesArray, scrollToMatch]);
+
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
   const didScrollRef = useRef(false);
   useEffect(() => { didScrollRef.current = false; }, [viewYear]);
@@ -607,13 +631,26 @@ function App() {
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); } }}
+                    onKeyDown={e => {
+                      if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); }
+                      if (e.key === "Enter") { e.shiftKey ? navigateMatch(-1) : navigateMatch(1); }
+                    }}
                     placeholder={t("searchPlaceholder")}
-                    style={{ width:"100%", paddingLeft:34, paddingRight: matchedDates.size > 0 ? 90 : 34, paddingTop:8, paddingBottom:8, borderRadius:10, background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border:"1px solid var(--border-soft)", color:"var(--text)", fontSize:13, outline:"none", fontFamily:"inherit" }}
+                    style={{ width:"100%", paddingLeft:34, paddingRight: matchedDatesArray.length > 0 ? 112 : 34, paddingTop:8, paddingBottom:8, borderRadius:10, background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border:"1px solid var(--border-soft)", color:"var(--text)", fontSize:13, outline:"none", fontFamily:"inherit" }}
                   />
                   {searchQuery.trim() && (
-                    <div style={{ position:"absolute", right:10, fontSize:11, color:"var(--text-tertiary)", pointerEvents:"none", whiteSpace:"nowrap" }}>
-                      {matchedDates.size > 0 ? `${matchedDates.size} ${t("searchResults")}` : t("searchNoResults")}
+                    <div style={{ position:"absolute", right:6, display:"flex", alignItems:"center", gap:4 }}>
+                      {matchedDatesArray.length > 0 ? (
+                        <>
+                          <span style={{ fontSize:11, color:"var(--text-tertiary)", whiteSpace:"nowrap" }}>
+                            {searchIndex + 1} {t("of")} {matchedDatesArray.length}
+                          </span>
+                          <button type="button" onClick={() => navigateMatch(-1)} style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, padding:0 }}>↑</button>
+                          <button type="button" onClick={() => navigateMatch(1)} style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, padding:0 }}>↓</button>
+                        </>
+                      ) : (
+                        <span style={{ fontSize:11, color:"var(--text-tertiary)", whiteSpace:"nowrap" }}>{t("searchNoResults")}</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -714,7 +751,7 @@ function App() {
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
                       dayState={dayState} weekRefs={weekRefs} notes={notes} milestonesMap={milestonesMap}
                       blockGoals={blockGoals} dark={dark} cardBg={cardBg} overlayBg={overlayBg}
-                      weekSel={weekSel} matchedDates={matchedDates}
+                      weekSel={weekSel} matchedDates={matchedDates} activeMatchKey={matchedDatesArray[searchIndex]}
                       onNoteOpen={k => setOpenNote(k)}
                       onLabelChange={(bid, lbl) => updateBlockLabel(qi, bid, lbl)}
                       onGoalToggle={toggleGoal}
@@ -827,7 +864,7 @@ function IconButton({ children, onClick, title, bg, color }: { children: React.R
 function BlocksRenderer({
   qi:_qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress,
   dayState, weekRefs, notes, milestonesMap, blockGoals, dark, cardBg, overlayBg,
-  weekSel, matchedDates, onNoteOpen, onLabelChange, onGoalToggle, onEditGoals, onWeekLabelClick,
+  weekSel, matchedDates, activeMatchKey, onNoteOpen, onLabelChange, onGoalToggle, onEditGoals, onWeekLabelClick,
   onCreateSprint, onCancelSel,
 }: {
   qi: number; quarter: Quarter; qConfig: QuarterConfig; startIndex: number;
@@ -836,7 +873,7 @@ function BlocksRenderer({
   notes: Record<string,NoteEntry[]>; milestonesMap: Record<string,Milestone[]>;
   blockGoals: Record<string,BlockGoals>; dark: boolean; cardBg: string; overlayBg: string;
   weekSel: { qi: number; anchor: number; focus: number }|null;
-  matchedDates: Set<string>;
+  matchedDates: Set<string>; activeMatchKey?: string;
   onNoteOpen: (key: string) => void; onLabelChange: (blockId: string, label: string) => void;
   onGoalToggle: (blockId: string, goalId: string) => void; onEditGoals: (blockId: string) => void;
   onWeekLabelClick: (qi: number, qOffset: number) => void;
@@ -981,6 +1018,7 @@ function BlocksRenderer({
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 accentColor={effectiveQ.border}
                                 highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
+                                isActiveMatch={activeMatchKey === dateKey(d)}
                                 onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
                               />
                             ))}
@@ -1078,9 +1116,9 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, accentColor, highlighted, onOpen }: {
+function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, accentColor, highlighted, isActiveMatch, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  notes?: NoteEntry[]; milestones: Milestone[]; accentColor: string; highlighted?: boolean; onOpen: () => void;
+  notes?: NoteEntry[]; milestones: Milestone[]; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; onOpen: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
@@ -1090,7 +1128,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const { months: ctxMonths } = React.useContext(LangContext);
   const dayNumber = date.getDate(), monthAbbr = ctxMonths[date.getMonth()]!;
 
-  const highlightRing = highlighted === true ? "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)" : highlighted === false ? "none" : undefined;
+  const dk = dateKey(date);
+  const highlightRing = isActiveMatch
+    ? "0 0 0 3px #ff9f0a, 0 0 16px 4px rgba(255,159,10,0.65)"
+    : highlighted === true ? "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)"
+    : highlighted === false ? "none" : undefined;
   const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative", boxShadow: highlightRing };
 
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
@@ -1126,7 +1168,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   if (isPast) {
     return (
-      <div style={{ ...base }} {...hov}>
+      <div data-datekey={dk} style={{ ...base }} {...hov}>
         {tooltip}
         <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
           {msBar}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
@@ -1136,7 +1178,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   }
   if (isToday) {
     return (
-      <div style={{ ...base }} {...hov}>
+      <div data-datekey={dk} style={{ ...base }} {...hov}>
         {tooltip}
         <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
           {msBar}
@@ -1150,7 +1192,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     );
   }
   return (
-    <div style={{ ...base }} {...hov}>
+    <div data-datekey={dk} style={{ ...base }} {...hov}>
       {tooltip}
       <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
         {msBar}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
