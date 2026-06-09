@@ -19,6 +19,51 @@ function lsSet(key: string, v: unknown) {
 function dateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
+
+const _JUMP_EN_FULL = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+const _JUMP_EN_SHORT = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+const _JUMP_RU_FULL = ["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+const _JUMP_RU_GEN  = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const _JUMP_RU_SHORT = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+function _jumpFindMonth(name: string): number {
+  const n = name.toLowerCase();
+  for (let i = 0; i < 12; i++) {
+    if (_JUMP_EN_FULL[i]===n || _JUMP_EN_SHORT[i]===n || _JUMP_RU_FULL[i]===n || _JUMP_RU_GEN[i]===n || _JUMP_RU_SHORT[i]===n) return i;
+  }
+  return -1;
+}
+function parseDateQuery(s: string): Date | null {
+  const q = s.trim();
+  if (q.length < 3) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(q)) {
+    const d = new Date(q + "T00:00:00"); return isNaN(d.getTime()) ? null : d;
+  }
+  const numMatch = q.match(/^(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?$/);
+  if (numMatch) {
+    const day = parseInt(numMatch[1]), month = parseInt(numMatch[2]) - 1;
+    let year = new Date().getFullYear();
+    if (numMatch[3]) year = numMatch[3].length === 2 ? 2000 + parseInt(numMatch[3]) : parseInt(numMatch[3]);
+    if (month < 0 || month > 11 || day < 1 || day > 31) return null;
+    const d = new Date(year, month, day);
+    return (d.getDate()===day && d.getMonth()===month) ? d : null;
+  }
+  const lower = q.toLowerCase();
+  const dmY = lower.match(/^(\d{1,2})\s+([a-zа-яё]+)(?:[,\s]+(\d{4}))?$/);
+  if (dmY) {
+    const day = parseInt(dmY[1]), mi = _jumpFindMonth(dmY[2]), year = dmY[3] ? parseInt(dmY[3]) : new Date().getFullYear();
+    if (mi===-1 || day<1 || day>31) return null;
+    const d = new Date(year, mi, day);
+    return (d.getDate()===day && d.getMonth()===mi) ? d : null;
+  }
+  const mdY = lower.match(/^([a-zа-яё]+)\s+(\d{1,2})(?:[,\s]+(\d{4}))?$/);
+  if (mdY) {
+    const mi = _jumpFindMonth(mdY[1]), day = parseInt(mdY[2]), year = mdY[3] ? parseInt(mdY[3]) : new Date().getFullYear();
+    if (mi===-1 || day<1 || day>31) return null;
+    const d = new Date(year, mi, day);
+    return (d.getDate()===day && d.getMonth()===mi) ? d : null;
+  }
+  return null;
+}
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
 function startOfYear(y: number) { return new Date(y, 0, 1); }
 function startOfNextYear(y: number) { return new Date(y+1, 0, 1); }
@@ -52,7 +97,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     complete:"complete", daysOf:"days", of:"of", daysRemaining:"days remaining",
     milestones:"Milestones", darkMode:"Dark mode", lightMode:"Light mode",
     lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress", expandFullscreen:"Expand to fullscreen", collapseFullscreen:"Collapse",
-    search:"Search", searchPlaceholder:"Search notes and events…", searchResults:"results", searchNoResults:"No matches found",
+    search:"Search", searchPlaceholder:"Search notes and events…", searchResults:"results", searchNoResults:"No matches found", jumpTo:"Jump to",
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
@@ -90,7 +135,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
     milestones:"События", darkMode:"Тёмная тема", lightMode:"Светлая тема",
     lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала", expandFullscreen:"Развернуть на весь экран", collapseFullscreen:"Свернуть",
-    search:"Поиск", searchPlaceholder:"Поиск по заметкам и событиям…", searchResults:"совпадений", searchNoResults:"Ничего не найдено",
+    search:"Поиск", searchPlaceholder:"Поиск по заметкам и событиям…", searchResults:"совпадений", searchNoResults:"Ничего не найдено", jumpTo:"Перейти к",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
@@ -495,6 +540,22 @@ function App() {
     scrollToMatch(next);
   }, [searchIndex, matchedDatesArray, scrollToMatch]);
 
+  const parsedJumpDate = useMemo(() => {
+    if (matchedDatesArray.length > 0) return null;
+    return parseDateQuery(searchQuery);
+  }, [searchQuery, matchedDatesArray.length]);
+
+  const scrollToDateKey = React.useCallback((key: string) => {
+    const el = document.querySelector<HTMLElement>(`[data-datekey="${key}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.animate([
+        { boxShadow: "0 0 0 4px #30d158, 0 0 20px 6px rgba(48,209,88,0.6)" },
+        { boxShadow: "0 0 0 2px #30d158, 0 0 8px 2px rgba(48,209,88,0.3)" },
+      ], { duration: 700, easing: "ease-out" });
+    }
+  }, []);
+
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
   const didScrollRef = useRef(false);
   useEffect(() => { didScrollRef.current = false; }, [viewYear]);
@@ -633,10 +694,13 @@ function App() {
                     onChange={e => setSearchQuery(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); }
-                      if (e.key === "Enter") { e.shiftKey ? navigateMatch(-1) : navigateMatch(1); }
+                      if (e.key === "Enter") {
+                        if (parsedJumpDate) { scrollToDateKey(dateKey(parsedJumpDate)); }
+                        else { e.shiftKey ? navigateMatch(-1) : navigateMatch(1); }
+                      }
                     }}
                     placeholder={t("searchPlaceholder")}
-                    style={{ width:"100%", paddingLeft:34, paddingRight: matchedDatesArray.length > 0 ? 112 : 34, paddingTop:8, paddingBottom:8, borderRadius:10, background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border:"1px solid var(--border-soft)", color:"var(--text)", fontSize:13, outline:"none", fontFamily:"inherit" }}
+                    style={{ width:"100%", paddingLeft:34, paddingRight: matchedDatesArray.length > 0 ? 112 : parsedJumpDate ? 180 : 34, paddingTop:8, paddingBottom:8, borderRadius:10, background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border:"1px solid var(--border-soft)", color:"var(--text)", fontSize:13, outline:"none", fontFamily:"inherit" }}
                   />
                   {searchQuery.trim() && (
                     <div style={{ position:"absolute", right:6, display:"flex", alignItems:"center", gap:4 }}>
@@ -648,6 +712,15 @@ function App() {
                           <button type="button" onClick={() => navigateMatch(-1)} style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, padding:0 }}>↑</button>
                           <button type="button" onClick={() => navigateMatch(1)} style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, padding:0 }}>↓</button>
                         </>
+                      ) : parsedJumpDate ? (
+                        <button
+                          type="button"
+                          onClick={() => scrollToDateKey(dateKey(parsedJumpDate))}
+                          style={{ display:"flex", alignItems:"center", gap:4, paddingLeft:8, paddingRight:8, paddingTop:3, paddingBottom:3, borderRadius:7, background: dark ? "rgba(48,209,88,0.15)" : "rgba(48,209,88,0.12)", border:"1px solid rgba(48,209,88,0.35)", cursor:"pointer", color:"#30d158", fontSize:11, fontWeight:500, whiteSpace:"nowrap", fontFamily:"inherit" }}
+                        >
+                          <span style={{ fontSize:12 }}>↵</span>
+                          {t("jumpTo")} {parsedJumpDate.getDate()} {MONTHS_I18N[lang][parsedJumpDate.getMonth()]} {parsedJumpDate.getFullYear()}
+                        </button>
                       ) : (
                         <span style={{ fontSize:11, color:"var(--text-tertiary)", whiteSpace:"nowrap" }}>{t("searchNoResults")}</span>
                       )}
