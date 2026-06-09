@@ -1993,7 +1993,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: isFullscreen ? "auto" : "visible", minHeight: 0 }}>
+            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: "auto", maxHeight: isFullscreen ? undefined : (view === "days" ? 260 : undefined), minHeight: 0 }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                   {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
