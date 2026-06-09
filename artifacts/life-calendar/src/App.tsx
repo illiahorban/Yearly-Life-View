@@ -1076,26 +1076,35 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   if (isPast) {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ ...base, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }} {...hov}>
-        {msBar}{tooltip}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
+      <div style={{ ...base }} {...hov}>
+        {tooltip}
+        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+          {msBar}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
+        </div>
       </div>
     );
   }
   if (isToday) {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ ...base, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }} {...hov}>
-        {msBar}{tooltip}
-        <div className="relative w-full h-full overflow-hidden">
-          <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
-          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+      <div style={{ ...base }} {...hov}>
+        {tooltip}
+        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
+          {msBar}
+          <div className="relative w-full h-full overflow-hidden">
+            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
+            <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+          </div>
+          {noteDot}
         </div>
-        {noteDot}
       </div>
     );
   }
   return (
-    <div className="flex flex-col items-center justify-center" style={{ ...base, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }} {...hov}>
-      {msBar}{tooltip}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
+    <div style={{ ...base }} {...hov}>
+      {tooltip}
+      <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
+        {msBar}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
+      </div>
     </div>
   );
 }
