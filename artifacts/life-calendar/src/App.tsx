@@ -846,7 +846,7 @@ function BlocksRenderer({
                 <div className="px-3 sm:px-3.5 pb-2">
                   <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
                     <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
-                    <span style={{ color: dark ? (isComplete ? "var(--apple-green)" : isFuture ? "var(--text-tertiary)" : effectiveQ.text) : (isComplete ? "var(--apple-green-deep)" : isFuture ? "var(--text-tertiary)" : (effectiveQ.key === "green" ? "var(--apple-green-deep)" : effectiveQ.text)), fontWeight:700 }}>{pct.toFixed(0)}%</span>
+                    <span style={{ color: isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
                     <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
