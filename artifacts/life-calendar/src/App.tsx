@@ -51,7 +51,7 @@ const I18N: Record<Lang, Record<string, string>> = {
   en: {
     complete:"complete", daysOf:"days", of:"of", daysRemaining:"days remaining",
     milestones:"Milestones", darkMode:"Dark mode", lightMode:"Light mode",
-    lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress",
+    lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress", expandFullscreen:"Expand to fullscreen", collapseFullscreen:"Collapse",
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
@@ -88,7 +88,7 @@ const I18N: Record<Lang, Record<string, string>> = {
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
     milestones:"События", darkMode:"Тёмная тема", lightMode:"Светлая тема",
-    lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала",
+    lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала", expandFullscreen:"Развернуть на весь экран", collapseFullscreen:"Свернуть",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
@@ -2002,7 +2002,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   <button
                     type="button"
                     onClick={() => setIsFullscreen(f => !f)}
-                    title={isFullscreen ? "Свернуть" : "Развернуть на весь экран"}
+                    title={isFullscreen ? t("collapseFullscreen") : t("expandFullscreen")}
                     style={{ width:24, height:24, borderRadius:6, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"color 150ms" }}
                     onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
                     onMouseLeave={e => (e.currentTarget.style.color = "var(--text-tertiary)")}
