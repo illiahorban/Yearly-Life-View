@@ -1840,7 +1840,13 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 }) {
   const { t, lang } = React.useContext(LangContext);
   const [view, setView] = useState<LifeView>("weeks");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
+
+  const handleSetView = (v: LifeView) => {
+    if (v !== "days") setIsFullscreen(false);
+    setView(v);
+  };
 
   const today = useMemo(() => startOfDay(new Date()), []);
   const birthDate = useMemo(() => {
@@ -1898,7 +1904,18 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     >
       <motion.div initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
-        style={{ width:"min(96vw,560px)", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:24, boxShadow:"0 24px 80px rgba(0,0,0,0.28)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"96vh" }}
+        style={{
+          width: isFullscreen ? "100vw" : "min(96vw,560px)",
+          height: isFullscreen ? "100vh" : undefined,
+          maxWidth: isFullscreen ? "100%" : undefined,
+          maxHeight: isFullscreen ? "100%" : "96vh",
+          borderRadius: isFullscreen ? 0 : 24,
+          background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)",
+          boxShadow:"0 24px 80px rgba(0,0,0,0.28)",
+          border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`,
+          overflow:"hidden", display:"flex", flexDirection:"column",
+          transition:"width 0.3s ease-in-out, height 0.3s ease-in-out, border-radius 0.3s ease-in-out, max-height 0.3s ease-in-out",
+        }}
       >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
@@ -1961,7 +1978,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             <div className="px-6 pb-3 shrink-0">
               <div className="flex gap-1 p-1 rounded-xl" style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.05)" }}>
                 {(["years","months","weeks","days"] as LifeView[]).map(v => (
-                  <button key={v} onClick={() => setView(v)}
+                  <button key={v} onClick={() => handleSetView(v)}
                     className="flex-1 py-1.5 rounded-lg text-[12px] transition-all"
                     style={{
                       background: view===v ? (dark?"rgba(255,255,255,0.13)":"rgba(255,255,255,0.9)") : "transparent",
@@ -1976,9 +1993,32 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="px-6 pb-5 shrink-0">
-              <div className="text-[10px] mb-2 tabular-nums" style={{ color:"var(--text-tertiary)" }}>
-                {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
+            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: isFullscreen ? "auto" : "visible", minHeight: 0 }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
+                  {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
+                </div>
+                {view === "days" && (
+                  <button
+                    type="button"
+                    onClick={() => setIsFullscreen(f => !f)}
+                    title={isFullscreen ? "Свернуть" : "Развернуть на весь экран"}
+                    style={{ width:24, height:24, borderRadius:6, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"color 150ms" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "var(--text-tertiary)")}
+                  >
+                    {isFullscreen ? (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 1H1v4M9 1h4v4M5 13H1V9M9 13h4V9"/>
+                        <path d="M4 4l2 2M10 4l-2 2M4 10l2-2M10 10l-2-2"/>
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"/>
+                      </svg>
+                    )}
+                  </button>
+                )}
               </div>
               <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
                 {Array.from({ length: totalUnits }, (_, i) => {
