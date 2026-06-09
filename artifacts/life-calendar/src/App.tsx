@@ -1866,12 +1866,17 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       case "years":  c = 10;  gap = 3; total = ls;       curr = Math.floor(ageDays / 365.25); break;
       case "months": c = 12;  gap = 1; total = ls * 12;  curr = Math.floor(ageDays / 30.44);  break;
       case "weeks":  c = 52;  gap = 1; total = ls * 52;  curr = Math.floor(ageDays / 7);      break;
-      default:       c = 365; gap = 0; total = ls * 365; curr = ageDays;                      break;
+      default:       c = 0;   gap = 1; total = ls * 365; curr = ageDays;                      break;
     }
-    const rows = Math.ceil(total / c);
-    const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
-    const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
-    const cell = Math.max(1, Math.floor(Math.min(fromH, fromW)));
+    let cell: number;
+    if (view === "days") {
+      cell = 5;
+    } else {
+      const rows = Math.ceil(total / c);
+      const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
+      const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
+      cell = Math.max(1, Math.floor(Math.min(fromH, fromW)));
+    }
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr };
   }, [view, settings.lifespan, ageDays]);
 
@@ -1975,7 +1980,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
               <div className="text-[10px] mb-2 tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                 {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px` }}>
+              <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
                 {Array.from({ length: totalUnits }, (_, i) => {
                   const isPast = i < currentUnit;
                   const isCurrent = i === currentUnit;
