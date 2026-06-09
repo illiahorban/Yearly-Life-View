@@ -175,3 +175,5 @@ overrides:
   yaml: "^2.8.3"
   # postcss: XSS via unescaped </style> in stringify output, fixed in >=8.5.10
   postcss: "^8.5.10"
+  # qs: remotely triggerable DoS via qs.stringify crash with null/undefined in comma-format arrays, fixed in >=6.15.2
+  qs: "^6.15.2"
