@@ -1487,7 +1487,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
           <div className="flex flex-col gap-1.5 pb-3">
             {items.map((ms, _msIdx) => {
               const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
-              const lbl = new Date(y2,m2-1,d2).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+              const lbl = new Date(y2,m2-1,d2).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { month:"short", day:"numeric", year:"numeric" });
               const isEditing = editId === ms.id;
               const _q = Math.ceil(m2 / 3);
               const _prevMs = items[_msIdx - 1];
