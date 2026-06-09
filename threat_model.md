@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-This repository is a pnpm workspace monorepo with a small production footprint. The likely production application is the `artifacts/life-calendar` React/Vite frontend plus the `artifacts/api-server` Express 5 API server. The API currently exposes only `/api/healthz`, and the shared database package (`lib/db`) provides a PostgreSQL/Drizzle connection but no defined tables or production query logic yet.
+This repository is a pnpm workspace monorepo with a small production footprint. The active production deployment is composed of the `artifacts/life-calendar` React/Vite frontend and the `artifacts/api-server` Express 5 API server. Artifact manifests confirm the deployed route split: `artifacts/life-calendar` serves the public `/` static application, and `artifacts/api-server` serves the public `/api` service.
+
+The API currently exposes only `/api/healthz`, and the shared database package (`lib/db`) provides a PostgreSQL/Drizzle connection but no defined tables or production query logic yet.
 
 The current deployment is publicly reachable, so the static frontend and `/api/healthz` should be treated as internet-accessible production surface rather than private infrastructure.
 
@@ -22,7 +24,7 @@ Production assumptions for future scans:
 
 - **Browser to API** — all requests from the frontend to `/api/*` cross from an untrusted client into the Express server. Any future sensitive route will require explicit authentication, authorization, input validation, and rate limiting.
 - **API to PostgreSQL** — the API server can connect directly to PostgreSQL through `lib/db`. Any future raw SQL or unsafe query construction would become high risk.
-- **Client local storage boundary** — the frontend persists user state in browser localStorage. This data is readable by any script executing in the origin, so future XSS would expose it.
+- **Client local storage boundary** — the frontend persists user state in browser localStorage. This data is readable by any script executing in the origin, so future XSS would expose that local data.
 - **Production vs dev-only boundary** — `artifacts/mockup-sandbox` contains dynamic preview functionality and looser assumptions intended for development. It is out of scope for production unless deployed reachability is demonstrated.
 
 ## Scan Anchors
@@ -33,13 +35,16 @@ Production assumptions for future scans:
   - `artifacts/api-server/src/routes/`
   - `artifacts/life-calendar/src/main.tsx`
   - `artifacts/life-calendar/src/App.tsx`
+- **Deployment routing manifests**
+  - `artifacts/life-calendar/.replit-artifact/artifact.toml`
+  - `artifacts/api-server/.replit-artifact/artifact.toml`
 - **Highest-risk shared areas if the app grows**
   - `lib/db/src/index.ts`
   - `lib/api-client-react/src/custom-fetch.ts`
   - `lib/api-spec/openapi.yaml`
 - **Public surface today**
+  - Static life-calendar frontend at `/`
   - `GET /api/healthz`
-  - Static life-calendar frontend
 - **Dev-only area to usually ignore**
   - `artifacts/mockup-sandbox/**`
 
