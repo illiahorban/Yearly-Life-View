@@ -52,6 +52,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     complete:"complete", daysOf:"days", of:"of", daysRemaining:"days remaining",
     milestones:"Milestones", darkMode:"Dark mode", lightMode:"Light mode",
     lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress", expandFullscreen:"Expand to fullscreen", collapseFullscreen:"Collapse",
+    search:"Search", searchPlaceholder:"Search notes and events…", searchResults:"results", searchNoResults:"No matches found",
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
@@ -89,6 +90,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
     milestones:"События", darkMode:"Тёмная тема", lightMode:"Светлая тема",
     lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала", expandFullscreen:"Развернуть на весь экран", collapseFullscreen:"Свернуть",
+    search:"Поиск", searchPlaceholder:"Поиск по заметкам и событиям…", searchResults:"совпадений", searchNoResults:"Ничего не найдено",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
@@ -326,6 +328,10 @@ function App() {
   useEffect(() => { setConfig(loadConfig(viewYear)); }, [viewYear]);
   useEffect(() => { saveConfig(viewYear, config); }, [viewYear, config]);
 
+  // Search
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Milestones
   const [milestones, setMilestones] = useState<Milestone[]>(() => ls<Milestone[]>("lifeCalendar:milestones", []));
   useEffect(() => { lsSet("lifeCalendar:milestones", milestones); }, [milestones]);
@@ -450,6 +456,21 @@ function App() {
     return list.sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label)).slice(0, 10);
   }, [milestones, today]);
 
+  const matchedDates = useMemo<Set<string>>(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return new Set();
+    const result = new Set<string>();
+    for (const [key, entries] of Object.entries(notes)) {
+      if (entries.some(e => e.text.toLowerCase().includes(q))) result.add(key);
+    }
+    for (const ms of milestones) {
+      const matchLabel = ms.label.toLowerCase().includes(q);
+      const matchDesc = ms.description?.toLowerCase().includes(q) ?? false;
+      if (matchLabel || matchDesc) result.add(ms.date);
+    }
+    return result;
+  }, [searchQuery, notes, milestones]);
+
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
   const didScrollRef = useRef(false);
   useEffect(() => { didScrollRef.current = false; }, [viewYear]);
@@ -527,6 +548,7 @@ function App() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>{yearProgress.toFixed(1)}% {t("complete")}</span>
+              <IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
                 {dark ? <SunIcon /> : <MoonIcon />}
@@ -570,6 +592,31 @@ function App() {
                     </button>
                   );
                 })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Search bar */}
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div key="search-bar" initial={{ opacity:0, height:0, marginTop:0 }} animate={{ opacity:1, height:"auto", marginTop:10 }} exit={{ opacity:0, height:0, marginTop:0 }} transition={{ duration:0.2, ease:"easeInOut" }} style={{ overflow:"hidden" }}>
+                <div className="relative flex items-center">
+                  <div style={{ position:"absolute", left:10, color:"var(--text-tertiary)", pointerEvents:"none", display:"flex" }}><SearchIcon /></div>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); } }}
+                    placeholder={t("searchPlaceholder")}
+                    style={{ width:"100%", paddingLeft:34, paddingRight: matchedDates.size > 0 ? 90 : 34, paddingTop:8, paddingBottom:8, borderRadius:10, background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border:"1px solid var(--border-soft)", color:"var(--text)", fontSize:13, outline:"none", fontFamily:"inherit" }}
+                  />
+                  {searchQuery.trim() && (
+                    <div style={{ position:"absolute", right:10, fontSize:11, color:"var(--text-tertiary)", pointerEvents:"none", whiteSpace:"nowrap" }}>
+                      {matchedDates.size > 0 ? `${matchedDates.size} ${t("searchResults")}` : t("searchNoResults")}
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -667,7 +714,7 @@ function App() {
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
                       dayState={dayState} weekRefs={weekRefs} notes={notes} milestonesMap={milestonesMap}
                       blockGoals={blockGoals} dark={dark} cardBg={cardBg} overlayBg={overlayBg}
-                      weekSel={weekSel}
+                      weekSel={weekSel} matchedDates={matchedDates}
                       onNoteOpen={k => setOpenNote(k)}
                       onLabelChange={(bid, lbl) => updateBlockLabel(qi, bid, lbl)}
                       onGoalToggle={toggleGoal}
@@ -780,7 +827,7 @@ function IconButton({ children, onClick, title, bg, color }: { children: React.R
 function BlocksRenderer({
   qi:_qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress,
   dayState, weekRefs, notes, milestonesMap, blockGoals, dark, cardBg, overlayBg,
-  weekSel, onNoteOpen, onLabelChange, onGoalToggle, onEditGoals, onWeekLabelClick,
+  weekSel, matchedDates, onNoteOpen, onLabelChange, onGoalToggle, onEditGoals, onWeekLabelClick,
   onCreateSprint, onCancelSel,
 }: {
   qi: number; quarter: Quarter; qConfig: QuarterConfig; startIndex: number;
@@ -789,6 +836,7 @@ function BlocksRenderer({
   notes: Record<string,NoteEntry[]>; milestonesMap: Record<string,Milestone[]>;
   blockGoals: Record<string,BlockGoals>; dark: boolean; cardBg: string; overlayBg: string;
   weekSel: { qi: number; anchor: number; focus: number }|null;
+  matchedDates: Set<string>;
   onNoteOpen: (key: string) => void; onLabelChange: (blockId: string, label: string) => void;
   onGoalToggle: (blockId: string, goalId: string) => void; onEditGoals: (blockId: string) => void;
   onWeekLabelClick: (qi: number, qOffset: number) => void;
@@ -932,6 +980,7 @@ function BlocksRenderer({
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 accentColor={effectiveQ.border}
+                                highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
                                 onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
                               />
                             ))}
@@ -1029,9 +1078,9 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, accentColor, onOpen }: {
+function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, accentColor, highlighted, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  notes?: NoteEntry[]; milestones: Milestone[]; accentColor: string; onOpen: () => void;
+  notes?: NoteEntry[]; milestones: Milestone[]; accentColor: string; highlighted?: boolean; onOpen: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
@@ -1041,7 +1090,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const { months: ctxMonths } = React.useContext(LangContext);
   const dayNumber = date.getDate(), monthAbbr = ctxMonths[date.getMonth()]!;
 
-  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative" };
+  const highlightRing = highlighted === true ? "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)" : highlighted === false ? "none" : undefined;
+  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative", boxShadow: highlightRing };
 
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
@@ -2074,6 +2124,9 @@ function PencilIcon() {
 }
 function CheckIcon() {
   return <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="2 6 5 9 10 3"/></svg>;
+}
+function SearchIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
 }
 
 export default App;
