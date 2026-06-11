@@ -199,6 +199,9 @@ const APPLE_COLORS = [
   { key:"yellow", label:"Yellow", light:"#ffcc00", dark:"#ffd60a" },
   { key:"mint",   label:"Mint",   light:"#00c7be", dark:"#63e6e2" },
   { key:"brown",  label:"Brown",  light:"#a2845e", dark:"#ac8e68" },
+  { key:"black",  label:"Black",  light:"#1c1c1e", dark:"#3a3a3c" },
+  { key:"grey",   label:"Grey",   light:"#8e8e93", dark:"#636366" },
+  { key:"white",  label:"White",  light:"#c7c7cc", dark:"#ebebf5" },
 ] as const;
 
 type AppleColorKey = typeof APPLE_COLORS[number]["key"];
@@ -279,6 +282,7 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   const textHex = (!dark && meta.colorKey==="yellow") ? "#9a7400"
                 : (!dark && meta.colorKey==="mint")   ? "#008a82"
                 : (!dark && meta.colorKey==="teal")   ? "#007ea5"
+                : meta.colorKey==="white"             ? (dark ? "#ebebf5" : "#3a3a3c")
                 : hex;
   return {
     key: meta.colorKey,
@@ -292,7 +296,7 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   };
 }
 
-const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa"];
+const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#1c1c1e","#8e8e93","#c7c7cc"];
 const LIFE_ACCENT = "#007aff";
 
 function LifeIcon() {
@@ -790,7 +794,7 @@ function App() {
                               {APPLE_COLORS.map(ac => (
                                 <button key={ac.key} onClick={() => { updateQuarterMeta(qi, { colorKey: ac.key }); setColorPickerQi(null); }}
                                   title={ac.label}
-                                  style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: meta.colorKey===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease" }}
+                                  style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: meta.colorKey===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
                                 />
                               ))}
                             </motion.div>
@@ -1400,7 +1404,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
                         <div className="flex gap-1 flex-wrap">
                           {MILESTONE_COLORS.map(c => (
                             <button key={c} onClick={() => setMsEditColor(c)}
-                              style={{ width:14, height:14, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms" }} />
+                              style={{ width:14, height:14, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#c7c7cc" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
                           ))}
                         </div>
                         <div className="flex gap-1.5">
@@ -1462,7 +1466,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
               <div className="flex gap-1 flex-wrap">
                 {MILESTONE_COLORS.map(c => (
                   <button key={c} onClick={() => setNewColor(c)}
-                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms" }} />
+                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#c7c7cc" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
                 ))}
               </div>
               <div className="flex gap-1.5">
@@ -1960,7 +1964,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   {APPLE_COLORS.map(ac => (
                     <button key={ac.key} type="button" onClick={() => { update(activeColorPickerBlock.id, { color: ac.key }); setColorPickerAnchor(null); }}
                       title={ac.label}
-                      style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: activeColorPickerBlock.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease" }}
+                      style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: activeColorPickerBlock.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
                     />
                   ))}
                 </motion.div>
