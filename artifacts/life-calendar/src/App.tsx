@@ -130,6 +130,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     allWeeks: "All weeks",
     enterBirthDate: "Enter your date of birth",
     birthDateSubtitle: "We'll map your life's journey across time",
+    resetSprint: "Reset sprint",
+    resetSprintConfirm: "This will permanently delete all notes, goals and events for this sprint. This cannot be undone.",
+    resetSprintBtn: "Reset",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -168,6 +171,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     allWeeks: "Все недели",
     enterBirthDate: "Введите дату рождения",
     birthDateSubtitle: "Мы покажем ваш жизненный путь во времени",
+    resetSprint: "Сбросить спринт",
+    resetSprintConfirm: "Все заметки, цели и события этого спринта будут удалены без возможности восстановления.",
+    resetSprintBtn: "Сбросить",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -895,6 +901,20 @@ function App() {
             initial={config.quarters[settingsQuarter]!} dark={dark} modalBg={modalBg}
             onClose={() => setSettingsQuarter(null)}
             onSave={next => { updateQuarter(settingsQuarter, next); setSettingsQuarter(null); }}
+            onResetBlock={(blockId) => {
+              const qi = settingsQuarter;
+              const qBlocks = config.quarters[qi]!.blocks;
+              let cursor = 0, blockStart = 0, blockEnd = 0;
+              for (const b of qBlocks) {
+                if (b.id === blockId) { blockStart = cursor; blockEnd = cursor + b.weeks; break; }
+                cursor += b.weeks;
+              }
+              const si = qi * WEEKS_PER_QUARTER;
+              const blockWeeks = weeks.slice(si + blockStart, si + blockEnd);
+              const keys = blockWeeks.flatMap(w => w.days).map(d => dateKey(d));
+              setNotes(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
+              setBlockGoals(prev => { const n = { ...prev }; delete n[blockId]; return n; });
+            }}
           />
         )}
       </AnimatePresence>
@@ -1880,9 +1900,9 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
 
 // ─── SprintSettingsModal ──────────────────────────────────────────────────────
 
-function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, onClose, onSave }: {
+function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, onClose, onSave, onResetBlock }: {
   quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
-  onClose: () => void; onSave: (next: QuarterConfig) => void;
+  onClose: () => void; onSave: (next: QuarterConfig) => void; onResetBlock: (blockId: string) => void;
 }) {
   const { t } = React.useContext(LangContext);
   const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map(b => ({ ...b })));
@@ -1893,6 +1913,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   const applyPreset = (parts: number[]) => setBlocks(parts.map((w,i) => ({ id:makeId(), weeks:w, label:`${t("sprintLabel")} ${i+1}` })));
   const [colorPickerAnchor, setColorPickerAnchor] = useState<{ id:string; rect: DOMRect } | null>(null);
   const activeColorPickerBlock = colorPickerAnchor ? blocks.find(b => b.id === colorPickerAnchor.id) : null;
+  const [confirmResetId, setConfirmResetId] = useState<string|null>(null);
 
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -1958,6 +1979,11 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color:"var(--text)" }}>{b.weeks}</span>
                       <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>+</button>
                     </div>
+                    <button type="button" title={t("resetSprint")} onClick={() => setConfirmResetId(b.id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-md"
+                      style={{ color:"#ff3b30", flexShrink:0 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    </button>
                     <button type="button" onClick={() => setBlocks(prev => prev.filter(x => x.id!==b.id))} disabled={blocks.length===1}
                       className="w-7 h-7 flex items-center justify-center rounded-md"
                       style={{ color: blocks.length===1?"var(--text-tertiary)":"#ff3b30", opacity: blocks.length===1?0.4:1 }}>
@@ -1967,6 +1993,36 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 </motion.div>
                 );
               })}
+            </AnimatePresence>
+
+            {/* Confirmation dialog */}
+            <AnimatePresence>
+              {confirmResetId !== null && (
+                <motion.div
+                  initial={{ opacity:0, y:6, scale:0.97 }}
+                  animate={{ opacity:1, y:0, scale:1 }}
+                  exit={{ opacity:0, y:4, scale:0.97 }}
+                  transition={{ type:"spring", stiffness:400, damping:30 }}
+                  style={{ background: dark?"rgba(40,10,10,0.92)":"rgba(255,245,245,0.97)", border:"1.5px solid #ff3b3055", borderRadius:14, padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span style={{ color:"#ff3b30", flexShrink:0, marginTop:1 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </span>
+                    <p className="text-[12px] leading-snug" style={{ color:"var(--text-secondary)" }}>{t("resetSprintConfirm")}</p>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button type="button" onClick={() => setConfirmResetId(null)}
+                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:500, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)", color:"var(--text-secondary)", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                      {t("cancel")}
+                    </button>
+                    <button type="button" onClick={() => { onResetBlock(confirmResetId); setConfirmResetId(null); }}
+                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:600, background:"#ff3b30", color:"white", border:"none", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(255,59,48,0.35)" }}>
+                      {t("resetSprintBtn")}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
             {colorPickerAnchor && activeColorPickerBlock && typeof document !== "undefined" && ReactDOM.createPortal(
               <AnimatePresence>
