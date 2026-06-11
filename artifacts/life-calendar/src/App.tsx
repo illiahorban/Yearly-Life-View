@@ -632,6 +632,7 @@ function App() {
                 style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear>=MAX_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear>=MAX_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, lineHeight:1, flexShrink:0 }}>›</button>
             </div>
             <div className="flex items-center gap-2">
+              <span className="text-sm tabular-nums" style={{ color: "var(--text-secondary)" }}>{yearProgress.toFixed(1)}% {t("complete")}</span>
               <IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
@@ -650,11 +651,7 @@ function App() {
             <div className="h-full transition-[width] duration-700 ease-out" style={{ width: `${yearProgress}%`, background: "linear-gradient(90deg,#5ed47b 0%,#34c759 55%,#28a745 100%)", borderRadius: 999 }} />
           </div>
 
-          <div className="mt-1.5 text-center text-xs font-medium tabular-nums" style={{ color: "var(--text-secondary)" }}>
-            {yearProgress.toFixed(1)}% {t("complete")}
-          </div>
-
-          <div className="mt-1 flex items-center justify-between text-xs tabular-nums" style={{ color: "var(--text-tertiary)" }}>
+          <div className="mt-2 flex items-center justify-between text-xs tabular-nums" style={{ color: "var(--text-tertiary)" }}>
             <span>{daysCompleted} {t("of")} {totalDays} {t("daysOf")}</span>
             <span>{(totalDays-daysCompleted).toFixed(0)} {t("daysRemaining")}</span>
           </div>
