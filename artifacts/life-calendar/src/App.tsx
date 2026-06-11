@@ -767,7 +767,7 @@ function App() {
 
               return (
                 <motion.section layout key={qi} className="overflow-hidden"
-                  style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, borderLeft: `3px solid ${quarter.border}` }}
+                  style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-1.5">
