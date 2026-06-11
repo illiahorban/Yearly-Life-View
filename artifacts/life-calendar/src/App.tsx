@@ -135,6 +135,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     resetSprintBtn: "Reset",
     settings: "Settings",
     sprintLabelPlaceholder: "Sprint label",
+    deleteSprint: "Delete sprint",
+    deleteSprintConfirm: "Are you sure you want to delete this sprint? Its weeks will be unassigned.",
+    deleteSprintBtn: "Delete",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -178,6 +181,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     resetSprintBtn: "Сбросить",
     settings: "Настройки",
     sprintLabelPlaceholder: "Название спринта",
+    deleteSprint: "Удалить спринт",
+    deleteSprintConfirm: "Вы уверены, что хотите удалить этот спринт? Его недели станут нераспределёнными.",
+    deleteSprintBtn: "Удалить",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1923,6 +1929,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   const [colorPickerAnchor, setColorPickerAnchor] = useState<{ id:string; rect: DOMRect } | null>(null);
   const activeColorPickerBlock = colorPickerAnchor ? blocks.find(b => b.id === colorPickerAnchor.id) : null;
   const [confirmResetId, setConfirmResetId] = useState<string|null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
 
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -1993,7 +2000,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       style={{ color:"#ff3b30", flexShrink:0 }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                     </button>
-                    <button type="button" onClick={() => setBlocks(prev => prev.filter(x => x.id!==b.id))} disabled={blocks.length===1}
+                    <button type="button" onClick={() => setConfirmDeleteId(b.id)} disabled={blocks.length===1}
                       className="w-7 h-7 flex items-center justify-center rounded-md"
                       style={{ color: blocks.length===1?"var(--text-tertiary)":"#ff3b30", opacity: blocks.length===1?0.4:1 }}>
                       <TrashIcon />
@@ -2033,6 +2040,37 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Delete confirmation */}
+            <AnimatePresence>
+              {confirmDeleteId !== null && (
+                <motion.div
+                  initial={{ opacity:0, y:6, scale:0.97 }}
+                  animate={{ opacity:1, y:0, scale:1 }}
+                  exit={{ opacity:0, y:4, scale:0.97 }}
+                  transition={{ type:"spring", stiffness:400, damping:30 }}
+                  style={{ background: dark?"rgba(40,10,10,0.92)":"rgba(255,245,245,0.97)", border:"1.5px solid #ff3b3055", borderRadius:14, padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span style={{ color:"#ff3b30", flexShrink:0, marginTop:1 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </span>
+                    <p className="text-[12px] leading-snug" style={{ color:"var(--text-secondary)" }}>{t("deleteSprintConfirm")}</p>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button type="button" onClick={() => setConfirmDeleteId(null)}
+                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:500, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)", color:"var(--text-secondary)", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                      {t("cancel")}
+                    </button>
+                    <button type="button" onClick={() => { setBlocks(prev => prev.filter(x => x.id !== confirmDeleteId)); setConfirmDeleteId(null); }}
+                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:600, background:"#ff3b30", color:"white", border:"none", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(255,59,48,0.35)" }}>
+                      {t("deleteSprintBtn")}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {colorPickerAnchor && activeColorPickerBlock && typeof document !== "undefined" && ReactDOM.createPortal(
               <AnimatePresence>
                 <motion.div initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
