@@ -681,14 +681,28 @@ function App() {
                         animate={{ opacity:1, y:0, scale:1 }}
                         exit={{ opacity:0, y:-8, scale:0.95 }}
                         transition={{ type:"spring", stiffness:380, damping:28 }}
-                        style={{ background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:3, width:38 }}
+                        style={{ background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"5px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:2, minWidth:160 }}
                       >
-                        <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
-                          {dark ? <SunIcon /> : <MoonIcon />}
-                        </IconButton>
-                        <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
-                          <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
-                        </IconButton>
+                        <button type="button" onClick={() => setDark(d => !d)}
+                          style={{ display:"flex", alignItems:"center", gap:9, padding:"6px 10px", borderRadius:8, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-secondary)", fontFamily:"inherit", width:"100%", textAlign:"left" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.05)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <span style={{ width:20, height:20, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, color:"var(--text-secondary)" }}>
+                            {dark ? <SunIcon /> : <MoonIcon />}
+                          </span>
+                          <span style={{ fontSize:13, fontWeight:500, color:"var(--text)" }}>{dark ? t("lightMode") : t("darkMode")}</span>
+                        </button>
+                        <button type="button" onClick={() => setLang(l => l==="en"?"ru":"en")}
+                          style={{ display:"flex", alignItems:"center", gap:9, padding:"6px 10px", borderRadius:8, background:"transparent", border:"none", cursor:"pointer", color:"var(--text-secondary)", fontFamily:"inherit", width:"100%", textAlign:"left" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.05)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <span style={{ width:20, height:20, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:10, fontWeight:700, letterSpacing:"-0.02em", color:"var(--text-secondary)" }}>
+                            {lang==="en"?"RU":"EN"}
+                          </span>
+                          <span style={{ fontSize:13, fontWeight:500, color:"var(--text)" }}>{lang==="en" ? t("switchToRussian") : t("switchToEnglish")}</span>
+                        </button>
                       </motion.div>
                     )}
                   </AnimatePresence>
