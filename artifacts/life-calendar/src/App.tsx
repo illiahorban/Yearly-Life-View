@@ -133,6 +133,8 @@ const I18N: Record<Lang, Record<string, string>> = {
     resetSprint: "Reset sprint",
     resetSprintConfirm: "This will permanently delete all notes, goals and events for this sprint. This cannot be undone.",
     resetSprintBtn: "Reset",
+    settings: "Settings",
+    sprintLabelPlaceholder: "Sprint label",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -174,6 +176,8 @@ const I18N: Record<Lang, Record<string, string>> = {
     resetSprint: "Сбросить спринт",
     resetSprintConfirm: "Все заметки, цели и события этого спринта будут удалены без возможности восстановления.",
     resetSprintBtn: "Сбросить",
+    settings: "Настройки",
+    sprintLabelPlaceholder: "Название спринта",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -661,7 +665,7 @@ function App() {
               {/* Settings gear */}
               <div ref={settingsRef} style={{ position:"relative" }}>
                 <IconButton
-                  title="Settings"
+                  title={t("settings")}
                   onClick={() => setSettingsOpen(o => !o)}
                   bg={settingsOpen ? "rgba(0,122,255,0.13)" : overlayBg}
                 >
@@ -1473,7 +1477,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
                         </div>
                         <div style={{ position:"relative" }}>
                           <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value.slice(0,300))}
-                            placeholder="Description (optional)…" rows={2}
+                            placeholder={t("editDescPlaceholder")} rows={2}
                             style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"6px 9px", paddingBottom:16, display:"block" }} />
                           <span style={{ position:"absolute", bottom:4, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{msEditDesc.length}/300</span>
                         </div>
@@ -1972,7 +1976,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                     {/* Number badge */}
                     <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
                       style={{ width:20, height:20, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>{idx+1}</div>
-                    <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder="Sprint label"
+                    <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder={t("sprintLabelPlaceholder")}
                       className="flex-1 bg-transparent outline-none text-[13px]" style={{ color:"var(--text)" }} />
                     <div className="flex items-center gap-1" style={{ background: dark?"rgba(255,255,255,0.06)":"white", border:`1px solid ${borderColor}`, borderRadius:8, padding:2 }}>
                       <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color:"var(--text-secondary)" }}>−</button>
