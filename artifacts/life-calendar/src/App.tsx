@@ -1835,7 +1835,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
   const [description, setDescription] = useState(initial.description);
   const [goals, setGoals] = useState<Goal[]>(() => initial.goals.length > 0 ? initial.goals.map(g=>({...g})) : [{ id:makeId(), text:"", done:false }]);
   const activeGoals = goals.filter(g => g.text.trim());
-  const canAdd = goals.length < 5;
+  const canAdd = goals.length < 10;
 
   const save = () => onSave({ description:description.trim(), goals: goals.filter(g=>g.text.trim()) }, label.trim() || blockLabel);
 
@@ -1874,7 +1874,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
 
         <div className="px-5 pb-3">
           <div className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color:"var(--text-tertiary)" }}>
-            {t("goalsLabel")} ({activeGoals.length}/5)
+            {t("goalsLabel")} ({activeGoals.length}/10)
           </div>
           <div className="flex flex-col gap-1.5">
             {goals.map((g, idx) => (
