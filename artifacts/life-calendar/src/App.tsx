@@ -377,6 +377,18 @@ function App() {
   useEffect(() => { setConfig(loadConfig(viewYear)); }, [viewYear]);
   useEffect(() => { saveConfig(viewYear, config); }, [viewYear, config]);
 
+  // Settings dropdown
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setSettingsOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [settingsOpen]);
+
   // Search
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -638,15 +650,38 @@ function App() {
             <div className="flex items-center gap-2">
               <IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
-              <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
-                {dark ? <SunIcon /> : <MoonIcon />}
-              </IconButton>
-              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
               <IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
-              <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
-                <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
-              </IconButton>
+              {/* Settings gear */}
+              <div ref={settingsRef} style={{ position:"relative" }}>
+                <IconButton
+                  title="Settings"
+                  onClick={() => setSettingsOpen(o => !o)}
+                  bg={settingsOpen ? "rgba(0,122,255,0.13)" : overlayBg}
+                >
+                  <span style={{ display:"inline-flex", transition:"transform 320ms cubic-bezier(0.34,1.56,0.64,1)", transform: settingsOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+                    <GearIcon />
+                  </span>
+                </IconButton>
+                <AnimatePresence>
+                  {settingsOpen && (
+                    <motion.div
+                      initial={{ opacity:0, y:-8, scale:0.95 }}
+                      animate={{ opacity:1, y:0, scale:1 }}
+                      exit={{ opacity:0, y:-8, scale:0.95 }}
+                      transition={{ type:"spring", stiffness:380, damping:28 }}
+                      style={{ position:"absolute", top:"calc(100% + 8px)", right:0, zIndex:50, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:14, padding:"6px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:4, minWidth:44 }}
+                    >
+                      <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
+                        {dark ? <SunIcon /> : <MoonIcon />}
+                      </IconButton>
+                      <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
+                        <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
+                      </IconButton>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
