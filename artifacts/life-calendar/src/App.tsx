@@ -107,7 +107,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
     today:"Today", week:"Week", done:"done", left:"left", goals:"goals",
-    sprintGoals:"Sprint Goals", addGoal:"Add goal", saveGoals:"Save goals",
+    sprintGoals:"Sprint Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…",
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     yr:"yr", mo:"mo", remaining:"remaining", born:"Born", age:"Age",
@@ -148,7 +148,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"Неделя", done:"готово", left:"осталось", goals:"целей",
-    sprintGoals:"Цели спринта", addGoal:"Добавить цель", saveGoals:"Сохранить цели",
+    sprintGoals:"Цели спринта", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…",
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     yr:"лет", mo:"мес", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
@@ -1858,21 +1858,21 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
 
         <div className="px-5 pb-3">
           <textarea value={description} onChange={e => setDescription(e.target.value.slice(0,200))}
-            placeholder="Sprint description (optional)…" rows={2}
+            placeholder={t("sprintDescPlaceholder")} rows={2}
             style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:10, padding:"8px 10px", fontSize:13, lineHeight:1.5, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box" }}
           />
         </div>
 
         <div className="px-5 pb-3">
           <div className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color:"var(--text-tertiary)" }}>
-            Goals ({activeGoals.length}/5)
+            {t("goalsLabel")} ({activeGoals.length}/5)
           </div>
           <div className="flex flex-col gap-1.5">
             {goals.map((g, idx) => (
               <div key={g.id} className="flex items-center gap-2">
                 <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
                 <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
-                  placeholder={`Goal ${idx+1}`}
+                  placeholder={`${t("goalPlaceholder")} ${idx+1}`}
                   style={{ flex:1, background:inputBg, border:`1px solid ${borderColor}`, borderRadius:8, padding:"6px 9px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit" }}
                 />
                 <button onClick={() => setGoals(prev => prev.filter(x => x.id!==g.id))} disabled={goals.length===1}
