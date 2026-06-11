@@ -447,6 +447,7 @@ function App() {
     }
     return migrated;
   });
+  useEffect(() => { lsSet("lifeCalendar:notes", notes); }, [notes]);
   const [openNote, setOpenNote] = useState<string|null>(null);
   const upsertNotes = (key: string, entries: NoteEntry[]) => {
     setNotes(prev => {
