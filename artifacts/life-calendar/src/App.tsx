@@ -138,6 +138,14 @@ const I18N: Record<Lang, Record<string, string>> = {
     deleteSprint: "Delete sprint",
     deleteSprintConfirm: "Are you sure you want to delete this sprint? Its weeks will be unassigned.",
     deleteSprintBtn: "Delete",
+    factoryReset: "Factory reset",
+    factoryResetWarn1Title: "Step 1 of 2",
+    factoryResetWarn1: "All notes, goals and events will be permanently deleted. This cannot be undone.",
+    factoryResetWarn2Title: "Step 2 of 2",
+    factoryResetWarn2: "All sprint configurations, labels and colors will be reset to defaults.",
+    factoryResetBtn: "Reset everything",
+    nextStep: "Next →",
+    back: "← Back",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -184,6 +192,14 @@ const I18N: Record<Lang, Record<string, string>> = {
     deleteSprint: "Удалить спринт",
     deleteSprintConfirm: "Вы уверены, что хотите удалить этот спринт? Его недели станут нераспределёнными.",
     deleteSprintBtn: "Удалить",
+    factoryReset: "Сброс к заводским",
+    factoryResetWarn1Title: "Шаг 1 из 2",
+    factoryResetWarn1: "Все заметки, цели и события будут удалены без возможности восстановления.",
+    factoryResetWarn2Title: "Шаг 2 из 2",
+    factoryResetWarn2: "Все спринты, их названия и цвета будут сброшены до настроек по умолчанию.",
+    factoryResetBtn: "Сбросить всё",
+    nextStep: "Далее →",
+    back: "← Назад",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -395,11 +411,12 @@ function App() {
 
   // Settings dropdown
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [factoryResetStep, setFactoryResetStep] = useState(0);
   const settingsRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!settingsOpen) return;
     const handler = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setSettingsOpen(false);
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) { setSettingsOpen(false); setFactoryResetStep(0); }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -683,18 +700,72 @@ function App() {
                   <AnimatePresence>
                     {settingsOpen && (
                       <motion.div
+                        key={`settings-step-${factoryResetStep}`}
                         initial={{ opacity:0, y:-8, scale:0.95 }}
                         animate={{ opacity:1, y:0, scale:1 }}
                         exit={{ opacity:0, y:-8, scale:0.95 }}
                         transition={{ type:"spring", stiffness:380, damping:28 }}
-                        style={{ background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:3, width:38 }}
+                        style={{ background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:3, width: factoryResetStep > 0 ? 220 : 38 }}
                       >
-                        <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
-                          {dark ? <SunIcon /> : <MoonIcon />}
-                        </IconButton>
-                        <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
-                          <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
-                        </IconButton>
+                        {factoryResetStep === 0 && (<>
+                          <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
+                            {dark ? <SunIcon /> : <MoonIcon />}
+                          </IconButton>
+                          <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
+                            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
+                          </IconButton>
+                          <div style={{ height:1, background:"var(--border-soft)", margin:"1px 2px" }} />
+                          <IconButton title={t("factoryReset")} onClick={() => setFactoryResetStep(1)} bg={overlayBg} color="#ff3b30">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
+                          </IconButton>
+                        </>)}
+
+                        {factoryResetStep === 1 && (
+                          <div style={{ padding:"8px 6px", display:"flex", flexDirection:"column", gap:8 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                              <span style={{ color:"#ff9500" }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+                              <span style={{ fontSize:10, fontWeight:700, color:"#ff9500", letterSpacing:"0.04em", textTransform:"uppercase" }}>{t("factoryResetWarn1Title")}</span>
+                            </div>
+                            <p style={{ fontSize:11, lineHeight:1.5, color:"var(--text-secondary)", margin:0 }}>{t("factoryResetWarn1")}</p>
+                            <div style={{ display:"flex", gap:4, justifyContent:"flex-end" }}>
+                              <button type="button" onClick={() => setFactoryResetStep(0)}
+                                style={{ padding:"4px 9px", borderRadius:7, fontSize:11, fontWeight:500, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)", color:"var(--text-secondary)", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                                {t("cancel")}
+                              </button>
+                              <button type="button" onClick={() => setFactoryResetStep(2)}
+                                style={{ padding:"4px 9px", borderRadius:7, fontSize:11, fontWeight:600, background:"#ff9500", color:"white", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                                {t("nextStep")}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {factoryResetStep === 2 && (
+                          <div style={{ padding:"8px 6px", display:"flex", flexDirection:"column", gap:8 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                              <span style={{ color:"#ff3b30" }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+                              <span style={{ fontSize:10, fontWeight:700, color:"#ff3b30", letterSpacing:"0.04em", textTransform:"uppercase" }}>{t("factoryResetWarn2Title")}</span>
+                            </div>
+                            <p style={{ fontSize:11, lineHeight:1.5, color:"var(--text-secondary)", margin:0 }}>{t("factoryResetWarn2")}</p>
+                            <div style={{ display:"flex", gap:4, justifyContent:"flex-end" }}>
+                              <button type="button" onClick={() => setFactoryResetStep(1)}
+                                style={{ padding:"4px 9px", borderRadius:7, fontSize:11, fontWeight:500, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)", color:"var(--text-secondary)", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                                {t("back")}
+                              </button>
+                              <button type="button" onClick={() => {
+                                setNotes({});
+                                setBlockGoals({});
+                                setMilestones([]);
+                                setConfig(defaultConfig());
+                                setFactoryResetStep(0);
+                                setSettingsOpen(false);
+                              }}
+                                style={{ padding:"4px 9px", borderRadius:7, fontSize:11, fontWeight:600, background:"#ff3b30", color:"white", border:"none", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(255,59,48,0.35)" }}>
+                                {t("factoryResetBtn")}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
