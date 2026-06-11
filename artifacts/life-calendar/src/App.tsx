@@ -921,9 +921,10 @@ function App() {
               }
               const si = qi * WEEKS_PER_QUARTER;
               const blockWeeks = weeks.slice(si + blockStart, si + blockEnd);
-              const keys = blockWeeks.flatMap(w => w.days).map(d => dateKey(d));
+              const keys = new Set(blockWeeks.flatMap(w => w.days).map(d => dateKey(d)));
               setNotes(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
               setBlockGoals(prev => { const n = { ...prev }; delete n[blockId]; return n; });
+              setMilestones(prev => prev.filter(m => !keys.has(m.date)));
             }}
           />
         )}
