@@ -653,6 +653,7 @@ function App() {
 
           <div className="mt-2 flex items-center justify-between text-xs tabular-nums" style={{ color: "var(--text-tertiary)" }}>
             <span>{daysCompleted} {t("of")} {totalDays} {t("daysOf")}</span>
+            <span>{yearProgress.toFixed(1)}% {t("complete")}</span>
             <span>{(totalDays-daysCompleted).toFixed(0)} {t("daysRemaining")}</span>
           </div>
 
