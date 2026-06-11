@@ -952,7 +952,7 @@ function App() {
             blockId={editGoalsBlockId} blockLabel={editGoalsBlock.label}
             initial={blockGoals[editGoalsBlockId] ?? { description:"", goals:[] }}
             dark={dark} modalBg={modalBg}
-            onSave={bg => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); setEditGoalsBlockId(null); }}
+            onSave={(bg, lbl) => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); const qi = config.quarters.findIndex(q => q.blocks.some(b => b.id === editGoalsBlockId)); if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl); setEditGoalsBlockId(null); }}
             onClose={() => setEditGoalsBlockId(null)}
           />
         )}
@@ -1828,15 +1828,16 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
 
 function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, onClose }: {
   blockId: string; blockLabel: string; initial: BlockGoals; dark: boolean; modalBg: string;
-  onSave: (bg: BlockGoals) => void; onClose: () => void;
+  onSave: (bg: BlockGoals, label: string) => void; onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
+  const [label, setLabel] = useState(blockLabel);
   const [description, setDescription] = useState(initial.description);
   const [goals, setGoals] = useState<Goal[]>(() => initial.goals.length > 0 ? initial.goals.map(g=>({...g})) : [{ id:makeId(), text:"", done:false }]);
   const activeGoals = goals.filter(g => g.text.trim());
   const canAdd = goals.length < 5;
 
-  const save = () => onSave({ description:description.trim(), goals: goals.filter(g=>g.text.trim()) });
+  const save = () => onSave({ description:description.trim(), goals: goals.filter(g=>g.text.trim()) }, label.trim() || blockLabel);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)";
@@ -1852,12 +1853,16 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
         className="w-full max-w-sm"
         style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
       >
-        <div className="px-5 pt-5 pb-3 flex items-start justify-between">
-          <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("sprintGoals")}</div>
-            <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{blockLabel}</div>
+        <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] font-semibold tracking-widest uppercase mb-1" style={{ color:"var(--text-tertiary)" }}>{t("sprintGoals")}</div>
+            <input
+              value={label} onChange={e => setLabel(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
+              style={{ width:"100%", background:"transparent", border:"none", outline:"none", fontSize:15, fontWeight:600, letterSpacing:"-0.01em", color:"var(--text)", fontFamily:"inherit", padding:0 }}
+            />
           </div>
-          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
 
         <div className="px-5 pb-3">
