@@ -1007,6 +1007,7 @@ function App() {
           setBlockGoals({});
           setMilestones([]);
           setConfig(defaultConfig());
+          setQuarterMeta(DEFAULT_QUARTER_META);
         }}
         dark={dark}
       />
