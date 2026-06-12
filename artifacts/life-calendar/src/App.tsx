@@ -1986,6 +1986,77 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
   );
 }
 
+// ─── ConfirmDialog ────────────────────────────────────────────────────────────
+
+function ConfirmDialog({ open, onClose, onConfirm, message, confirmLabel, dark }: {
+  open: boolean; onClose: () => void; onConfirm: () => void;
+  message: string; confirmLabel: string; dark: boolean;
+}) {
+  const { t } = React.useContext(LangContext);
+  const modalBg = dark ? "rgba(28,28,30,0.97)" : "rgba(255,255,255,0.97)";
+  if (typeof document === "undefined") return null;
+  return ReactDOM.createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="confirm-overlay"
+          className="fixed inset-0 flex items-center justify-center p-6"
+          style={{ zIndex: 60 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          onClick={onClose}
+        >
+          <motion.div
+            style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(10px) saturate(160%)", WebkitBackdropFilter:"blur(10px) saturate(160%)" }}
+          />
+          <motion.div
+            key="confirm-card"
+            onClick={e => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            style={{
+              position: "relative",
+              width: "min(92vw, 320px)",
+              background: modalBg,
+              backdropFilter: "blur(30px) saturate(180%)",
+              WebkitBackdropFilter: "blur(30px) saturate(180%)",
+              borderRadius: 20,
+              padding: "20px",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08)",
+              border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+              display: "flex", flexDirection: "column", gap: 16,
+            }}
+          >
+            <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
+              <span style={{ color:"#ff3b30", flexShrink:0, marginTop:2 }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </span>
+              <p style={{ fontSize:13, lineHeight:1.55, color:"var(--text-secondary)", margin:0 }}>{message}</p>
+            </div>
+            <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+              <button type="button" onClick={onClose}
+                style={{ padding:"7px 16px", borderRadius:10, fontSize:13, fontWeight:500, background: dark?"rgba(255,255,255,0.10)":"rgba(0,0,0,0.07)", color:"var(--text-secondary)", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                {t("cancel")}
+              </button>
+              <button type="button" onClick={() => { onConfirm(); onClose(); }}
+                style={{ padding:"7px 16px", borderRadius:10, fontSize:13, fontWeight:600, background:"#ff3b30", color:"white", border:"none", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 10px rgba(255,59,48,0.4)" }}>
+                {confirmLabel}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
 // ─── SprintSettingsModal ──────────────────────────────────────────────────────
 
 function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, onClose, onSave, onResetBlock }: {
@@ -2007,12 +2078,13 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
   return (
+    <>
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background:"rgba(20,20,25,0.38)", backdropFilter:"blur(14px) saturate(160%)", WebkitBackdropFilter:"blur(14px) saturate(160%)" }}
       initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}
       onClick={onClose}
     >
-      <motion.div layout onClick={e => e.stopPropagation()} initial={{ opacity:0, scale:0.96, y:8 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:4 }}
+      <motion.div onClick={e => e.stopPropagation()} initial={{ opacity:0, scale:0.96, y:8 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:4 }}
         transition={{ type:"spring", stiffness:360, damping:32 }} className="w-full max-w-md"
         style={{ background:modalBg, backdropFilter:"blur(30px) saturate(180%)", WebkitBackdropFilter:"blur(30px) saturate(180%)", borderRadius:22, boxShadow:"0 30px 80px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.6)"}` }}
       >
@@ -2084,64 +2156,6 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               })}
             </AnimatePresence>
 
-            {/* Confirmation dialog */}
-            <AnimatePresence mode="popLayout">
-              {confirmResetId !== null && (
-                <motion.div
-                  initial={{ opacity:0, y:6, scale:0.97 }}
-                  animate={{ opacity:1, y:0, scale:1, transition:{ type:"spring", stiffness:400, damping:30 } }}
-                  exit={{ opacity:0, y:6, scale:0.97, transition:{ duration:0.18, ease:[0.4,0,1,1] } }}
-                  style={{ background: dark?"rgba(40,10,10,0.92)":"rgba(255,245,245,0.97)", border:"1.5px solid #ff3b3055", borderRadius:14, padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <span style={{ color:"#ff3b30", flexShrink:0, marginTop:1 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </span>
-                    <p className="text-[12px] leading-snug" style={{ color:"var(--text-secondary)" }}>{t("resetSprintConfirm")}</p>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button type="button" onClick={() => setConfirmResetId(null)}
-                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:500, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)", color:"var(--text-secondary)", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
-                      {t("cancel")}
-                    </button>
-                    <button type="button" onClick={() => { onResetBlock(confirmResetId); setConfirmResetId(null); }}
-                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:600, background:"#ff3b30", color:"white", border:"none", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(255,59,48,0.35)" }}>
-                      {t("resetSprintBtn")}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Delete confirmation */}
-            <AnimatePresence mode="popLayout">
-              {confirmDeleteId !== null && (
-                <motion.div
-                  initial={{ opacity:0, y:6, scale:0.97 }}
-                  animate={{ opacity:1, y:0, scale:1, transition:{ type:"spring", stiffness:400, damping:30 } }}
-                  exit={{ opacity:0, y:6, scale:0.97, transition:{ duration:0.18, ease:[0.4,0,1,1] } }}
-                  style={{ background: dark?"rgba(40,10,10,0.92)":"rgba(255,245,245,0.97)", border:"1.5px solid #ff3b3055", borderRadius:14, padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <span style={{ color:"#ff3b30", flexShrink:0, marginTop:1 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </span>
-                    <p className="text-[12px] leading-snug" style={{ color:"var(--text-secondary)" }}>{t("deleteSprintConfirm")}</p>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button type="button" onClick={() => setConfirmDeleteId(null)}
-                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:500, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)", color:"var(--text-secondary)", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
-                      {t("cancel")}
-                    </button>
-                    <button type="button" onClick={() => { setBlocks(prev => prev.filter(x => x.id !== confirmDeleteId)); setConfirmDeleteId(null); }}
-                      style={{ padding:"5px 12px", borderRadius:8, fontSize:12, fontWeight:600, background:"#ff3b30", color:"white", border:"none", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(255,59,48,0.35)" }}>
-                      {t("deleteSprintBtn")}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {colorPickerAnchor && activeColorPickerBlock && typeof document !== "undefined" && ReactDOM.createPortal(
               <AnimatePresence>
                 <motion.div initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
@@ -2207,6 +2221,24 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
         </div>
       </motion.div>
     </motion.div>
+
+    <ConfirmDialog
+      open={confirmResetId !== null}
+      onClose={() => setConfirmResetId(null)}
+      onConfirm={() => { if (confirmResetId) onResetBlock(confirmResetId); }}
+      message={t("resetSprintConfirm")}
+      confirmLabel={t("resetSprintBtn")}
+      dark={dark}
+    />
+    <ConfirmDialog
+      open={confirmDeleteId !== null}
+      onClose={() => setConfirmDeleteId(null)}
+      onConfirm={() => { if (confirmDeleteId) setBlocks(prev => prev.filter(x => x.id !== confirmDeleteId)); }}
+      message={t("deleteSprintConfirm")}
+      confirmLabel={t("deleteSprintBtn")}
+      dark={dark}
+    />
+    </>
   );
 }
 
