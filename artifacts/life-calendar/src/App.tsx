@@ -2085,13 +2085,12 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
             </AnimatePresence>
 
             {/* Confirmation dialog */}
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {confirmResetId !== null && (
                 <motion.div
                   initial={{ opacity:0, y:6, scale:0.97 }}
-                  animate={{ opacity:1, y:0, scale:1 }}
-                  exit={{ opacity:0, y:4, scale:0.97 }}
-                  transition={{ type:"spring", stiffness:400, damping:30 }}
+                  animate={{ opacity:1, y:0, scale:1, transition:{ type:"spring", stiffness:400, damping:30 } }}
+                  exit={{ opacity:0, y:6, scale:0.97, transition:{ duration:0.18, ease:[0.4,0,1,1] } }}
                   style={{ background: dark?"rgba(40,10,10,0.92)":"rgba(255,245,245,0.97)", border:"1.5px solid #ff3b3055", borderRadius:14, padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}
                 >
                   <div className="flex items-start gap-2.5">
@@ -2115,13 +2114,12 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
             </AnimatePresence>
 
             {/* Delete confirmation */}
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {confirmDeleteId !== null && (
                 <motion.div
                   initial={{ opacity:0, y:6, scale:0.97 }}
-                  animate={{ opacity:1, y:0, scale:1 }}
-                  exit={{ opacity:0, y:4, scale:0.97 }}
-                  transition={{ type:"spring", stiffness:400, damping:30 }}
+                  animate={{ opacity:1, y:0, scale:1, transition:{ type:"spring", stiffness:400, damping:30 } }}
+                  exit={{ opacity:0, y:6, scale:0.97, transition:{ duration:0.18, ease:[0.4,0,1,1] } }}
                   style={{ background: dark?"rgba(40,10,10,0.92)":"rgba(255,245,245,0.97)", border:"1.5px solid #ff3b3055", borderRadius:14, padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}
                 >
                   <div className="flex items-start gap-2.5">
