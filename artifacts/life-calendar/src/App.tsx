@@ -150,6 +150,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     noNotesInQuarter: "No notes",
     noNotesAtAll: "No notes yet. Click a day to add one.",
     notesPanel: "Notes",
+    notesSearchPlaceholder: "Search notes…",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -208,6 +209,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     noNotesInQuarter: "Нет заметок",
     noNotesAtAll: "Заметок пока нет. Нажмите на день, чтобы добавить.",
     notesPanel: "Заметки",
+    notesSearchPlaceholder: "Поиск по заметкам…",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1784,7 +1786,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
               ref={searchRef}
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder={t("searchPlaceholder")}
+              placeholder={t("notesSearchPlaceholder")}
               style={{ width: "100%", paddingLeft: 34, paddingRight: query ? 30 : 12, paddingTop: 8, paddingBottom: 8, borderRadius: 10, background: inputBg, border: `1px solid ${borderColor}`, fontSize: 13, color: "var(--text)", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
             />
             {query && (
