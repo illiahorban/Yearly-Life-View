@@ -689,10 +689,9 @@ function App() {
               <h1 className="text-2xl sm:text-3xl font-semibold tabular-nums" style={{ color: "var(--text)", letterSpacing: "-0.02em", minWidth:"3.2ch", textAlign:"center" }}>{viewYear}</h1>
               <button onClick={() => setViewYear(y => Math.min(MAX_YEAR, y+1))} disabled={viewYear >= MAX_YEAR}
                 style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear>=MAX_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear>=MAX_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, lineHeight:1, flexShrink:0 }}>›</button>
-              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, marginLeft:4 }} />
-              <IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton>
             </div>
             <div className="flex items-center gap-2">
+              <IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton>
               <IconButton title={t("notesPanel")} onClick={() => setNotesPanelOpen(true)} bg={overlayBg}><NotesIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
