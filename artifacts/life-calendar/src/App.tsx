@@ -1679,6 +1679,20 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
 
 // ─── NotesPanel ───────────────────────────────────────────────────────────────
 
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+  const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase()
+          ? <mark key={i} style={{ background: "rgba(255,204,0,0.45)", color: "inherit", borderRadius: 3, padding: "0 1px" }}>{part}</mark>
+          : part
+      )}
+    </>
+  );
+}
+
 function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote, onClose }: {
   notes: Record<string, NoteEntry[]>;
   weeks: { weekStart: Date; days: Date[] }[];
@@ -1688,6 +1702,15 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   onClose: () => void;
 }) {
   const { t, months } = React.useContext(LangContext);
+  const [query, setQuery] = useState("");
+  const searchRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => searchRef.current?.focus(), 120);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const q = query.trim().toLowerCase();
 
   const grouped = useMemo(() => {
     const qGroups: { dateKey: string; entries: NoteEntry[] }[][] = [[], [], [], []];
@@ -1696,16 +1719,31 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
       const qi = Math.min(3, Math.floor(wi / WEEKS_PER_QUARTER));
       w.days.forEach(d => { dateToQi[dateKey(d)] = qi; });
     });
-    for (const [dk, entries] of Object.entries(notes)) {
+    for (const [dk, allEntries] of Object.entries(notes)) {
+      const entries = q
+        ? allEntries.filter(e => e.text.toLowerCase().includes(q))
+        : allEntries;
       if (!entries.length) continue;
       const qi = dateToQi[dk] ?? -1;
       if (qi >= 0) qGroups[qi]!.push({ dateKey: dk, entries });
     }
     qGroups.forEach(g => g.sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
     return qGroups;
-  }, [notes, weeks]);
+  }, [notes, weeks, q]);
 
   const totalCount = grouped.reduce((s, g) => s + g.length, 0);
+  const allDaysCount = useMemo(() => {
+    let n = 0;
+    const dateToQi: Record<string, number> = {};
+    weeks.forEach((w, wi) => {
+      const qi = Math.min(3, Math.floor(wi / WEEKS_PER_QUARTER));
+      w.days.forEach(d => { dateToQi[dateKey(d)] = qi; });
+    });
+    for (const [dk, entries] of Object.entries(notes)) {
+      if (entries.length && dateToQi[dk] !== undefined) n++;
+    }
+    return n;
+  }, [notes, weeks]);
 
   const formatDate = (dk: string) => {
     const [, m, d] = dk.split("-").map(Number);
@@ -1713,6 +1751,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   };
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
+  const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)";
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
@@ -1726,54 +1765,73 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
         style={{ background: modalBg, backdropFilter: "saturate(180%) blur(28px)", WebkitBackdropFilter: "saturate(180%) blur(28px)", borderRadius: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.24)", border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`, overflow: "hidden", maxHeight: "82vh" }}
       >
         {/* Header */}
-        <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${borderColor}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 650, letterSpacing: "-0.01em", color: "var(--text)" }}>{t("allNotes")}</h2>
-            {totalCount > 0 && (
-              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", borderRadius: 8, padding: "2px 7px" }}>{totalCount}</span>
+        <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 650, letterSpacing: "-0.01em", color: "var(--text)" }}>{t("allNotes")}</h2>
+              {allDaysCount > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", borderRadius: 8, padding: "2px 7px" }}>{allDaysCount}</span>
+              )}
+            </div>
+            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+          </div>
+          {/* Search */}
+          <div style={{ position: "relative" }}>
+            <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)", pointerEvents: "none", display: "flex" }}>
+              <SearchIcon />
+            </div>
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={t("searchPlaceholder")}
+              style={{ width: "100%", paddingLeft: 34, paddingRight: query ? 30 : 12, paddingTop: 8, paddingBottom: 8, borderRadius: 10, background: inputBg, border: `1px solid ${borderColor}`, fontSize: 13, color: "var(--text)", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+            />
+            {query && (
+              <button onClick={() => setQuery("")}
+                style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)", fontSize: 14, lineHeight: 1, padding: 2 }}>×</button>
             )}
           </div>
-          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
         </div>
 
         {/* Body */}
         <div style={{ overflowY: "auto", padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {totalCount === 0 ? (
+          {allDaysCount === 0 ? (
             <p style={{ textAlign: "center", color: "var(--text-tertiary)", fontSize: 13, padding: "24px 0", margin: 0 }}>{t("noNotesAtAll")}</p>
+          ) : totalCount === 0 && q ? (
+            <p style={{ textAlign: "center", color: "var(--text-tertiary)", fontSize: 13, padding: "24px 0", margin: 0 }}>{t("searchNoResults")}</p>
           ) : (
             grouped.map((group, qi) => {
+              if (group.length === 0) return null;
               const quarter = resolvedQuarters[qi]!;
               return (
                 <div key={qi}>
-                  {/* Quarter label */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: quarter.tint, border: `2px solid ${quarter.border}`, flexShrink: 0, display: "inline-block" }} />
                     <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)" }}>{quarter.label}</span>
-                    <span style={{ fontSize: 11, color: "var(--text-tertiary)", fontWeight: 500 }}>{group.length > 0 ? group.length : ""}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-tertiary)", fontWeight: 500 }}>{group.length}</span>
                   </div>
-                  {group.length === 0 ? (
-                    <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: "0 0 0 16px" }}>{t("noNotesInQuarter")}</p>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {group.map(({ dateKey: dk, entries }) => (
-                        <button key={dk} onClick={() => { onOpenNote(dk); onClose(); }}
-                          style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px", borderRadius: 12, background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", border: `1px solid ${borderColor}`, cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "background 150ms" }}
-                          onMouseEnter={e => (e.currentTarget.style.background = dark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.06)")}
-                          onMouseLeave={e => (e.currentTarget.style.background = dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)")}
-                        >
-                          <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            {entries.slice(0, 3).map((e, i) => (
-                              <span key={i} style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.text}</span>
-                            ))}
-                            {entries.length > 3 && (
-                              <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>+{entries.length - 3} more</span>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {group.map(({ dateKey: dk, entries }) => (
+                      <button key={dk} onClick={() => { onOpenNote(dk); onClose(); }}
+                        style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px", borderRadius: 12, background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", border: `1px solid ${borderColor}`, cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "background 150ms" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = dark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.06)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)")}
+                      >
+                        <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                          {entries.slice(0, 3).map((e, i) => (
+                            <span key={i} style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              <HighlightText text={e.text} query={q} />
+                            </span>
+                          ))}
+                          {entries.length > 3 && (
+                            <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>+{entries.length - 3}</span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               );
             })
