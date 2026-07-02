@@ -994,7 +994,7 @@ function App() {
       <AnimatePresence>
         {milestonePanelOpen && (
           <MilestoneModal key="milestones"
-            milestones={milestones} resolvedQuarters={resolvedQuarters} dark={dark} modalBg={modalBg}
+            milestones={milestones} resolvedQuarters={resolvedQuarters} weeks={weeks} dark={dark} modalBg={modalBg}
             onClose={() => setMilestonePanelOpen(false)}
             onChange={m => { setMilestones(m); }}
           />
@@ -1848,8 +1848,8 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
 
 // ─── MilestoneModal ───────────────────────────────────────────────────────────
 
-function MilestoneModal({ milestones, resolvedQuarters, dark, modalBg, onClose, onChange }: {
-  milestones: Milestone[]; resolvedQuarters: Quarter[]; dark: boolean; modalBg: string;
+function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, onClose, onChange }: {
+  milestones: Milestone[]; resolvedQuarters: Quarter[]; weeks: { weekStart: Date; days: Date[] }[]; dark: boolean; modalBg: string;
   onClose: () => void; onChange: (m: Milestone[]) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
@@ -1860,6 +1860,21 @@ function MilestoneModal({ milestones, resolvedQuarters, dark, modalBg, onClose, 
     if (!q) return items;
     return items.filter(ms => ms.label.toLowerCase().includes(q) || (ms.description ?? "").toLowerCase().includes(q));
   }, [items, q]);
+
+  const dateToQi = useMemo(() => {
+    const map: Record<string, number> = {};
+    weeks.forEach((w, wi) => {
+      const qi = Math.min(3, Math.floor(wi / WEEKS_PER_QUARTER));
+      w.days.forEach(d => { map[dateKey(d)] = qi; });
+    });
+    return map;
+  }, [weeks]);
+  const quarterOf = (dateStr: string) => {
+    const known = dateToQi[dateStr];
+    if (known !== undefined) return known;
+    const m = parseInt(dateStr.split("-")[1]!, 10);
+    return Math.ceil(m / 3) - 1;
+  };
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
@@ -1990,15 +2005,15 @@ function MilestoneModal({ milestones, resolvedQuarters, dark, modalBg, onClose, 
               const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
               const lbl = new Date(y2,m2-1,d2).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { month:"short", day:"numeric", year:"numeric" });
               const isEditing = editId === ms.id;
-              const _q = Math.ceil(m2 / 3);
+              const _q = quarterOf(ms.date);
               const _prevMs = filteredItems[_msIdx - 1];
-              const _prevQ = _prevMs ? Math.ceil(parseInt(_prevMs.date.split("-")[1]!, 10) / 3) : -1;
+              const _prevQ = _prevMs ? quarterOf(_prevMs.date) : -1;
               const _showQHeader = _q !== _prevQ;
               return (
                 <React.Fragment key={ms.id}>
                   {_showQHeader && (
                     <div className="text-[10px] font-semibold tracking-widest uppercase pt-1.5 pb-0 px-0.5" style={{ color:"var(--text-tertiary)" }}>
-                      {resolvedQuarters[_q - 1]?.label ?? t("q" + String(_q))}
+                      {resolvedQuarters[_q]?.label ?? t("q" + String(_q + 1))}
                     </div>
                   )}
                   <div className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
