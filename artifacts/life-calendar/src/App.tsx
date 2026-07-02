@@ -994,7 +994,7 @@ function App() {
       <AnimatePresence>
         {milestonePanelOpen && (
           <MilestoneModal key="milestones"
-            milestones={milestones} dark={dark} modalBg={modalBg}
+            milestones={milestones} resolvedQuarters={resolvedQuarters} dark={dark} modalBg={modalBg}
             onClose={() => setMilestonePanelOpen(false)}
             onChange={m => { setMilestones(m); }}
           />
@@ -1848,8 +1848,8 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
 
 // ─── MilestoneModal ───────────────────────────────────────────────────────────
 
-function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
-  milestones: Milestone[]; dark: boolean; modalBg: string;
+function MilestoneModal({ milestones, resolvedQuarters, dark, modalBg, onClose, onChange }: {
+  milestones: Milestone[]; resolvedQuarters: Quarter[]; dark: boolean; modalBg: string;
   onClose: () => void; onChange: (m: Milestone[]) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
@@ -1998,7 +1998,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                 <React.Fragment key={ms.id}>
                   {_showQHeader && (
                     <div className="text-[10px] font-semibold tracking-widest uppercase pt-1.5 pb-0 px-0.5" style={{ color:"var(--text-tertiary)" }}>
-                      {t("q" + String(_q))}
+                      {resolvedQuarters[_q - 1]?.label ?? t("q" + String(_q))}
                     </div>
                   )}
                   <div className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
