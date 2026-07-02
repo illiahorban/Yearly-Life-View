@@ -151,6 +151,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     noNotesAtAll: "No notes yet. Click a day to add one.",
     notesPanel: "Notes",
     notesSearchPlaceholder: "Search notes…",
+    eventsSearchPlaceholder: "Search events…",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -210,6 +211,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     noNotesAtAll: "Заметок пока нет. Нажмите на день, чтобы добавить.",
     notesPanel: "Заметки",
     notesSearchPlaceholder: "Поиск по заметкам…",
+    eventsSearchPlaceholder: "Поиск по событиям…",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1852,6 +1854,12 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
 }) {
   const { t, lang } = React.useContext(LangContext);
   const [items, setItems] = useState<Milestone[]>(() => [...milestones].sort((a,b) => a.date.localeCompare(b.date)));
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filteredItems = useMemo(() => {
+    if (!q) return items;
+    return items.filter(ms => ms.label.toLowerCase().includes(q) || (ms.description ?? "").toLowerCase().includes(q));
+  }, [items, q]);
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
@@ -1911,6 +1919,25 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
         </div>
 
+        {/* Search */}
+        <div className="px-6 pb-3">
+          <div style={{ position:"relative" }}>
+            <div style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"var(--text-tertiary)", pointerEvents:"none", display:"flex" }}>
+              <SearchIcon />
+            </div>
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={t("eventsSearchPlaceholder")}
+              style={{ ...inputStyle, width:"100%", paddingLeft:34, paddingRight: query ? 30 : 12 }}
+            />
+            {query && (
+              <button onClick={() => setQuery("")}
+                style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"var(--text-tertiary)", fontSize:14, lineHeight:1, padding:2 }}>×</button>
+            )}
+          </div>
+        </div>
+
         {/* Color picker + add form */}
         <div className="px-6 pb-4">
           <div className="flex gap-1.5 mb-2.5 flex-wrap">
@@ -1955,13 +1982,16 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
           {items.length === 0 && (
             <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("noMilestones")}</div>
           )}
+          {items.length > 0 && filteredItems.length === 0 && (
+            <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("searchNoResults")}</div>
+          )}
           <div className="flex flex-col gap-1.5 pb-3">
-            {items.map((ms, _msIdx) => {
+            {filteredItems.map((ms, _msIdx) => {
               const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
               const lbl = new Date(y2,m2-1,d2).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { month:"short", day:"numeric", year:"numeric" });
               const isEditing = editId === ms.id;
               const _q = Math.ceil(m2 / 3);
-              const _prevMs = items[_msIdx - 1];
+              const _prevMs = filteredItems[_msIdx - 1];
               const _prevQ = _prevMs ? Math.ceil(parseInt(_prevMs.date.split("-")[1]!, 10) / 3) : -1;
               const _showQHeader = _q !== _prevQ;
               return (
@@ -2025,7 +2055,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                     <>
                       <div className="flex items-center gap-2.5">
                         <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
-                        <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}>{ms.label}</span>
+                        <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}><HighlightText text={ms.label} query={q} /></span>
                         {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
                         <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
                         <button onClick={() => startEdit(ms)} title={t("edit")}
@@ -2034,7 +2064,7 @@ function MilestoneModal({ milestones, dark, modalBg, onClose, onChange }: {
                           style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
                       </div>
                       {ms.description && (
-                        <p className="text-[11px] leading-snug ml-5" style={{ color:"var(--text-tertiary)", margin:0 }}>{ms.description}</p>
+                        <p className="text-[11px] leading-snug ml-5" style={{ color:"var(--text-tertiary)", margin:0 }}><HighlightText text={ms.description} query={q} /></p>
                       )}
                     </>
                   )}
