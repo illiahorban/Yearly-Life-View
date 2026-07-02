@@ -461,6 +461,15 @@ function App() {
     return migrated;
   });
   useEffect(() => { lsSet("lifeCalendar:notes", notes); }, [notes]);
+  const [noteColors, setNoteColors] = useState<Record<string, string>>(() => ls<Record<string, string>>("lifeCalendar:noteColors", {}));
+  useEffect(() => { lsSet("lifeCalendar:noteColors", noteColors); }, [noteColors]);
+  const setNoteColor = (key: string, color: string | undefined) => {
+    setNoteColors(prev => {
+      const next = { ...prev };
+      if (color) next[key] = color; else delete next[key];
+      return next;
+    });
+  };
   const [openNote, setOpenNote] = useState<string|null>(null);
   const upsertNotes = (key: string, entries: NoteEntry[]) => {
     setNotes(prev => {
@@ -971,10 +980,11 @@ function App() {
         {openNote !== null && (
           <NoteModal key="note"
             dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
+            color={noteColors[openNote]}
             dayMilestones={milestonesMap[openNote] ?? []}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
-            onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
+            onSave={(entries, color) => { upsertNotes(openNote, entries); setNoteColor(openNote, color); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
           />
         )}
@@ -1422,18 +1432,20 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMilestoneUpdate, onMilestoneAdd, onSave, onClose }: {
-  dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
+function NoteModal({ dateKey: dk, initial, color, dark, modalBg, dayMilestones, onMilestoneUpdate, onMilestoneAdd, onSave, onClose }: {
+  dateKey: string; initial: NoteEntry[]; color?: string; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
-  onSave: (entries: NoteEntry[]) => void; onClose: () => void;
+  onSave: (entries: NoteEntry[], color?: string) => void; onClose: () => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() =>
     initial.length > 0 ? initial : [{ id: makeId(), text: "", createdAt: Date.now() }]
   );
   const [focusId, setFocusId] = useState<string|null>(initial.length === 0 ? (entries[0]?.id ?? null) : null);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(color);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   useEffect(() => {
     if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
@@ -1491,7 +1503,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
     setEntries(prev => prev.map(e => e.id === id ? { ...e, text: text.slice(0, 320) } : e));
   const deleteEntry = (id: string) =>
     setEntries(prev => prev.filter(e => e.id !== id));
-  const handleSave = () => { onSave(entries); onClose(); };
+  const handleSave = () => { onSave(entries, selectedColor); onClose(); };
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") onClose();
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleSave();
@@ -1504,7 +1516,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
       onClick={onClose}
     >
       <motion.div layout initial={{ opacity:0, scale:0.95, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
-        transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => e.stopPropagation()}
+        transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerOpen(false); }}
         style={{ width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"85vh" }}
       >
         {/* Header */}
@@ -1513,7 +1525,36 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
             <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
               {dayMilestones.length > 0 ? t("eventsAndNotes") : t("dayNotes")}
             </div>
-            <div className="mt-0.5 text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{label}</div>
+            <div className="mt-0.5 flex items-center gap-2">
+              <div style={{ position:"relative" }}>
+                <button
+                  onClick={e => { e.stopPropagation(); setColorPickerOpen(o => !o); }}
+                  title={t("chooseColor")}
+                  style={{ width:14, height:14, borderRadius:999, background: selectedColor ?? (dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.08)"), border:`2px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)"}`, cursor:"pointer", display:"block", flexShrink:0 }}
+                />
+                <AnimatePresence>
+                  {colorPickerOpen && (
+                    <motion.div
+                      initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
+                      transition={{ type:"spring", stiffness:420, damping:28 }}
+                      onClick={e => e.stopPropagation()}
+                      style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:40, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+                    >
+                      {APPLE_COLORS.map(ac => {
+                        const hex = dark ? ac.dark : ac.light;
+                        return (
+                          <button key={ac.key} onClick={() => { setSelectedColor(hex); setColorPickerOpen(false); }}
+                            title={ac.label}
+                            style={{ width:20, height:20, borderRadius:999, background:hex, border: selectedColor===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                          />
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <span className="text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{label}</span>
+            </div>
           </div>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
