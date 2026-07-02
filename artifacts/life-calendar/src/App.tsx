@@ -1875,6 +1875,11 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
     const m = parseInt(dateStr.split("-")[1]!, 10);
     return Math.ceil(m / 3) - 1;
   };
+  const quarterCounts = useMemo(() => {
+    const counts = [0, 0, 0, 0];
+    filteredItems.forEach(ms => { counts[quarterOf(ms.date)]!++; });
+    return counts;
+  }, [filteredItems, dateToQi]);
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
@@ -2012,8 +2017,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
               return (
                 <React.Fragment key={ms.id}>
                   {_showQHeader && (
-                    <div className="text-[10px] font-semibold tracking-widest uppercase pt-1.5 pb-0 px-0.5" style={{ color:"var(--text-tertiary)" }}>
-                      {resolvedQuarters[_q]?.label ?? t("q" + String(_q + 1))}
+                    <div className="flex items-center gap-1.5 pt-1.5 pb-0 px-0.5">
+                      <span style={{ width:8, height:8, borderRadius:"50%", background: resolvedQuarters[_q]?.tint, border:`2px solid ${resolvedQuarters[_q]?.border}`, flexShrink:0, display:"inline-block" }} />
+                      <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
+                        {resolvedQuarters[_q]?.label ?? t("q" + String(_q + 1))}
+                      </span>
+                      <span className="text-[10px]" style={{ color:"var(--text-tertiary)" }}>· {quarterCounts[_q]}</span>
                     </div>
                   )}
                   <div className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
