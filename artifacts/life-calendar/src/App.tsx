@@ -3179,6 +3179,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                             display: "flex", alignItems: "center", justifyContent: "flex-end",
                             paddingRight: 3,
                             fontSize: lblFontSize, lineHeight: 1,
+                            fontVariantNumeric: "tabular-nums",
                             color: "var(--text-tertiary)",
                             overflow: "hidden", whiteSpace: "nowrap",
                             opacity: showYear ? 1 : 0,
