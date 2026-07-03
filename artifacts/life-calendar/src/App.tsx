@@ -1008,6 +1008,7 @@ function App() {
             config={config} blockGoals={blockGoals} resolvedQuarters={resolvedQuarters}
             dark={dark} modalBg={modalBg}
             onToggleGoal={toggleGoal}
+            onEditGoals={id => { setEditGoalsBlockId(id); setGoalsOpen(false); }}
             onClose={() => setGoalsOpen(false)}
           />
         )}
@@ -1836,12 +1837,13 @@ function HighlightText({ text, query }: { text: string; query: string }) {
 
 // ─── AllGoalsPanel ────────────────────────────────────────────────────────────
 
-function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, onToggleGoal, onClose }: {
+function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, onToggleGoal, onEditGoals, onClose }: {
   config: CalendarConfig;
   blockGoals: Record<string, BlockGoals>;
   resolvedQuarters: Quarter[];
   dark: boolean; modalBg: string;
   onToggleGoal: (blockId: string, goalId: string) => void;
+  onEditGoals: (blockId: string) => void;
   onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
@@ -1915,9 +1917,14 @@ function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, on
                   <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:8 }}>
                     {blocksWithGoals.map(({ block, goals }) => (
                       <div key={block.id} style={{ borderRadius:12, border:`1px solid ${borderColor}`, overflow:"hidden" }}>
-                        <div style={{ padding:"7px 12px 6px", background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", borderBottom:`1px solid ${borderColor}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                          <span style={{ fontSize:12, fontWeight:600, color:"var(--text-secondary)" }}>{block.label}</span>
-                          <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                        <div style={{ padding:"7px 12px 6px", background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", borderBottom:`1px solid ${borderColor}`, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ fontSize:12, fontWeight:600, color:"var(--text-secondary)", flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
+                          <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                          <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
+                            style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color:"var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"color 120ms, background 120ms" }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text)"; (e.currentTarget as HTMLButtonElement).style.background = dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.05)"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-tertiary)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                          ><PencilIcon /></button>
                         </div>
                         <div style={{ padding:"6px 8px", display:"flex", flexDirection:"column", gap:2 }}>
                           {goals.map(goal => (
