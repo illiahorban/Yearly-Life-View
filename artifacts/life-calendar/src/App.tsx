@@ -2573,10 +2573,9 @@ function ConfirmDialog({ open, onClose, onConfirm, message, confirmLabel, dark }
           key="confirm-overlay"
           className="fixed inset-0 flex items-center justify-center p-6"
           style={{ zIndex: 60 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.28, ease: "easeOut" }}
           onClick={onClose}
         >
           <motion.div
@@ -2651,10 +2650,9 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
           key="factory-reset-overlay"
           className="fixed inset-0 flex items-center justify-center p-6"
           style={{ zIndex: 60 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.28, ease: "easeOut" }}
           onClick={onClose}
         >
           <motion.div
