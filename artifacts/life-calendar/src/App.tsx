@@ -2195,95 +2195,121 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
             <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("searchNoResults")}</div>
           )}
           <div className="flex flex-col gap-1.5 pb-3">
-            {filteredItems.map((ms, _msIdx) => {
-              const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
-              const lbl = new Date(y2,m2-1,d2).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { month:"short", day:"numeric", year:"numeric" });
-              const isEditing = editId === ms.id;
-              const _q = quarterOf(ms.date);
-              const _prevMs = filteredItems[_msIdx - 1];
-              const _prevQ = _prevMs ? quarterOf(_prevMs.date) : -1;
-              const _showQHeader = _q !== _prevQ;
-              return (
-                <React.Fragment key={ms.id}>
-                  {_showQHeader && (
-                    <div className="flex items-center gap-1.5 pt-1.5 pb-0 px-0.5">
-                      <span style={{ width:8, height:8, borderRadius:"50%", background: resolvedQuarters[_q]?.tint, border:`2px solid ${resolvedQuarters[_q]?.border}`, flexShrink:0, display:"inline-block" }} />
-                      <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
-                        {resolvedQuarters[_q]?.label ?? t("q" + String(_q + 1))}
-                      </span>
-                      <span className="text-[10px]" style={{ color:"var(--text-tertiary)" }}>· {quarterCounts[_q]}</span>
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
+            {(() => {
+              // Group consecutive events by date
+              const dateGroups: { date: string; lbl: string; qi: number; items: Milestone[] }[] = [];
+              for (const ms of filteredItems) {
+                const last = dateGroups[dateGroups.length - 1];
+                if (last && last.date === ms.date) {
+                  last.items.push(ms);
+                } else {
+                  const [y2,m2,d2] = ms.date.split("-").map(Number) as [number,number,number];
+                  const lbl = new Date(y2,m2-1,d2).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { month:"short", day:"numeric", year:"numeric" });
+                  dateGroups.push({ date: ms.date, lbl, qi: quarterOf(ms.date), items: [ms] });
+                }
+              }
+
+              const renderCard = (ms: Milestone, showDate: boolean) => {
+                const isEditing = editId === ms.id;
+                return (
+                  <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
                     style={{ background: dark ? `color-mix(in srgb, ${ms.color} 12%, rgba(255,255,255,0.04))` : `color-mix(in srgb, ${ms.color} 8%, rgba(255,255,255,0.85))`, border:`1px solid ${ms.color}${isEditing ? "88" : "44"}`, borderLeft:`3px solid ${ms.color}`, transition:"border 150ms, background 150ms" }}
                   >
-                  {isEditing ? (
-                    <div className="flex flex-col gap-2">
-                      {/* Edit color row */}
-                      <div className="flex gap-1 flex-wrap">
-                        {MILESTONE_COLORS.map(c => (
-                          <button key={c} onClick={() => setEditColor(c)}
-                            style={{ width:16, height:16, borderRadius:999, background:c, border: editColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms" }}
+                    {isEditing ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-1 flex-wrap">
+                          {MILESTONE_COLORS.map(c => (
+                            <button key={c} onClick={() => setEditColor(c)}
+                              style={{ width:16, height:16, borderRadius:999, background:c, border: editColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms" }}
+                            />
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <input value={editLabel} onChange={e => setEditLabel(e.target.value)}
+                            onKeyDown={e => { if (e.key==="Enter") saveEdit(); if (e.key==="Escape") cancelEdit(); }}
+                            placeholder={t("labelPlaceholder")} autoFocus
+                            style={{ ...inputStyle, flex:2, width:"auto" }}
                           />
-                        ))}
+                          <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                            lang={lang} style={{ ...inputStyle, flex:1, width:"auto" }}
+                          />
+                        </div>
+                        <div style={{ position:"relative" }}>
+                          <textarea value={editDesc} onChange={e => setEditDesc(e.target.value.slice(0,300))}
+                            placeholder={t("editDescPlaceholder")} rows={2}
+                            style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px", paddingBottom:18 }}
+                          />
+                          <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{editDesc.length}/300</span>
+                        </div>
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
+                          <input type="checkbox" checked={editRecurring} onChange={e => setEditRecurring(e.target.checked)}
+                            style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
+                          />
+                          <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <button onClick={cancelEdit}
+                            style={{ flex:1, height:30, borderRadius:8, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>
+                            {t("cancel")}
+                          </button>
+                          <button onClick={saveEdit} disabled={!editLabel.trim()}
+                            style={{ flex:2, height:30, borderRadius:8, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>
+                            {t("saveChanges")}
+                          </button>
+                        </div>
                       </div>
-                      {/* Edit label + date row */}
-                      <div className="flex gap-2">
-                        <input value={editLabel} onChange={e => setEditLabel(e.target.value)}
-                          onKeyDown={e => { if (e.key==="Enter") saveEdit(); if (e.key==="Escape") cancelEdit(); }}
-                          placeholder={t("labelPlaceholder")} autoFocus
-                          style={{ ...inputStyle, flex:2, width:"auto" }}
-                        />
-                        <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                          lang={lang} style={{ ...inputStyle, flex:1, width:"auto" }}
-                        />
-                      </div>
-                      {/* Edit description */}
-                      <div style={{ position:"relative" }}>
-                        <textarea value={editDesc} onChange={e => setEditDesc(e.target.value.slice(0,300))}
-                          placeholder={t("editDescPlaceholder")} rows={2}
-                          style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px", paddingBottom:18 }}
-                        />
-                        <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{editDesc.length}/300</span>
-                      </div>
-                      <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
-                        <input type="checkbox" checked={editRecurring} onChange={e => setEditRecurring(e.target.checked)}
-                          style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
-                        />
-                        <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
-                      </label>
-                      {/* Edit action row */}
-                      <div className="flex gap-2">
-                        <button onClick={cancelEdit}
-                          style={{ flex:1, height:30, borderRadius:8, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>
-                          {t("cancel")}
-                        </button>
-                        <button onClick={saveEdit} disabled={!editLabel.trim()}
-                          style={{ flex:2, height:30, borderRadius:8, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>
-                          {t("saveChanges")}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2.5">
-                        <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}><HighlightText text={ms.label} query={q} /></span>
-                        {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
-                        <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
-                        <button onClick={() => startEdit(ms)} title={t("edit")}
-                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
-                        <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
-                          style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
-                      </div>
-                      {ms.description && (
-                        <p className="text-[11px] leading-snug ml-5" style={{ color:"var(--text-tertiary)", margin:0 }}><HighlightText text={ms.description} query={q} /></p>
-                      )}
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}><HighlightText text={ms.label} query={q} /></span>
+                          {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
+                          {showDate && <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
+                          <button onClick={() => startEdit(ms)} title={t("edit")}
+                            style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
+                          <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
+                            style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                        </div>
+                        {ms.description && (
+                          <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", margin:0 }}><HighlightText text={ms.description} query={q} /></p>
+                        )}
+                      </>
+                    )}
                   </div>
-                </React.Fragment>
-              );
-            })}
+                );
+              };
+
+              return dateGroups.map((group, gi) => {
+                const prevGroup = dateGroups[gi - 1];
+                const _showQHeader = !prevGroup || group.qi !== prevGroup.qi;
+                const isMulti = group.items.length > 1;
+                return (
+                  <React.Fragment key={group.date}>
+                    {_showQHeader && (
+                      <div className="flex items-center gap-1.5 pt-1.5 pb-0 px-0.5">
+                        <span style={{ width:8, height:8, borderRadius:"50%", background: resolvedQuarters[group.qi]?.tint, border:`2px solid ${resolvedQuarters[group.qi]?.border}`, flexShrink:0, display:"inline-block" }} />
+                        <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
+                          {resolvedQuarters[group.qi]?.label ?? t("q" + String(group.qi + 1))}
+                        </span>
+                        <span className="text-[10px]" style={{ color:"var(--text-tertiary)" }}>· {quarterCounts[group.qi]}</span>
+                      </div>
+                    )}
+                    {isMulti ? (
+                      <div style={{ borderRadius:14, border:`1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"}`, overflow:"hidden" }}>
+                        <div style={{ padding:"6px 10px 5px", background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderBottom:`1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"}`, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ fontSize:11, fontWeight:600, color:"var(--text-secondary)", letterSpacing:"0.01em" }}>{group.lbl}</span>
+                          <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>· {group.items.length}</span>
+                        </div>
+                        <div style={{ display:"flex", flexDirection:"column", gap:4, padding:"6px 6px" }}>
+                          {group.items.map(ms => renderCard(ms, false))}
+                        </div>
+                      </div>
+                    ) : (
+                      renderCard(group.items[0]!, true)
+                    )}
+                  </React.Fragment>
+                );
+              });
+            })()}
           </div>
         </div>
 
