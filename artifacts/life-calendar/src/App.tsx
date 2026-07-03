@@ -3024,11 +3024,12 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex justify-center p-4"
+      style={{ overflowY:"auto", alignItems:(view === "months" || view === "weeks") ? "flex-start" : "center" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.40)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)" }}
+        style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.40)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)", pointerEvents:"none" }}
       />
       <motion.div layout initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
@@ -3036,7 +3037,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
           width: isFullscreen ? "100vw" : "min(96vw,560px)",
           height: isFullscreen ? "100vh" : undefined,
           maxWidth: isFullscreen ? "100%" : undefined,
-          maxHeight: isFullscreen ? "100%" : "96vh",
+          maxHeight: isFullscreen ? "100%" : (view === "months" || view === "weeks") ? undefined : "96vh",
           borderRadius: isFullscreen ? 0 : 24,
           background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)",
           boxShadow:"0 24px 80px rgba(0,0,0,0.28)",
@@ -3121,7 +3122,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="px-6 pb-5" style={{ flex: (view === "months" || view === "weeks") ? "1 1 0" : isFullscreen ? "1 1 0" : "0 0 auto", overflow: "auto", maxHeight: isFullscreen ? undefined : view === "days" ? 260 : undefined, minHeight: (view === "months" || view === "weeks") ? 120 : 0 }}>
+            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: "auto", maxHeight: isFullscreen ? undefined : view === "days" ? 260 : undefined, minHeight: 0 }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                   {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
