@@ -995,6 +995,7 @@ function App() {
             dark={dark} modalBg={modalBg}
             onOpenNote={key => setOpenNote(key)}
             onAddNote={(dk, entry) => upsertNotes(dk, [...(notes[dk] ?? []), entry])}
+            onDeleteDayNotes={dk => upsertNotes(dk, [])}
             onClose={() => setNotesPanelOpen(false)}
           />
         )}
@@ -1804,13 +1805,14 @@ function HighlightText({ text, query }: { text: string; query: string }) {
   );
 }
 
-function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote, onAddNote, onClose }: {
+function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote, onAddNote, onDeleteDayNotes, onClose }: {
   notes: Record<string, NoteEntry[]>;
   weeks: { weekStart: Date; days: Date[] }[];
   resolvedQuarters: Quarter[];
   dark: boolean; modalBg: string;
   onOpenNote: (key: string) => void;
   onAddNote: (dk: string, entry: NoteEntry) => void;
+  onDeleteDayNotes: (dk: string) => void;
   onClose: () => void;
 }) {
   const { t, months, lang } = React.useContext(LangContext);
@@ -1818,6 +1820,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   const [draftText, setDraftText] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState<string | null>(null);
+  const [hoveredDk, setHoveredDk] = useState<string | null>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -1975,23 +1978,32 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {group.map(({ dateKey: dk, entries }) => (
-                      <button key={dk} onClick={() => { onOpenNote(dk); onClose(); }}
-                        style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px", borderRadius: 12, background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", border: `1px solid ${borderColor}`, cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "background 150ms" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = dark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.06)")}
-                        onMouseLeave={e => (e.currentTarget.style.background = dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)")}
+                      <div key={dk} style={{ position: "relative" }}
+                        onMouseEnter={() => setHoveredDk(dk)}
+                        onMouseLeave={() => setHoveredDk(null)}
                       >
-                        <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                          {entries.slice(0, 3).map((e, i) => (
-                            <span key={i} style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              <HighlightText text={e.text} query={q} />
-                            </span>
-                          ))}
-                          {entries.length > 3 && (
-                            <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>+{entries.length - 3}</span>
-                          )}
-                        </div>
-                      </button>
+                        <button onClick={() => { onOpenNote(dk); onClose(); }}
+                          style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 36px 10px 12px", borderRadius: 12, background: hoveredDk === dk ? (dark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.06)") : (dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"), border: `1px solid ${borderColor}`, cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "background 150ms", width: "100%" }}
+                        >
+                          <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            {entries.slice(0, 3).map((e, i) => (
+                              <span key={i} style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <HighlightText text={e.text} query={q} />
+                              </span>
+                            ))}
+                            {entries.length > 3 && (
+                              <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>+{entries.length - 3}</span>
+                            )}
+                          </div>
+                        </button>
+                        {hoveredDk === dk && (
+                          <button
+                            onClick={e => { e.stopPropagation(); onDeleteDayNotes(dk); }}
+                            title={t("remove")}
+                            style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: 6, background: dark ? "rgba(255,59,48,0.18)" : "rgba(255,59,48,0.12)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#ff3b30", fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
