@@ -2995,19 +2995,16 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     let cell: number;
     if (view === "days") {
       cell = 5;
-    } else if (view === "months" || view === "weeks") {
-      // Size by width only — the container scrolls vertically for large lifespans
-      const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
-      const maxCell = view === "months" ? 16 : 10;
-      const minCell = view === "months" ? 5 : 4;
-      cell = Math.max(minCell, Math.min(maxCell, Math.floor(fromW)));
     } else {
-      // years: fit everything in view
-      const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320);
+      const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320 - lh);
       const rows = Math.ceil(total / c);
       const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
       const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
-      cell = Math.max(1, Math.floor(Math.min(fromH, fromW)));
+      const natural = Math.max(1, Math.floor(Math.min(fromH, fromW)));
+      // For months/weeks: enforce a minimum so cells never become illegible;
+      // if natural size is already above the minimum (small lifespan), use it as-is.
+      const minCell = view === "months" ? 5 : view === "weeks" ? 4 : 1;
+      cell = Math.max(minCell, natural);
     }
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, labelW: lw, headerH: lh };
   }, [view, settings.lifespan, ageDays]);
