@@ -902,7 +902,7 @@ function App() {
                   </div>
 
                   {/* Quarter progress bar */}
-                  <div className="px-4 sm:px-5 pb-2.5">
+                  <div className="px-4 sm:px-5 pb-5">
                     <div className="flex items-center justify-between text-[10px] tabular-nums mb-0.5">
                       <span style={{ color:"var(--text-tertiary)" }}>{t("quarterProgress")}</span>
                     </div>
