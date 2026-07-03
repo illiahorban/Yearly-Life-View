@@ -1328,7 +1328,9 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   date: Date; state: DayState; todayProgress: number;
   notes?: NoteEntry[]; milestones: Milestone[]; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; onOpen: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
+  const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+  const tileRef = useRef<HTMLDivElement>(null);
+  const hovered = tooltipRect !== null;
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const activeNotes = dayNotes?.filter(n => n.text.trim()) ?? [];
   const hasNote = activeNotes.length > 0;
@@ -1345,22 +1347,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
-  const tooltip = hovered && hasNote ? (
-    <div style={{ position:"absolute", bottom:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50, background:"rgba(29,29,31,0.96)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", color:"rgba(255,255,255,0.92)", fontSize:12, lineHeight:1.55, borderRadius:12, padding:"10px 12px", width:240, wordBreak:"break-word", boxShadow:"0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset", border:"1px solid rgba(255,255,255,0.08)", pointerEvents:"none" }}>
-      {activeNotes.map((n, i) => (
-        <div key={n.id} style={{
-          marginTop: i > 0 ? 5 : 0,
-          padding: "6px 9px",
-          borderRadius: 8,
-          background: n.color ? `color-mix(in srgb, ${n.color} 28%, rgba(255,255,255,0.04))` : "rgba(255,255,255,0.06)",
-          border: n.color ? `1px solid color-mix(in srgb, ${n.color} 50%, rgba(255,255,255,0.12))` : "1px solid rgba(255,255,255,0.08)",
-          whiteSpace: "pre-wrap",
-        }}>{n.text}</div>
-      ))}
-      <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />
-    </div>
-  ) : null;
-
   const hasEvents = dayMilestones.length > 0;
   const noteDot = hasNote ? (
     <div
@@ -1376,40 +1362,75 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     </div>
   ) : null;
 
-  const hov = { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false), onClick: onOpen };
+  const handleMouseEnter = () => {
+    if (hasNote && tileRef.current) setTooltipRect(tileRef.current.getBoundingClientRect());
+  };
+  const handleMouseLeave = () => setTooltipRect(null);
+  const hov = { onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave, onClick: onOpen };
+
+  // Compute portal tooltip position so it never clips outside viewport
+  const tooltipPortal = hovered && tooltipRect && hasNote ? ReactDOM.createPortal(
+    (() => {
+      const TW = 240, TH_EST = activeNotes.length * 60;
+      const spaceAbove = tooltipRect.top;
+      const showBelow = spaceAbove < TH_EST + 20;
+      const top = showBelow ? tooltipRect.bottom + 8 : tooltipRect.top - 8;
+      const arrowOnTop = showBelow;
+      // horizontal: clamp so tooltip stays inside viewport
+      const rawLeft = tooltipRect.left + tooltipRect.width / 2 - TW / 2;
+      const left = Math.max(8, Math.min(rawLeft, window.innerWidth - TW - 8));
+      const arrowLeft = tooltipRect.left + tooltipRect.width / 2 - left - 6;
+      return (
+        <div style={{ position:"fixed", top, left, width:TW, zIndex:9999, background:"rgba(29,29,31,0.96)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", color:"rgba(255,255,255,0.92)", fontSize:12, lineHeight:1.55, borderRadius:12, padding:"10px 12px", wordBreak:"break-word", boxShadow:"0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset", border:"1px solid rgba(255,255,255,0.08)", pointerEvents:"none", transform: showBelow ? "none" : "translateY(-100%)" }}>
+          {arrowOnTop && <div style={{ position:"absolute", bottom:"100%", left:arrowLeft, width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderBottom:"6px solid rgba(29,29,31,0.96)" }} />}
+          {activeNotes.map((n, i) => (
+            <div key={n.id} style={{ marginTop: i > 0 ? 5 : 0, padding:"6px 9px", borderRadius:8, background: n.color ? `color-mix(in srgb, ${n.color} 28%, rgba(255,255,255,0.04))` : "rgba(255,255,255,0.06)", border: n.color ? `1px solid color-mix(in srgb, ${n.color} 50%, rgba(255,255,255,0.12))` : "1px solid rgba(255,255,255,0.08)", whiteSpace:"pre-wrap" }}>{n.text}</div>
+          ))}
+          {!arrowOnTop && <div style={{ position:"absolute", top:"100%", left:arrowLeft, width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />}
+        </div>
+      );
+    })(),
+    document.body
+  ) : null;
 
   if (isPast) {
     return (
-      <div data-datekey={dk} style={{ ...base }} {...hov}>
-        {tooltip}
-        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
-          {msBar}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
+      <>
+        <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+            {msBar}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
+          </div>
         </div>
-      </div>
+        {tooltipPortal}
+      </>
     );
   }
   if (isToday) {
     return (
-      <div data-datekey={dk} style={{ ...base }} {...hov}>
-        {tooltip}
-        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
-          {msBar}
-          <div className="relative w-full h-full overflow-hidden">
-            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
-            <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+      <>
+        <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
+            {msBar}
+            <div className="relative w-full h-full overflow-hidden">
+              <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
+              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+            </div>
+            {noteDot}
           </div>
-          {noteDot}
         </div>
-      </div>
+        {tooltipPortal}
+      </>
     );
   }
   return (
-    <div data-datekey={dk} style={{ ...base }} {...hov}>
-      {tooltip}
-      <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
-        {msBar}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
+    <>
+      <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
+        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
+          {msBar}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
+        </div>
       </div>
-    </div>
+      {tooltipPortal}
+    </>
   );
 }
 
