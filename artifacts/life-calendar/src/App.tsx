@@ -2979,9 +2979,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingYears = Math.floor(remainingDays / 365.25);
   const remainingMonths = Math.floor((remainingDays % 365.25) / 30.44);
 
-  const { cols, cellPx, gapPx, totalUnits, currentUnit } = useMemo(() => {
-    const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320);
-    const gridW = Math.max(200, Math.min(window.innerWidth * 0.94, 560) - 48);
+  const { cols, cellPx, gapPx, totalUnits, currentUnit, labelW, headerH } = useMemo(() => {
     const ls = settings.lifespan;
     let c: number, gap: number, total: number, curr: number;
     switch (view) {
@@ -2990,6 +2988,11 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       case "weeks":  c = 52;  gap = 1; total = ls * 52;  curr = Math.floor(ageDays / 7);      break;
       default:       c = 0;   gap = 1; total = ls * 365; curr = ageDays;                      break;
     }
+    const showLbl = view === "months" || view === "weeks";
+    const lw = showLbl ? 26 : 0;
+    const lh = showLbl ? 12 : 0;
+    const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320 - lh);
+    const gridW = Math.max(100, Math.min(window.innerWidth * 0.94, 560) - 48 - lw - 4);
     let cell: number;
     if (view === "days") {
       cell = 5;
@@ -2999,7 +3002,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
       cell = Math.max(1, Math.floor(Math.min(fromH, fromW)));
     }
-    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr };
+    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, labelW: lw, headerH: lh };
   }, [view, settings.lifespan, ageDays]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
@@ -3138,24 +3141,82 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   </button>
                 )}
               </div>
-              <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
-                {Array.from({ length: totalUnits }, (_, i) => {
-                  const isPast = i < currentUnit;
-                  const isCurrent = i === currentUnit;
-                  const radius = Math.max(0, Math.floor(cellPx / 5));
-                  const showBorder = cellPx >= 3;
-                  return (
-                    <div key={i} style={{
-                      width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
-                      background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
-                      border: showBorder
-                        ? (isCurrent ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
-                        : "none",
-                      boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
-                    }} />
-                  );
-                })}
-              </div>
+              {(view === "months" || view === "weeks") ? (() => {
+                const rows = Math.ceil(totalUnits / cols);
+                const lblFontSize = Math.min(8, Math.max(6, cellPx));
+                const yearInterval = Math.max(1, Math.ceil(9 / (cellPx + gapPx)));
+                const birthYear = birthDate ? birthDate.getFullYear() : null;
+                const showColAt = (ci: number) =>
+                  view === "months" ? true : (ci === 0 || ci === 12 || ci === 25 || ci === 38 || ci === 51);
+                return (
+                  <div style={{ display:"inline-flex", flexDirection:"column", gap: gapPx }}>
+                    {/* Column header row */}
+                    <div style={{ display:"flex", alignItems:"flex-end", gap: gapPx, height: headerH, paddingLeft: labelW + gapPx }}>
+                      {Array.from({ length: cols }, (_, ci) => (
+                        <div key={ci} style={{
+                          width: cellPx, flexShrink: 0,
+                          textAlign: "center", fontSize: Math.min(7, cellPx),
+                          color: "var(--text-tertiary)", lineHeight: 1,
+                          overflow: "visible", whiteSpace: "nowrap",
+                          opacity: showColAt(ci) ? 1 : 0,
+                        }}>{ci + 1}</div>
+                      ))}
+                    </div>
+                    {/* Rows with year labels */}
+                    {Array.from({ length: rows }, (_, ri) => {
+                      const yearNum = birthYear !== null ? birthYear + ri : ri + 1;
+                      const showYear = ri % yearInterval === 0;
+                      return (
+                        <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx }}>
+                          {/* Year label */}
+                          <div style={{
+                            width: labelW, flexShrink: 0,
+                            textAlign: "right", paddingRight: 3,
+                            fontSize: lblFontSize, color: "var(--text-tertiary)",
+                            lineHeight: `${cellPx}px`, height: cellPx,
+                            overflow: "hidden", whiteSpace: "nowrap",
+                            opacity: showYear ? 1 : 0,
+                          }}>{yearNum}</div>
+                          {/* Cells */}
+                          {Array.from({ length: Math.min(cols, totalUnits - ri * cols) }, (_, ci) => {
+                            const i = ri * cols + ci;
+                            const isPast = i < currentUnit;
+                            const isCurrent = i === currentUnit;
+                            const radius = Math.max(0, Math.floor(cellPx / 5));
+                            return (
+                              <div key={ci} style={{
+                                width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
+                                background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
+                                border: (cellPx >= 3 && isCurrent) ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none",
+                                boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
+                              }} />
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })() : (
+                <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
+                  {Array.from({ length: totalUnits }, (_, i) => {
+                    const isPast = i < currentUnit;
+                    const isCurrent = i === currentUnit;
+                    const radius = Math.max(0, Math.floor(cellPx / 5));
+                    const showBorder = cellPx >= 3;
+                    return (
+                      <div key={i} style={{
+                        width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
+                        background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
+                        border: showBorder
+                          ? (isCurrent ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
+                          : "none",
+                        boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
+                      }} />
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </>
         ) : (
