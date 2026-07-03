@@ -1578,11 +1578,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
   };
 
   return (
-    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background:"rgba(0,0,0,0.32)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
       onClick={onClose}
     >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
+      />
       <motion.div layout initial={{ opacity:0, scale:0.95, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
         transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerEntryId(null); }}
         style={{ width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"85vh" }}
@@ -1859,11 +1861,13 @@ function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, on
   }));
 
   return ReactDOM.createPortal(
-    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background:"rgba(0,0,0,0.34)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
       onClick={onClose}
     >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.34)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
+      />
       <motion.div initial={{ opacity:0, scale:0.96, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md flex flex-col"
@@ -2023,11 +2027,13 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)";
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.34)", backdropFilter: "blur(5px)", WebkitBackdropFilter: "blur(5px)" }}
       onClick={onClose}
     >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.34)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
+      />
       <motion.div layout initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }}
         transition={{ type: "spring", stiffness: 360, damping: 30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md flex flex-col"
@@ -2257,11 +2263,13 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   const inputStyle: React.CSSProperties = { background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.03)", border:`1px solid ${borderColor}`, borderRadius:8, padding:"7px 10px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
 
   return (
-    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background:"rgba(0,0,0,0.34)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
       onClick={onClose}
     >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.34)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
+      />
       <motion.div layout initial={{ opacity:0, scale:0.96, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md"
@@ -2493,11 +2501,13 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)";
 
   return (
-    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background:"rgba(0,0,0,0.32)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
       onClick={onClose}
     >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
+      />
       <motion.div layout initial={{ opacity:0, scale:0.96, y:12 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-sm"
@@ -2772,10 +2782,12 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   return (
     <>
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background:"rgba(20,20,25,0.38)", backdropFilter:"blur(14px) saturate(160%)", WebkitBackdropFilter:"blur(14px) saturate(160%)" }}
-      initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}
+      initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       onClick={onClose}
     >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(20,20,25,0.38)", backdropFilter:"blur(14px) saturate(160%)", WebkitBackdropFilter:"blur(14px) saturate(160%)" }}
+      />
       <motion.div onClick={e => e.stopPropagation()} initial={{ opacity:0, scale:0.96, y:8 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:4 }}
         transition={{ type:"spring", stiffness:360, damping:32 }} className="w-full max-w-md"
         style={{ background:modalBg, backdropFilter:"blur(30px) saturate(180%)", WebkitBackdropFilter:"blur(30px) saturate(180%)", borderRadius:22, boxShadow:"0 30px 80px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.6)"}` }}
@@ -3001,11 +3013,13 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const viewLabels: Record<LifeView, string> = { years: t("years"), months: t("months"), weeks: t("weeks"), days: t("days") };
 
   return (
-    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background:"rgba(0,0,0,0.40)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)" }}
       onClick={onClose}
     >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.40)", backdropFilter:"blur(6px)", WebkitBackdropFilter:"blur(6px)" }}
+      />
       <motion.div layout initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         style={{
