@@ -3211,6 +3211,9 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                     const isCurrent = i === currentUnit;
                     const radius = Math.max(0, Math.floor(cellPx / 5));
                     const showBorder = cellPx >= 3;
+                    const showYearLabel = view === "years" && cellPx >= 18 && birthDate !== null;
+                    const yearLabel = showYearLabel ? birthDate!.getFullYear() + i : null;
+                    const yearFontSize = Math.max(7, Math.min(11, Math.floor(cellPx * 0.22)));
                     return (
                       <div key={i} style={{
                         width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
@@ -3219,7 +3222,20 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                           ? (isCurrent ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
                           : "none",
                         boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
-                      }} />
+                        display: showYearLabel ? "flex" : undefined,
+                        alignItems: showYearLabel ? "center" : undefined,
+                        justifyContent: showYearLabel ? "center" : undefined,
+                        overflow: showYearLabel ? "hidden" : undefined,
+                      }}>
+                        {showYearLabel && (
+                          <span style={{
+                            fontSize: yearFontSize, lineHeight: 1,
+                            fontVariantNumeric: "tabular-nums",
+                            color: isPast ? "rgba(255,255,255,0.75)" : isCurrent ? "#fff" : (dark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)"),
+                            userSelect: "none", pointerEvents: "none",
+                          }}>{yearLabel}</span>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
