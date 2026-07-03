@@ -2990,7 +2990,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     }
     const showLbl = view === "months" || view === "weeks";
     const lw = showLbl ? 26 : 0;
-    const lh = showLbl ? (view === "weeks" ? 24 : 14) : 0;
+    const lh = showLbl ? 12 : 0;
     const gridW = Math.max(100, Math.min(window.innerWidth * 0.94, 560) - 48 - lw - 4);
     let cell: number;
     if (view === "days") {
@@ -3151,30 +3151,20 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 const lblFontSize = Math.min(8, Math.max(6, cellPx));
                 const yearInterval = Math.max(1, Math.ceil(9 / (cellPx + gapPx)));
                 const birthYear = birthDate ? birthDate.getFullYear() : null;
+                const showColAt = (ci: number) =>
+                  view === "months" ? true : (ci === 0 || ci === 12 || ci === 25 || ci === 38 || ci === 51);
                 return (
                   <div style={{ display:"inline-flex", flexDirection:"column", gap: gapPx }}>
                     {/* Column header row */}
                     <div style={{ display:"flex", alignItems:"flex-end", gap: gapPx, height: headerH, paddingLeft: labelW + gapPx }}>
                       {Array.from({ length: cols }, (_, ci) => (
-                        view === "weeks" ? (
-                          <div key={ci} style={{
-                            width: cellPx, flexShrink: 0,
-                            height: headerH,
-                            display: "flex", alignItems: "flex-start", justifyContent: "center",
-                            fontSize: 8,
-                            color: "var(--text-tertiary)", lineHeight: 1,
-                            overflow: "visible", whiteSpace: "nowrap",
-                            writingMode: "vertical-rl" as const,
-                            transform: "rotate(180deg)",
-                          }}>{ci + 1}</div>
-                        ) : (
-                          <div key={ci} style={{
-                            width: cellPx, flexShrink: 0,
-                            textAlign: "center", fontSize: Math.min(8, cellPx + 1),
-                            color: "var(--text-tertiary)", lineHeight: 1,
-                            overflow: "visible", whiteSpace: "nowrap",
-                          }}>{ci + 1}</div>
-                        )
+                        <div key={ci} style={{
+                          width: cellPx, flexShrink: 0,
+                          textAlign: "center", fontSize: Math.min(7, cellPx),
+                          color: "var(--text-tertiary)", lineHeight: 1,
+                          overflow: "visible", whiteSpace: "nowrap",
+                          opacity: showColAt(ci) ? 1 : 0,
+                        }}>{ci + 1}</div>
                       ))}
                     </div>
                     {/* Rows with year labels */}
