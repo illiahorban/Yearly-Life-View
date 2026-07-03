@@ -994,6 +994,7 @@ function App() {
             notes={notes} weeks={weeks} resolvedQuarters={resolvedQuarters}
             dark={dark} modalBg={modalBg}
             onOpenNote={key => setOpenNote(key)}
+            onAddNote={(dk, entry) => upsertNotes(dk, [...(notes[dk] ?? []), entry])}
             onClose={() => setNotesPanelOpen(false)}
           />
         )}
@@ -1803,18 +1804,20 @@ function HighlightText({ text, query }: { text: string; query: string }) {
   );
 }
 
-function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote, onClose }: {
+function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote, onAddNote, onClose }: {
   notes: Record<string, NoteEntry[]>;
   weeks: { weekStart: Date; days: Date[] }[];
   resolvedQuarters: Quarter[];
   dark: boolean; modalBg: string;
   onOpenNote: (key: string) => void;
+  onAddNote: (dk: string, entry: NoteEntry) => void;
   onClose: () => void;
 }) {
-  const { t, months } = React.useContext(LangContext);
+  const { t, months, lang } = React.useContext(LangContext);
   const [query, setQuery] = useState("");
-  const [addMode, setAddMode] = useState(false);
-  const [addDate, setAddDate] = useState(dateKey(new Date()));
+  const [draftText, setDraftText] = useState("");
+  const [draftDate, setDraftDate] = useState(dateKey(new Date()));
+  const [draftColor, setDraftColor] = useState<string | null>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -1885,34 +1888,8 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", borderRadius: 8, padding: "2px 7px" }}>{allDaysCount}</span>
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button
-                onClick={() => { setAddMode(v => !v); setAddDate(dateKey(new Date())); }}
-                title={t("addNote")}
-                style={{ width: 28, height: 28, borderRadius: 8, background: addMode ? "rgba(52,199,89,0.18)" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), border: addMode ? "1.5px solid rgba(52,199,89,0.5)" : "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: addMode ? "#34c759" : "var(--text-secondary)", fontSize: 18, lineHeight: 1, flexShrink: 0, fontWeight: 400 }}>+</button>
-              <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
-            </div>
+            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
           </div>
-          {/* Add note date picker */}
-          {addMode && (
-            <div style={{ marginBottom: 10, padding: "10px 12px", borderRadius: 12, background: dark ? "rgba(52,199,89,0.08)" : "rgba(52,199,89,0.06)", border: "1px solid rgba(52,199,89,0.2)" }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 7 }}>{t("addNotePickDate")}</div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <input
-                  type="date"
-                  value={addDate}
-                  onChange={e => setAddDate(e.target.value)}
-                  style={{ flex: 1, borderRadius: 9, border: `1px solid ${borderColor}`, background: dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.85)", color: "var(--text)", fontSize: 13, padding: "7px 10px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
-                />
-                <button
-                  onClick={() => { if (addDate) { onOpenNote(addDate); onClose(); } }}
-                  disabled={!addDate}
-                  style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: "linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color: "white", fontWeight: 600, fontSize: 13, cursor: addDate ? "pointer" : "not-allowed", fontFamily: "inherit", opacity: addDate ? 1 : 0.5, whiteSpace: "nowrap" as const }}>
-                  {t("openNote")}
-                </button>
-              </div>
-            </div>
-          )}
           {/* Search */}
           <div style={{ position: "relative" }}>
             <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)", pointerEvents: "none", display: "flex" }}>
@@ -1932,9 +1909,56 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
           </div>
         </div>
 
+        {/* Add note form */}
+        <div style={{ padding: "0 20px 14px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 2, flexWrap: "wrap", marginBottom: 8 }}>
+            <button onClick={() => setDraftColor(null)} title={t("noColor")}
+              style={{ width: 18, height: 18, borderRadius: 999, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: draftColor === null ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-tertiary)" }}>
+              ∅
+            </button>
+            {APPLE_COLORS.map(ac => {
+              const c = dark ? ac.dark : ac.light;
+              return (
+                <button key={ac.key} onClick={() => setDraftColor(c)} title={ac.label}
+                  style={{ width: 18, height: 18, borderRadius: 999, background: c, border: draftColor === c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", boxShadow: (ac.key === "white" || ac.key === "grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                />
+              );
+            })}
+          </div>
+          <textarea
+            value={draftText}
+            onChange={e => setDraftText(e.target.value)}
+            placeholder={t("notePlaceholder")}
+            rows={2}
+            style={{ width: "100%", borderRadius: 10, border: `1px solid ${borderColor}`, background: draftColor ? (dark ? `color-mix(in srgb, ${draftColor} 14%, ${inputBg})` : `color-mix(in srgb, ${draftColor} 10%, rgba(255,255,255,0.9))`) : inputBg, color: "var(--text)", fontSize: 13, padding: "8px 10px", fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box", display: "block", marginBottom: 8, transition: "background 200ms ease" }}
+            onKeyDown={e => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && draftText.trim()) {
+                e.preventDefault();
+                onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
+                setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date()));
+              }
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)} lang={lang}
+              style={{ flex: 1, borderRadius: 9, border: `1px solid ${borderColor}`, background: inputBg, color: "var(--text)", fontSize: 13, padding: "7px 10px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
+            />
+            <button
+              onClick={() => {
+                if (!draftText.trim()) return;
+                onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
+                setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date()));
+              }}
+              disabled={!draftText.trim()}
+              style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: draftText.trim() ? "linear-gradient(135deg,#5ed47b 0%,#34c759 100%)" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), color: draftText.trim() ? "white" : "var(--text-tertiary)", fontWeight: 600, fontSize: 13, cursor: draftText.trim() ? "pointer" : "default", fontFamily: "inherit", whiteSpace: "nowrap" as const, transition: "background 150ms, color 150ms" }}>
+              {t("add")}
+            </button>
+          </div>
+        </div>
+
         {/* Body */}
         <div style={{ overflowY: "auto", padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {allDaysCount === 0 ? (
+          {allDaysCount === 0 && !draftText ? (
             <p style={{ textAlign: "center", color: "var(--text-tertiary)", fontSize: 13, padding: "24px 0", margin: 0 }}>{t("noNotesAtAll")}</p>
           ) : totalCount === 0 && q ? (
             <p style={{ textAlign: "center", color: "var(--text-tertiary)", fontSize: 13, padding: "24px 0", margin: 0 }}>{t("searchNoResults")}</p>
