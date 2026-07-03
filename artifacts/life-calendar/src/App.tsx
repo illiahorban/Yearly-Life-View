@@ -149,10 +149,12 @@ const I18N: Record<Lang, Record<string, string>> = {
     back: "← Back",
     allNotes: "All Notes",
     noNotesInQuarter: "No notes",
-    noNotesAtAll: "No notes yet. Click a day to add one.",
+    noNotesAtAll: "No notes yet. Click a day or use + to add one.",
     notesPanel: "Notes",
     notesSearchPlaceholder: "Search notes…",
     eventsSearchPlaceholder: "Search events…",
+    addNotePickDate: "Choose a date:",
+    openNote: "Open",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -210,10 +212,12 @@ const I18N: Record<Lang, Record<string, string>> = {
     back: "← Назад",
     allNotes: "Все заметки",
     noNotesInQuarter: "Нет заметок",
-    noNotesAtAll: "Заметок пока нет. Нажмите на день, чтобы добавить.",
+    noNotesAtAll: "Заметок пока нет. Нажмите на день или используйте + для добавления.",
     notesPanel: "Заметки",
     notesSearchPlaceholder: "Поиск по заметкам…",
     eventsSearchPlaceholder: "Поиск по событиям…",
+    addNotePickDate: "Выберите дату:",
+    openNote: "Открыть",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1809,6 +1813,8 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
 }) {
   const { t, months } = React.useContext(LangContext);
   const [query, setQuery] = useState("");
+  const [addMode, setAddMode] = useState(false);
+  const [addDate, setAddDate] = useState(dateKey(new Date()));
   const searchRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -1879,8 +1885,34 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", borderRadius: 8, padding: "2px 7px" }}>{allDaysCount}</span>
               )}
             </div>
-            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <button
+                onClick={() => { setAddMode(v => !v); setAddDate(dateKey(new Date())); }}
+                title={t("addNote")}
+                style={{ width: 28, height: 28, borderRadius: 8, background: addMode ? "rgba(52,199,89,0.18)" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), border: addMode ? "1.5px solid rgba(52,199,89,0.5)" : "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: addMode ? "#34c759" : "var(--text-secondary)", fontSize: 18, lineHeight: 1, flexShrink: 0, fontWeight: 400 }}>+</button>
+              <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+            </div>
           </div>
+          {/* Add note date picker */}
+          {addMode && (
+            <div style={{ marginBottom: 10, padding: "10px 12px", borderRadius: 12, background: dark ? "rgba(52,199,89,0.08)" : "rgba(52,199,89,0.06)", border: "1px solid rgba(52,199,89,0.2)" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 7 }}>{t("addNotePickDate")}</div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="date"
+                  value={addDate}
+                  onChange={e => setAddDate(e.target.value)}
+                  style={{ flex: 1, borderRadius: 9, border: `1px solid ${borderColor}`, background: dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.85)", color: "var(--text)", fontSize: 13, padding: "7px 10px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
+                />
+                <button
+                  onClick={() => { if (addDate) { onOpenNote(addDate); onClose(); } }}
+                  disabled={!addDate}
+                  style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: "linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color: "white", fontWeight: 600, fontSize: 13, cursor: addDate ? "pointer" : "not-allowed", fontFamily: "inherit", opacity: addDate ? 1 : 0.5, whiteSpace: "nowrap" as const }}>
+                  {t("openNote")}
+                </button>
+              </div>
+            </div>
+          )}
           {/* Search */}
           <div style={{ position: "relative" }}>
             <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-tertiary)", pointerEvents: "none", display: "flex" }}>
