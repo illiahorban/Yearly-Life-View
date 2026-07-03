@@ -1200,18 +1200,18 @@ function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <motion.div layout className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
+                <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
                     const isCurrent = wi === currentWeekIndex;
                     const isSel = qOffset >= selMin && qOffset <= selMax;
                     const isAnchor = hasSelection && (weekSel!.anchor === qOffset || weekSel!.focus === qOffset);
+                    const isPanelOpen = hasSelection && qOffset === selMax;
                     return (
-                      <React.Fragment key={wi}>
-                        <motion.div layout ref={el => { weekRefs.current[wi] = el as HTMLDivElement | null; }} className="flex items-center gap-3 sm:gap-4"
-                          transition={{ type:"spring", stiffness:350, damping:36 }}
-                        >
+                      <div key={wi} style={{ display:"flex", flexDirection:"column" }}>
+                        {/* Fixed-height week row — never changes its own size */}
+                        <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
@@ -1241,44 +1241,45 @@ function BlocksRenderer({
                               />
                             ))}
                           </div>
-                        </motion.div>
-                        <AnimatePresence>
-                          {hasSelection && qOffset === selMax && (
-                            <motion.div
-                              key="sprint-action"
-                              layout
-                              initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
-                              transition={{ type:"spring", stiffness:380, damping:28 }}
-                              className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
-                              style={{ background: dark ? quarter.darkSoft : quarter.soft, border:`1px solid ${quarter.border}55` }}
-                            >
-                              <div className="flex flex-col gap-0.5 min-w-0">
-                                <span className="text-[12px] font-semibold truncate" style={{ color: quarter.text }}>
-                                  {selMin === selMax
-                                    ? `${t("week")} ${selMin + startIndex + 1}`
-                                    : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
-                                </span>
-                                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                                  {selMax - selMin + 1} {t("week")}{lang === "en" && selMax - selMin + 1 !== 1 ? "s" : ""} · {t("clickWeekToAdjust")}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <button onClick={onCancelSel}
-                                  style={{ height:28, paddingInline:10, borderRadius:8, border:`1px solid ${quarter.border}44`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
-                                  {t("cancel")}
-                                </button>
-                                <button onClick={() => onCreateSprint(selMin, selMax)}
-                                  style={{ height:28, paddingInline:12, borderRadius:8, border:"none", background: quarter.border, color:"white", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:`0 2px 8px ${quarter.border}55` }}>
-                                  {t("createSprint")}
-                                </button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </React.Fragment>
+                        </div>
+                        {/* Reserved accordion slot — always in DOM, opens with CSS height transition */}
+                        <div style={{
+                          overflow: "hidden",
+                          maxHeight: isPanelOpen ? "72px" : "0",
+                          opacity: isPanelOpen ? 1 : 0,
+                          marginTop: isPanelOpen ? "8px" : "0",
+                          transition: "max-height 0.3s ease-out, opacity 0.25s ease-out, margin-top 0.3s ease-out",
+                          pointerEvents: isPanelOpen ? "auto" : "none",
+                        }}>
+                          <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
+                            style={{ background: dark ? quarter.darkSoft : quarter.soft, border:`1px solid ${quarter.border}55` }}
+                          >
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="text-[12px] font-semibold truncate" style={{ color: quarter.text }}>
+                                {selMin === selMax
+                                  ? `${t("week")} ${selMin + startIndex + 1}`
+                                  : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
+                              </span>
+                              <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+                                {selMax - selMin + 1} {t("week")}{lang === "en" && selMax - selMin + 1 !== 1 ? "s" : ""} · {t("clickWeekToAdjust")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button onClick={onCancelSel}
+                                style={{ height:28, paddingInline:10, borderRadius:8, border:`1px solid ${quarter.border}44`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
+                                {t("cancel")}
+                              </button>
+                              <button onClick={() => onCreateSprint(selMin, selMax)}
+                                style={{ height:28, paddingInline:12, borderRadius:8, border:"none", background: quarter.border, color:"white", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:`0 2px 8px ${quarter.border}55` }}>
+                                {t("createSprint")}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
-                </motion.div>
+                </div>
               </motion.div>
             );
           })}
