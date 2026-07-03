@@ -1164,7 +1164,7 @@ function BlocksRenderer({
                   <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.text} />
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                     ><PencilIcon /></button>
                     <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{pluralWeeks(block.weeks, lang, t)}</span>
                   </div>
