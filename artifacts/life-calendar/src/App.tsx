@@ -1350,7 +1350,12 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       {activeNotes.map((n, i) => (
         <React.Fragment key={n.id}>
           {i > 0 && <div style={{ borderTop:"1px solid rgba(255,255,255,0.1)", margin:"6px 0" }} />}
-          <div style={{ whiteSpace:"pre-wrap" }}>{n.text}</div>
+          <div style={{ display:"flex", alignItems:"flex-start", gap:6 }}>
+            {n.color && (
+              <div style={{ width:8, height:8, borderRadius:999, background:n.color, flexShrink:0, marginTop:4, boxShadow:`0 0 4px ${n.color}88` }} />
+            )}
+            <div style={{ whiteSpace:"pre-wrap", flex:1 }}>{n.text}</div>
+          </div>
         </React.Fragment>
       ))}
       <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />
