@@ -107,6 +107,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
     today:"Today", week:"Week", week2:"weeks", week5:"weeks", done:"done", left:"left", goals:"goals",
+    allGoals:"Year Goals", noGoalsYet:"No goals set yet. Open a sprint to add goals.",
     sprintGoals:"Sprint Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…",
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
@@ -170,6 +171,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
+    allGoals:"Цели года", noGoalsYet:"Целей пока нет. Откройте спринт, чтобы добавить цели.",
     sprintGoals:"Цели спринта", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…",
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
@@ -458,6 +460,7 @@ function App() {
   useEffect(() => { lsSet("lifeCalendar:milestones", milestones); }, [milestones]);
   const [milestonePanelOpen, setMilestonePanelOpen] = useState(false);
   const [notesPanelOpen, setNotesPanelOpen] = useState(false);
+  const [goalsOpen, setGoalsOpen] = useState(false);
   const [lifeCalendarOpen, setLifeCalendarOpen] = useState(false);
   const [lifeSettings, setLifeSettings] = useState<LifeSettings>(() => ls<LifeSettings>("lifeCalendar:lifeSettings", { birthDate: "", lifespan: 80 }));
   useEffect(() => { lsSet("lifeCalendar:lifeSettings", lifeSettings); }, [lifeSettings]);
@@ -711,6 +714,8 @@ function App() {
             </div>
             <div className="flex items-center gap-2">
               <IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton>
+              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
+              <IconButton title={t("allGoals")} onClick={() => setGoalsOpen(o => !o)} bg={goalsOpen ? "rgba(52,199,89,0.15)" : overlayBg}><GoalsIcon /></IconButton>
               <IconButton title={t("notesPanel")} onClick={() => setNotesPanelOpen(true)} bg={overlayBg}><NotesIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
@@ -993,6 +998,17 @@ function App() {
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {goalsOpen && (
+          <AllGoalsPanel key="goals-panel"
+            config={config} blockGoals={blockGoals} resolvedQuarters={resolvedQuarters}
+            dark={dark} modalBg={modalBg}
+            onToggleGoal={toggleGoal}
+            onClose={() => setGoalsOpen(false)}
           />
         )}
       </AnimatePresence>
@@ -1817,6 +1833,120 @@ function HighlightText({ text, query }: { text: string; query: string }) {
     </>
   );
 }
+
+// ─── AllGoalsPanel ────────────────────────────────────────────────────────────
+
+function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, onToggleGoal, onClose }: {
+  config: CalendarConfig;
+  blockGoals: Record<string, BlockGoals>;
+  resolvedQuarters: Quarter[];
+  dark: boolean; modalBg: string;
+  onToggleGoal: (blockId: string, goalId: string) => void;
+  onClose: () => void;
+}) {
+  const { t } = React.useContext(LangContext);
+  const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
+
+  let totalGoals = 0, doneGoals = 0;
+  config.quarters.forEach(qc => qc.blocks.forEach(b => {
+    const bg = blockGoals[b.id];
+    const active = bg?.goals.filter(g => g.text.trim()) ?? [];
+    totalGoals += active.length;
+    doneGoals += active.filter(g => g.done).length;
+  }));
+
+  return ReactDOM.createPortal(
+    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.15 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background:"rgba(0,0,0,0.34)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
+      onClick={onClose}
+    >
+      <motion.div initial={{ opacity:0, scale:0.96, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
+        transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
+        className="w-full max-w-md flex flex-col"
+        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", maxHeight:"82vh" }}
+      >
+        {/* Header */}
+        <div style={{ padding:"18px 20px 14px", borderBottom:`1px solid ${borderColor}`, flexShrink:0 }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: totalGoals > 0 ? 10 : 0 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <h2 style={{ margin:0, fontSize:17, fontWeight:650, letterSpacing:"-0.01em", color:"var(--text)" }}>{t("allGoals")}</h2>
+              {totalGoals > 0 && (
+                <span style={{ fontSize:11, fontWeight:600, color:"var(--text-tertiary)", background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)", borderRadius:8, padding:"2px 7px" }}>{doneGoals}/{totalGoals}</span>
+              )}
+            </div>
+            <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
+          </div>
+          {totalGoals > 0 && (
+            <div style={{ height:4, borderRadius:999, overflow:"hidden", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)" }}>
+              <div style={{ height:"100%", borderRadius:999, background:"#34c759", width:`${(doneGoals/totalGoals)*100}%`, transition:"width 0.4s ease" }} />
+            </div>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1">
+          {totalGoals === 0 ? (
+            <div style={{ padding:"40px 20px", textAlign:"center", color:"var(--text-tertiary)", fontSize:13 }}>{t("noGoalsYet")}</div>
+          ) : (
+            config.quarters.map((qc, qi) => {
+              const qr = resolvedQuarters[qi]!;
+              const blocksWithGoals = qc.blocks.map(b => {
+                const bg = blockGoals[b.id];
+                const goals = bg?.goals.filter(g => g.text.trim()) ?? [];
+                return { block: b, goals };
+              }).filter(x => x.goals.length > 0);
+              if (blocksWithGoals.length === 0) return null;
+              const qDone = blocksWithGoals.reduce((s, x) => s + x.goals.filter(g => g.done).length, 0);
+              const qTotal = blocksWithGoals.reduce((s, x) => s + x.goals.length, 0);
+              return (
+                <div key={qi} style={{ padding:"14px 16px 4px" }}>
+                  {/* Quarter header */}
+                  <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                    <span style={{ width:8, height:8, borderRadius:"50%", background:qr.tint, border:`2px solid ${qr.border}`, flexShrink:0, display:"inline-block" }} />
+                    <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"var(--text-tertiary)" }}>{qr.label ?? t(`q${qi+1}` as keyof typeof t)}</span>
+                    <span style={{ fontSize:10, color:"var(--text-tertiary)" }}>· {qDone}/{qTotal}</span>
+                    <div style={{ flex:1 }} />
+                    <div style={{ width:48, height:3, borderRadius:999, overflow:"hidden", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)" }}>
+                      <div style={{ height:"100%", borderRadius:999, background:qr.border, width:`${(qDone/qTotal)*100}%`, transition:"width 0.4s ease" }} />
+                    </div>
+                  </div>
+                  {/* Sprint blocks */}
+                  <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:8 }}>
+                    {blocksWithGoals.map(({ block, goals }) => (
+                      <div key={block.id} style={{ borderRadius:12, border:`1px solid ${borderColor}`, overflow:"hidden" }}>
+                        <div style={{ padding:"7px 12px 6px", background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", borderBottom:`1px solid ${borderColor}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                          <span style={{ fontSize:12, fontWeight:600, color:"var(--text-secondary)" }}>{block.label}</span>
+                          <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                        </div>
+                        <div style={{ padding:"6px 8px", display:"flex", flexDirection:"column", gap:2 }}>
+                          {goals.map(goal => (
+                            <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"4px 4px", borderRadius:6 }}
+                              onClick={() => onToggleGoal(block.id, goal.id)}
+                            >
+                              <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? qr.border : "transparent", border:`1.5px solid ${goal.done ? qr.border : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                                {goal.done && <CheckIcon />}
+                              </div>
+                              <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : "var(--text-secondary)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div style={{ height:12 }} />
+        </div>
+      </motion.div>
+    </motion.div>,
+    document.body
+  );
+}
+
+// ─── NotesPanel ───────────────────────────────────────────────────────────────
 
 function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote, onAddNote, onDeleteDayNotes, onClose }: {
   notes: Record<string, NoteEntry[]>;
@@ -3023,6 +3153,14 @@ function MoonIcon() {
 }
 function SunIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
+}
+function GoalsIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 11 12 14 22 4"/>
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+  );
 }
 function FlagIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
