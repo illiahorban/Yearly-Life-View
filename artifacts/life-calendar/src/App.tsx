@@ -903,9 +903,11 @@ function App() {
 
                   {/* Quarter progress bar */}
                   <div className="px-4 sm:px-5 pb-2.5">
-                    <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
+                    <div className="flex items-center justify-between text-[10px] tabular-nums mb-0.5">
                       <span style={{ color:"var(--text-tertiary)" }}>{t("quarterProgress")}</span>
-                      <span style={{ color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text, fontWeight:700 }}>{qPct.toFixed(0)}%</span>
+                    </div>
+                    <div className="text-center tabular-nums mb-1" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
+                      {qPct.toFixed(0)}%
                     </div>
                     <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                       <motion.div initial={false} animate={{ width:`${qPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
