@@ -106,7 +106,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     descPlaceholder:"Description (optional, up to 300 chars)…",
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
-    today:"Today", week:"Week", done:"done", left:"left", goals:"goals",
+    today:"Today", week:"Week", week2:"weeks", week5:"weeks", done:"done", left:"left", goals:"goals",
     sprintGoals:"Sprint Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…",
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
@@ -169,7 +169,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     descPlaceholder:"Описание (необязательно, до 300 символов)…",
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
-    today:"Сегодня", week:"Неделя", done:"готово", left:"осталось", goals:"целей",
+    today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
     sprintGoals:"Цели спринта", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…",
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
@@ -357,6 +357,15 @@ function LifeIcon() {
 
 function makeId() { return Math.random().toString(36).slice(2,10); }
 function defaultBlock(): Block { return { id: makeId(), weeks: WEEKS_PER_QUARTER, label: "All weeks" }; }
+
+/** Returns correct plural form of "week/неделя" for a given count and language. */
+function pluralWeeks(n: number, lang: string, t: (k: string) => string): string {
+  if (lang !== "ru") return `${n} ${n === 1 ? t("week") : t("week2")}`;
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} ${t("week")}`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} ${t("week2")}`;
+  return `${n} ${t("week5")}`;
+}
 
 function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, selEnd: number, sprintLabel: string): QuarterConfig {
   const selEndExcl = selEnd + 1;
@@ -1139,7 +1148,7 @@ function BlocksRenderer({
                     <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
                       style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                     ><PencilIcon /></button>
-                    <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{block.weeks} {t("week")}</span>
+                    <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{pluralWeeks(block.weeks, lang, t)}</span>
                   </div>
                 </div>
 
@@ -1261,7 +1270,7 @@ function BlocksRenderer({
                                   : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
                               </span>
                               <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                                {selMax - selMin + 1} {t("week")}{lang === "en" && selMax - selMin + 1 !== 1 ? "s" : ""} · {t("clickWeekToAdjust")}
+                                {pluralWeeks(selMax - selMin + 1, lang, t)} · {t("clickWeekToAdjust")}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -2600,7 +2609,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
   onClose: () => void; onSave: (next: QuarterConfig) => void; onResetBlock: (blockId: string) => void;
 }) {
-  const { t } = React.useContext(LangContext);
+  const { t, lang } = React.useContext(LangContext);
   const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map(b => ({ ...b })));
   const total = blocks.reduce((a,b) => a+(Number(b.weeks)||0), 0);
   const remaining = WEEKS_PER_QUARTER - total;
@@ -2743,8 +2752,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
         <div className="px-6 mt-4">
           <div className="flex items-center justify-between text-[12px] tabular-nums px-3 py-2.5 rounded-xl"
             style={{ background: valid?"rgba(52,199,89,0.08)":"rgba(255,59,48,0.07)", color: valid?"#28a745":"#c00", border:`1px solid ${valid?"rgba(52,199,89,0.2)":"rgba(255,59,48,0.2)"}` }}>
-            <span>{t("total")}: {total} / {WEEKS_PER_QUARTER} {t("week")}</span>
-            <span>{valid ? t("looksGood") : remaining>0 ? `${remaining} ${t("week")} ${t("unassigned")}` : `${-remaining} ${t("week")} ${t("over")}`}</span>
+            <span>{t("total")}: {total} / {WEEKS_PER_QUARTER} {t("week5")}</span>
+            <span>{valid ? t("looksGood") : remaining>0 ? `${pluralWeeks(remaining, lang, t)} ${t("unassigned")}` : `${pluralWeeks(-remaining, lang, t)} ${t("over")}`}</span>
           </div>
         </div>
 
