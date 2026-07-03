@@ -1921,14 +1921,14 @@ function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, on
                   {/* Sprint blocks */}
                   <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:8 }}>
                     {blocksWithGoals.map(({ block, goals }) => (
-                      <div key={block.id} style={{ borderRadius:12, border:`1px solid ${borderColor}`, overflow:"hidden" }}>
-                        <div style={{ padding:"7px 12px 6px", background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", borderBottom:`1px solid ${borderColor}`, display:"flex", alignItems:"center", gap:6 }}>
-                          <span style={{ fontSize:12, fontWeight:600, color:"var(--text-secondary)", flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
-                          <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                      <div key={block.id} style={{ borderRadius:12, border:`1px solid ${qr.border}44`, overflow:"hidden" }}>
+                        <div style={{ padding:"7px 12px 6px", background: dark ? qr.darkTint : qr.tint, borderBottom:`1px solid ${qr.border}33`, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ fontSize:12, fontWeight:600, color: qr.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
+                          <span style={{ fontSize:11, color: qr.text, opacity:0.65, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
                           <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                            style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color:"var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"color 120ms, background 120ms" }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text)"; (e.currentTarget as HTMLButtonElement).style.background = dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.05)"; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-tertiary)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                            style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: qr.text, opacity:0.7, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"opacity 120ms, background 120ms" }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.background = `${qr.border}22`; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
                           ><PencilIcon /></button>
                         </div>
                         <div style={{ padding:"6px 8px", display:"flex", flexDirection:"column", gap:2 }}>
