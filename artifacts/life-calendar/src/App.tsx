@@ -1104,11 +1104,10 @@ function BlocksRenderer({
   const hasSelection = weekSel?.qi === _qi;
 
   return (
-    <LayoutGroup>
-      <div className="flex flex-col gap-2.5">
-        <AnimatePresence initial={false}>
-          {blocks.map(block => {
-            const blockRows = weeks.slice(startIndex+block.start, startIndex+block.end);
+    <div className="flex flex-col gap-2.5">
+      <AnimatePresence initial={false}>
+        {blocks.map(block => {
+          const blockRows = weeks.slice(startIndex+block.start, startIndex+block.end);
             const allDays = blockRows.flatMap(r => r.days);
             const pastDays = allDays.filter(d => dayState(d)==="past").length;
             const hasToday = allDays.some(d => dayState(d)==="today");
@@ -1126,8 +1125,10 @@ function BlocksRenderer({
             const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : quarter;
             const softColor = dark ? effectiveQ.darkSoft : effectiveQ.soft;
 
+            const blockHasSel = hasSelection && selMax >= block.start && selMax < block.end;
+
             return (
-              <motion.div layout key={block.id}
+              <motion.div key={block.id}
                 initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                 transition={{ type:"spring", stiffness:320, damping:30 }}
                 style={{ background:softColor, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"hidden" }}
@@ -1199,8 +1200,10 @@ function BlocksRenderer({
                   </div>
                 )}
 
-                {/* Week rows */}
-                <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
+                {/* Week rows — position:relative so sprint panel can overlay without shifting rows */}
+                <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pt-1"
+                  style={{ position:"relative", paddingBottom: blockHasSel ? 58 : 12, transition:"padding-bottom 220ms ease" }}
+                >
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -1208,80 +1211,79 @@ function BlocksRenderer({
                     const isSel = qOffset >= selMin && qOffset <= selMax;
                     const isAnchor = hasSelection && (weekSel!.anchor === qOffset || weekSel!.focus === qOffset);
                     return (
-                      <React.Fragment key={wi}>
-                        <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
-                          <button type="button"
-                            onClick={() => onWeekLabelClick(_qi, qOffset)}
-                            title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`w-20 sm:w-24 shrink-0 text-[15px] tabular-nums whitespace-nowrap ${lang === "en" ? "text-center" : "text-right"}`}
-                            style={{
-                              color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
-                              fontWeight: isSel || isCurrent ? 600 : 500,
-                              background: isSel ? (dark ? quarter.darkSoft : quarter.soft) : "transparent",
-                              borderRadius: 6,
-                              padding: "2px 6px",
-                              border: isAnchor ? `1.5px solid ${quarter.border}` : "1.5px solid transparent",
-                              cursor: "pointer",
-                              fontFamily: "inherit",
-                              outline: "none",
-                              transition: "background 120ms, border 120ms, color 120ms",
-                              opacity: hasSelection && !isSel ? 0.55 : 1,
-                            }}
-                          >{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</button>
-                          <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
-                            {days.map((d, di) => (
-                              <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
-                                notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
-                                accentColor={effectiveQ.border}
-                                highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
-                                isActiveMatch={activeMatchKey === dateKey(d)}
-                                onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
-                              />
-                            ))}
-                          </div>
+                      <div key={wi} ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
+                        <button type="button"
+                          onClick={() => onWeekLabelClick(_qi, qOffset)}
+                          title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
+                          className={`w-20 sm:w-24 shrink-0 text-[15px] tabular-nums whitespace-nowrap ${lang === "en" ? "text-center" : "text-right"}`}
+                          style={{
+                            color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
+                            fontWeight: 500,
+                            background: isSel ? (dark ? quarter.darkSoft : quarter.soft) : "transparent",
+                            borderRadius: 6,
+                            padding: "2px 6px",
+                            border: isAnchor ? `1.5px solid ${quarter.border}` : "1.5px solid transparent",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            outline: "none",
+                            transition: "background 220ms ease, border 150ms ease, color 150ms ease, opacity 150ms ease",
+                            opacity: hasSelection && !isSel ? 0.45 : 1,
+                          }}
+                        >{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</button>
+                        <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
+                          {days.map((d, di) => (
+                            <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
+                              notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
+                              accentColor={effectiveQ.border}
+                              highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
+                              isActiveMatch={activeMatchKey === dateKey(d)}
+                              onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
+                            />
+                          ))}
                         </div>
-                        <AnimatePresence>
-                          {hasSelection && qOffset === selMax && (
-                            <motion.div
-                              key="sprint-action"
-                              initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
-                              transition={{ type:"spring", stiffness:380, damping:28 }}
-                              className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
-                              style={{ background: dark ? quarter.darkSoft : quarter.soft, border:`1px solid ${quarter.border}55` }}
-                            >
-                              <div className="flex flex-col gap-0.5 min-w-0">
-                                <span className="text-[12px] font-semibold truncate" style={{ color: quarter.text }}>
-                                  {selMin === selMax
-                                    ? `${t("week")} ${selMin + startIndex + 1}`
-                                    : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
-                                </span>
-                                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                                  {selMax - selMin + 1} {t("week")}{lang === "en" && selMax - selMin + 1 !== 1 ? "s" : ""} · {t("clickWeekToAdjust")}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <button onClick={onCancelSel}
-                                  style={{ height:28, paddingInline:10, borderRadius:8, border:`1px solid ${quarter.border}44`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
-                                  {t("cancel")}
-                                </button>
-                                <button onClick={() => onCreateSprint(selMin, selMax)}
-                                  style={{ height:28, paddingInline:12, borderRadius:8, border:"none", background: quarter.border, color:"white", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:`0 2px 8px ${quarter.border}55` }}>
-                                  {t("createSprint")}
-                                </button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </React.Fragment>
+                      </div>
                     );
                   })}
+
+                  {/* Sprint action panel — absolutely positioned so it never shifts week rows */}
+                  <div style={{
+                    position:"absolute", left:10, right:10, bottom:8,
+                    opacity: blockHasSel ? 1 : 0,
+                    transform: blockHasSel ? "translateY(0)" : "translateY(12px)",
+                    transition: "opacity 200ms ease, transform 200ms ease",
+                    pointerEvents: blockHasSel ? "auto" : "none",
+                  }}>
+                    <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
+                      style={{ background: dark ? quarter.darkSoft : quarter.soft, border:`1px solid ${quarter.border}55`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
+                    >
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-[12px] font-semibold truncate" style={{ color: quarter.text }}>
+                          {selMin === selMax
+                            ? `${t("week")} ${selMin + startIndex + 1}`
+                            : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
+                        </span>
+                        <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+                          {selMax - selMin + 1} {t("week")}{lang === "en" && selMax - selMin + 1 !== 1 ? "s" : ""} · {t("clickWeekToAdjust")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={onCancelSel}
+                          style={{ height:28, paddingInline:10, borderRadius:8, border:`1px solid ${quarter.border}44`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
+                          {t("cancel")}
+                        </button>
+                        <button onClick={() => onCreateSprint(selMin, selMax)}
+                          style={{ height:28, paddingInline:12, borderRadius:8, border:"none", background: quarter.border, color:"white", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:`0 2px 8px ${quarter.border}55` }}>
+                          {t("createSprint")}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             );
           })}
         </AnimatePresence>
-      </div>
-    </LayoutGroup>
+    </div>
   );
 }
 
