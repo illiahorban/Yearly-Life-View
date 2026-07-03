@@ -2670,87 +2670,6 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   );
 }
 
-// ─── LifeDaysCanvas ────────────────────────────────────────────────────────────
-
-function LifeDaysCanvas({ totalUnits, currentUnit, dark, cellPx, gapPx, gridW, accentColor }: {
-  totalUnits: number; currentUnit: number; dark: boolean;
-  cellPx: number; gapPx: number; gridW: number; accentColor: string;
-}) {
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const cols = Math.max(1, Math.floor((gridW + gapPx) / (cellPx + gapPx)));
-  const rows = Math.ceil(totalUnits / cols);
-  const canvasW = cols * (cellPx + gapPx) - gapPx;
-  const canvasH = rows * (cellPx + gapPx) - gapPx;
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const dpr = Math.ceil(window.devicePixelRatio || 1);
-    canvas.width = canvasW * dpr;
-    canvas.height = canvasH * dpr;
-    canvas.style.width = canvasW + "px";
-    canvas.style.height = canvasH + "px";
-    ctx.scale(dpr, dpr);
-
-    const r = Math.max(0, Math.floor(cellPx / 5));
-    const futureColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.07)";
-
-    const roundRect = (x: number, y: number, w: number, h: number, radius: number) => {
-      if (radius <= 0) { ctx.rect(x, y, w, h); return; }
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + w - radius, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-      ctx.lineTo(x + w, y + h - radius);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-      ctx.lineTo(x + radius, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-    };
-
-    // batch past cells in one fill call for maximum speed
-    ctx.beginPath();
-    ctx.fillStyle = accentColor;
-    for (let i = 0; i < Math.min(currentUnit, totalUnits); i++) {
-      const col = i % cols; const row = Math.floor(i / cols);
-      roundRect(col * (cellPx + gapPx), row * (cellPx + gapPx), cellPx, cellPx, r);
-    }
-    ctx.fill();
-
-    // future cells
-    ctx.beginPath();
-    ctx.fillStyle = futureColor;
-    for (let i = currentUnit + 1; i < totalUnits; i++) {
-      const col = i % cols; const row = Math.floor(i / cols);
-      roundRect(col * (cellPx + gapPx), row * (cellPx + gapPx), cellPx, cellPx, r);
-    }
-    ctx.fill();
-
-    // current cell
-    if (currentUnit < totalUnits) {
-      const col = currentUnit % cols; const row = Math.floor(currentUnit / cols);
-      const x = col * (cellPx + gapPx); const y = row * (cellPx + gapPx);
-      ctx.beginPath();
-      ctx.fillStyle = accentColor + "66";
-      roundRect(x, y, cellPx, cellPx, r);
-      ctx.fill();
-      if (cellPx >= 5) {
-        const bw = Math.max(1, Math.round(cellPx / 6));
-        ctx.beginPath();
-        ctx.strokeStyle = accentColor;
-        ctx.lineWidth = bw;
-        roundRect(x + bw / 2, y + bw / 2, cellPx - bw, cellPx - bw, Math.max(0, r - bw / 2));
-        ctx.stroke();
-      }
-    }
-  }, [totalUnits, currentUnit, dark, cellPx, gapPx, cols, canvasW, canvasH, accentColor]);
-
-  return <canvas ref={canvasRef} style={{ display:"block", maxWidth:"100%" }} />;
-}
-
 // ─── LifeCalendarModal ────────────────────────────────────────────────────────
 
 function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose }: {
@@ -2763,23 +2682,11 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const [view, setView] = useState<LifeView>("weeks");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
-  const [gridReady, setGridReady] = useState(false);
 
   const handleSetView = (v: LifeView) => {
     if (v !== "days") setIsFullscreen(false);
-    setGridReady(false);
     setView(v);
   };
-
-  // Double-rAF: let modal animation start before any heavy grid work
-  useEffect(() => {
-    setGridReady(false);
-    let id1 = 0, id2 = 0;
-    id1 = requestAnimationFrame(() => {
-      id2 = requestAnimationFrame(() => setGridReady(true));
-    });
-    return () => { cancelAnimationFrame(id1); cancelAnimationFrame(id2); };
-  }, [view]);
 
   const today = useMemo(() => startOfDay(new Date()), []);
   const birthDate = useMemo(() => {
@@ -2953,34 +2860,24 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   </button>
                 )}
               </div>
-              {!gridReady ? (
-                <div style={{ height: view === "days" ? 220 : Math.ceil(totalUnits / (cols || 52)) * (cellPx + gapPx), display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <div style={{ width:28, height:28, borderRadius:99, border:`2px solid ${LIFE_ACCENT}44`, borderTopColor:LIFE_ACCENT, animation:"spin 0.7s linear infinite" }} />
-                </div>
-              ) : view === "days" ? (
-                <LifeDaysCanvas
-                  totalUnits={totalUnits} currentUnit={currentUnit}
-                  dark={dark} cellPx={cellPx} gapPx={gapPx}
-                  gridW={cols > 0 ? cols * (cellPx + gapPx) - gapPx : Math.max(200, Math.min(window.innerWidth * 0.94, 560) - 48)}
-                  accentColor={LIFE_ACCENT}
-                />
-              ) : (
-                <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
-                  {Array.from({ length: totalUnits }, (_, i) => {
-                    const isPast = i < currentUnit;
-                    const isCurrent = i === currentUnit;
-                    const radius = Math.max(0, Math.floor(cellPx / 5));
-                    return (
-                      <div key={i} style={{
-                        width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
-                        background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
-                        border: isCurrent && cellPx >= 3 ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none",
-                        boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
-                      }} />
-                    );
-                  })}
-                </div>
-              )}
+              <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
+                {Array.from({ length: totalUnits }, (_, i) => {
+                  const isPast = i < currentUnit;
+                  const isCurrent = i === currentUnit;
+                  const radius = Math.max(0, Math.floor(cellPx / 5));
+                  const showBorder = cellPx >= 3;
+                  return (
+                    <div key={i} style={{
+                      width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
+                      background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
+                      border: showBorder
+                        ? (isCurrent ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
+                        : "none",
+                      boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
+                    }} />
+                  );
+                })}
+              </div>
             </div>
           </>
         ) : (

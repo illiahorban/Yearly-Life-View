@@ -45,10 +45,6 @@ body {
 
 * { box-sizing: border-box; }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
   filter: invert(var(--date-invert, 0));
