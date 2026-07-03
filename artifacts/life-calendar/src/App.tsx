@@ -1988,17 +1988,24 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                           <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             {entries.slice(0, 3).map((e, i) => (
-                              <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, overflow: "hidden" }}>
-                                {e.color && (
-                                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: e.color, flexShrink: 0, opacity: 0.9 }} />
-                                )}
-                                <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                              <div key={i} style={{
+                                padding: e.color ? "3px 7px 3px 8px" : "2px 0",
+                                borderRadius: e.color ? 6 : 0,
+                                borderLeft: e.color ? `3px solid ${e.color}` : "none",
+                                background: e.color
+                                  ? (dark
+                                    ? `color-mix(in srgb, ${e.color} 16%, rgba(255,255,255,0.04))`
+                                    : `color-mix(in srgb, ${e.color} 10%, rgba(255,255,255,0.85))`)
+                                  : "transparent",
+                                overflow: "hidden",
+                              }}>
+                                <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
                                   <HighlightText text={e.text} query={q} />
                                 </span>
                               </div>
                             ))}
                             {entries.length > 3 && (
-                              <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>+{entries.length - 3}</span>
+                              <span style={{ fontSize: 11, color: "var(--text-tertiary)", paddingLeft: 2 }}>+{entries.length - 3}</span>
                             )}
                           </div>
                         </button>
