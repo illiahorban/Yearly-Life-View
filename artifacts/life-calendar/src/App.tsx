@@ -1200,7 +1200,7 @@ function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
+                <motion.div layout className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -1209,7 +1209,9 @@ function BlocksRenderer({
                     const isAnchor = hasSelection && (weekSel!.anchor === qOffset || weekSel!.focus === qOffset);
                     return (
                       <React.Fragment key={wi}>
-                        <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
+                        <motion.div layout ref={el => { weekRefs.current[wi] = el as HTMLDivElement | null; }} className="flex items-center gap-3 sm:gap-4"
+                          transition={{ type:"spring", stiffness:350, damping:36 }}
+                        >
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
@@ -1239,11 +1241,12 @@ function BlocksRenderer({
                               />
                             ))}
                           </div>
-                        </div>
+                        </motion.div>
                         <AnimatePresence>
                           {hasSelection && qOffset === selMax && (
                             <motion.div
                               key="sprint-action"
+                              layout
                               initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
                               transition={{ type:"spring", stiffness:380, damping:28 }}
                               className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
@@ -1275,7 +1278,7 @@ function BlocksRenderer({
                       </React.Fragment>
                     );
                   })}
-                </div>
+                </motion.div>
               </motion.div>
             );
           })}
