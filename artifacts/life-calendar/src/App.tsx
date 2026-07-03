@@ -3175,8 +3175,9 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                         <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx, height: cellPx }}>
                           {/* Year label */}
                           <div style={{
-                            width: labelW, flexShrink: 0,
-                            textAlign: "right", paddingRight: 3,
+                            width: labelW, height: cellPx, flexShrink: 0,
+                            display: "flex", alignItems: "center", justifyContent: "flex-end",
+                            paddingRight: 3,
                             fontSize: lblFontSize, color: "var(--text-tertiary)",
                             overflow: "visible", whiteSpace: "nowrap",
                             opacity: showYear ? 1 : 0,
