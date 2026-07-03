@@ -2990,7 +2990,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     }
     const showLbl = view === "months" || view === "weeks";
     const lw = showLbl ? 26 : 0;
-    const lh = view === "weeks" ? 16 : showLbl ? 12 : 0;
+    const lh = showLbl ? 12 : 0;
     const gridW = Math.max(100, Math.min(window.innerWidth * 0.94, 560) - 48 - lw - 4);
     let cell: number;
     if (view === "days") {
@@ -3160,7 +3160,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                       {Array.from({ length: cols }, (_, ci) => (
                         <div key={ci} style={{
                           width: cellPx, flexShrink: 0,
-                          textAlign: "center", fontSize: view === "weeks" ? 9 : Math.min(8, cellPx),
+                          textAlign: "center", fontSize: Math.min(7, cellPx),
                           color: "var(--text-tertiary)", lineHeight: 1,
                           overflow: "visible", whiteSpace: "nowrap",
                           opacity: showColAt(ci) ? 1 : 0,
