@@ -1986,11 +1986,16 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                           style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 36px 10px 12px", borderRadius: 12, background: hoveredDk === dk ? (dark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.06)") : (dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"), border: `1px solid ${borderColor}`, cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "background 150ms", width: "100%" }}
                         >
                           <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             {entries.slice(0, 3).map((e, i) => (
-                              <span key={i} style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                <HighlightText text={e.text} query={q} />
-                              </span>
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, overflow: "hidden" }}>
+                                {e.color && (
+                                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: e.color, flexShrink: 0, opacity: 0.9 }} />
+                                )}
+                                <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                                  <HighlightText text={e.text} query={q} />
+                                </span>
+                              </div>
                             ))}
                             {entries.length > 3 && (
                               <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>+{entries.length - 3}</span>
