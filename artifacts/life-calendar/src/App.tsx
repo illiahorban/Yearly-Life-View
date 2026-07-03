@@ -1910,17 +1910,17 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
         </div>
 
         {/* Add note form */}
-        <div style={{ padding: "0 20px 14px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
-          <div style={{ display: "flex", gap: 2, flexWrap: "wrap", marginBottom: 8 }}>
+        <div style={{ padding: "12px 20px 14px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 9, alignItems: "center" }}>
             <button onClick={() => setDraftColor(null)} title={t("noColor")}
-              style={{ width: 18, height: 18, borderRadius: 999, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: draftColor === null ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-tertiary)" }}>
+              style={{ width: 20, height: 20, borderRadius: 999, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: draftColor === null ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-tertiary)", flexShrink: 0 }}>
               ∅
             </button>
             {APPLE_COLORS.map(ac => {
               const c = dark ? ac.dark : ac.light;
               return (
                 <button key={ac.key} onClick={() => setDraftColor(c)} title={ac.label}
-                  style={{ width: 18, height: 18, borderRadius: 999, background: c, border: draftColor === c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", boxShadow: (ac.key === "white" || ac.key === "grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                  style={{ width: 20, height: 20, borderRadius: 999, background: c, border: draftColor === c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", flexShrink: 0, boxShadow: (ac.key === "white" || ac.key === "grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
                 />
               );
             })}
