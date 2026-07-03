@@ -1891,7 +1891,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-tertiary)", background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", borderRadius: 8, padding: "2px 7px" }}>{allDaysCount}</span>
               )}
             </div>
-            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+            <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
           </div>
           {/* Search */}
           <div style={{ position: "relative" }}>
