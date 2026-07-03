@@ -2215,7 +2215,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     </div>
                   )}
                   <div className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.025)", border:`1px solid ${isEditing ? ms.color+"66" : borderColor}`, transition:"border 150ms" }}
+                    style={{ background: dark ? `color-mix(in srgb, ${ms.color} 12%, rgba(255,255,255,0.04))` : `color-mix(in srgb, ${ms.color} 8%, rgba(255,255,255,0.85))`, border:`1px solid ${ms.color}${isEditing ? "88" : "44"}`, borderLeft:`3px solid ${ms.color}`, transition:"border 150ms, background 150ms" }}
                   >
                   {isEditing ? (
                     <div className="flex flex-col gap-2">
@@ -2267,7 +2267,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                   ) : (
                     <>
                       <div className="flex items-center gap-2.5">
-                        <div style={{ width:10, height:10, borderRadius:999, background:ms.color, flexShrink:0 }} />
                         <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}><HighlightText text={ms.label} query={q} /></span>
                         {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
                         <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{lbl}</span>
