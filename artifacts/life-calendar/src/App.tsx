@@ -2991,12 +2991,19 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const showLbl = view === "months" || view === "weeks";
     const lw = showLbl ? 26 : 0;
     const lh = showLbl ? 12 : 0;
-    const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320 - lh);
     const gridW = Math.max(100, Math.min(window.innerWidth * 0.94, 560) - 48 - lw - 4);
     let cell: number;
     if (view === "days") {
       cell = 5;
+    } else if (view === "months" || view === "weeks") {
+      // Size by width only — the container scrolls vertically for large lifespans
+      const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
+      const maxCell = view === "months" ? 16 : 10;
+      const minCell = view === "months" ? 5 : 4;
+      cell = Math.max(minCell, Math.min(maxCell, Math.floor(fromW)));
     } else {
+      // years: fit everything in view
+      const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320);
       const rows = Math.ceil(total / c);
       const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
       const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
@@ -3114,7 +3121,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: "auto", maxHeight: isFullscreen ? undefined : (view === "days" ? 260 : undefined), minHeight: 0 }}>
+            <div className="px-6 pb-5" style={{ flex: (view === "months" || view === "weeks") ? "1 1 0" : isFullscreen ? "1 1 0" : "0 0 auto", overflow: "auto", maxHeight: isFullscreen ? undefined : view === "days" ? 260 : undefined, minHeight: (view === "months" || view === "weeks") ? 120 : 0 }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                   {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
