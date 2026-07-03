@@ -2580,6 +2580,10 @@ function ConfirmDialog({ open, onClose, onConfirm, message, confirmLabel, dark }
           onClick={onClose}
         >
           <motion.div
+            initial={{ opacity:0 }}
+            animate={{ opacity:1 }}
+            exit={{ opacity:0 }}
+            transition={{ duration:0.28, ease:"easeOut" }}
             style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(10px) saturate(160%)", WebkitBackdropFilter:"blur(10px) saturate(160%)" }}
           />
           <motion.div
@@ -2653,7 +2657,13 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
           transition={{ duration: 0.2, ease: "easeOut" }}
           onClick={onClose}
         >
-          <motion.div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(10px) saturate(160%)", WebkitBackdropFilter:"blur(10px) saturate(160%)" }} />
+          <motion.div
+            initial={{ opacity:0 }}
+            animate={{ opacity:1 }}
+            exit={{ opacity:0 }}
+            transition={{ duration:0.28, ease:"easeOut" }}
+            style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(10px) saturate(160%)", WebkitBackdropFilter:"blur(10px) saturate(160%)" }}
+          />
           <motion.div
             key="factory-reset-card"
             onClick={e => e.stopPropagation()}
