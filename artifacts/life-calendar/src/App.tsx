@@ -2035,7 +2035,14 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
         style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("milestones")}</h2>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <h2 className="text-base font-semibold" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("milestones")}</h2>
+            {items.length > 0 && (
+              <span style={{ fontSize:11, fontWeight:600, color:"var(--text-tertiary)", background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", borderRadius:8, padding:"2px 7px" }}>
+                {q ? filteredItems.length : items.length}
+              </span>
+            )}
+          </div>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
         </div>
 
