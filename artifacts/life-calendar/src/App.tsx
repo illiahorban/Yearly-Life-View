@@ -3172,14 +3172,13 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                       const yearNum = birthYear !== null ? birthYear + ri : ri + 1;
                       const showYear = ri % yearInterval === 0;
                       return (
-                        <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx }}>
+                        <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx, height: cellPx }}>
                           {/* Year label */}
                           <div style={{
                             width: labelW, flexShrink: 0,
                             textAlign: "right", paddingRight: 3,
                             fontSize: lblFontSize, color: "var(--text-tertiary)",
-                            lineHeight: `${cellPx}px`, height: cellPx,
-                            overflow: "hidden", whiteSpace: "nowrap",
+                            overflow: "visible", whiteSpace: "nowrap",
                             opacity: showYear ? 1 : 0,
                           }}>{yearNum}</div>
                           {/* Cells */}
