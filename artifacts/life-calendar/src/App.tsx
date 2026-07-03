@@ -1348,15 +1348,14 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const tooltip = hovered && hasNote ? (
     <div style={{ position:"absolute", bottom:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50, background:"rgba(29,29,31,0.96)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", color:"rgba(255,255,255,0.92)", fontSize:12, lineHeight:1.55, borderRadius:12, padding:"10px 12px", width:240, wordBreak:"break-word", boxShadow:"0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset", border:"1px solid rgba(255,255,255,0.08)", pointerEvents:"none" }}>
       {activeNotes.map((n, i) => (
-        <React.Fragment key={n.id}>
-          {i > 0 && <div style={{ borderTop:"1px solid rgba(255,255,255,0.1)", margin:"6px 0" }} />}
-          <div style={{ display:"flex", alignItems:"flex-start", gap:6 }}>
-            {n.color && (
-              <div style={{ width:8, height:8, borderRadius:999, background:n.color, flexShrink:0, marginTop:4, boxShadow:`0 0 4px ${n.color}88` }} />
-            )}
-            <div style={{ whiteSpace:"pre-wrap", flex:1 }}>{n.text}</div>
-          </div>
-        </React.Fragment>
+        <div key={n.id} style={{
+          marginTop: i > 0 ? 5 : 0,
+          padding: "6px 9px",
+          borderRadius: 8,
+          background: n.color ? `color-mix(in srgb, ${n.color} 28%, rgba(255,255,255,0.04))` : "rgba(255,255,255,0.06)",
+          border: n.color ? `1px solid color-mix(in srgb, ${n.color} 50%, rgba(255,255,255,0.12))` : "1px solid rgba(255,255,255,0.08)",
+          whiteSpace: "pre-wrap",
+        }}>{n.text}</div>
       ))}
       <div style={{ position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />
     </div>
