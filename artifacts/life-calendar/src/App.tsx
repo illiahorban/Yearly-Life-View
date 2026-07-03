@@ -3152,7 +3152,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 const yearInterval = Math.max(1, Math.ceil(9 / (cellPx + gapPx)));
                 const birthYear = birthDate ? birthDate.getFullYear() : null;
                 const showColAt = (ci: number) =>
-                  view === "months" ? true : ci % 2 === 0;
+                  view === "months" ? true : (ci === 0 || ci === 12 || ci === 25 || ci === 38 || ci === 51);
                 return (
                   <div style={{ display:"inline-flex", flexDirection:"column", gap: gapPx }}>
                     {/* Column header row */}
@@ -3160,7 +3160,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                       {Array.from({ length: cols }, (_, ci) => (
                         <div key={ci} style={{
                           width: cellPx, flexShrink: 0,
-                          textAlign: "center", fontSize: Math.min(7, cellPx),
+                          textAlign: "center", fontSize: view === "weeks" ? 9 : Math.min(8, cellPx),
                           color: "var(--text-tertiary)", lineHeight: 1,
                           overflow: "visible", whiteSpace: "nowrap",
                           opacity: showColAt(ci) ? 1 : 0,
