@@ -3178,8 +3178,9 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                             width: labelW, height: cellPx, flexShrink: 0,
                             display: "flex", alignItems: "center", justifyContent: "flex-end",
                             paddingRight: 3,
-                            fontSize: lblFontSize, color: "var(--text-tertiary)",
-                            overflow: "visible", whiteSpace: "nowrap",
+                            fontSize: lblFontSize, lineHeight: 1,
+                            color: "var(--text-tertiary)",
+                            overflow: "hidden", whiteSpace: "nowrap",
                             opacity: showYear ? 1 : 0,
                           }}>{yearNum}</div>
                           {/* Cells */}
