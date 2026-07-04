@@ -1455,8 +1455,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
   const goalsRatio = dayGoals && dayGoals.count > 0 ? dayGoals.done.filter(Boolean).length / dayGoals.count : 0;
-  const labelTone: "gold" | "silver" | "silverBright" | "onGreen" | "muted" | "auto" =
-    isPast ? (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silverBright" : "onGreen")
+  const labelTone: "gold" | "goldBright" | "silver" | "silverBright" | "onGreen" | "muted" | "auto" =
+    isPast ? (isAllDone ? "goldBright" : goalsRatio >= 0.5 ? "silverBright" : "onGreen")
     : isToday ? (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "auto")
     : (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "muted");
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
@@ -1583,8 +1583,9 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 
-function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto"|"gold"|"silver"|"silverBright" }) {
+function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto"|"gold"|"goldBright"|"silver"|"silverBright" }) {
   const isGold = tone === "gold";
+  const isGoldBright = tone === "goldBright";
   const isSilver = tone === "silver";
   const isSilverBright = tone === "silverBright";
   const isOnGreen = tone === "onGreen";
@@ -1594,6 +1595,8 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
   const silverGrad = "linear-gradient(135deg,#d0d0d8 0%,#8e8ea0 40%,#d8d8e0 60%,#7a7a8a 100%)";
   const numStyle: React.CSSProperties = isGold
     ? { background: goldGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:"-0.02em" }
+    : isGoldBright
+      ? { color: "#ffd700", letterSpacing:"-0.02em" }
     : isSilver
       ? { background: silverGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:"-0.02em" }
     : isSilverBright
@@ -1601,6 +1604,8 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
       : { color: nc, letterSpacing:"-0.02em" };
   const monStyle: React.CSSProperties = isGold
     ? { background: goldGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }
+    : isGoldBright
+      ? { color: "#ffd700" }
     : isSilver
       ? { background: silverGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }
     : isSilverBright
