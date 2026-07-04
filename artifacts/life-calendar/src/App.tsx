@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
+import confetti from "canvas-confetti";
 
 // ─── Tiny localStorage helpers ────────────────────────────────────────────────
 
@@ -156,6 +157,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     eventsSearchPlaceholder: "Search events…",
     addNotePickDate: "Choose a date:",
     openNote: "Open",
+    dailyGoals: "Daily Goals", allDone: "All done! 🎉", goalCountLabel: "Number of goals:",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -220,6 +222,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     eventsSearchPlaceholder: "Поиск по событиям…",
     addNotePickDate: "Выберите дату:",
     openNote: "Открыть",
+    dailyGoals: "Цели дня", allDone: "Всё выполнено! 🎉", goalCountLabel: "Количество целей:",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -238,6 +241,13 @@ type BlockGoals = { description: string; goals: Goal[] };
 type NoteEntry = { id: string; text: string; createdAt: number; color?: string };
 type LifeSettings = { birthDate: string; lifespan: number };
 type LifeView = "years" | "months" | "weeks" | "days";
+type DayGoals = { count: number; done: boolean[] };
+
+function fireConfettiCannons() {
+  const opts = { startVelocity: 32, spread: 80, ticks: 70, zIndex: 9999 };
+  confetti({ ...opts, particleCount: 70, origin: { x: 0.08, y: 0.72 }, angle: 60, colors: ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac"] });
+  confetti({ ...opts, particleCount: 70, origin: { x: 0.92, y: 0.72 }, angle: 120, colors: ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac"] });
+}
 
 const APPLE_COLORS = [
   { key:"blue",   label:"Blue",   light:"#007aff", dark:"#0a84ff" },
@@ -464,6 +474,13 @@ function App() {
   const [lifeCalendarOpen, setLifeCalendarOpen] = useState(false);
   const [lifeSettings, setLifeSettings] = useState<LifeSettings>(() => ls<LifeSettings>("lifeCalendar:lifeSettings", { birthDate: "", lifespan: 80 }));
   useEffect(() => { lsSet("lifeCalendar:lifeSettings", lifeSettings); }, [lifeSettings]);
+
+  // Day Goals
+  const [dayGoals, setDayGoals] = useState<Record<string, DayGoals>>(() => ls<Record<string, DayGoals>>("lifeCalendar:dayGoals", {}));
+  useEffect(() => { lsSet("lifeCalendar:dayGoals", dayGoals); }, [dayGoals]);
+  const updateDayGoals = (dk: string, goals: DayGoals) => {
+    setDayGoals(prev => ({ ...prev, [dk]: goals }));
+  };
 
   // Notes
   const [notes, setNotes] = useState<Record<string, NoteEntry[]>>(() => {
@@ -940,7 +957,7 @@ function App() {
                       qi={qi} quarter={quarter} qConfig={qConfig} startIndex={startIndex}
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
                       dayState={dayState} weekRefs={weekRefs} notes={notes} milestonesMap={milestonesMap}
-                      blockGoals={blockGoals} dark={dark} cardBg={cardBg} overlayBg={overlayBg}
+                      blockGoals={blockGoals} dayGoalsMap={dayGoals} dark={dark} cardBg={cardBg} overlayBg={overlayBg}
                       weekSel={weekSel} matchedDates={matchedDates} activeMatchKey={matchedDatesArray[searchIndex]}
                       onNoteOpen={k => setOpenNote(k)}
                       onLabelChange={(bid, lbl) => updateBlockLabel(qi, bid, lbl)}
@@ -995,8 +1012,10 @@ function App() {
           <NoteModal key="note"
             dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
             dayMilestones={milestonesMap[openNote] ?? []}
+            initDayGoals={dayGoals[openNote]}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
+            onDayGoalsChange={g => updateDayGoals(openNote, g)}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
           />
@@ -1106,7 +1125,7 @@ function IconButton({ children, onClick, title, bg, color }: { children: React.R
 
 function BlocksRenderer({
   qi:_qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress,
-  dayState, weekRefs, notes, milestonesMap, blockGoals, dark, cardBg, overlayBg,
+  dayState, weekRefs, notes, milestonesMap, blockGoals, dayGoalsMap, dark, cardBg, overlayBg,
   weekSel, matchedDates, activeMatchKey, onNoteOpen, onLabelChange, onGoalToggle, onEditGoals, onWeekLabelClick,
   onCreateSprint, onCancelSel,
 }: {
@@ -1114,7 +1133,7 @@ function BlocksRenderer({
   weeks: Array<{ weekStart: Date; days: Date[] }>; currentWeekIndex: number; todayProgress: number;
   dayState: (d: Date) => DayState; weekRefs: React.MutableRefObject<Array<HTMLDivElement|null>>;
   notes: Record<string,NoteEntry[]>; milestonesMap: Record<string,Milestone[]>;
-  blockGoals: Record<string,BlockGoals>; dark: boolean; cardBg: string; overlayBg: string;
+  blockGoals: Record<string,BlockGoals>; dayGoalsMap: Record<string,DayGoals>; dark: boolean; cardBg: string; overlayBg: string;
   weekSel: { qi: number; anchor: number; focus: number }|null;
   matchedDates: Set<string>; activeMatchKey?: string;
   onNoteOpen: (key: string) => void; onLabelChange: (blockId: string, label: string) => void;
@@ -1261,6 +1280,7 @@ function BlocksRenderer({
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
+                                dayGoals={dayGoalsMap[dateKey(d)]}
                                 accentColor={effectiveQ.border}
                                 highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
                                 isActiveMatch={activeMatchKey === dateKey(d)}
@@ -1363,14 +1383,26 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, accentColor, highlighted, isActiveMatch, onOpen }: {
+function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, dayGoals, accentColor, highlighted, isActiveMatch, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  notes?: NoteEntry[]; milestones: Milestone[]; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; onOpen: () => void;
+  notes?: NoteEntry[]; milestones: Milestone[]; dayGoals?: DayGoals; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; onOpen: () => void;
 }) {
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const tileRef = useRef<HTMLDivElement>(null);
   const hovered = tooltipRect !== null;
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
+  const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
+  const microMarkers = dayGoals && dayGoals.count > 0 ? (
+    <div style={{ position:"absolute", bottom:4, left:0, right:0, display:"flex", justifyContent:"center", gap:2, zIndex:6, pointerEvents:"none" }}>
+      {Array.from({ length: dayGoals.count }, (_, i) => (
+        <div key={i} style={{ width:3, height:3, borderRadius:1, flexShrink:0,
+          background: (dayGoals.done[i] ?? false) ? (isPast ? "rgba(255,255,255,0.95)" : accentColor) : "transparent",
+          border: `1px solid ${(dayGoals.done[i] ?? false) ? (isPast ? "rgba(255,255,255,0.9)" : accentColor) : (isPast ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.18)")}`,
+          transition:"background 200ms, border-color 200ms"
+        }} />
+      ))}
+    </div>
+  ) : null;
   const activeNotes = dayNotes?.filter(n => n.text.trim()) ?? [];
   const hasNote = activeNotes.length > 0;
   const noteCount = activeNotes.length;
@@ -1436,8 +1468,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
-            {msBar}<Label number={dayNumber} month={monthAbbr} tone="onGreen" />{noteDot}
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: isAllDone ? `0 0 0 2.5px #ffd700cc, 0 4px 18px rgba(255,215,0,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.18)` : hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+            {msBar}
+            {isAllDone && <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg, rgba(255,215,0,0.2) 0%, transparent 55%)", borderRadius:11, pointerEvents:"none", zIndex:3 }} />}
+            <Label number={dayNumber} month={monthAbbr} tone="onGreen" />
+            {noteDot}{microMarkers}
           </div>
         </div>
         {tooltipPortal}
@@ -1448,13 +1483,13 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${isAllDone ? "#ffd700" : accentColor}`, boxShadow: isAllDone ? `0 0 0 3px rgba(255,215,0,0.32), 0 4px 18px rgba(255,215,0,0.4)` : hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
             <div className="relative w-full h-full overflow-hidden">
               <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
               <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
             </div>
-            {noteDot}
+            {noteDot}{microMarkers}
           </div>
         </div>
         {tooltipPortal}
@@ -1464,8 +1499,9 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   return (
     <>
       <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
+        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border: isAllDone ? "1.5px solid #ffd70099" : "1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: isAllDone ? `0 0 0 2px rgba(255,215,0,0.28), 0 4px 14px rgba(255,215,0,0.28)` : hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
           {msBar}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
+          {microMarkers}
         </div>
       </div>
       {tooltipPortal}
@@ -1488,17 +1524,32 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMilestoneUpdate, onMilestoneAdd, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
+  initDayGoals?: DayGoals;
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
+  onDayGoalsChange: (g: DayGoals) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() =>
     initial.length > 0 ? initial : [{ id: makeId(), text: "", createdAt: Date.now() }]
   );
   const [focusId, setFocusId] = useState<string|null>(initial.length === 0 ? (entries[0]?.id ?? null) : null);
+  const [goalsDraft, setGoalsDraft] = useState<DayGoals>(() => initDayGoals ?? { count: 3, done: [] });
+  const handleGoalCountChange = (n: number) => {
+    const newDone = Array.from({ length: n }, (_, i) => goalsDraft.done[i] ?? false);
+    const g: DayGoals = { count: n, done: newDone };
+    setGoalsDraft(g); onDayGoalsChange(g);
+  };
+  const handleGoalToggle = (i: number) => {
+    const newDone = Array.from({ length: goalsDraft.count }, (_, j) => j === i ? !(goalsDraft.done[j] ?? false) : (goalsDraft.done[j] ?? false));
+    const g: DayGoals = { count: goalsDraft.count, done: newDone };
+    setGoalsDraft(g); onDayGoalsChange(g);
+    if (newDone.every(Boolean) && newDone.length > 0) setTimeout(fireConfettiCannons, 80);
+  };
+  const allGoalsDone = goalsDraft.count > 0 && goalsDraft.done.slice(0, goalsDraft.count).every(Boolean);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(null);
@@ -1600,6 +1651,36 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, onMiles
             </div>
           </div>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
+        </div>
+
+        {/* Daily Goals */}
+        <div className="px-5 pt-1 pb-3 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}` }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dailyGoals")}</span>
+            <div className="flex items-center gap-1">
+              {Array.from({length:10},(_,i)=>i+1).map(n=>(
+                <button key={n} onClick={()=>handleGoalCountChange(n)} style={{ width:18,height:18,borderRadius:4,border:"none",cursor:"pointer",background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"),color:goalsDraft.count===n?"white":"var(--text-tertiary)",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0,transition:"background 120ms" }}>{n}</button>
+              ))}
+            </div>
+          </div>
+          {goalsDraft.count > 0 && (
+            <div className="flex flex-col gap-1.5">
+              {Array.from({length:goalsDraft.count},(_,i)=>{
+                const done = goalsDraft.done[i]??false;
+                return (
+                  <label key={i} className="flex items-center gap-2 cursor-pointer select-none" onClick={()=>handleGoalToggle(i)}>
+                    <div style={{ width:17,height:17,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 150ms ease" }}>
+                      {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </div>
+                    <span style={{ fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"all 150ms",lineHeight:1.35 }}>{t("dailyGoals")} {i+1}</span>
+                  </label>
+                );
+              })}
+              {allGoalsDone && (
+                <div className="mt-0.5 text-center text-[12px] font-semibold" style={{ color:"#34c759" }}>{t("allDone")}</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Milestones for this day */}
