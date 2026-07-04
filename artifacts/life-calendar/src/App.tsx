@@ -1443,6 +1443,17 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
   return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color:"var(--text)", letterSpacing:"-0.01em" }} title={t("clickToRename")}>{value}</button>;
 }
 
+// ─── Fire animation ───────────────────────────────────────────────────────────
+if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")) {
+  const s = document.createElement("style");
+  s.id = "lc-fire-style";
+  s.textContent = `@keyframes lc-fire-pulse {
+    0%,100%{box-shadow:0 0 0 1.5px #ff7722,0 0 6px 2px rgba(255,110,0,0.7),0 0 18px 5px rgba(255,50,0,0.4),0 0 32px 8px rgba(255,100,0,0.18);}
+    50%{box-shadow:0 0 0 2px #ffaa00,0 0 12px 4px rgba(255,140,0,0.9),0 0 30px 9px rgba(255,70,0,0.55),0 0 50px 14px rgba(255,120,0,0.28);}
+  }.lc-fire-tile{animation:lc-fire-pulse 1.8s ease-in-out infinite;}`;
+  document.head.appendChild(s);
+}
+
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
 function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, dayGoals, accentColor, highlighted, isActiveMatch, onOpen }: {
@@ -1484,8 +1495,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     ? "0 0 0 3px #ff9f0a, 0 0 16px 4px rgba(255,159,10,0.65)"
     : highlighted === true ? "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)"
     : highlighted === false ? "none" : undefined;
-  const fireShadow = "0 0 0 1.5px #ff7722, 0 0 6px 2px rgba(255,110,0,0.7), 0 0 18px 5px rgba(255,50,0,0.4), 0 0 32px 8px rgba(255,100,0,0.18)";
-  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative", boxShadow: isAllDone ? fireShadow : highlightRing };
+  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", boxShadow: isAllDone ? undefined : highlightRing };
 
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
@@ -1539,7 +1549,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   if (isPast) {
     return (
       <>
-        <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
+        <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
@@ -1553,7 +1563,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   if (isToday) {
     return (
       <>
-        <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
+        <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
             <div className="relative w-full h-full overflow-hidden">
@@ -1569,7 +1579,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   }
   return (
     <>
-      <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
+      <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
         <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
           {msBar}<Label number={dayNumber} month={monthAbbr} tone={labelTone} />{noteDot}
           {microMarkers}
