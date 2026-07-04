@@ -1920,14 +1920,16 @@ function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, on
                   </div>
                   {/* Sprint blocks */}
                   <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:8 }}>
-                    {blocksWithGoals.map(({ block, goals }) => (
-                      <div key={block.id} style={{ borderRadius:12, border:`1px solid ${qr.border}44`, overflow:"hidden" }}>
-                        <div style={{ padding:"7px 12px 6px", background: dark ? qr.darkTint : qr.tint, borderBottom:`1px solid ${qr.border}33`, display:"flex", alignItems:"center", gap:6 }}>
-                          <span style={{ fontSize:12, fontWeight:600, color: qr.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
-                          <span style={{ fontSize:11, color: qr.text, opacity:0.65, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                    {blocksWithGoals.map(({ block, goals }) => {
+                      const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : qr;
+                      return (
+                      <div key={block.id} style={{ borderRadius:12, border:`1px solid ${effectiveQ.border}44`, overflow:"hidden" }}>
+                        <div style={{ padding:"7px 12px 6px", background: dark ? effectiveQ.darkTint : effectiveQ.tint, borderBottom:`1px solid ${effectiveQ.border}33`, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ fontSize:12, fontWeight:600, color: effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
+                          <span style={{ fontSize:11, color: effectiveQ.text, opacity:0.65, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
                           <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                            style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: qr.text, opacity:0.7, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"opacity 120ms, background 120ms" }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.background = `${qr.border}22`; }}
+                            style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: effectiveQ.text, opacity:0.7, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"opacity 120ms, background 120ms" }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.background = `${effectiveQ.border}22`; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
                           ><PencilIcon /></button>
                         </div>
@@ -1944,7 +1946,7 @@ function AllGoalsPanel({ config, blockGoals, resolvedQuarters, dark, modalBg, on
                           ))}
                         </div>
                       </div>
-                    ))}
+                    ); })}
                   </div>
                 </div>
               );
