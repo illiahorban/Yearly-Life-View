@@ -159,6 +159,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     openNote: "Open",
     dailyGoals: "Daily Goals", allDone: "All done! 🎉", goalCountLabel: "Number of goals:", goal: "Goal",
     streakDays: "day streak", streakDaysPlural: "day streak", weekGoalsDone: "goals done",
+    resetGoals: "Reset", resetGoalsConfirm: "Reset all marks?", yes: "Yes", no: "No",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -225,6 +226,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     openNote: "Открыть",
     dailyGoals: "Цели дня", allDone: "Всё выполнено! 🎉", goalCountLabel: "Количество целей:", goal: "Цель",
     streakDays: "день подряд", streakDaysPlural: "дней подряд", weekGoalsDone: "целей выполнено",
+    resetGoals: "Сбросить", resetGoalsConfirm: "Сбросить все отметки?", yes: "Да", no: "Нет",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1615,6 +1617,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const g: DayGoals = { ...goalsDraft, labels: newLabels };
     setGoalsDraft(g); onDayGoalsChange(g);
   };
+  const [confirmReset, setConfirmReset] = useState(false);
+  const handleGoalReset = () => {
+    const g: DayGoals = { ...goalsDraft, done: Array(goalsDraft.count).fill(false) };
+    setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
+  };
   const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
   const allGoalsDone = goalsDraft.count > 0 && _doneSlice.length === goalsDraft.count && _doneSlice.every(Boolean);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
@@ -1723,12 +1730,28 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         {/* Daily Goals */}
         <div className="px-5 pt-1 pb-3 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}` }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dailyGoals")}</span>
-            <div className="flex items-center gap-1">
-              {Array.from({length:10},(_,i)=>i+1).map(n=>(
-                <button key={n} onClick={()=>handleGoalCountChange(n)} style={{ width:18,height:18,borderRadius:4,border:"none",cursor:"pointer",background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"),color:goalsDraft.count===n?"white":"var(--text-tertiary)",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0,transition:"background 120ms" }}>{n}</button>
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dailyGoals")}</span>
+              {goalsDraft.count > 0 && goalsDraft.done.some(Boolean) && !confirmReset && (
+                <button onClick={() => setConfirmReset(true)} title={t("resetGoals")}
+                  style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0, opacity:0.7 }}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5a4 4 0 1 0 .7-2.3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M1 2v2h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              )}
             </div>
+            {confirmReset ? (
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{t("resetGoalsConfirm")}</span>
+                <button onClick={() => setConfirmReset(false)} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
+                <button onClick={handleGoalReset} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                {Array.from({length:10},(_,i)=>i+1).map(n=>(
+                  <button key={n} onClick={()=>handleGoalCountChange(n)} style={{ width:18,height:18,borderRadius:4,border:"none",cursor:"pointer",background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"),color:goalsDraft.count===n?"white":"var(--text-tertiary)",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0,transition:"background 120ms" }}>{n}</button>
+                ))}
+              </div>
+            )}
           </div>
           {goalsDraft.count > 0 && (
             <div className="flex flex-col gap-1.5">
