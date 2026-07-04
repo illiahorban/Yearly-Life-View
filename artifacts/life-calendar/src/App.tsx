@@ -158,7 +158,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     addNotePickDate: "Choose a date:",
     openNote: "Open",
     dailyGoals: "Daily Goals", allDone: "All done! 🎉", goalCountLabel: "Number of goals:", goal: "Goal",
-    streakDays: "day streak", streakDaysPlural: "day streak",
+    streakDays: "day streak", streakDaysPlural: "day streak", weekGoalsDone: "goals done",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -224,7 +224,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     addNotePickDate: "Выберите дату:",
     openNote: "Открыть",
     dailyGoals: "Цели дня", allDone: "Всё выполнено! 🎉", goalCountLabel: "Количество целей:", goal: "Цель",
-    streakDays: "день подряд", streakDaysPlural: "дней подряд",
+    streakDays: "день подряд", streakDaysPlural: "дней подряд", weekGoalsDone: "целей выполнено",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1294,6 +1294,8 @@ function BlocksRenderer({
                     const isSel = qOffset >= selMin && qOffset <= selMax;
                     const isAnchor = hasSelection && (weekSel!.anchor === qOffset || weekSel!.focus === qOffset);
                     const isPanelOpen = hasSelection && qOffset === selMax;
+                    const weekDone = days.reduce((s, d) => { const g = dayGoalsMap[dateKey(d)]; return s + (g ? g.done.filter(Boolean).length : 0); }, 0);
+                    const weekTotal = days.reduce((s, d) => { const g = dayGoalsMap[dateKey(d)]; return s + (g ? g.count : 0); }, 0);
                     return (
                       <div key={wi} style={{ display:"flex", flexDirection:"column" }}>
                         {/* Fixed-height week row — never changes its own size */}
@@ -1301,8 +1303,9 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`w-20 sm:w-24 shrink-0 text-[15px] tabular-nums whitespace-nowrap ${lang === "en" ? "text-center" : "text-right"}`}
+                            className={`w-20 sm:w-24 shrink-0 ${lang === "en" ? "text-center" : "text-right"}`}
                             style={{
+                              display:"flex", flexDirection:"column", alignItems: lang === "en" ? "center" : "flex-end",
                               color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
                               fontWeight: isSel || isCurrent ? 600 : 500,
                               background: isSel ? (dark ? quarter.darkSoft : quarter.soft) : "transparent",
@@ -1314,8 +1317,19 @@ function BlocksRenderer({
                               outline: "none",
                               transition: "background 120ms, border 120ms, color 120ms",
                               opacity: hasSelection && !isSel ? 0.55 : 1,
+                              gap: 1,
                             }}
-                          >{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</button>
+                          >
+                            <span className="text-[15px] tabular-nums whitespace-nowrap">{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</span>
+                            {weekTotal > 0 && (
+                              <span style={{ fontSize:9.5, fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", display:"flex", alignItems:"center", gap:2, lineHeight:1 }}>
+                                <svg width="7" height="6" viewBox="0 0 7 6" fill="none" style={{ flexShrink:0 }}>
+                                  <path d="M1 3l2 2 3.5-3.5" stroke={weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                <span className="tabular-nums">{weekDone}/{weekTotal}</span>
+                              </span>
+                            )}
+                          </button>
                           <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
