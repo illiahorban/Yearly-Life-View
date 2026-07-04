@@ -1214,15 +1214,16 @@ function BlocksRenderer({
                   </div>
                 </div>
 
+                {blockStreak > 0 && (
+                  <div className="flex items-center justify-center gap-1 px-3 pb-1" style={{ lineHeight:1 }}>
+                    <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
+                    <span style={{ fontSize:10, fontWeight:700, color:"#ff9500" }}>{blockStreak}</span>
+                    <span style={{ fontSize:10, color:"var(--text-tertiary)" }}>{blockStreak===1 ? t("streakDays") : t("streakDaysPlural")}</span>
+                  </div>
+                )}
+
                 {/* Progress strip */}
                 <div className="px-3 sm:px-3.5 pb-2">
-                  {blockStreak > 0 && (
-                    <div className="flex items-center justify-center gap-1 mb-1" style={{ lineHeight:1 }}>
-                      <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
-                      <span style={{ fontSize:10, fontWeight:700, color:"#ff9500" }}>{blockStreak}</span>
-                      <span style={{ fontSize:10, color:"var(--text-tertiary)" }}>{blockStreak===1 ? t("streakDays") : t("streakDaysPlural")}</span>
-                    </div>
-                  )}
                   <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
                     <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
                     <span style={{ color: isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
