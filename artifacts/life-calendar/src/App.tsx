@@ -1118,6 +1118,7 @@ function App() {
           setNotes({});
           setBlockGoals({});
           setMilestones([]);
+          setDayGoals({});
           setConfig(defaultConfig());
           setQuarterMeta(DEFAULT_QUARTER_META);
         }}
