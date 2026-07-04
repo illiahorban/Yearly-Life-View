@@ -1619,7 +1619,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   };
   const [confirmReset, setConfirmReset] = useState(false);
   const handleGoalReset = () => {
-    const g: DayGoals = { ...goalsDraft, done: Array(goalsDraft.count).fill(false) };
+    const g: DayGoals = { count: 0, done: [], labels: [] };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
   };
   const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
@@ -1732,9 +1732,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dailyGoals")}</span>
-              {goalsDraft.count > 0 && goalsDraft.done.some(Boolean) && !confirmReset && (
+              {goalsDraft.count > 0 && !confirmReset && (
                 <button onClick={() => setConfirmReset(true)} title={t("resetGoals")}
-                  style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0, opacity:0.7 }}>
+                  style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5a4 4 0 1 0 .7-2.3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M1 2v2h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               )}
