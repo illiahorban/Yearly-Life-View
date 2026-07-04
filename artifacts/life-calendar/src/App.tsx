@@ -381,6 +381,14 @@ function pluralWeeks(n: number, lang: string, t: (k: string) => string): string 
   return `${n} ${t("week5")}`;
 }
 
+function pluralDayStreak(n: number, lang: string): string {
+  if (lang !== "ru") return `${n} day streak`;
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} день подряд`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} дня подряд`;
+  return `${n} дней подряд`;
+}
+
 function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, selEnd: number, sprintLabel: string): QuarterConfig {
   const selEndExcl = selEnd + 1;
   const newBlocks: Block[] = [];
@@ -1209,8 +1217,7 @@ function BlocksRenderer({
                   {blockStreak > 0 && (
                     <div className="flex items-center gap-1" style={{ lineHeight:1 }}>
                       <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
-                      <span style={{ fontSize:10, fontWeight:700, color:"#ff9500" }}>{blockStreak}</span>
-                      <span style={{ fontSize:10, color:"var(--text-tertiary)" }}>{blockStreak===1 ? t("streakDays") : t("streakDaysPlural")}</span>
+                      <span style={{ fontSize:10, fontWeight:700, color:"#ff9500" }}>{pluralDayStreak(blockStreak, lang)}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
