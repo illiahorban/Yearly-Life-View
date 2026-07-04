@@ -1455,25 +1455,20 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
   const goalsRatio = dayGoals && dayGoals.count > 0 ? dayGoals.done.filter(Boolean).length / dayGoals.count : 0;
-  const premiumGrad = "linear-gradient(135deg,#1a1a2e 0%,#0d3b2e 55%,#1a4840 100%)";
-  const labelTone: "gold" | "goldBright" | "silver" | "silverBright" | "onGreen" | "muted" | "auto" =
-    isAllDone ? "onGreen"
-    : isPast ? (goalsRatio >= 0.5 ? "silverBright" : "onGreen")
-    : isToday ? (goalsRatio >= 0.5 ? "silver" : "auto")
-    : (goalsRatio >= 0.5 ? "silver" : "muted");
-  const onDarkBg = isPast || isAllDone;
+  const labelTone: "onGreen" | "muted" | "auto" =
+    isPast ? "onGreen" : isToday ? "auto" : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: dayGoals.count }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         return done ? (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
-            <circle cx="3" cy="3" r="3" fill={onDarkBg ? "rgba(255,255,255,0.92)" : "#34c759"} />
-            <path d="M1.5 3l1 1 2-2" stroke={onDarkBg ? (isAllDone ? "#0d3b2e" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="3" cy="3" r="3" fill={isPast ? "rgba(255,255,255,0.92)" : "#34c759"} />
+            <path d="M1.5 3l1 1 2-2" stroke={isPast ? accentColor : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.5 }}>
-            <circle cx="3" cy="3" r="2.5" stroke={onDarkBg ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)"} strokeWidth="0.9"/>
+            <circle cx="3" cy="3" r="2.5" stroke={isPast ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)"} strokeWidth="0.9"/>
           </svg>
         );
       })}
@@ -1540,18 +1535,26 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     document.body
   ) : null;
 
+  const medalBadge = isAllDone ? (
+    <div style={{ position:"absolute", top: hasEvents ? 10 : 4, left:4, width:12, height:12, zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", pointerEvents:"none" }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <circle cx="6" cy="7" r="4.5" fill="#f0c040" stroke="#c8922a" strokeWidth="0.6"/>
+        <polygon points="6,4.5 6.7,6.2 8.5,6.2 7.1,7.3 7.6,9 6,8 4.4,9 4.9,7.3 3.5,6.2 5.3,6.2" fill="#a06010" opacity="0.5"/>
+        <polygon points="6,4.8 6.6,6.3 8.2,6.3 6.9,7.2 7.4,8.8 6,7.9 4.6,8.8 5.1,7.2 3.8,6.3 5.4,6.3" fill="white" opacity="0.9"/>
+        <line x1="4.5" y1="1" x2="5.5" y2="4" stroke="#c8922a" strokeWidth="1" strokeLinecap="round"/>
+        <line x1="7.5" y1="1" x2="6.5" y2="4" stroke="#f0c040" strokeWidth="1" strokeLinecap="round"/>
+      </svg>
+    </div>
+  ) : null;
+
   if (isPast) {
-    const bg = isAllDone ? premiumGrad : `linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`;
-    const shadow = isAllDone
-      ? (hovered ? "0 4px 20px rgba(13,59,46,0.7), inset 0 0 0 0.5px rgba(255,255,255,0.15)" : "0 1px 4px rgba(13,59,46,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.12)")
-      : (hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`);
     return (
       <>
         <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:bg, color:"white", boxShadow:shadow }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
-            {noteDot}{microMarkers}
+            {medalBadge}{noteDot}{microMarkers}
           </div>
         </div>
         {tooltipPortal}
@@ -1559,20 +1562,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     );
   }
   if (isToday) {
-    if (isAllDone) {
-      return (
-        <>
-          <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-            <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:premiumGrad, color:"white", boxShadow: hovered ? "0 4px 20px rgba(13,59,46,0.7), inset 0 0 0 0.5px rgba(255,255,255,0.15)" : "0 1px 4px rgba(13,59,46,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.12)" }}>
-              {msBar}
-              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone={labelTone} /></div>
-              {noteDot}{microMarkers}
-            </div>
-          </div>
-          {tooltipPortal}
-        </>
-      );
-    }
     return (
       <>
         <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
@@ -1582,7 +1571,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
               <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
               <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone={labelTone} /></div>
             </div>
-            {noteDot}{microMarkers}
+            {medalBadge}{noteDot}{microMarkers}
           </div>
         </div>
         {tooltipPortal}
@@ -1592,8 +1581,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   return (
     <>
       <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background: isAllDone ? premiumGrad : "var(--surface)", border: isAllDone ? "none" : "1px solid var(--border-soft)", color: isAllDone ? "white" : "var(--text-secondary)", boxShadow: isAllDone ? (hovered ? "0 4px 20px rgba(13,59,46,0.7), inset 0 0 0 0.5px rgba(255,255,255,0.15)" : "0 1px 4px rgba(13,59,46,0.5), inset 0 0 0 0.5px rgba(255,255,255,0.12)") : (hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)") }}>
-          {msBar}<Label number={dayNumber} month={monthAbbr} tone={labelTone} />{noteDot}
+        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
+          {msBar}<Label number={dayNumber} month={monthAbbr} tone={labelTone} />{medalBadge}{noteDot}
           {microMarkers}
         </div>
       </div>
