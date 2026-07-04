@@ -892,9 +892,8 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 flex items-center gap-3 sm:gap-4 pl-[26px] pr-[23px] sm:pl-[32px] sm:pr-[29px]">
-            <div className="w-20 sm:w-24 shrink-0" />
-            <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
+          <div className="mt-3 pl-[46px] pr-[44px] sm:pl-[64px] sm:pr-[60px]">
+            <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
           </div>
@@ -927,7 +926,7 @@ function App() {
               const qStreak = computeQuarterStreak(qAllDays);
 
               return (
-                <motion.section layout key={qi} className="overflow-hidden"
+                <motion.section layout key={qi} className="overflow-visible"
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header */}
@@ -1219,7 +1218,7 @@ function BlocksRenderer({
               <motion.div layout key={block.id}
                 initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                 transition={{ type:"spring", stiffness:320, damping:30 }}
-                style={{ background:softColor, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"hidden" }}
+                style={{ background:softColor, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5">
@@ -1295,7 +1294,7 @@ function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-2 sm:gap-2.5 px-2.5 sm:px-3 pb-3 pt-1">
+                <div className="flex flex-col gap-2 sm:gap-2.5 pl-3 sm:pl-3.5 pr-2.5 sm:pr-3 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -1312,20 +1311,20 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`w-20 sm:w-24 shrink-0 ${lang === "en" ? "text-center" : "text-right"}`}
+                            className={`-ml-[92px] sm:-ml-[112px] w-20 sm:w-24 shrink-0 text-right`}
                             style={{
-                              display:"flex", flexDirection:"column", alignItems: lang === "en" ? "center" : "flex-end",
-                              color: isSel ? quarter.text : isCurrent ? quarter.text : "var(--text-tertiary)",
-                              fontWeight: isSel || isCurrent ? 600 : 500,
-                              background: isSel ? (dark ? quarter.darkSoft : quarter.soft) : "transparent",
+                              display:"flex", flexDirection:"column", alignItems:"flex-end",
+                              color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
+                              fontWeight: isCurrent ? 600 : 400,
+                              background: "transparent",
                               borderRadius: 6,
                               padding: "2px 6px",
-                              border: isAnchor ? `1.5px solid ${quarter.border}` : "1.5px solid transparent",
+                              border: isAnchor ? `1.5px solid ${quarter.border}66` : "1.5px solid transparent",
                               cursor: "pointer",
                               fontFamily: "inherit",
                               outline: "none",
-                              transition: "background 120ms, border 120ms, color 120ms",
-                              opacity: hasSelection && !isSel ? 0.55 : 1,
+                              transition: "color 120ms, border 120ms",
+                              opacity: hasSelection && !isSel ? 0.4 : 1,
                               gap: 1,
                             }}
                           >
