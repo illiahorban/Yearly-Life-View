@@ -1433,14 +1433,20 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div style={{ position:"absolute", bottom:4, left:0, right:0, display:"flex", justifyContent:"center", gap:2, zIndex:6, pointerEvents:"none" }}>
-      {Array.from({ length: dayGoals.count }, (_, i) => (
-        <div key={i} style={{ width:3, height:3, borderRadius:1, flexShrink:0,
-          background: (dayGoals.done[i] ?? false) ? (isPast ? "rgba(255,255,255,0.95)" : accentColor) : "transparent",
-          border: `1px solid ${(dayGoals.done[i] ?? false) ? (isPast ? "rgba(255,255,255,0.9)" : accentColor) : (isPast ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.18)")}`,
-          transition:"background 200ms, border-color 200ms"
-        }} />
-      ))}
+    <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", gap:1.5, zIndex:6, pointerEvents:"none" }}>
+      {Array.from({ length: dayGoals.count }, (_, i) => {
+        const done = dayGoals.done[i] ?? false;
+        return done ? (
+          <svg key={i} width="6" height="6" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
+            <circle cx="3" cy="3" r="3" fill={isPast ? "rgba(255,255,255,0.92)" : "#34c759"} />
+            <path d="M1.5 3l1 1 2-2" stroke={isPast ? accentColor : "white"} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ) : (
+          <svg key={i} width="6" height="6" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.45 }}>
+            <circle cx="3" cy="3" r="2.5" stroke={isPast ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.25)"} strokeWidth="0.8"/>
+          </svg>
+        );
+      })}
     </div>
   ) : null;
   const activeNotes = dayNotes?.filter(n => n.text.trim()) ?? [];
