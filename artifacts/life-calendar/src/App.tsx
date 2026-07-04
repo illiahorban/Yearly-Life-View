@@ -1767,7 +1767,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         )}
 
         {/* Add event form */}
-        <div className="px-5 pb-3 shrink-0">
+        <div className="px-5 pt-3 pb-3 shrink-0">
           {!addEventOpen ? (
             <button onClick={() => setAddEventOpen(true)}
               style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
