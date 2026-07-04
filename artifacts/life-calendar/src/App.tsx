@@ -1448,8 +1448,8 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   const s = document.createElement("style");
   s.id = "lc-fire-style";
   s.textContent = `@keyframes lc-fire-pulse {
-    0%,100%{box-shadow:0 0 0 1.5px #ff7722,0 0 6px 2px rgba(255,110,0,0.56),0 0 18px 5px rgba(255,50,0,0.32),0 0 32px 8px rgba(255,100,0,0.14);}
-    50%{box-shadow:0 0 0 2px #ffaa00,0 0 12px 4px rgba(255,140,0,0.72),0 0 30px 9px rgba(255,70,0,0.44),0 0 50px 14px rgba(255,120,0,0.22);}
+    0%,100%{box-shadow:0 0 0 1.5px #ff7722,0 0 6px 2px rgba(255,110,0,0.50),0 0 18px 5px rgba(255,50,0,0.29),0 0 32px 8px rgba(255,100,0,0.13);}
+    50%{box-shadow:0 0 0 2px #ffaa00,0 0 12px 4px rgba(255,140,0,0.65),0 0 30px 9px rgba(255,70,0,0.40),0 0 50px 14px rgba(255,120,0,0.20);}
   }.lc-fire-tile{animation:lc-fire-pulse 3s ease-in-out infinite;}`;
   document.head.appendChild(s);
 }
