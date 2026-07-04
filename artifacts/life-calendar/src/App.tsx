@@ -1307,12 +1307,13 @@ function BlocksRenderer({
                     return (
                       <div key={wi} style={{ display:"flex", flexDirection:"column" }}>
                         {/* Fixed-height week row — never changes its own size */}
-                        <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center gap-3 sm:gap-4">
+                        <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center" style={{ position:"relative" }}>
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`-ml-[92px] sm:-ml-[112px] w-20 sm:w-24 shrink-0`}
+                            className={`w-20 sm:w-24`}
                             style={{
+                              position:"absolute", right:"calc(100% + 12px)", top:"50%", transform:"translateY(-50%)",
                               display:"flex", flexDirection:"column", alignItems:"flex-start",
                               color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
                               fontWeight: isCurrent ? 600 : 400,
@@ -1338,7 +1339,7 @@ function BlocksRenderer({
                               </span>
                             )}
                           </button>
-                          <div className="grid grid-cols-7 gap-2 sm:gap-3 flex-1">
+                          <div className="grid grid-cols-7 gap-2 sm:gap-3 w-full">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
