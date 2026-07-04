@@ -1204,23 +1204,21 @@ function BlocksRenderer({
                 style={{ background:softColor, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"hidden" }}
               >
                 {/* Header */}
-                <div className="px-3 sm:px-3.5 pt-2.5 pb-1.5">
-                  <div className="flex items-center justify-between">
-                    <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.text} />
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                        style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
-                      ><PencilIcon /></button>
-                      <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{pluralWeeks(block.weeks, lang, t)}</span>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5">
+                  <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.text} />
                   {blockStreak > 0 && (
-                    <div className="flex items-center justify-center gap-1 mt-1" style={{ lineHeight:1 }}>
+                    <div className="flex items-center gap-1" style={{ lineHeight:1 }}>
                       <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
                       <span style={{ fontSize:10, fontWeight:700, color:"#ff9500" }}>{blockStreak}</span>
                       <span style={{ fontSize:10, color:"var(--text-tertiary)" }}>{blockStreak===1 ? t("streakDays") : t("streakDaysPlural")}</span>
                     </div>
                   )}
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
+                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                    ><PencilIcon /></button>
+                    <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{pluralWeeks(block.weeks, lang, t)}</span>
+                  </div>
                 </div>
 
                 {/* Progress strip */}
