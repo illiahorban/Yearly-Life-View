@@ -1455,8 +1455,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
   const goalsRatio = dayGoals && dayGoals.count > 0 ? dayGoals.done.filter(Boolean).length / dayGoals.count : 0;
-  const labelTone: "gold" | "silver" | "onGreen" | "muted" | "auto" =
-    isPast ? (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "onGreen")
+  const labelTone: "gold" | "silver" | "silverBright" | "onGreen" | "muted" | "auto" =
+    isPast ? (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silverBright" : "onGreen")
     : isToday ? (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "auto")
     : (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "muted");
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
@@ -1583,30 +1583,29 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 
-function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto"|"gold"|"silver" }) {
+function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto"|"gold"|"silver"|"silverBright" }) {
   const isGold = tone === "gold";
   const isSilver = tone === "silver";
+  const isSilverBright = tone === "silverBright";
   const isOnGreen = tone === "onGreen";
-  const nc = isGold
-    ? "transparent"
-    : isSilver ? "transparent"
-    : isOnGreen ? "white" : "var(--text)";
-  const mc = isGold
-    ? "transparent"
-    : isSilver ? "transparent"
-    : isOnGreen ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+  const nc = isGold || isSilver ? "transparent" : isOnGreen ? "white" : "var(--text)";
+  const mc = isGold || isSilver ? "transparent" : isOnGreen ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
   const goldGrad = "linear-gradient(135deg,#f5d060 0%,#c8922a 40%,#f5d060 60%,#a06010 100%)";
   const silverGrad = "linear-gradient(135deg,#d0d0d8 0%,#8e8ea0 40%,#d8d8e0 60%,#7a7a8a 100%)";
-  const numStyle: React.CSSProperties = isGold || isSilver ? {
-    background: isGold ? goldGrad : silverGrad,
-    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-    backgroundClip: "text", letterSpacing:"-0.02em"
-  } : { color: nc, letterSpacing:"-0.02em" };
-  const monStyle: React.CSSProperties = isGold || isSilver ? {
-    background: isGold ? goldGrad : silverGrad,
-    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-    backgroundClip: "text"
-  } : { color: mc };
+  const numStyle: React.CSSProperties = isGold
+    ? { background: goldGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:"-0.02em" }
+    : isSilver
+      ? { background: silverGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:"-0.02em" }
+    : isSilverBright
+      ? { color: "rgba(255,255,255,0.62)", letterSpacing:"-0.02em" }
+      : { color: nc, letterSpacing:"-0.02em" };
+  const monStyle: React.CSSProperties = isGold
+    ? { background: goldGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }
+    : isSilver
+      ? { background: silverGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }
+    : isSilverBright
+      ? { color: "rgba(255,255,255,0.62)" }
+      : { color: mc };
   return (
     <div className="flex flex-col items-center justify-center leading-none select-none">
       <div className="text-[21px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
