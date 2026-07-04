@@ -1703,7 +1703,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Milestones for this day */}
         {dayMilestones.length > 0 && (
-          <div className="px-5 pb-3 shrink-0">
+          <div className="px-5 pt-3 pb-3 shrink-0">
             <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("events")}</div>
             <div className="flex flex-col gap-1.5">
               {dayMilestones.map(ms => {
