@@ -947,11 +947,6 @@ function App() {
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
                       <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
-                      {qStreak > 0 && (
-                        <span className="flex items-center gap-0.5 text-[11px] font-bold tabular-nums" style={{ color:"#ff9500", filter:"drop-shadow(0 0 3px rgba(255,149,0,0.4))" }}>
-                          🔥{qStreak}
-                        </span>
-                      )}
                     </div>
                     <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                   </div>
@@ -1188,6 +1183,17 @@ function BlocksRenderer({
             const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
             const isFuture = pastDays===0 && !hasToday;
             const isComplete = pct >= 99.5;
+            const blockStreak = (() => {
+              const isDone = (dk: string) => { const g = dayGoalsMap[dk]; return g != null && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean); };
+              const t0 = startOfDay(new Date());
+              const rel = allDays.filter(d => d <= t0).sort((a, b) => a.getTime() - b.getTime());
+              if (rel.length === 0) return 0;
+              let idx = rel.length - 1;
+              if (!isDone(dateKey(rel[idx]!))) idx--;
+              let s = 0;
+              for (let i = idx; i >= 0; i--) { if (!isDone(dateKey(rel[i]!))) break; s++; }
+              return s;
+            })();
             const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : quarter;
             const softColor = dark ? effectiveQ.darkSoft : effectiveQ.soft;
 
@@ -1212,7 +1218,12 @@ function BlocksRenderer({
                 <div className="px-3 sm:px-3.5 pb-2">
                   <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
                     <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
-                    <span style={{ color: isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
+                    <span style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:1 }}>
+                      {blockStreak > 0 && (
+                        <span style={{ color:"#ff9500", fontSize:10, fontWeight:700, lineHeight:1, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.45))" }}>🔥{blockStreak}</span>
+                      )}
+                      <span style={{ color: isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
+                    </span>
                     <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
