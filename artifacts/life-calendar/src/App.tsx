@@ -1454,6 +1454,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const hovered = tooltipRect !== null;
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
+  const goalsRatio = dayGoals && dayGoals.count > 0 ? dayGoals.done.filter(Boolean).length / dayGoals.count : 0;
+  const labelTone: "gold" | "silver" | "onGreen" | "muted" | "auto" =
+    isPast ? (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "onGreen")
+    : isToday ? (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "auto")
+    : (isAllDone ? "gold" : goalsRatio >= 0.5 ? "silver" : "muted");
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: dayGoals.count }, (_, i) => {
@@ -1538,7 +1543,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
         <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
-            <Label number={dayNumber} month={monthAbbr} tone="onGreen" />
+            <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
             {noteDot}{microMarkers}
           </div>
         </div>
@@ -1554,7 +1559,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
             {msBar}
             <div className="relative w-full h-full overflow-hidden">
               <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
-              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone="auto" /></div>
+              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone={labelTone} /></div>
             </div>
             {noteDot}{microMarkers}
           </div>
@@ -1567,7 +1572,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     <>
       <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
         <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border: "1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
-          {msBar}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
+          {msBar}<Label number={dayNumber} month={monthAbbr} tone={labelTone} />{noteDot}
           {microMarkers}
         </div>
       </div>
@@ -1578,13 +1583,34 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 
-function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto" }) {
-  const nc = tone==="onGreen" ? "white" : "var(--text)";
-  const mc = tone==="onGreen" ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto"|"gold"|"silver" }) {
+  const isGold = tone === "gold";
+  const isSilver = tone === "silver";
+  const isOnGreen = tone === "onGreen";
+  const nc = isGold
+    ? "transparent"
+    : isSilver ? "transparent"
+    : isOnGreen ? "white" : "var(--text)";
+  const mc = isGold
+    ? "transparent"
+    : isSilver ? "transparent"
+    : isOnGreen ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+  const goldGrad = "linear-gradient(135deg,#f5d060 0%,#c8922a 40%,#f5d060 60%,#a06010 100%)";
+  const silverGrad = "linear-gradient(135deg,#d0d0d8 0%,#8e8ea0 40%,#d8d8e0 60%,#7a7a8a 100%)";
+  const numStyle: React.CSSProperties = isGold || isSilver ? {
+    background: isGold ? goldGrad : silverGrad,
+    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+    backgroundClip: "text", letterSpacing:"-0.02em"
+  } : { color: nc, letterSpacing:"-0.02em" };
+  const monStyle: React.CSSProperties = isGold || isSilver ? {
+    background: isGold ? goldGrad : silverGrad,
+    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+    backgroundClip: "text"
+  } : { color: mc };
   return (
     <div className="flex flex-col items-center justify-center leading-none select-none">
-      <div className="text-[21px] sm:text-[24px] font-semibold tabular-nums" style={{ color:nc, letterSpacing:"-0.02em" }}>{number}</div>
-      <div className="mt-1 text-[12px] sm:text-[13px] font-medium tracking-widest" style={{ color:mc }}>{month}</div>
+      <div className="text-[21px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
+      <div className="mt-1 text-[12px] sm:text-[13px] font-medium tracking-widest" style={monStyle}>{month}</div>
     </div>
   );
 }
