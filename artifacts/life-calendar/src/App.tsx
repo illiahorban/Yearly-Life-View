@@ -160,6 +160,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dailyGoals: "Daily Goals", allDone: "All done! 🎉", goalCountLabel: "Number of goals:", goal: "Goal",
     streakDays: "day streak", streakDaysPlural: "day streak", weekGoalsDone: "goals done",
     resetGoals: "Reset", resetGoalsConfirm: "Reset all marks?", yes: "Yes", no: "No",
+    copyToTomorrow: "Copy to tomorrow", copiedToTomorrow: "Copied!",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -227,6 +228,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dailyGoals: "Цели дня", allDone: "Всё выполнено! 🎉", goalCountLabel: "Количество целей:", goal: "Цель",
     streakDays: "день подряд", streakDaysPlural: "дней подряд", weekGoalsDone: "целей выполнено",
     resetGoals: "Сбросить", resetGoalsConfirm: "Сбросить все отметки?", yes: "Да", no: "Нет",
+    copyToTomorrow: "Скопировать на завтра", copiedToTomorrow: "Скопировано!",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1041,6 +1043,7 @@ function App() {
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
+            onCopyGoalsTo={(targetDk, g) => updateDayGoals(targetDk, g)}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
             onClose={() => setOpenNote(null)}
           />
@@ -1586,13 +1589,14 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   initDayGoals?: DayGoals;
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
   onDayGoalsChange: (g: DayGoals) => void;
+  onCopyGoalsTo: (targetDk: string, g: DayGoals) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() =>
@@ -1621,6 +1625,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [] };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
+  };
+  const [copiedTomorrow, setCopiedTomorrow] = useState(false);
+  const tomorrowDk = (() => {
+    const [yr, mo, dy] = dk.split("-").map(Number) as [number,number,number];
+    const t = new Date(yr, mo - 1, dy + 1);
+    return dateKey(t);
+  })();
+  const handleCopyToTomorrow = () => {
+    const g: DayGoals = { count: goalsDraft.count, done: Array(goalsDraft.count).fill(false), labels: goalsDraft.labels ? [...goalsDraft.labels] : [] };
+    onCopyGoalsTo(tomorrowDk, g);
+    setCopiedTomorrow(true);
+    setTimeout(() => setCopiedTomorrow(false), 1800);
   };
   const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
   const allGoalsDone = goalsDraft.count > 0 && _doneSlice.length === goalsDraft.count && _doneSlice.every(Boolean);
@@ -1733,10 +1749,19 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dailyGoals")}</span>
               {goalsDraft.count > 0 && !confirmReset && (
-                <button onClick={() => setConfirmReset(true)} title={t("resetGoals")}
-                  style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5a4 4 0 1 0 .7-2.3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M1 2v2h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
+                <>
+                  <button onClick={handleCopyToTomorrow} title={t("copyToTomorrow")}
+                    style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color: copiedTomorrow ? "#34c759" : "var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0, transition:"color 200ms" }}>
+                    {copiedTomorrow
+                      ? <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : <svg width="11" height="10" viewBox="0 0 11 10" fill="none"><rect x="0.5" y="0.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1"/><path d="M3 3h7v7H3z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" fill="none"/></svg>
+                    }
+                  </button>
+                  <button onClick={() => setConfirmReset(true)} title={t("resetGoals")}
+                    style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5a4 4 0 1 0 .7-2.3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M1 2v2h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                </>
               )}
             </div>
             {confirmReset ? (
