@@ -157,7 +157,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     eventsSearchPlaceholder: "Search events…",
     addNotePickDate: "Choose a date:",
     openNote: "Open",
-    dailyGoals: "Daily Goals", allDone: "All done! 🎉", goalCountLabel: "Number of goals:",
+    dailyGoals: "Daily Goals", allDone: "All done! 🎉", goalCountLabel: "Number of goals:", goal: "Goal",
     streakDays: "day streak", streakDaysPlural: "day streak",
   },
   ru: {
@@ -223,7 +223,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     eventsSearchPlaceholder: "Поиск по событиям…",
     addNotePickDate: "Выберите дату:",
     openNote: "Открыть",
-    dailyGoals: "Цели дня", allDone: "Всё выполнено! 🎉", goalCountLabel: "Количество целей:",
+    dailyGoals: "Цели дня", allDone: "Всё выполнено! 🎉", goalCountLabel: "Количество целей:", goal: "Цель",
     streakDays: "день подряд", streakDaysPlural: "дней подряд",
   },
 };
@@ -1721,7 +1721,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     <input
                       value={goalsDraft.labels?.[i] ?? ""}
                       onChange={e => handleGoalLabelChange(i, e.target.value)}
-                      placeholder={`${t("dailyGoals")} ${i+1}`}
+                      placeholder={`${t("goal")} ${i+1}`}
                       maxLength={60}
                       style={{ flex:1,background:"transparent",border:"none",outline:"none",fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0 }}
                     />
