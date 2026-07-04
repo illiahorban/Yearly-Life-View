@@ -1454,7 +1454,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const hovered = tooltipRect !== null;
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
-  const goalsRatio = dayGoals && dayGoals.count > 0 ? dayGoals.done.filter(Boolean).length / dayGoals.count : 0;
   const labelTone: "onGreen" | "muted" | "auto" =
     isPast ? "onGreen" : isToday ? "auto" : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
@@ -1485,7 +1484,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     ? "0 0 0 3px #ff9f0a, 0 0 16px 4px rgba(255,159,10,0.65)"
     : highlighted === true ? "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)"
     : highlighted === false ? "none" : undefined;
-  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative", boxShadow: highlightRing };
+  const fireShadow = "0 0 0 1.5px #ff7722, 0 0 6px 2px rgba(255,110,0,0.7), 0 0 18px 5px rgba(255,50,0,0.4), 0 0 32px 8px rgba(255,100,0,0.18)";
+  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition:"box-shadow 200ms ease", position:"relative", boxShadow: isAllDone ? fireShadow : highlightRing };
 
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
@@ -1535,11 +1535,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     document.body
   ) : null;
 
-  const medalBadge = isAllDone ? (
-    <div style={{ position:"absolute", top: hasEvents ? 10 : 4, left:4, width:12, height:12, zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", pointerEvents:"none", fontSize:10, lineHeight:1 }}>
-      🚀
-    </div>
-  ) : null;
 
   if (isPast) {
     return (
@@ -1548,7 +1543,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
-            {medalBadge}{noteDot}{microMarkers}
+            {noteDot}{microMarkers}
           </div>
         </div>
         {tooltipPortal}
@@ -1565,7 +1560,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
               <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
               <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone={labelTone} /></div>
             </div>
-            {medalBadge}{noteDot}{microMarkers}
+            {noteDot}{microMarkers}
           </div>
         </div>
         {tooltipPortal}
@@ -1576,7 +1571,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     <>
       <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
         <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
-          {msBar}<Label number={dayNumber} month={monthAbbr} tone={labelTone} />{medalBadge}{noteDot}
+          {msBar}<Label number={dayNumber} month={monthAbbr} tone={labelTone} />{noteDot}
           {microMarkers}
         </div>
       </div>
