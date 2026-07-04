@@ -892,7 +892,7 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[46px] pr-[44px] sm:pl-[64px] sm:pr-[60px]">
+          <div className="mt-3 pl-[26px] pr-[24px] sm:pl-[32px] sm:pr-[28px]">
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
@@ -1311,9 +1311,9 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`-ml-[92px] sm:-ml-[112px] w-20 sm:w-24 shrink-0 text-right`}
+                            className={`-ml-[92px] sm:-ml-[112px] w-20 sm:w-24 shrink-0`}
                             style={{
-                              display:"flex", flexDirection:"column", alignItems:"flex-end",
+                              display:"flex", flexDirection:"column", alignItems:"flex-start",
                               color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
                               fontWeight: isCurrent ? 600 : 400,
                               background: "transparent",
