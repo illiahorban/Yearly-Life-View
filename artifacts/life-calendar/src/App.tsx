@@ -1589,28 +1589,21 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
   const isSilver = tone === "silver";
   const isSilverBright = tone === "silverBright";
   const isOnGreen = tone === "onGreen";
-  const nc = isGold || isSilver ? "transparent" : isOnGreen ? "white" : "var(--text)";
-  const mc = isGold || isSilver ? "transparent" : isOnGreen ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
-  const goldGrad = "linear-gradient(135deg,#f5d060 0%,#c8922a 40%,#f5d060 60%,#a06010 100%)";
-  const silverGrad = "linear-gradient(135deg,#d0d0d8 0%,#8e8ea0 40%,#d8d8e0 60%,#7a7a8a 100%)";
-  const numStyle: React.CSSProperties = isGold
-    ? { background: goldGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:"-0.02em" }
-    : isGoldBright
-      ? { color: "#ffd700", letterSpacing:"-0.02em" }
-    : isSilver
-      ? { background: silverGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:"-0.02em" }
-    : isSilverBright
-      ? { color: "rgba(255,255,255,0.62)", letterSpacing:"-0.02em" }
-      : { color: nc, letterSpacing:"-0.02em" };
-  const monStyle: React.CSSProperties = isGold
-    ? { background: goldGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }
-    : isGoldBright
-      ? { color: "#ffd700" }
-    : isSilver
-      ? { background: silverGrad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }
-    : isSilverBright
-      ? { color: "rgba(255,255,255,0.62)" }
-      : { color: mc };
+  const nc = isOnGreen ? "white" : "var(--text)";
+  const mc = isOnGreen ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+  // solid colours — work on any background without gradient-clip artefacts
+  const goldCol  = "#e8b338";        // warm gold, readable on dark & light
+  const silverCol = "#9e9eae";       // steel silver, readable on light/dark
+  const goldBrightCol  = "#ffd700";  // bright gold on coloured accent bg
+  const silverBrightCol = "rgba(255,255,255,0.62)"; // dimmed white on coloured bg
+  const numColor =
+    isGold ? goldCol : isGoldBright ? goldBrightCol :
+    isSilver ? silverCol : isSilverBright ? silverBrightCol : nc;
+  const monColor =
+    isGold ? goldCol : isGoldBright ? goldBrightCol :
+    isSilver ? silverCol : isSilverBright ? silverBrightCol : mc;
+  const numStyle: React.CSSProperties = { color: numColor, letterSpacing:"-0.02em" };
+  const monStyle: React.CSSProperties = { color: monColor };
   return (
     <div className="flex flex-col items-center justify-center leading-none select-none">
       <div className="text-[21px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
