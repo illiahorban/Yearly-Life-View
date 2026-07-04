@@ -1680,6 +1680,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerEntryId(null); }}
         style={{ width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"85vh" }}
       >
+        <style>{`@keyframes goalCheckBounce{0%{transform:scale(1)}30%{transform:scale(1.45)}60%{transform:scale(0.85)}80%{transform:scale(1.12)}100%{transform:scale(1)}}`}</style>
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
           <div>
@@ -1709,7 +1710,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const done = goalsDraft.done[i]??false;
                 return (
                   <label key={i} className="flex items-center gap-2 cursor-pointer select-none" onClick={()=>handleGoalToggle(i)}>
-                    <div style={{ width:17,height:17,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 150ms ease" }}>
+                    <div style={{ width:17,height:17,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",animation:done?"goalCheckBounce 320ms cubic-bezier(0.36,0.07,0.19,0.97) both":"none" }}>
                       {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                     </div>
                     <span style={{ fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"all 150ms",lineHeight:1.35 }}>{t("dailyGoals")} {i+1}</span>
