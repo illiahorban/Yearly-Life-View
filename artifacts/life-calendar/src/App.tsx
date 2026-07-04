@@ -1446,26 +1446,21 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const hovered = tooltipRect !== null;
   const isOut = state==="out", isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
-  const _goalDoneCount = dayGoals ? dayGoals.done.filter(Boolean).length : 0;
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1.5, zIndex:6, pointerEvents:"none" }}>
-      {dayGoals.count <= 6 ? Array.from({ length: dayGoals.count }, (_, i) => {
+    <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:0.5, zIndex:6, pointerEvents:"none" }}>
+      {Array.from({ length: dayGoals.count }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         return done ? (
-          <svg key={i} width="6" height="6" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
+          <svg key={i} width="4" height="4" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
             <circle cx="3" cy="3" r="3" fill={isPast ? "rgba(255,255,255,0.92)" : "#34c759"} />
-            <path d="M1.5 3l1 1 2-2" stroke={isPast ? accentColor : "white"} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1.5 3l1 1 2-2" stroke={isPast ? accentColor : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
-          <svg key={i} width="6" height="6" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.45 }}>
-            <circle cx="3" cy="3" r="2.5" stroke={isPast ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.25)"} strokeWidth="0.8"/>
+          <svg key={i} width="4" height="4" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.4 }}>
+            <circle cx="3" cy="3" r="2.5" stroke={isPast ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.25)"} strokeWidth="0.9"/>
           </svg>
         );
-      }) : (
-        <span style={{ fontSize:8.5, fontWeight:600, fontVariantNumeric:"tabular-nums", color: _goalDoneCount === dayGoals.count ? (isPast ? "rgba(255,255,255,0.95)" : "#34c759") : (isPast ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.35)"), lineHeight:1 }}>
-          {_goalDoneCount}/{dayGoals.count}
-        </span>
-      )}
+      })}
     </div>
   ) : null;
   const activeNotes = dayNotes?.filter(n => n.text.trim()) ?? [];
