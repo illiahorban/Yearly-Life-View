@@ -1536,9 +1536,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: isAllDone ? `0 0 0 2.5px #34c759cc, 0 4px 18px rgba(52,199,89,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.18)` : hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
-            {isAllDone && <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg, rgba(52,199,89,0.2) 0%, transparent 55%)", borderRadius:11, pointerEvents:"none", zIndex:3 }} />}
             <Label number={dayNumber} month={monthAbbr} tone="onGreen" />
             {noteDot}{microMarkers}
           </div>
@@ -1551,7 +1550,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${isAllDone ? "#34c759" : accentColor}`, boxShadow: isAllDone ? `0 0 0 3px rgba(52,199,89,0.32), 0 4px 18px rgba(52,199,89,0.4)` : hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
             <div className="relative w-full h-full overflow-hidden">
               <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
@@ -1567,7 +1566,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   return (
     <>
       <div ref={tileRef} data-datekey={dk} style={{ ...base }} {...hov}>
-        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border: isAllDone ? "1.5px solid #34c75999" : "1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: isAllDone ? `0 0 0 2px rgba(52,199,89,0.28), 0 4px 14px rgba(52,199,89,0.28)` : hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
+        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border: "1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
           {msBar}<Label number={dayNumber} month={monthAbbr} tone="muted" />{noteDot}
           {microMarkers}
         </div>
