@@ -1536,14 +1536,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   ) : null;
 
   const medalBadge = isAllDone ? (
-    <div style={{ position:"absolute", top: hasEvents ? 10 : 4, left:4, width:12, height:12, zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", pointerEvents:"none" }}>
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <circle cx="6" cy="7" r="4.5" fill="#f0c040" stroke="#c8922a" strokeWidth="0.6"/>
-        <polygon points="6,4.5 6.7,6.2 8.5,6.2 7.1,7.3 7.6,9 6,8 4.4,9 4.9,7.3 3.5,6.2 5.3,6.2" fill="#a06010" opacity="0.5"/>
-        <polygon points="6,4.8 6.6,6.3 8.2,6.3 6.9,7.2 7.4,8.8 6,7.9 4.6,8.8 5.1,7.2 3.8,6.3 5.4,6.3" fill="white" opacity="0.9"/>
-        <line x1="4.5" y1="1" x2="5.5" y2="4" stroke="#c8922a" strokeWidth="1" strokeLinecap="round"/>
-        <line x1="7.5" y1="1" x2="6.5" y2="4" stroke="#f0c040" strokeWidth="1" strokeLinecap="round"/>
-      </svg>
+    <div style={{ position:"absolute", top: hasEvents ? 10 : 4, left:4, width:12, height:12, zIndex:5, display:"flex", alignItems:"center", justifyContent:"center", pointerEvents:"none", fontSize:10, lineHeight:1 }}>
+      🚀
     </div>
   ) : null;
 
