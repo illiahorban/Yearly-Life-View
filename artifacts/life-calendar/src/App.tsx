@@ -246,9 +246,13 @@ type LifeView = "years" | "months" | "weeks" | "days";
 type DayGoals = { count: number; done: boolean[] };
 
 function fireConfettiCannons() {
-  const opts = { startVelocity: 32, spread: 80, ticks: 140, zIndex: 9999 };
-  confetti({ ...opts, particleCount: 70, origin: { x: 0.08, y: 0.72 }, angle: 60, colors: ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac"] });
-  confetti({ ...opts, particleCount: 70, origin: { x: 0.92, y: 0.72 }, angle: 120, colors: ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac"] });
+  const colors = ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac","#ff922b","#cc5de8"];
+  const opts = { startVelocity: 52, spread: 90, ticks: 140, gravity: 0.7, zIndex: 9999, colors };
+  confetti({ ...opts, particleCount: 140, origin: { x: 0.08, y: 0.75 }, angle: 65 });
+  confetti({ ...opts, particleCount: 140, origin: { x: 0.92, y: 0.75 }, angle: 115 });
+  setTimeout(() => {
+    confetti({ ...opts, particleCount: 60, startVelocity: 38, origin: { x: 0.5, y: 0.8 }, angle: 90, spread: 120 });
+  }, 250);
 }
 
 const APPLE_COLORS = [
