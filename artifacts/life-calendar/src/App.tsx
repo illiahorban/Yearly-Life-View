@@ -243,7 +243,7 @@ type BlockGoals = { description: string; goals: Goal[] };
 type NoteEntry = { id: string; text: string; createdAt: number; color?: string };
 type LifeSettings = { birthDate: string; lifespan: number };
 type LifeView = "years" | "months" | "weeks" | "days";
-type DayGoals = { count: number; done: boolean[] };
+type DayGoals = { count: number; done: boolean[]; labels?: string[] };
 
 function fireConfettiCannons() {
   const colors = ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac","#ff922b","#cc5de8"];
@@ -1580,14 +1580,20 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(() => initDayGoals ?? { count: 3, done: [] });
   const handleGoalCountChange = (n: number) => {
     const newDone = Array.from({ length: n }, (_, i) => goalsDraft.done[i] ?? false);
-    const g: DayGoals = { count: n, done: newDone };
+    const newLabels = Array.from({ length: n }, (_, i) => goalsDraft.labels?.[i] ?? "");
+    const g: DayGoals = { count: n, done: newDone, labels: newLabels };
     setGoalsDraft(g); onDayGoalsChange(g);
   };
   const handleGoalToggle = (i: number) => {
     const newDone = Array.from({ length: goalsDraft.count }, (_, j) => j === i ? !(goalsDraft.done[j] ?? false) : (goalsDraft.done[j] ?? false));
-    const g: DayGoals = { count: goalsDraft.count, done: newDone };
+    const g: DayGoals = { count: goalsDraft.count, done: newDone, labels: goalsDraft.labels };
     setGoalsDraft(g); onDayGoalsChange(g);
     if (newDone.every(Boolean) && newDone.length > 0) setTimeout(fireConfettiCannons, 80);
+  };
+  const handleGoalLabelChange = (i: number, value: string) => {
+    const newLabels = Array.from({ length: goalsDraft.count }, (_, j) => j === i ? value : (goalsDraft.labels?.[j] ?? ""));
+    const g: DayGoals = { ...goalsDraft, labels: newLabels };
+    setGoalsDraft(g); onDayGoalsChange(g);
   };
   const allGoalsDone = goalsDraft.count > 0 && goalsDraft.done.slice(0, goalsDraft.count).every(Boolean);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
@@ -1680,7 +1686,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerEntryId(null); }}
         style={{ width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"85vh" }}
       >
-        <style>{`@keyframes goalCheckBounce{0%{transform:scale(1)}30%{transform:scale(1.45)}60%{transform:scale(0.85)}80%{transform:scale(1.12)}100%{transform:scale(1)}}`}</style>
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
           <div>
@@ -1709,12 +1714,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               {Array.from({length:goalsDraft.count},(_,i)=>{
                 const done = goalsDraft.done[i]??false;
                 return (
-                  <label key={i} className="flex items-center gap-2 cursor-pointer select-none" onClick={()=>handleGoalToggle(i)}>
-                    <div style={{ width:17,height:17,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",animation:done?"goalCheckBounce 320ms cubic-bezier(0.36,0.07,0.19,0.97) both":"none" }}>
+                  <div key={i} className="flex items-center gap-2">
+                    <div onClick={()=>handleGoalToggle(i)} style={{ width:17,height:17,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                       {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                     </div>
-                    <span style={{ fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"all 150ms",lineHeight:1.35 }}>{t("dailyGoals")} {i+1}</span>
-                  </label>
+                    <input
+                      value={goalsDraft.labels?.[i] ?? ""}
+                      onChange={e => handleGoalLabelChange(i, e.target.value)}
+                      placeholder={`${t("dailyGoals")} ${i+1}`}
+                      maxLength={60}
+                      style={{ flex:1,background:"transparent",border:"none",outline:"none",fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0 }}
+                    />
+                  </div>
                 );
               })}
               {allGoalsDone && (
