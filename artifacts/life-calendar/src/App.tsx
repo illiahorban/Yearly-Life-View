@@ -1456,8 +1456,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
             <path d="M1.5 3l1 1 2-2" stroke={isPast ? accentColor : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
-          <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.4 }}>
-            <circle cx="3" cy="3" r="2.5" stroke={isPast ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.25)"} strokeWidth="0.9"/>
+          <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.5 }}>
+            <circle cx="3" cy="3" r="2.5" stroke={isPast ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)"} strokeWidth="0.9"/>
           </svg>
         );
       })}
