@@ -1595,7 +1595,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const g: DayGoals = { ...goalsDraft, labels: newLabels };
     setGoalsDraft(g); onDayGoalsChange(g);
   };
-  const allGoalsDone = goalsDraft.count > 0 && goalsDraft.done.slice(0, goalsDraft.count).every(Boolean);
+  const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
+  const allGoalsDone = goalsDraft.count > 0 && _doneSlice.length === goalsDraft.count && _doneSlice.every(Boolean);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(null);
