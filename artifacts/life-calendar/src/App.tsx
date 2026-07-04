@@ -158,6 +158,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     addNotePickDate: "Choose a date:",
     openNote: "Open",
     dailyGoals: "Daily Goals", allDone: "All done! 🎉", goalCountLabel: "Number of goals:",
+    streakDays: "day streak", streakDaysPlural: "day streak",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -223,6 +224,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     addNotePickDate: "Выберите дату:",
     openNote: "Открыть",
     dailyGoals: "Цели дня", allDone: "Всё выполнено! 🎉", goalCountLabel: "Количество целей:",
+    streakDays: "день подряд", streakDaysPlural: "дней подряд",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -481,6 +483,15 @@ function App() {
   const updateDayGoals = (dk: string, goals: DayGoals) => {
     setDayGoals(prev => ({ ...prev, [dk]: goals }));
   };
+  const currentStreak = useMemo(() => {
+    const isDone = (dk: string) => { const g = dayGoals[dk]; return g != null && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean); };
+    const t0 = startOfDay(new Date());
+    let startDay = new Date(t0);
+    if (!isDone(dateKey(startDay))) startDay = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() - 1);
+    let streak = 0, d = new Date(startDay);
+    while (streak <= 3650) { if (!isDone(dateKey(d))) break; streak++; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1); }
+    return streak;
+  }, [dayGoals]);
 
   // Notes
   const [notes, setNotes] = useState<Record<string, NoteEntry[]>>(() => {
@@ -787,6 +798,13 @@ function App() {
             <span>{yearProgress.toFixed(1)}% {t("complete")}</span>
             <span>{(totalDays-daysCompleted).toFixed(0)} {t("daysRemaining")}</span>
           </div>
+          {currentStreak > 0 && (
+            <div className="mt-2 flex items-center justify-center gap-1.5">
+              <span style={{ fontSize:15, lineHeight:1, filter:"drop-shadow(0 0 4px rgba(255,149,0,0.55))" }}>🔥</span>
+              <span className="text-[13px] font-bold tabular-nums" style={{ color:"#ff9500" }}>{currentStreak}</span>
+              <span className="text-[12px]" style={{ color:"var(--text-tertiary)" }}>{lang==="ru" ? (currentStreak===1?"день подряд":"дней подряд") : (currentStreak===1?"day streak":"day streak")}</span>
+            </div>
+          )}
 
           {/* Milestone countdown — up to 7 upcoming */}
           <AnimatePresence>
