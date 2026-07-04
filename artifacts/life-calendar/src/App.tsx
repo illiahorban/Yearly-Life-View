@@ -161,6 +161,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     streakDays: "day streak", streakDaysPlural: "day streak", weekGoalsDone: "goals done",
     resetGoals: "Reset", resetGoalsConfirm: "Reset all marks?", yes: "Yes", no: "No",
     copyToTomorrow: "Copy to tomorrow", copiedToTomorrow: "Copied!",
+    tomorrowHasGoals: "Tomorrow already has goals. Replace?", replace: "Replace",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -229,6 +230,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     streakDays: "день подряд", streakDaysPlural: "дней подряд", weekGoalsDone: "целей выполнено",
     resetGoals: "Сбросить", resetGoalsConfirm: "Сбросить все отметки?", yes: "Да", no: "Нет",
     copyToTomorrow: "Скопировать на завтра", copiedToTomorrow: "Скопировано!",
+    tomorrowHasGoals: "На завтра уже есть цели. Заменить?", replace: "Заменить",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -1040,6 +1042,7 @@ function App() {
             dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
             dayMilestones={milestonesMap[openNote] ?? []}
             initDayGoals={dayGoals[openNote]}
+            tomorrowInitGoals={(() => { const [yr,mo,dy] = openNote.split("-").map(Number); return dayGoals[dateKey(new Date(yr,mo-1,dy+1))]; })()}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
@@ -1589,10 +1592,11 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   initDayGoals?: DayGoals;
+  tomorrowInitGoals?: DayGoals;
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
   onDayGoalsChange: (g: DayGoals) => void;
@@ -1627,16 +1631,22 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
   };
   const [copiedTomorrow, setCopiedTomorrow] = useState(false);
+  const [confirmCopyTomorrow, setConfirmCopyTomorrow] = useState(false);
   const tomorrowDk = (() => {
     const [yr, mo, dy] = dk.split("-").map(Number) as [number,number,number];
     const t = new Date(yr, mo - 1, dy + 1);
     return dateKey(t);
   })();
-  const handleCopyToTomorrow = () => {
+  const tomorrowAlreadyHasGoals = (tomorrowInitGoals?.count ?? 0) > 0;
+  const doCopyToTomorrow = () => {
     const g: DayGoals = { count: goalsDraft.count, done: Array(goalsDraft.count).fill(false), labels: goalsDraft.labels ? [...goalsDraft.labels] : [] };
     onCopyGoalsTo(tomorrowDk, g);
     setCopiedTomorrow(true);
+    setConfirmCopyTomorrow(false);
     setTimeout(() => setCopiedTomorrow(false), 1800);
+  };
+  const handleCopyToTomorrow = () => {
+    if (tomorrowAlreadyHasGoals) { setConfirmCopyTomorrow(true); } else { doCopyToTomorrow(); }
   };
   const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
   const allGoalsDone = goalsDraft.count > 0 && _doneSlice.length === goalsDraft.count && _doneSlice.every(Boolean);
@@ -1769,6 +1779,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{t("resetGoalsConfirm")}</span>
                 <button onClick={() => setConfirmReset(false)} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
                 <button onClick={handleGoalReset} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
+              </div>
+            ) : confirmCopyTomorrow ? (
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{t("tomorrowHasGoals")}</span>
+                <button onClick={() => setConfirmCopyTomorrow(false)} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
+                <button onClick={doCopyToTomorrow} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:"none", background:"#007aff", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("replace")}</button>
               </div>
             ) : (
               <div className="flex items-center gap-1">
