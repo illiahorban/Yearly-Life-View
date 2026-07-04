@@ -1759,9 +1759,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   </button>
                   <button onClick={() => setConfirmReset(true)} title={t("resetGoals")}
                     style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
-                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                      <path d="M2.5 9.5 A4.2 4.2 0 1 1 9.5 5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                      <path d="M9.5 5.5 L11 4 M9.5 5.5 L8 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 5a4 4 0 1 0 2.5-3.7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                      <path d="M1 2h2M1 2v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
                 </>
