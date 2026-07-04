@@ -246,7 +246,7 @@ type LifeView = "years" | "months" | "weeks" | "days";
 type DayGoals = { count: number; done: boolean[] };
 
 function fireConfettiCannons() {
-  const opts = { startVelocity: 32, spread: 80, ticks: 70, zIndex: 9999 };
+  const opts = { startVelocity: 32, spread: 80, ticks: 140, zIndex: 9999 };
   confetti({ ...opts, particleCount: 70, origin: { x: 0.08, y: 0.72 }, angle: 60, colors: ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac"] });
   confetti({ ...opts, particleCount: 70, origin: { x: 0.92, y: 0.72 }, angle: 120, colors: ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac"] });
 }
