@@ -1444,6 +1444,7 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
 }
 
 // ─── Fire animation ───────────────────────────────────────────────────────────
+const FIRE_EPOCH = Date.now(); // fixed reference point — all tiles sync to this
 if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")) {
   const s = document.createElement("style");
   s.id = "lc-fire-style";
@@ -1495,7 +1496,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     ? "0 0 0 3px #ff9f0a, 0 0 16px 4px rgba(255,159,10,0.65)"
     : highlighted === true ? "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)"
     : highlighted === false ? "none" : undefined;
-  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", boxShadow: isAllDone ? undefined : highlightRing };
+  const fireDelay = isAllDone ? `${-(((Date.now() - FIRE_EPOCH) % 4000) / 1000).toFixed(3)}s` : undefined;
+  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", boxShadow: isAllDone ? undefined : highlightRing, ...(isAllDone ? { animationDelay: fireDelay } : {}) };
 
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
