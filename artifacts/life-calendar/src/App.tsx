@@ -1216,11 +1216,6 @@ function BlocksRenderer({
 
                 {/* Progress strip */}
                 <div className="px-3 sm:px-3.5 pb-2">
-                  <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
-                    <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
-                    <span style={{ color: isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
-                    <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
-                  </div>
                   {blockStreak > 0 && (
                     <div className="flex items-center justify-center gap-1 mb-1" style={{ lineHeight:1 }}>
                       <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
@@ -1228,6 +1223,11 @@ function BlocksRenderer({
                       <span style={{ fontSize:10, color:"var(--text-tertiary)" }}>{blockStreak===1 ? t("streakDays") : t("streakDaysPlural")}</span>
                     </div>
                   )}
+                  <div className="flex items-center justify-between text-[10px] tabular-nums mb-1">
+                    <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
+                    <span style={{ color: isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
+                    <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
+                  </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                     <motion.div initial={false} animate={{ width:`${pct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
                       style={{ height:"100%", background: `linear-gradient(90deg,${effectiveQ.text},${effectiveQ.border})`, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
