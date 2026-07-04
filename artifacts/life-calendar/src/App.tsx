@@ -892,7 +892,7 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[26px] pr-[24px] sm:pl-[32px] sm:pr-[28px]">
+          <div className="mt-3 pl-[86px] pr-[24px] sm:pl-[32px] sm:pr-[28px]">
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
@@ -1294,7 +1294,7 @@ function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-2 sm:gap-2.5 pl-3 sm:pl-3.5 pr-2.5 sm:pr-3 pb-3 pt-1">
+                <div className="flex flex-col gap-2 sm:gap-2.5 pl-[72px] sm:pl-3.5 pr-2.5 sm:pr-3 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -1311,9 +1311,8 @@ function BlocksRenderer({
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`w-20 sm:w-24`}
+                            className={`absolute top-1/2 -translate-y-1/2 -left-[72px] sm:left-auto sm:right-[calc(100%_+_40px)] w-16 sm:w-24`}
                             style={{
-                              position:"absolute", right:"calc(100% + 12px)", top:"50%", transform:"translateY(-50%)",
                               display:"flex", flexDirection:"column", alignItems:"flex-start",
                               color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
                               fontWeight: isCurrent ? 600 : 400,
@@ -1329,7 +1328,7 @@ function BlocksRenderer({
                               gap: 1,
                             }}
                           >
-                            <span className="text-[15px] tabular-nums whitespace-nowrap">{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</span>
+                            <span className="text-[12px] sm:text-[15px] tabular-nums whitespace-nowrap">{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</span>
                             {weekTotal > 0 && (
                               <span style={{ fontSize:9.5, fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", display:"flex", alignItems:"center", gap:2, lineHeight:1 }}>
                                 <svg width="7" height="6" viewBox="0 0 7 6" fill="none" style={{ flexShrink:0 }}>
