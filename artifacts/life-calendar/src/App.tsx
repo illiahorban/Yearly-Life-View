@@ -930,8 +930,8 @@ function App() {
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header zone — single flex-col space-between, no manual margins on children */}
-                  <div className="flex flex-col px-4 sm:px-5 pt-2 pb-2" style={{ minHeight: 88 }}>
-                    {/* Item 1: title row + gear — anchored to top */}
+                  <div className="px-4 sm:px-5" style={{ display:"grid", gridTemplateRows:"auto 1fr", minHeight:88, paddingTop:8, paddingBottom:8 }}>
+                    {/* Row 1: title + gear — fixed at top */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {/* Color swatch */}
@@ -965,8 +965,8 @@ function App() {
                       </div>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
-                    {/* margin:auto top+bottom = true vertical centering in remaining space below header */}
-                    <div className="flex flex-col gap-1" style={{ marginTop:"auto", marginBottom:"auto" }}>
+                    {/* Row 2: 1fr — % + bar centered inside it */}
+                    <div style={{ display:"flex", flexDirection:"column", alignItems:"stretch", justifyContent:"center", gap:4 }}>
                       <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                         {qPct.toFixed(0)}%
                       </div>
