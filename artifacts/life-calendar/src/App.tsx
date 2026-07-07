@@ -892,7 +892,7 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[58px] pr-[58px] sm:pl-[62px] sm:pr-[62px]">
+          <div className="mt-3 pl-[61px] pr-[61px] sm:pl-[65px] sm:pr-[65px]">
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
@@ -980,7 +980,7 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="pl-12 pr-12 pb-3 sm:pb-4 pt-0 flex flex-col gap-2">
+                  <div className="pl-[51px] pr-[51px] pb-3 sm:pb-4 pt-0 flex flex-col gap-2">
                     <BlocksRenderer
                       qi={qi} quarter={quarter} qConfig={qConfig} startIndex={startIndex}
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
