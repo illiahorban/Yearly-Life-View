@@ -256,6 +256,7 @@ function fireConfettiCannons() {
   const opts = { startVelocity: 52, spread: 90, ticks: 210, gravity: 0.7, zIndex: 9999, colors };
   confetti({ ...opts, particleCount: 140, origin: { x: 0.08, y: 0.75 }, angle: 52 });
   confetti({ ...opts, particleCount: 140, origin: { x: 0.92, y: 0.75 }, angle: 128 });
+  confetti({ ...opts, particleCount: 90, startVelocity: 44, origin: { x: 0.5, y: 0.72 }, angle: 90, spread: 70 });
 }
 
 const APPLE_COLORS = [
