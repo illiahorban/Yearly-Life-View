@@ -1347,10 +1347,9 @@ function BlocksRenderer({
                           {weekTotal > 0 && (
                             <div style={{
                               position:"absolute", left:"calc(100% + 18px)", top:"50%", transform:"translateY(-50%)",
-                              width:36, textAlign:"center",
                               display:"flex", flexDirection:"row", alignItems:"center", gap:2,
                             }}>
-                              <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1 }}>
+                              <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1, display:"inline-block", width:30, textAlign:"right" }}>
                                 {weekDone}/{weekTotal}
                               </span>
                               {weekDone === weekTotal && (
