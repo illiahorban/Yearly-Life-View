@@ -930,7 +930,7 @@ function App() {
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header row */}
-                  <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-0">
+                  <div className="flex items-center justify-between px-4 sm:px-5 pt-6 pb-0">
                     <div className="flex items-center gap-2">
                       {/* Color swatch */}
                       <div style={{ position:"relative" }}>
