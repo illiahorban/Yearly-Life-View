@@ -1313,8 +1313,8 @@ function BlocksRenderer({
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
                             style={{
-                              position:"absolute", right:"calc(100% + 18px)", top:"50%", transform:"translateY(-50%)",
-                              width:32, textAlign:"center",
+                              position:"absolute", right:"calc(100% + 8px)", top:"50%", transform:"translateY(-50%)",
+                              width:51, textAlign:"center",
                               color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
                               fontWeight: isCurrent ? 600 : 400,
                               background: "transparent",
@@ -1346,8 +1346,8 @@ function BlocksRenderer({
                           {/* Goals progress — right gutter */}
                           {weekTotal > 0 && (
                             <div style={{
-                              position:"absolute", left:"calc(100% + 18px)", top:"50%", transform:"translateY(-50%)",
-                              display:"flex", flexDirection:"row", alignItems:"center", gap:2,
+                              position:"absolute", left:"calc(100% + 8px)", top:"50%", transform:"translateY(-50%)",
+                              width:51, display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"center", gap:2,
                             }}>
                               <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1 }}>
                                 {weekDone}/{weekTotal}
