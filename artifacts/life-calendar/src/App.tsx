@@ -963,8 +963,8 @@ function App() {
                     </div>
                     <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                   </div>
-                  {/* Quarter progress — pt:2 above, pb:20 below → bar centered between header bottom and sprint card top */}
-                  <div className="px-4 sm:px-5" style={{ paddingTop:2, paddingBottom:20 }}>
+                  {/* Quarter progress — pt:0 above, pb:18 below → bar centered between header bottom and sprint card top */}
+                  <div className="px-4 sm:px-5" style={{ paddingTop:0, paddingBottom:18 }}>
                     <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, marginBottom:4, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                       {qPct.toFixed(0)}%
                     </div>
