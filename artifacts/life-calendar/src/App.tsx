@@ -929,8 +929,8 @@ function App() {
                 <motion.section layout key={qi} className="overflow-visible"
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
-                  {/* Quarter header zone — single flex-col space-between, no manual margins on children */}
-                  <div className="flex flex-col justify-between px-4 sm:px-5 py-2" style={{ minHeight: 68 }}>
+                  {/* Quarter header zone — 3-row CSS Grid, equal row-gap, no manual margins */}
+                  <div className="px-4 sm:px-5 py-2.5" style={{ display:"grid", gridTemplateColumns:"1fr", gridTemplateRows:"repeat(3, auto)", rowGap:14, alignItems:"center" }}>
                     {/* Item 1: title row + gear */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
