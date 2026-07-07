@@ -929,10 +929,10 @@ function App() {
                 <motion.section layout key={qi} className="overflow-visible"
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
-                  {/* Quarter header zone — single flex-col space-between, no manual margins on children */}
-                  <div className="px-4 sm:px-5" style={{ display:"grid", gridTemplateRows:"auto 1fr", minHeight:88, paddingTop:8, paddingBottom:8 }}>
-                    {/* Row 1: title + gear — fixed at top */}
-                    <div className="flex items-center justify-between">
+                  {/* Quarter header zone */}
+                  <div style={{ position:"relative", minHeight:88, paddingTop:8, paddingBottom:8 }}>
+                    {/* Header row at top */}
+                    <div className="px-4 sm:px-5 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {/* Color swatch */}
                         <div style={{ position:"relative" }}>
@@ -965,8 +965,9 @@ function App() {
                       </div>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
-                    {/* Row 2: 1fr — % + bar centered inside it */}
-                    <div style={{ display:"flex", flexDirection:"column", alignItems:"stretch", justifyContent:"center", gap:4 }}>
+                    {/* % + bar: absolutely positioned at midpoint between header bottom and container bottom */}
+                    {/* minHeight=88, pt=8, header≈28 → header bottom≈36. Center of (36..88)=62. Group top=62-10.5≈51 */}
+                    <div className="px-4 sm:px-5" style={{ position:"absolute", top:51, left:0, right:0, display:"flex", flexDirection:"column", gap:4 }}>
                       <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                         {qPct.toFixed(0)}%
                       </div>
