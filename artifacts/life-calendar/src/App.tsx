@@ -929,47 +929,47 @@ function App() {
                 <motion.section layout key={qi} className="overflow-visible"
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
-                  {/* Quarter header */}
-                  <div className="flex items-center justify-between px-4 sm:px-5 pt-2 pb-0">
-                    <div className="flex items-center gap-2">
-                      {/* Color swatch */}
-                      <div style={{ position:"relative" }}>
-                        <button
-                          onClick={() => setColorPickerQi(colorPickerQi === qi ? null : qi)}
-                          title={t("chooseColor")}
-                          style={{ width:13, height:13, borderRadius:999, background:quarter.border, border:`2px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)"}`, cursor:"pointer", display:"block", flexShrink:0 }}
-                        />
-                        <AnimatePresence>
-                          {colorPickerQi === qi && (
-                            <motion.div
-                              initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
-                              transition={{ type:"spring", stiffness:420, damping:28 }}
-                              onClick={e => e.stopPropagation()}
-                              style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:40, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
-                            >
-                              {APPLE_COLORS.map(ac => (
-                                <button key={ac.key} onClick={() => { updateQuarterMeta(qi, { colorKey: ac.key }); setColorPickerQi(null); }}
-                                  title={ac.label}
-                                  style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: meta.colorKey===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
-                                />
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                  {/* Quarter header zone — single flex-col space-between, no manual margins on children */}
+                  <div className="flex flex-col justify-between px-4 sm:px-5 py-2" style={{ minHeight: 68 }}>
+                    {/* Item 1: title row + gear */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {/* Color swatch */}
+                        <div style={{ position:"relative" }}>
+                          <button
+                            onClick={() => setColorPickerQi(colorPickerQi === qi ? null : qi)}
+                            title={t("chooseColor")}
+                            style={{ width:13, height:13, borderRadius:999, background:quarter.border, border:`2px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)"}`, cursor:"pointer", display:"block", flexShrink:0 }}
+                          />
+                          <AnimatePresence>
+                            {colorPickerQi === qi && (
+                              <motion.div
+                                initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
+                                transition={{ type:"spring", stiffness:420, damping:28 }}
+                                onClick={e => e.stopPropagation()}
+                                style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:40, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+                              >
+                                {APPLE_COLORS.map(ac => (
+                                  <button key={ac.key} onClick={() => { updateQuarterMeta(qi, { colorKey: ac.key }); setColorPickerQi(null); }}
+                                    title={ac.label}
+                                    style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: meta.colorKey===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                                  />
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        {/* Editable quarter name */}
+                        <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
+                        <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
                       </div>
-
-                      {/* Editable quarter name */}
-                      <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
-                      <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
+                      <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
-                    <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
-                  </div>
-
-                  {/* Quarter progress bar */}
-                  <div className="px-4 sm:px-5 pt-2 pb-2">
-                    <div className="text-center tabular-nums mb-1" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
+                    {/* Item 2: percentage */}
+                    <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                       {qPct.toFixed(0)}%
                     </div>
+                    {/* Item 3: progress bar */}
                     <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                       <motion.div initial={false} animate={{ width:`${qPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
                         style={{ height:"100%", background: quarter.border, borderRadius:999, opacity:0.88 }}
