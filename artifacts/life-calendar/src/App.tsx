@@ -980,7 +980,7 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="pb-3 sm:pb-4 pt-0 flex flex-col gap-2">
+                  <div className="pb-3 sm:pb-4 px-3 sm:px-4 pt-0 flex flex-col gap-2">
                     <BlocksRenderer
                       qi={qi} quarter={quarter} qConfig={qConfig} startIndex={startIndex}
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
