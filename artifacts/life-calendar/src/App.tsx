@@ -892,7 +892,7 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[86px] pr-[24px] sm:pl-[32px] sm:pr-[28px]">
+          <div className="mt-3 pl-[38px] pr-[38px]">
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
@@ -980,7 +980,7 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-0 flex flex-col gap-2">
+                  <div className="pl-9 pr-9 pb-3 sm:pb-4 pt-0 flex flex-col gap-2">
                     <BlocksRenderer
                       qi={qi} quarter={quarter} qConfig={qConfig} startIndex={startIndex}
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
@@ -1294,7 +1294,7 @@ function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-2 sm:gap-2.5 pl-[72px] sm:pl-3.5 pr-2.5 sm:pr-3 pb-3 pt-1">
+                <div className="flex flex-col gap-2 sm:gap-2.5 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -1308,36 +1308,29 @@ function BlocksRenderer({
                       <div key={wi} style={{ display:"flex", flexDirection:"column" }}>
                         {/* Fixed-height week row — never changes its own size */}
                         <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center" style={{ position:"relative" }}>
+                          {/* Week number — left gutter */}
                           <button type="button"
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            className={`absolute top-1/2 -translate-y-1/2 -left-[72px] sm:left-auto sm:right-[calc(100%_+_40px)] w-16 sm:w-24`}
                             style={{
-                              display:"flex", flexDirection:"column", alignItems:"flex-start",
+                              position:"absolute", right:"calc(100% + 6px)", top:"50%", transform:"translateY(-50%)",
+                              width:28, textAlign:"right",
                               color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
                               fontWeight: isCurrent ? 600 : 400,
                               background: "transparent",
-                              borderRadius: 6,
-                              padding: "2px 6px",
+                              borderRadius: 4,
+                              padding: "2px 0",
                               border: isAnchor ? `1.5px solid ${quarter.border}66` : "1.5px solid transparent",
                               cursor: "pointer",
                               fontFamily: "inherit",
                               outline: "none",
                               transition: "color 120ms, border 120ms",
                               opacity: hasSelection && !isSel ? 0.4 : 1,
-                              gap: 1,
                             }}
                           >
-                            <span className="text-[12px] sm:text-[15px] tabular-nums whitespace-nowrap">{lang === "en" ? `${t("week")}\u00A0\u00A0${wi+1}` : `${t("week")} ${wi+1}`}</span>
-                            {weekTotal > 0 && (
-                              <span style={{ fontSize:9.5, fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", display:"flex", alignItems:"center", gap:2, lineHeight:1 }}>
-                                <svg width="7" height="6" viewBox="0 0 7 6" fill="none" style={{ flexShrink:0 }}>
-                                  <path d="M1 3l2 2 3.5-3.5" stroke={weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                                <span className="tabular-nums">{weekDone}/{weekTotal}</span>
-                              </span>
-                            )}
+                            <span className="text-[11px] sm:text-[13px] tabular-nums">{wi+1}</span>
                           </button>
+                          {/* Day tiles */}
                           <div className="grid grid-cols-7 gap-2 sm:gap-3 w-full">
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
@@ -1350,6 +1343,23 @@ function BlocksRenderer({
                               />
                             ))}
                           </div>
+                          {/* Goals progress — right gutter */}
+                          {weekTotal > 0 && (
+                            <div style={{
+                              position:"absolute", left:"calc(100% + 6px)", top:"50%", transform:"translateY(-50%)",
+                              width:28, textAlign:"left",
+                              display:"flex", flexDirection:"column", alignItems:"flex-start", gap:1,
+                            }}>
+                              <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1.2 }}>
+                                {weekDone}/{weekTotal}
+                              </span>
+                              {weekDone === weekTotal && (
+                                <svg width="8" height="7" viewBox="0 0 8 7" fill="none">
+                                  <path d="M1 3.5l2.2 2.2L7 1" stroke="#34c759" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </div>
+                          )}
                         </div>
                         {/* Reserved accordion slot — always in DOM, opens with CSS height transition */}
                         <div style={{
