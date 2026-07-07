@@ -892,7 +892,7 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[38px] pr-[38px]">
+          <div className="mt-3 pl-[46px] pr-[46px] sm:pl-[50px] sm:pr-[50px]">
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
@@ -1294,7 +1294,7 @@ function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-2 sm:gap-2.5 pb-3 pt-1">
+                <div className="flex flex-col gap-2 sm:gap-2.5 pb-3 pt-1 px-2 sm:px-3">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -1313,7 +1313,7 @@ function BlocksRenderer({
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
                             style={{
-                              position:"absolute", right:"calc(100% + 6px)", top:"50%", transform:"translateY(-50%)",
+                              position:"absolute", right:"calc(100% + 14px)", top:"50%", transform:"translateY(-50%)",
                               width:28, textAlign:"right",
                               color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
                               fontWeight: isCurrent ? 600 : 400,
@@ -1346,15 +1346,15 @@ function BlocksRenderer({
                           {/* Goals progress — right gutter */}
                           {weekTotal > 0 && (
                             <div style={{
-                              position:"absolute", left:"calc(100% + 6px)", top:"50%", transform:"translateY(-50%)",
-                              width:28, textAlign:"left",
-                              display:"flex", flexDirection:"column", alignItems:"flex-start", gap:1,
+                              position:"absolute", left:"calc(100% + 14px)", top:"50%", transform:"translateY(-50%)",
+                              width:30, textAlign:"left",
+                              display:"flex", flexDirection:"row", alignItems:"center", gap:2,
                             }}>
-                              <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1.2 }}>
+                              <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1 }}>
                                 {weekDone}/{weekTotal}
                               </span>
                               {weekDone === weekTotal && (
-                                <svg width="8" height="7" viewBox="0 0 8 7" fill="none">
+                                <svg width="8" height="7" viewBox="0 0 8 7" fill="none" style={{ flexShrink:0 }}>
                                   <path d="M1 3.5l2.2 2.2L7 1" stroke="#34c759" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                                 </svg>
                               )}
