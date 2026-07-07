@@ -254,8 +254,8 @@ type DayGoals = { count: number; done: boolean[]; labels?: string[] };
 function fireConfettiCannons() {
   const colors = ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac","#ff922b","#cc5de8"];
   const opts = { startVelocity: 52, spread: 90, ticks: 210, gravity: 0.7, zIndex: 9999, colors };
-  confetti({ ...opts, particleCount: 140, origin: { x: 0.08, y: 0.75 }, angle: 65 });
-  confetti({ ...opts, particleCount: 140, origin: { x: 0.92, y: 0.75 }, angle: 115 });
+  confetti({ ...opts, particleCount: 140, origin: { x: 0.08, y: 0.75 }, angle: 52 });
+  confetti({ ...opts, particleCount: 140, origin: { x: 0.92, y: 0.75 }, angle: 128 });
 }
 
 const APPLE_COLORS = [
