@@ -965,9 +965,9 @@ function App() {
                       </div>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
-                    {/* % + bar: absolutely positioned at midpoint between header bottom and container bottom */}
-                    {/* minHeight=88, pt=8, header≈28 → header bottom≈36. Center of (36..88)=62. Group top=62-10.5≈51 */}
-                    <div className="px-4 sm:px-5" style={{ position:"absolute", top:51, left:0, right:0, display:"flex", flexDirection:"column", gap:4 }}>
+                    {/* % + bar: absolutely positioned at midpoint of space below header */}
+                    {/* minHeight=88, pt=8, pb=8, header≈28 → header bottom≈36, content bottom≈80. Center=(36+80)/2=58. Group(21px) top=58-10.5≈48 */}
+                    <div className="px-4 sm:px-5" style={{ position:"absolute", top:48, left:0, right:0, display:"flex", flexDirection:"column", gap:4 }}>
                       <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                         {qPct.toFixed(0)}%
                       </div>
