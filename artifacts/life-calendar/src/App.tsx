@@ -930,7 +930,7 @@ function App() {
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header */}
-                  <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-1.5">
+                  <div className="flex items-center justify-between px-4 sm:px-5 pt-3 pb-1">
                     <div className="flex items-center gap-2">
                       {/* Color swatch */}
                       <div style={{ position:"relative" }}>
@@ -966,10 +966,7 @@ function App() {
                   </div>
 
                   {/* Quarter progress bar */}
-                  <div className="px-4 sm:px-5 pb-5">
-                    <div className="flex items-center justify-between text-[10px] tabular-nums mb-0.5">
-                      <span style={{ color:"var(--text-tertiary)" }}>{t("quarterProgress")}</span>
-                    </div>
+                  <div className="px-4 sm:px-5 pb-2">
                     <div className="text-center tabular-nums mb-1" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                       {qPct.toFixed(0)}%
                     </div>
