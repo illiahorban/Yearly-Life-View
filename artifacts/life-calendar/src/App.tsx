@@ -930,7 +930,7 @@ function App() {
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header row */}
-                  <div className="flex items-center justify-between px-4 sm:px-5 pt-1 pb-0">
+                  <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-0">
                     <div className="flex items-center gap-2">
                       {/* Color swatch */}
                       <div style={{ position:"relative" }}>
@@ -963,8 +963,8 @@ function App() {
                     </div>
                     <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                   </div>
-                  {/* Quarter progress — pt:4 above, pb:22 below → bar centered between header bottom and sprint card top */}
-                  <div className="px-4 sm:px-5" style={{ paddingTop:4, paddingBottom:22 }}>
+                  {/* Quarter progress — pt:2 above, pb:20 below → bar centered between header bottom and sprint card top */}
+                  <div className="px-4 sm:px-5" style={{ paddingTop:2, paddingBottom:20 }}>
                     <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, marginBottom:4, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                       {qPct.toFixed(0)}%
                     </div>
