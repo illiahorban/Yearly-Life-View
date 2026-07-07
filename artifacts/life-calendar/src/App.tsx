@@ -930,7 +930,7 @@ function App() {
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header zone — single flex-col space-between, no manual margins on children */}
-                  <div className="flex flex-col justify-between px-4 sm:px-5 py-2" style={{ minHeight: 68 }}>
+                  <div className="flex flex-col justify-between px-4 sm:px-5 py-2" style={{ minHeight: 67 }}>
                     {/* Item 1: title row + gear */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -965,15 +965,16 @@ function App() {
                       </div>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
-                    {/* Item 2: percentage */}
-                    <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
-                      {qPct.toFixed(0)}%
-                    </div>
-                    {/* Item 3: progress bar */}
-                    <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
-                      <motion.div initial={false} animate={{ width:`${qPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                        style={{ height:"100%", background: quarter.border, borderRadius:999, opacity:0.88 }}
-                      />
+                    {/* Item 2: % + bar as one group — flexbox centers this block between header and sprint card */}
+                    <div className="flex flex-col gap-1">
+                      <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
+                        {qPct.toFixed(0)}%
+                      </div>
+                      <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
+                        <motion.div initial={false} animate={{ width:`${qPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
+                          style={{ height:"100%", background: quarter.border, borderRadius:999, opacity:0.88 }}
+                        />
+                      </div>
                     </div>
                   </div>
 
