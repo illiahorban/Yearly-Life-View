@@ -1313,7 +1313,7 @@ function BlocksRenderer({
                             onClick={() => onWeekLabelClick(_qi, qOffset)}
                             title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
                             style={{
-                              position:"absolute", right:"calc(100% + 14px)", top:"50%", transform:"translateY(-50%)",
+                              position:"absolute", right:"calc(100% + 18px)", top:"50%", transform:"translateY(-50%)",
                               width:32, textAlign:"center",
                               color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
                               fontWeight: isCurrent ? 600 : 400,
@@ -1346,7 +1346,7 @@ function BlocksRenderer({
                           {/* Goals progress — right gutter */}
                           {weekTotal > 0 && (
                             <div style={{
-                              position:"absolute", left:"calc(100% + 14px)", top:"50%", transform:"translateY(-50%)",
+                              position:"absolute", left:"calc(100% + 18px)", top:"50%", transform:"translateY(-50%)",
                               width:36, textAlign:"center",
                               display:"flex", flexDirection:"row", alignItems:"center", gap:2,
                             }}>
