@@ -930,7 +930,7 @@ function App() {
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Quarter header zone — single flex-col space-between, no manual margins on children */}
-                  <div className="flex flex-col px-4 sm:px-5 py-2" style={{ minHeight: 76 }}>
+                  <div className="flex flex-col px-4 sm:px-5 pt-2 pb-2" style={{ minHeight: 88 }}>
                     {/* Item 1: title row + gear — anchored to top */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -965,9 +965,8 @@ function App() {
                       </div>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
-                    {/* Equal spacers above and below center the group between header and sprint card */}
-                    <div className="flex-1" />
-                    <div className="flex flex-col gap-1">
+                    {/* margin:auto top+bottom = true vertical centering in remaining space below header */}
+                    <div className="flex flex-col gap-1" style={{ marginTop:"auto", marginBottom:"auto" }}>
                       <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                         {qPct.toFixed(0)}%
                       </div>
@@ -977,7 +976,6 @@ function App() {
                         />
                       </div>
                     </div>
-                    <div className="flex-1" />
                   </div>
 
                   <div className="pb-3 sm:pb-4 px-3 sm:px-4 pt-0 flex flex-col gap-2">
