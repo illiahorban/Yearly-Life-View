@@ -1216,10 +1216,10 @@ function BlocksRenderer({
                 style={{ background:softColor, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5">
+                <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
                   <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.text} />
                   {blockStreak > 0 && (
-                    <div className="flex items-center gap-1" style={{ lineHeight:1 }}>
+                    <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", display:"flex", alignItems:"center", justifyContent:"center", gap:4, lineHeight:1 }}>
                       <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
                       <span style={{ fontSize:10, fontWeight:700, color:"#ff9500" }}>{pluralDayStreak(blockStreak, lang)}</span>
                     </div>
