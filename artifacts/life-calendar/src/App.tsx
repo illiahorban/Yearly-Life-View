@@ -892,7 +892,7 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[61px] pr-[61px] sm:pl-[65px] sm:pr-[65px]">
+          <div className="mt-3 pl-[51px] pr-[60px]">
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
@@ -980,7 +980,7 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="pl-[51px] pr-[51px] pb-3 sm:pb-4 pt-0 flex flex-col gap-2">
+                  <div className="pb-3 sm:pb-4 pt-0 flex flex-col gap-2">
                     <BlocksRenderer
                       qi={qi} quarter={quarter} qConfig={qConfig} startIndex={startIndex}
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
@@ -1294,7 +1294,7 @@ function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-2 sm:gap-2.5 pb-3 pt-1 px-2 sm:px-3">
+                <div className="flex flex-col gap-2 sm:gap-2.5 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -1306,32 +1306,32 @@ function BlocksRenderer({
                     const weekTotal = days.reduce((s, d) => { const g = dayGoalsMap[dateKey(d)]; return s + (g ? g.count : 0); }, 0);
                     return (
                       <div key={wi} style={{ display:"flex", flexDirection:"column" }}>
-                        {/* Fixed-height week row — never changes its own size */}
-                        <div ref={el => { weekRefs.current[wi] = el; }} className="flex items-center" style={{ position:"relative" }}>
-                          {/* Week number — left gutter */}
-                          <button type="button"
-                            onClick={() => onWeekLabelClick(_qi, qOffset)}
-                            title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
-                            style={{
-                              position:"absolute", right:"calc(100% + 8px)", top:"50%", transform:"translateY(-50%)",
-                              width:51, textAlign:"center",
-                              color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
-                              fontWeight: isCurrent ? 600 : 400,
-                              background: "transparent",
-                              borderRadius: 4,
-                              padding: "2px 0",
-                              border: isAnchor ? `1.5px solid ${quarter.border}66` : "1.5px solid transparent",
-                              cursor: "pointer",
-                              fontFamily: "inherit",
-                              outline: "none",
-                              transition: "color 120ms, border 120ms",
-                              opacity: hasSelection && !isSel ? 0.4 : 1,
-                            }}
-                          >
-                            <span className="text-[11px] sm:text-[13px] tabular-nums">{wi+1}</span>
-                          </button>
-                          {/* Day tiles */}
-                          <div className="grid grid-cols-7 gap-2 sm:gap-3 w-full">
+                        {/* Three-column week row: [left 51px] [tiles flex-1] [right 60px] */}
+                        <div ref={el => { weekRefs.current[wi] = el; }} style={{ display:"flex", flexDirection:"row", alignItems:"center" }}>
+                          {/* LEFT COLUMN — week number, 51px, perfectly centered */}
+                          <div style={{ width:51, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            <button type="button"
+                              onClick={() => onWeekLabelClick(_qi, qOffset)}
+                              title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
+                              style={{
+                                color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
+                                fontWeight: isCurrent ? 600 : 400,
+                                background: "transparent",
+                                borderRadius: 4,
+                                padding: "2px 6px",
+                                border: isAnchor ? `1.5px solid ${quarter.border}66` : "1.5px solid transparent",
+                                cursor: "pointer",
+                                fontFamily: "inherit",
+                                outline: "none",
+                                transition: "color 120ms, border 120ms",
+                                opacity: hasSelection && !isSel ? 0.4 : 1,
+                              }}
+                            >
+                              <span className="text-[11px] sm:text-[13px] tabular-nums">{wi+1}</span>
+                            </button>
+                          </div>
+                          {/* MIDDLE COLUMN — day tiles, fills remaining space */}
+                          <div className="grid grid-cols-7 gap-2 sm:gap-3" style={{ flex:1, minWidth:0 }}>
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
@@ -1343,22 +1343,21 @@ function BlocksRenderer({
                               />
                             ))}
                           </div>
-                          {/* Goals progress — right gutter */}
-                          {weekTotal > 0 && (
-                            <div style={{
-                              position:"absolute", left:"calc(100% + 14px)", top:"50%", transform:"translateY(-50%)",
-                              display:"flex", flexDirection:"row", alignItems:"center", gap:2,
-                            }}>
-                              <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1 }}>
-                                {weekDone}/{weekTotal}
-                              </span>
-                              {weekDone === weekTotal && (
-                                <svg width="8" height="7" viewBox="0 0 8 7" fill="none" style={{ flexShrink:0 }}>
-                                  <path d="M1 3.5l2.2 2.2L7 1" stroke="#34c759" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              )}
-                            </div>
-                          )}
+                          {/* RIGHT COLUMN — goals counter, 60px, perfectly centered */}
+                          <div style={{ width:60, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            {weekTotal > 0 && (
+                              <div style={{ display:"flex", flexDirection:"row", alignItems:"center", gap:3 }}>
+                                <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1 }}>
+                                  {weekDone}/{weekTotal}
+                                </span>
+                                {weekDone === weekTotal && (
+                                  <svg width="8" height="7" viewBox="0 0 8 7" fill="none" style={{ flexShrink:0 }}>
+                                    <path d="M1 3.5l2.2 2.2L7 1" stroke="#34c759" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {/* Reserved accordion slot — always in DOM, opens with CSS height transition */}
                         <div style={{
