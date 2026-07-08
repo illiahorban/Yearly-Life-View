@@ -1872,6 +1872,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [msEditRecurring, setMsEditRecurring] = useState(false);
 
   // New event form state
+  const newLabelInputRef = React.useRef<HTMLInputElement|null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newDate, setNewDate] = useState(dk);
@@ -1914,6 +1915,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const t = setTimeout(() => msEditInputRef.current?.focus(), 300);
     return () => clearTimeout(t);
   }, [msEditId]);
+
+  React.useEffect(() => {
+    if (!addEventOpen) return;
+    const t = setTimeout(() => newLabelInputRef.current?.focus(), 320);
+    return () => clearTimeout(t);
+  }, [addEventOpen]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
   const label = new Date(y, m-1, d).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { weekday:"long", month:"long", day:"numeric" });
@@ -2143,12 +2150,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Add event form */}
         <div className="px-5 pt-3 pb-3 shrink-0">
-          {!addEventOpen ? (
+          {/* Button — collapses when form open */}
+          <div style={{ maxHeight: addEventOpen ? 0 : "40px", opacity: addEventOpen ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: addEventOpen ? "none" : "auto" }}>
             <button onClick={() => setAddEventOpen(true)}
               style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
               <span style={{ fontSize:14, lineHeight:1 }}>+</span> {t("addEvent")}
             </button>
-          ) : (
+          </div>
+          {/* Form — expands when open */}
+          <div style={{ maxHeight: addEventOpen ? "400px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
             <div style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"}`, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
               <div className="flex gap-1 flex-wrap">
                 {MILESTONE_COLORS.map(c => (
@@ -2157,9 +2167,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 ))}
               </div>
               <div className="flex gap-1.5">
-                <input value={newLabel} onChange={e => setNewLabel(e.target.value)}
+                <input ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
-                  placeholder={t("labelPlaceholder")} autoFocus
+                  placeholder={t("labelPlaceholder")}
                   style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:2, width:"auto" }} />
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                   lang={lang}
@@ -2183,7 +2193,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   style={{ flex:2, height:28, borderRadius:7, border:"none", background: newLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: newLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
               </div>
             </div>
-          )}
+          </div>
           {(dayMilestones.length > 0 || addEventOpen) && <div className="mt-3 h-px" style={{ background:"var(--border-soft)" }} />}
         </div>
 
@@ -2200,8 +2210,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 : borderColor;
               return (
               <motion.div key={entry.id}
-                initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
-                transition={{ type:"spring", stiffness:360, damping:28 }}
+                initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }}
+                transition={{ duration:0.28, ease:"easeInOut" }}
+                style={{ overflow:"hidden" }}
                 onMouseEnter={() => setHoveredEntryId(entry.id)}
                 onMouseLeave={() => setHoveredEntryId(null)}
               >
