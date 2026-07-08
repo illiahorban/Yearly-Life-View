@@ -102,7 +102,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
-    remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", noMilestones:"No milestones yet. Add one above.",
+    remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", deleteDayNotesConfirm:"Delete all notes for this day?", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
     descPlaceholder:"Description (optional, up to 300 chars)…",
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
@@ -173,7 +173,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
-    remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", noMilestones:"Нет событий. Добавьте выше.",
+    remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", deleteDayNotesConfirm:"Удалить все заметки этого дня?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
     descPlaceholder:"Описание (необязательно, до 300 символов)…",
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
@@ -2538,6 +2538,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState<string | null>(null);
   const [hoveredDk, setHoveredDk] = useState<string | null>(null);
+  const [confirmDeleteDk, setConfirmDeleteDk] = useState<string | null>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -2730,7 +2731,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                         </button>
                         {hoveredDk === dk && (
                           <button
-                            onClick={e => { e.stopPropagation(); onDeleteDayNotes(dk); }}
+                            onClick={e => { e.stopPropagation(); setConfirmDeleteDk(dk); }}
                             title={t("remove")}
                             style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: 6, background: dark ? "rgba(255,59,48,0.18)" : "rgba(255,59,48,0.12)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#ff3b30", fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</button>
                         )}
@@ -2743,6 +2744,14 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
           )}
         </div>
       </motion.div>
+      <ConfirmDialog
+        open={confirmDeleteDk !== null}
+        onClose={() => setConfirmDeleteDk(null)}
+        onConfirm={() => { if (confirmDeleteDk) onDeleteDayNotes(confirmDeleteDk); }}
+        message={t("deleteDayNotesConfirm")}
+        confirmLabel={t("remove")}
+        dark={dark}
+      />
     </motion.div>
   );
 }
