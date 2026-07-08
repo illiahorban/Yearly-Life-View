@@ -3903,10 +3903,12 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
     }
     setEditingId(null);
   };
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
   const deleteTpl = (id: string) => {
     const updated = draft.filter(tpl => tpl.id !== id);
     setDraft(updated);
     onSave(updated);
+    setConfirmDeleteId(null);
   };
   const addItem = () => { if (formItems.length < 10) setFormItems(prev => [...prev, ""]); };
   const removeItem = (i: number) => setFormItems(prev => prev.filter((_, j) => j !== i));
@@ -3997,19 +3999,27 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
                   <div key={tpl.id} style={{ borderRadius:10, border:`1px solid ${borderColor}`, padding:"10px 12px", background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)" }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
                       <span style={{ fontSize:13, fontWeight:700, color:"var(--text)" }}>{tpl.name}</span>
-                      <div style={{ display:"flex", gap:4 }}>
-                        {onApply && (
-                          <button onClick={() => onApply(tpl)} style={{ height:24, padding:"0 9px", borderRadius:5, border:"none", background:"#007aff", cursor:"pointer", color:"white", fontSize:11, fontWeight:700, fontFamily:"inherit", display:"flex", alignItems:"center" }}>
-                            {t("applyTemplate")}
+                      {confirmDeleteId === tpl.id ? (
+                        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{t("resetGoalsConfirm")}</span>
+                          <button onClick={() => setConfirmDeleteId(null)} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
+                          <button onClick={() => deleteTpl(tpl.id)} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
+                        </div>
+                      ) : (
+                        <div style={{ display:"flex", gap:4 }}>
+                          {onApply && (
+                            <button onClick={() => onApply(tpl)} style={{ height:24, padding:"0 9px", borderRadius:5, border:"none", background:"#007aff", cursor:"pointer", color:"white", fontSize:11, fontWeight:700, fontFamily:"inherit", display:"flex", alignItems:"center" }}>
+                              {t("applyTemplate")}
+                            </button>
+                          )}
+                          <button onClick={() => startEdit(tpl)} style={{ width:24, height:24, borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                           </button>
-                        )}
-                        <button onClick={() => startEdit(tpl)} style={{ width:24, height:24, borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => deleteTpl(tpl.id)} style={{ width:24, height:24, borderRadius:5, border:`1px solid rgba(255,59,48,0.3)`, background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                      </div>
+                          <button onClick={() => setConfirmDeleteId(tpl.id)} style={{ width:24, height:24, borderRadius:5, border:`1px solid rgba(255,59,48,0.3)`, background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
                       {tpl.items.filter(s=>s.trim()).map((item, i) => (
