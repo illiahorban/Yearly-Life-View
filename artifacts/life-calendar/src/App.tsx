@@ -2225,7 +2225,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
 
         {/* Scrollable notes list */}
-        <div className="px-5 pb-2 flex flex-col gap-3 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
+        <div className="px-5 pb-2 flex flex-col gap-1.5 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
           <AnimatePresence initial={false}>
             {entries.map((entry, idx) => {
               const entryColor = entry.color;
@@ -2243,11 +2243,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 onMouseEnter={() => setHoveredEntryId(entry.id)}
                 onMouseLeave={() => setHoveredEntryId(null)}
               >
-                {entries.length > 1 && (
-                  <div className="text-[10px] font-semibold tracking-widest uppercase mb-1" style={{ color:"var(--text-tertiary)" }}>
-                    {t("note")} {idx + 1}
-                  </div>
-                )}
                 <div style={{ position:"relative" }}>
                   <textarea
                     ref={el => { areaRefs.current[entry.id] = el; }}
