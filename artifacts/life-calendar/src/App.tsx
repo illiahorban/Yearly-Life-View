@@ -163,6 +163,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     resetGoals: "Reset", resetGoalsConfirm: "Reset all marks?", yes: "Yes", no: "No",
     copyToTomorrow: "Copy to tomorrow", copiedToTomorrow: "Copied!",
     tomorrowHasGoals: "Tomorrow already has goals. Replace?", replace: "Replace",
+    templates: "Templates", noTemplates: "No templates yet.", newTemplate: "New template", templateNamePlaceholder: "e.g. Morning routine, Work day…", addTemplateItem: "Add item", applyTemplate: "Apply", deleteTemplate: "Delete", saveTemplate: "Save template", templatesTitle: "Day Goal Templates", applyTemplateBtn: "Apply template",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -233,6 +234,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     resetGoals: "Сбросить", resetGoalsConfirm: "Сбросить все отметки?", yes: "Да", no: "Нет",
     copyToTomorrow: "Скопировать на завтра", copiedToTomorrow: "Скопировано!",
     tomorrowHasGoals: "На завтра уже есть цели. Заменить?", replace: "Заменить",
+    templates: "Шаблоны", noTemplates: "Шаблонов пока нет.", newTemplate: "Новый шаблон", templateNamePlaceholder: "напр. Утро, Рабочий день…", addTemplateItem: "Добавить пункт", applyTemplate: "Применить", deleteTemplate: "Удалить", saveTemplate: "Сохранить шаблон", templatesTitle: "Шаблоны дневных целей", applyTemplateBtn: "Применить шаблон",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -252,6 +254,7 @@ type NoteEntry = { id: string; text: string; createdAt: number; color?: string }
 type LifeSettings = { birthDate: string; lifespan: number };
 type LifeView = "years" | "months" | "weeks" | "days";
 type DayGoals = { count: number; done: boolean[]; labels?: string[] };
+type DayTemplate = { id: string; name: string; items: string[] };
 
 function fireConfettiCannons() {
   const colors = ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac","#ff922b","#cc5de8"];
@@ -497,6 +500,10 @@ function App() {
   // Day Goals
   const [dayGoals, setDayGoals] = useState<Record<string, DayGoals>>(() => ls<Record<string, DayGoals>>("lifeCalendar:dayGoals", {}));
   useEffect(() => { lsSet("lifeCalendar:dayGoals", dayGoals); }, [dayGoals]);
+  // Day Templates
+  const [dayTemplates, setDayTemplates] = useState<DayTemplate[]>(() => ls<DayTemplate[]>("lifeCalendar:dayTemplates", []));
+  useEffect(() => { lsSet("lifeCalendar:dayTemplates", dayTemplates); }, [dayTemplates]);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const updateDayGoals = (dk: string, goals: DayGoals) => {
     setDayGoals(prev => ({ ...prev, [dk]: goals }));
   };
@@ -821,6 +828,9 @@ function App() {
                         <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
                           <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
                         </IconButton>
+                        <IconButton title={t("templates")} onClick={() => { setTemplatesOpen(true); setSettingsOpen(false); }} bg={overlayBg}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="11" height="4" rx="1"/></svg>
+                        </IconButton>
                         <div style={{ height:1, background:"var(--border-soft)", margin:"1px 2px" }} />
                         <IconButton title={t("factoryReset")} onClick={() => { setFactoryResetStep(1); setSettingsOpen(false); }} bg={overlayBg} color="#ff3b30">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
@@ -1124,6 +1134,7 @@ function App() {
             dayMilestones={milestonesMap[openNote] ?? []}
             initDayGoals={dayGoals[openNote]}
             tomorrowInitGoals={(() => { const [yr,mo,dy] = openNote.split("-").map(Number); return dayGoals[dateKey(new Date(yr,mo-1,dy+1))]; })()}
+            dayTemplates={dayTemplates}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
@@ -1149,6 +1160,17 @@ function App() {
             onEditQuarterGoals={qi => { setEditGoalsQi(qi); setGoalsOpen(false); }}
             onEditYearGoals={() => { setEditYearGoals(true); setGoalsOpen(false); }}
             onClose={() => setGoalsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {templatesOpen && (
+          <DayTemplatesModal key="templates-modal"
+            dark={dark} modalBg={modalBg}
+            templates={dayTemplates}
+            onSave={setDayTemplates}
+            onClose={() => setTemplatesOpen(false)}
           />
         )}
       </AnimatePresence>
@@ -1239,6 +1261,7 @@ function App() {
           setYearGoals({});
           setMilestones([]);
           setDayGoals({});
+          setDayTemplates([]);
           setConfig(defaultConfig());
           setQuarterMeta(DEFAULT_QUARTER_META);
         }}
@@ -1762,11 +1785,12 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   initDayGoals?: DayGoals;
   tomorrowInitGoals?: DayGoals;
+  dayTemplates: DayTemplate[];
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
   onDayGoalsChange: (g: DayGoals) => void;
@@ -1799,6 +1823,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [] };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
+  };
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const applyTemplate = (tpl: DayTemplate) => {
+    const items = tpl.items.filter(s => s.trim());
+    const n = Math.max(1, Math.min(10, items.length));
+    const g: DayGoals = { count: n, done: Array(n).fill(false), labels: items.slice(0, n) };
+    setGoalsDraft(g); onDayGoalsChange(g); setTemplatePickerOpen(false);
   };
   const [copiedTomorrow, setCopiedTomorrow] = useState(false);
   const [confirmCopyTomorrow, setConfirmCopyTomorrow] = useState(false);
@@ -1928,6 +1959,29 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dailyGoals")}</span>
+              {/* Template picker button */}
+              {dayTemplates.length > 0 && !confirmReset && !confirmCopyTomorrow && (
+                <div style={{ position:"relative" }}>
+                  <button onClick={() => setTemplatePickerOpen(v => !v)} title={t("applyTemplateBtn")}
+                    style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color: templatePickerOpen ? "#007aff" : "var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="11" height="4" rx="1"/></svg>
+                  </button>
+                  {templatePickerOpen && (
+                    <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, zIndex:200, background:dark?"rgba(30,30,30,0.97)":"rgba(255,255,255,0.97)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", borderRadius:10, boxShadow:"0 4px 24px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.08)"}`, minWidth:160, overflow:"hidden" }}>
+                      {dayTemplates.map(tpl => (
+                        <button key={tpl.id} onClick={() => applyTemplate(tpl)}
+                          style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", width:"100%", padding:"8px 12px", background:"transparent", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", borderBottom:`1px solid ${dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)"}` }}
+                          onMouseEnter={e => (e.currentTarget.style.background = dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.04)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <span style={{ fontSize:12, fontWeight:600, color:"var(--text)", lineHeight:1.3 }}>{tpl.name}</span>
+                          <span style={{ fontSize:10, color:"var(--text-tertiary)", marginTop:1 }}>{tpl.items.filter(s=>s.trim()).length} {t("goals")}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               {goalsDraft.count > 0 && !confirmReset && (
                 <>
                   <button onClick={handleCopyToTomorrow} title={t("copyToTomorrow")}
@@ -3807,6 +3861,175 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             <div className="mt-1 text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("birthDateSubtitle")}</div>
           </div>
         )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── DayTemplatesModal ────────────────────────────────────────────────────────
+
+function DayTemplatesModal({ dark, modalBg, templates, onSave, onClose }: {
+  dark: boolean; modalBg: string;
+  templates: DayTemplate[];
+  onSave: (templates: DayTemplate[]) => void;
+  onClose: () => void;
+}) {
+  const { t } = React.useContext(LangContext);
+  const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
+  const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
+  const inputStyle: React.CSSProperties = { background: inputBg, border:`1px solid ${borderColor}`, borderRadius:8, padding:"6px 10px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box", width:"100%" };
+
+  // local draft of templates
+  const [draft, setDraft] = useState<DayTemplate[]>(() => templates.map(t => ({ ...t, items: [...t.items] })));
+  const [editingId, setEditingId] = useState<string|null>(null);
+  // form state for create / edit
+  const [formName, setFormName] = useState("");
+  const [formItems, setFormItems] = useState<string[]>(["","",""]);
+
+  const startNew = () => {
+    setEditingId("__new__");
+    setFormName("");
+    setFormItems(["","",""]);
+  };
+  const startEdit = (tpl: DayTemplate) => {
+    setEditingId(tpl.id);
+    setFormName(tpl.name);
+    const items = [...tpl.items];
+    while (items.length < 3) items.push("");
+    setFormItems(items);
+  };
+  const cancelEdit = () => setEditingId(null);
+
+  const saveForm = () => {
+    const name = formName.trim();
+    if (!name) return;
+    const items = formItems.map(s => s.trim()).filter(s => s.length > 0);
+    if (items.length === 0) return;
+    if (editingId === "__new__") {
+      const newTpl: DayTemplate = { id: makeId(), name, items };
+      const updated = [...draft, newTpl];
+      setDraft(updated);
+      onSave(updated);
+    } else {
+      const updated = draft.map(tpl => tpl.id === editingId ? { ...tpl, name, items } : tpl);
+      setDraft(updated);
+      onSave(updated);
+    }
+    setEditingId(null);
+  };
+  const deleteTpl = (id: string) => {
+    const updated = draft.filter(tpl => tpl.id !== id);
+    setDraft(updated);
+    onSave(updated);
+  };
+  const addItem = () => { if (formItems.length < 10) setFormItems(prev => [...prev, ""]); };
+  const removeItem = (i: number) => setFormItems(prev => prev.filter((_, j) => j !== i));
+  const updateItem = (i: number, v: string) => setFormItems(prev => prev.map((s, j) => j === i ? v : s));
+
+  const editing = editingId !== null;
+
+  return (
+    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+        style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
+      />
+      <motion.div layout initial={{ opacity:0, scale:0.95, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
+        transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => e.stopPropagation()}
+        style={{ width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"80vh" }}
+      >
+        {/* Header */}
+        <div style={{ padding:"18px 20px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}` }}>
+          <div>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"var(--text-tertiary)" }}>{t("settings")}</div>
+            <div style={{ fontSize:15, fontWeight:700, color:"var(--text)", marginTop:2 }}>{t("templatesTitle")}</div>
+          </div>
+          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflowY:"auto", flex:1, padding:"12px 20px 16px" }}>
+          {editing ? (
+            /* ── Edit / Create form ── */
+            <div>
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:10, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--text-tertiary)", marginBottom:4 }}>{t("newTemplate")}</div>
+                <input
+                  value={formName} onChange={e => setFormName(e.target.value)}
+                  placeholder={t("templateNamePlaceholder")}
+                  style={{ ...inputStyle, fontSize:13, fontWeight:600 }}
+                  autoFocus
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); saveForm(); } if (e.key === "Escape") cancelEdit(); }}
+                />
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {formItems.map((item, i) => (
+                  <div key={i} style={{ display:"flex", gap:6, alignItems:"center" }}>
+                    <div style={{ width:18, height:18, borderRadius:4, border:`1.5px solid ${borderColor}`, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      <span style={{ fontSize:10, color:"var(--text-tertiary)", fontWeight:600 }}>{i+1}</span>
+                    </div>
+                    <input
+                      value={item} onChange={e => updateItem(i, e.target.value)}
+                      placeholder={`${t("goal")} ${i+1}`}
+                      style={{ ...inputStyle, flex:1 }}
+                      onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); if (i === formItems.length-1 && formItems.length < 10) addItem(); } if (e.key === "Escape") cancelEdit(); }}
+                    />
+                    {formItems.length > 1 && (
+                      <button onClick={() => removeItem(i)} style={{ width:18, height:18, border:"none", background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center", padding:0, flexShrink:0 }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {formItems.length < 10 && (
+                <button onClick={addItem} style={{ marginTop:8, fontSize:11, color:"#007aff", border:"none", background:"transparent", cursor:"pointer", padding:0, fontFamily:"inherit", fontWeight:600 }}>
+                  + {t("addTemplateItem")}
+                </button>
+              )}
+              <div style={{ display:"flex", gap:8, marginTop:14 }}>
+                <button onClick={cancelEdit} style={{ flex:1, padding:"7px 0", borderRadius:9, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
+                <button onClick={saveForm} disabled={!formName.trim() || formItems.every(s=>!s.trim())} style={{ flex:2, padding:"7px 0", borderRadius:9, border:"none", background:"#007aff", color:"white", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", opacity: (!formName.trim() || formItems.every(s=>!s.trim())) ? 0.4 : 1 }}>{t("saveTemplate")}</button>
+              </div>
+            </div>
+          ) : (
+            /* ── Templates list ── */
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              {draft.length === 0 ? (
+                <div style={{ textAlign:"center", padding:"20px 0", color:"var(--text-tertiary)", fontSize:13 }}>{t("noTemplates")}</div>
+              ) : (
+                draft.map(tpl => (
+                  <div key={tpl.id} style={{ borderRadius:10, border:`1px solid ${borderColor}`, padding:"10px 12px", background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+                      <span style={{ fontSize:13, fontWeight:700, color:"var(--text)" }}>{tpl.name}</span>
+                      <div style={{ display:"flex", gap:4 }}>
+                        <button onClick={() => startEdit(tpl)} style={{ width:24, height:24, borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onClick={() => deleteTpl(tpl.id)} style={{ width:24, height:24, borderRadius:5, border:`1px solid rgba(255,59,48,0.3)`, background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                      {tpl.items.filter(s=>s.trim()).map((item, i) => (
+                        <div key={i} style={{ display:"flex", alignItems:"center", gap:6 }}>
+                          <div style={{ width:5, height:5, borderRadius:99, background:"var(--text-tertiary)", flexShrink:0 }} />
+                          <span style={{ fontSize:11, color:"var(--text-secondary)" }}>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+              <button onClick={startNew} style={{ width:"100%", padding:"9px 0", borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.14)"}`, background:"transparent", color:"#007aff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", marginTop:2 }}>
+                + {t("newTemplate")}
+              </button>
+            </div>
+          )}
+        </div>
       </motion.div>
     </motion.div>
   );
