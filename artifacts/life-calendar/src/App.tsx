@@ -2210,7 +2210,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 : borderColor;
               return (
               <motion.div key={entry.id}
-                initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }}
+                initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0, height:0, marginBottom:0, paddingBottom:0 }}
                 transition={{ duration:0.28, ease:"easeInOut" }}
                 style={{ overflow:"hidden" }}
                 onMouseEnter={() => setHoveredEntryId(entry.id)}
