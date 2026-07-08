@@ -2109,7 +2109,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.6, flexShrink:0, transform:"scaleX(-1)" }}>✎</button>
                         {hoveredMsId === ms.id && (
                           <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", fontSize:14, lineHeight:1, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>×</button>
+                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                         )}
                       </div>
                     )}
@@ -2191,7 +2191,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   </span>
                   {hoveredEntryId === entry.id && (
                     <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                      style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", fontSize:14, lineHeight:1, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>×</button>
+                      style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                   )}
                 </div>
                 <div style={{ position:"relative" }}>
@@ -2650,7 +2650,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
             />
             {query && (
               <button onClick={() => setQuery("")}
-                style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)", fontSize: 14, lineHeight: 1, padding: 2 }}>×</button>
+                style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding: 2 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
             )}
           </div>
         </div>
@@ -2756,7 +2756,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                           <button
                             onClick={e => { e.stopPropagation(); setConfirmDeleteDk(dk); }}
                             title={t("remove")}
-                            style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: 6, background: dark ? "rgba(255,59,48,0.18)" : "rgba(255,59,48,0.12)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#ff3b30", fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</button>
+                            style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: 6, background: dark ? "rgba(255,59,48,0.18)" : "rgba(255,59,48,0.12)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#ff3b30", flexShrink: 0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                         )}
                       </div>
                     ))}
@@ -2896,7 +2896,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
             />
             {query && (
               <button onClick={() => setQuery("")}
-                style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"var(--text-tertiary)", fontSize:14, lineHeight:1, padding:2 }}>×</button>
+                style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:2 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
             )}
           </div>
         </div>
@@ -3021,7 +3021,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           <button onClick={() => startEdit(ms)} title={t("edit")}
                             style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
                           <button onClick={() => setConfirmDeleteMsId(ms.id)}
-                            style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                            style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:"0 2px" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                         </div>
                         {ms.description && (
                           <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", margin:0 }}><HighlightText text={ms.description} query={q} /></p>
@@ -3189,7 +3189,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
                     />
                   </div>
                   <button onClick={() => setConfirmDeleteGoalId(g.id)}
-                    style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px", flexShrink:0 }}>×</button>
+                    style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:"0 2px", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                 </div>
               );
             })}
