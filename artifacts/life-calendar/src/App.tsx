@@ -1862,6 +1862,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const { t, lang } = React.useContext(LangContext);
 
   // Milestone inline edit state
+  const msEditRef = React.useRef<HTMLDivElement|null>(null);
   const [msEditId, setMsEditId] = useState<string|null>(null);
   const [msEditLabel, setMsEditLabel] = useState("");
   const [msEditDate, setMsEditDate] = useState("");
@@ -1895,6 +1896,17 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (orig) onMilestoneUpdate({ ...orig, label: msEditLabel.trim(), date: msEditDate, color: msEditColor, description: msEditDesc.trim() || undefined, recurring: msEditRecurring || undefined });
     setMsEditId(null);
   };
+
+  React.useEffect(() => {
+    if (!msEditId) return;
+    const handler = (e: MouseEvent) => {
+      if (msEditRef.current && !msEditRef.current.contains(e.target as Node)) {
+        setMsEditId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [msEditId]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
   const label = new Date(y, m-1, d).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { weekday:"long", month:"long", day:"numeric" });
@@ -2063,7 +2075,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {isEditing ? (
-                      <div className="flex flex-col gap-1.5">
+                      <div ref={msEditRef} className="flex flex-col gap-1.5">
                         <div className="flex gap-1 flex-wrap">
                           {MILESTONE_COLORS.map(c => (
                             <button key={c} onClick={() => setMsEditColor(c)}
