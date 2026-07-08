@@ -2025,6 +2025,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
 
+        {/* Scrollable body */}
+        <div style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.2) transparent":"rgba(0,0,0,0.15) transparent" }}>
+
         {/* Daily Goals */}
         <div className="px-5 pt-1 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}`, paddingBottom: goalsListOpen ? 12 : 8 }}>
           {/* Clickable header row */}
@@ -2298,12 +2301,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
 
         {/* Add note button */}
-        <div className="px-5 pb-3 shrink-0">
+        <div className="px-5 pb-3">
           <button onClick={addEntry}
             style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
             <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addNote")}
           </button>
         </div>
+
+        </div>{/* end scrollable body */}
 
         {/* Footer */}
         <div className="px-5 pb-5 flex gap-2.5 shrink-0">
