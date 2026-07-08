@@ -2283,16 +2283,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     rows={1}
                     style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, maxHeight:NOTE_MAX_H, overflowY: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? "auto" : "hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
-                  <button
-                    ref={el => { colorBtnRefs.current[entry.id] = el; }}
-                    onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
-                    title={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-                    aria-label={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-                    data-testid={`note-color-btn-${idx}`}
-                    style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 51 : 36, width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0, opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", transition:"opacity 150ms, right 150ms, top 150ms" }}
-                  />
-                  <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                    style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 23 : 8, width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms, right 150ms, top 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                  <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 23 : 8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms, right 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none" }}>
+                    <button
+                      ref={el => { colorBtnRefs.current[entry.id] = el; }}
+                      onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
+                      title={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+                      aria-label={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+                      data-testid={`note-color-btn-${idx}`}
+                      style={{ width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0 }}
+                    />
+                    <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+                      style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                  </div>
                 </div>
               </motion.div>
               );
