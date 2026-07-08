@@ -2097,7 +2097,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       </div>
                     ) : (
                       <div className="flex items-start gap-2">
-                        <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop:3 }} />
+                        <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop:4 }} />
+                        <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.5, flexShrink:0, transform:"scaleX(-1)", marginTop:1 }}>✎</button>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>
                             {ms.label}
@@ -2105,12 +2107,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           </div>
                           {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
                         </div>
-                        <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.6, flexShrink:0, transform:"scaleX(-1)" }}>✎</button>
-                        {hoveredMsId === ms.id && (
-                          <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                        )}
+                        <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                          style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                       </div>
                     )}
                   </div>
@@ -2189,10 +2187,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   <span className="text-[10px] font-medium" style={{ color:"var(--text-tertiary)" }}>
                     {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
                   </span>
-                  {hoveredEntryId === entry.id && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      ref={el => { colorBtnRefs.current[entry.id] = el; }}
+                      onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
+                      title={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+                      aria-label={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+                      data-testid={`note-color-btn-${idx}`}
+                      style={{ width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0 }}
+                    />
                     <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                      style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                  )}
+                      style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                  </div>
                 </div>
                 <div style={{ position:"relative" }}>
                   <textarea
@@ -2202,18 +2208,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onKeyDown={handleKey}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                     rows={3}
-                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 34px 10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", transition:"background 200ms ease, border-color 200ms ease" }}
+                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
-                  <div style={{ position:"absolute", top:8, right:8 }}>
-                    <button
-                      ref={el => { colorBtnRefs.current[entry.id] = el; }}
-                      onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
-                      title={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-                      aria-label={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-                      data-testid={`note-color-btn-${idx}`}
-                      style={{ width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0 }}
-                    />
-                  </div>
                 </div>
                 <div className="text-right text-[10px] tabular-nums mt-0.5" style={{ color:"var(--text-tertiary)" }}>{entry.text.length} / 320</div>
               </motion.div>
