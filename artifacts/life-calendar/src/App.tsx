@@ -1134,6 +1134,7 @@ function App() {
             onSaveTemplates={setDayTemplates}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
+            onMilestoneDelete={id => setMilestones(prev => prev.filter(m => m.id !== id))}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
             onCopyGoalsTo={(targetDk, g) => updateDayGoals(targetDk, g)}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
@@ -1780,6 +1781,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   onSaveTemplates: (templates: DayTemplate[]) => void;
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
+  onMilestoneDelete: (id: string) => void;
   onDayGoalsChange: (g: DayGoals) => void;
   onCopyGoalsTo: (targetDk: string, g: DayGoals) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
@@ -1911,6 +1913,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     setEntries(prev => prev.map(e => e.id === id ? { ...e, color } : e));
   const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<string|null>(null);
   const [hoveredEntryId, setHoveredEntryId] = useState<string|null>(null);
+  const [confirmDeleteMsIdDay, setConfirmDeleteMsIdDay] = useState<string|null>(null);
   const deleteEntry = (id: string) => {
     setEntries(prev => {
       const filtered = prev.filter(e => e.id !== id);
@@ -2101,6 +2104,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         </div>
                         <button onClick={() => startMsEdit(ms)} title={t("edit")}
                           style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.6, flexShrink:0, transform:"scaleX(-1)" }}>✎</button>
+                        <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                          style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", opacity:0.7, flexShrink:0 }}>×</button>
                       </div>
                     )}
                   </div>
@@ -2269,6 +2274,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         onClose={() => setConfirmDeleteEntryId(null)}
         onConfirm={() => { if (confirmDeleteEntryId) deleteEntry(confirmDeleteEntryId); }}
         message={t("deleteEntryConfirm")}
+        confirmLabel={t("remove")}
+        dark={dark}
+      />
+      <ConfirmDialog
+        open={confirmDeleteMsIdDay !== null}
+        onClose={() => setConfirmDeleteMsIdDay(null)}
+        onConfirm={() => { if (confirmDeleteMsIdDay) { onMilestoneDelete(confirmDeleteMsIdDay); setConfirmDeleteMsIdDay(null); } }}
+        message={t("deleteEventConfirm")}
         confirmLabel={t("remove")}
         dark={dark}
       />
