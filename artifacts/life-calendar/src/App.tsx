@@ -1979,7 +1979,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="11" height="4" rx="1"/></svg>
                 </button>
               )}
-              {goalsDraft.count > 0 && !confirmReset && !saveTplOpen && !confirmCopyTomorrow && (
+              {goalsDraft.count > 0 && !confirmReset && !saveTplOpen && !confirmCopyTomorrow && dayTemplates.length < 20 && (
                 <button onClick={() => setSaveTplOpen(true)} title={t("saveAsTemplate")}
                   style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color: savedTpl ? "#34c759" : "var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0, transition:"color 200ms" }}>
                   {savedTpl
@@ -4066,9 +4066,11 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
                   </div>
                 ))
               )}
-              <button onClick={startNew} style={{ width:"100%", padding:"9px 0", borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.14)"}`, background:"transparent", color:"#007aff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", marginTop:2 }}>
-                + {t("newTemplate")}
-              </button>
+              {draft.length < 20 && (
+                <button onClick={startNew} style={{ width:"100%", padding:"9px 0", borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.14)"}`, background:"transparent", color:"#007aff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", marginTop:2 }}>
+                  + {t("newTemplate")}
+                </button>
+              )}
             </div>
           )}
         </div>
