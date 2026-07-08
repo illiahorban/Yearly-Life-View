@@ -25,3 +25,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## User Preferences
+
+- **Bilingualism**: All new UI text must be added in both Russian and English via the existing i18n system. Never add hardcoded strings — always use the `t()` helper from `LangContext`.
