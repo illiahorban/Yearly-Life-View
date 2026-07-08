@@ -102,7 +102,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
-    remove:"Remove", deleteConfirm:"Delete?", noMilestones:"No milestones yet. Add one above.",
+    remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
     descPlaceholder:"Description (optional, up to 300 chars)…",
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
@@ -173,7 +173,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
-    remove:"Удалить", deleteConfirm:"Удалить?", noMilestones:"Нет событий. Добавьте выше.",
+    remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
     descPlaceholder:"Описание (необязательно, до 300 символов)…",
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
@@ -2000,13 +2000,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               </button>
             )}
             {/* Confirm / count buttons */}
-            {confirmReset ? (
-              <>
-                <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{t("resetGoalsConfirm")}</span>
-                <button onClick={() => setConfirmReset(false)} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("no")}</button>
-                <button onClick={handleGoalReset} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600, flexShrink:0 }}>{t("yes")}</button>
-              </>
-            ) : confirmCopyTomorrow ? (
+            {confirmCopyTomorrow ? (
               <>
                 <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{t("tomorrowHasGoals")}</span>
                 <button onClick={() => setConfirmCopyTomorrow(false)} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("no")}</button>
@@ -2179,18 +2173,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
                   </span>
                   {entries.length > 1 && (
-                    confirmDeleteEntryId === entry.id ? (
-                      <div className="flex items-center gap-1.5">
-                        <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{t("deleteConfirm")}</span>
-                        <button onClick={() => setConfirmDeleteEntryId(null)} style={{ height:18, paddingInline:6, borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
-                        <button onClick={() => deleteEntry(entry.id)} style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"#ff3b30", color:"white", fontSize:11, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                        style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                        {t("remove")}
-                      </button>
-                    )
+                    <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+                      style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                      {t("remove")}
+                    </button>
                   )}
                 </div>
                 <div style={{ position:"relative" }}>
@@ -2271,6 +2257,22 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </AnimatePresence>,
         document.body
       )}
+      <ConfirmDialog
+        open={confirmDeleteEntryId !== null}
+        onClose={() => setConfirmDeleteEntryId(null)}
+        onConfirm={() => { if (confirmDeleteEntryId) deleteEntry(confirmDeleteEntryId); }}
+        message={t("deleteEntryConfirm")}
+        confirmLabel={t("remove")}
+        dark={dark}
+      />
+      <ConfirmDialog
+        open={confirmReset}
+        onClose={() => setConfirmReset(false)}
+        onConfirm={handleGoalReset}
+        message={t("resetGoalsConfirm")}
+        confirmLabel={t("resetGoals")}
+        dark={dark}
+      />
     </motion.div>
   );
 }
@@ -2986,15 +2988,8 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           {showDate && <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
                           <button onClick={() => startEdit(ms)} title={t("edit")}
                             style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
-                          {confirmDeleteMsId === ms.id ? (
-                            <div className="flex items-center gap-1.5">
-                              <button onClick={() => setConfirmDeleteMsId(null)} style={{ height:18, paddingInline:5, borderRadius:5, border:`1px solid rgba(128,128,128,0.25)`, background:"transparent", color:"var(--text-secondary)", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
-                              <button onClick={() => { setItems(prev => prev.filter(x => x.id!==ms.id)); setConfirmDeleteMsId(null); }} style={{ height:18, paddingInline:5, borderRadius:5, border:"none", background:"#ff3b30", color:"white", fontSize:11, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
-                            </div>
-                          ) : (
-                            <button onClick={() => setConfirmDeleteMsId(ms.id)}
-                              style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
-                          )}
+                          <button onClick={() => setConfirmDeleteMsId(ms.id)}
+                            style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
                         </div>
                         {ms.description && (
                           <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", margin:0 }}><HighlightText text={ms.description} query={q} /></p>
@@ -3194,6 +3189,14 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
       </AnimatePresence>,
       document.body
     )}
+    <ConfirmDialog
+      open={confirmDeleteMsId !== null}
+      onClose={() => setConfirmDeleteMsId(null)}
+      onConfirm={() => { if (confirmDeleteMsId) { setItems(prev => prev.filter(x => x.id !== confirmDeleteMsId)); setConfirmDeleteMsId(null); } }}
+      message={t("deleteEventConfirm")}
+      confirmLabel={t("remove")}
+      dark={dark}
+    />
     </>
   );
 }
@@ -4042,27 +4045,19 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
                   <div key={tpl.id} style={{ borderRadius:10, border:`1px solid ${borderColor}`, padding:"10px 12px", background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)" }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
                       <span style={{ fontSize:13, fontWeight:700, color:"var(--text)" }}>{tpl.name}</span>
-                      {confirmDeleteId === tpl.id ? (
-                        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                          <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{t("resetGoalsConfirm")}</span>
-                          <button onClick={() => setConfirmDeleteId(null)} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
-                          <button onClick={() => deleteTpl(tpl.id)} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
-                        </div>
-                      ) : (
-                        <div style={{ display:"flex", gap:4 }}>
-                          {onApply && (
-                            <button onClick={() => onApply(tpl)} style={{ height:24, padding:"0 9px", borderRadius:5, border:"none", background:"#007aff", cursor:"pointer", color:"white", fontSize:11, fontWeight:700, fontFamily:"inherit", display:"flex", alignItems:"center" }}>
-                              {t("applyTemplate")}
-                            </button>
-                          )}
-                          <button onClick={() => startEdit(tpl)} style={{ width:24, height:24, borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      <div style={{ display:"flex", gap:4 }}>
+                        {onApply && (
+                          <button onClick={() => onApply(tpl)} style={{ height:24, padding:"0 9px", borderRadius:5, border:"none", background:"#007aff", cursor:"pointer", color:"white", fontSize:11, fontWeight:700, fontFamily:"inherit", display:"flex", alignItems:"center" }}>
+                            {t("applyTemplate")}
                           </button>
-                          <button onClick={() => setConfirmDeleteId(tpl.id)} style={{ width:24, height:24, borderRadius:5, border:`1px solid rgba(255,59,48,0.3)`, background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        </div>
-                      )}
+                        )}
+                        <button onClick={() => startEdit(tpl)} style={{ width:24, height:24, borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onClick={() => setConfirmDeleteId(tpl.id)} style={{ width:24, height:24, borderRadius:5, border:`1px solid rgba(255,59,48,0.3)`, background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </div>
                     </div>
                     <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
                       {tpl.items.filter(s=>s.trim()).map((item, i) => (
@@ -4084,6 +4079,14 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
           )}
         </div>
       </motion.div>
+    <ConfirmDialog
+      open={confirmDeleteId !== null}
+      onClose={() => setConfirmDeleteId(null)}
+      onConfirm={() => { if (confirmDeleteId) deleteTpl(confirmDeleteId); }}
+      message={t("deleteTplConfirm")}
+      confirmLabel={t("remove")}
+      dark={dark}
+    />
     </motion.div>
   );
 }
