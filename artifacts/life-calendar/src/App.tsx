@@ -503,7 +503,6 @@ function App() {
   // Day Templates
   const [dayTemplates, setDayTemplates] = useState<DayTemplate[]>(() => ls<DayTemplate[]>("lifeCalendar:dayTemplates", []));
   useEffect(() => { lsSet("lifeCalendar:dayTemplates", dayTemplates); }, [dayTemplates]);
-  const [templatesOpen, setTemplatesOpen] = useState(false);
   const updateDayGoals = (dk: string, goals: DayGoals) => {
     setDayGoals(prev => ({ ...prev, [dk]: goals }));
   };
@@ -828,9 +827,6 @@ function App() {
                         <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
                           <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
                         </IconButton>
-                        <IconButton title={t("templates")} onClick={() => { setTemplatesOpen(true); setSettingsOpen(false); }} bg={overlayBg}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="11" height="4" rx="1"/></svg>
-                        </IconButton>
                         <div style={{ height:1, background:"var(--border-soft)", margin:"1px 2px" }} />
                         <IconButton title={t("factoryReset")} onClick={() => { setFactoryResetStep(1); setSettingsOpen(false); }} bg={overlayBg} color="#ff3b30">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
@@ -1135,6 +1131,7 @@ function App() {
             initDayGoals={dayGoals[openNote]}
             tomorrowInitGoals={(() => { const [yr,mo,dy] = openNote.split("-").map(Number); return dayGoals[dateKey(new Date(yr,mo-1,dy+1))]; })()}
             dayTemplates={dayTemplates}
+            onSaveTemplates={setDayTemplates}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
@@ -1160,17 +1157,6 @@ function App() {
             onEditQuarterGoals={qi => { setEditGoalsQi(qi); setGoalsOpen(false); }}
             onEditYearGoals={() => { setEditYearGoals(true); setGoalsOpen(false); }}
             onClose={() => setGoalsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {templatesOpen && (
-          <DayTemplatesModal key="templates-modal"
-            dark={dark} modalBg={modalBg}
-            templates={dayTemplates}
-            onSave={setDayTemplates}
-            onClose={() => setTemplatesOpen(false)}
           />
         )}
       </AnimatePresence>
@@ -1785,12 +1771,13 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onSaveTemplates, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   initDayGoals?: DayGoals;
   tomorrowInitGoals?: DayGoals;
   dayTemplates: DayTemplate[];
+  onSaveTemplates: (templates: DayTemplate[]) => void;
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
   onDayGoalsChange: (g: DayGoals) => void;
@@ -1824,12 +1811,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const g: DayGoals = { count: 0, done: [], labels: [] };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
   };
-  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const [templateMgrOpen, setTemplateMgrOpen] = useState(false);
   const applyTemplate = (tpl: DayTemplate) => {
     const items = tpl.items.filter(s => s.trim());
     const n = Math.max(1, Math.min(10, items.length));
     const g: DayGoals = { count: n, done: Array(n).fill(false), labels: items.slice(0, n) };
-    setGoalsDraft(g); onDayGoalsChange(g); setTemplatePickerOpen(false);
+    setGoalsDraft(g); onDayGoalsChange(g); setTemplateMgrOpen(false);
   };
   const [copiedTomorrow, setCopiedTomorrow] = useState(false);
   const [confirmCopyTomorrow, setConfirmCopyTomorrow] = useState(false);
@@ -1929,6 +1916,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleSave();
   };
 
+  if (templateMgrOpen) {
+    return (
+      <DayTemplatesModal
+        dark={dark} modalBg={modalBg}
+        templates={dayTemplates}
+        onSave={onSaveTemplates}
+        onApply={applyTemplate}
+        onClose={() => setTemplateMgrOpen(false)}
+      />
+    );
+  }
+
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -1959,28 +1958,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dailyGoals")}</span>
-              {/* Template picker button */}
-              {dayTemplates.length > 0 && !confirmReset && !confirmCopyTomorrow && (
-                <div style={{ position:"relative" }}>
-                  <button onClick={() => setTemplatePickerOpen(v => !v)} title={t("applyTemplateBtn")}
-                    style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color: templatePickerOpen ? "#007aff" : "var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="11" height="4" rx="1"/></svg>
-                  </button>
-                  {templatePickerOpen && (
-                    <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, zIndex:200, background:dark?"rgba(30,30,30,0.97)":"rgba(255,255,255,0.97)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", borderRadius:10, boxShadow:"0 4px 24px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.08)"}`, minWidth:160, overflow:"hidden" }}>
-                      {dayTemplates.map(tpl => (
-                        <button key={tpl.id} onClick={() => applyTemplate(tpl)}
-                          style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", width:"100%", padding:"8px 12px", background:"transparent", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", borderBottom:`1px solid ${dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)"}` }}
-                          onMouseEnter={e => (e.currentTarget.style.background = dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.04)")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                        >
-                          <span style={{ fontSize:12, fontWeight:600, color:"var(--text)", lineHeight:1.3 }}>{tpl.name}</span>
-                          <span style={{ fontSize:10, color:"var(--text-tertiary)", marginTop:1 }}>{tpl.items.filter(s=>s.trim()).length} {t("goals")}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              {/* Template manager button — always shown */}
+              {!confirmReset && !confirmCopyTomorrow && (
+                <button onClick={() => setTemplateMgrOpen(true)} title={t("applyTemplateBtn")}
+                  style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="11" height="4" rx="1"/></svg>
+                </button>
               )}
               {goalsDraft.count > 0 && !confirmReset && (
                 <>
@@ -3868,10 +3851,11 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
 // ─── DayTemplatesModal ────────────────────────────────────────────────────────
 
-function DayTemplatesModal({ dark, modalBg, templates, onSave, onClose }: {
+function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose }: {
   dark: boolean; modalBg: string;
   templates: DayTemplate[];
   onSave: (templates: DayTemplate[]) => void;
+  onApply?: (tpl: DayTemplate) => void;
   onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
@@ -4005,6 +3989,11 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onClose }: {
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
                       <span style={{ fontSize:13, fontWeight:700, color:"var(--text)" }}>{tpl.name}</span>
                       <div style={{ display:"flex", gap:4 }}>
+                        {onApply && (
+                          <button onClick={() => onApply(tpl)} style={{ height:24, padding:"0 9px", borderRadius:5, border:"none", background:"#007aff", cursor:"pointer", color:"white", fontSize:11, fontWeight:700, fontFamily:"inherit", display:"flex", alignItems:"center" }}>
+                            {t("applyTemplate")}
+                          </button>
+                        )}
                         <button onClick={() => startEdit(tpl)} style={{ width:24, height:24, borderRadius:5, border:`1px solid ${borderColor}`, background:"transparent", cursor:"pointer", color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
