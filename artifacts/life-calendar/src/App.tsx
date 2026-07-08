@@ -109,6 +109,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
     today:"Today", week:"Week", week2:"weeks", week5:"weeks", done:"done", left:"left", goals:"goals",
     allGoals:"Year Goals", noGoalsYet:"No goals set yet. Open a sprint to add goals.",
+    yearGoals:"Year Goals", yearDescPlaceholder:"Year vision or theme (optional)…",
     sprintGoals:"Sprint Goals", quarterGoals:"Quarter Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…", quarterDescPlaceholder:"Quarter description (optional)…",
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
@@ -178,6 +179,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
     allGoals:"Цели года", noGoalsYet:"Целей пока нет. Откройте спринт, чтобы добавить цели.",
+    yearGoals:"Цели года", yearDescPlaceholder:"Видение или тема года (необязательно)…",
     sprintGoals:"Цели спринта", quarterGoals:"Цели квартала", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…", quarterDescPlaceholder:"Описание квартала (необязательно)…",
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
@@ -544,6 +546,11 @@ function App() {
   const [quarterGoals, setQuarterGoals] = useState<Record<number, BlockGoals>>(() => ls<Record<number, BlockGoals>>("lifeCalendar:quarterGoals", {}));
   useEffect(() => { lsSet("lifeCalendar:quarterGoals", quarterGoals); }, [quarterGoals]);
   const [editGoalsQi, setEditGoalsQi] = useState<number|null>(null);
+
+  // Year goals (keyed by year)
+  const [yearGoals, setYearGoals] = useState<Record<number, BlockGoals>>(() => ls<Record<number, BlockGoals>>("lifeCalendar:yearGoals", {}));
+  useEffect(() => { lsSet("lifeCalendar:yearGoals", yearGoals); }, [yearGoals]);
+  const [editYearGoals, setEditYearGoals] = useState(false);
   const editGoalsBlock = useMemo(() => {
     if (!editGoalsBlockId) return null;
     for (const q of config.quarters) { const b = q.blocks.find(b => b.id === editGoalsBlockId); if (b) return b; }
@@ -739,6 +746,12 @@ function App() {
     const updated = bg.goals.map(g => g.id === goalId ? { ...g, done: !g.done } : g);
     if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
     return { ...prev, [qi]: { ...bg, goals: updated } };
+  });
+  const toggleYearGoal = (year: number, goalId: string) => setYearGoals(prev => {
+    const bg = prev[year] ?? { description: "", goals: [] };
+    const updated = bg.goals.map(g => g.id === goalId ? { ...g, done: !g.done } : g);
+    if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
+    return { ...prev, [year]: { ...bg, goals: updated } };
   });
 
   // Resolved quarters (color + label derived from meta)
@@ -1126,11 +1139,15 @@ function App() {
           <AllGoalsPanel key="goals-panel"
             config={config} blockGoals={blockGoals} resolvedQuarters={resolvedQuarters}
             quarterGoals={quarterGoals}
+            yearGoals={yearGoals[viewYear] ?? { description:"", goals:[] }}
+            viewYear={viewYear}
             dark={dark} modalBg={modalBg}
             onToggleGoal={toggleGoal}
             onToggleQuarterGoal={toggleQuarterGoal}
+            onToggleYearGoal={goalId => toggleYearGoal(viewYear, goalId)}
             onEditGoals={id => { setEditGoalsBlockId(id); setGoalsOpen(false); }}
             onEditQuarterGoals={qi => { setEditGoalsQi(qi); setGoalsOpen(false); }}
+            onEditYearGoals={() => { setEditYearGoals(true); setGoalsOpen(false); }}
             onClose={() => setGoalsOpen(false)}
           />
         )}
@@ -1187,6 +1204,21 @@ function App() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {editYearGoals && (
+          <GoalsModal key="year-goals"
+            blockId={String(viewYear)}
+            blockLabel={String(viewYear)}
+            initial={yearGoals[viewYear] ?? { description:"", goals:[] }}
+            dark={dark} modalBg={modalBg}
+            titleLabel={t("yearGoals")}
+            descPlaceholder={t("yearDescPlaceholder")}
+            onSave={(bg) => { setYearGoals(prev => ({ ...prev, [viewYear]: bg })); setEditYearGoals(false); }}
+            onClose={() => setEditYearGoals(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {lifeCalendarOpen && (
           <LifeCalendarModal key="life-cal"
             dark={dark} modalBg={modalBg}
@@ -1204,6 +1236,7 @@ function App() {
           setNotes({});
           setBlockGoals({});
           setQuarterGoals({});
+          setYearGoals({});
           setMilestones([]);
           setDayGoals({});
           setConfig(defaultConfig());
@@ -2195,22 +2228,27 @@ function HighlightText({ text, query }: { text: string; query: string }) {
 
 // ─── AllGoalsPanel ────────────────────────────────────────────────────────────
 
-function AllGoalsPanel({ config, blockGoals, quarterGoals, resolvedQuarters, dark, modalBg, onToggleGoal, onToggleQuarterGoal, onEditGoals, onEditQuarterGoals, onClose }: {
+function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, resolvedQuarters, dark, modalBg, onToggleGoal, onToggleQuarterGoal, onToggleYearGoal, onEditGoals, onEditQuarterGoals, onEditYearGoals, onClose }: {
   config: CalendarConfig;
   blockGoals: Record<string, BlockGoals>;
   quarterGoals: Record<number, { description: string; goals: Goal[] }>;
+  yearGoals: { description: string; goals: Goal[] };
+  viewYear: number;
   resolvedQuarters: Quarter[];
   dark: boolean; modalBg: string;
   onToggleGoal: (blockId: string, goalId: string) => void;
   onToggleQuarterGoal: (qi: number, goalId: string) => void;
+  onToggleYearGoal: (goalId: string) => void;
   onEditGoals: (blockId: string) => void;
   onEditQuarterGoals: (qi: number) => void;
+  onEditYearGoals: () => void;
   onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
 
-  let totalGoals = 0, doneGoals = 0;
+  const activeYearGoals = yearGoals.goals.filter(g => g.text.trim());
+  let totalGoals = activeYearGoals.length, doneGoals = activeYearGoals.filter(g => g.done).length;
   config.quarters.forEach((qc, qi) => {
     const qGoals = quarterGoals[qi]?.goals.filter(g => g.text.trim()) ?? [];
     totalGoals += qGoals.length;
@@ -2259,7 +2297,55 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, resolvedQuarters, dar
           {totalGoals === 0 ? (
             <div style={{ padding:"40px 20px", textAlign:"center", color:"var(--text-tertiary)", fontSize:13 }}>{t("noGoalsYet")}</div>
           ) : (
-            config.quarters.map((qc, qi) => {
+            <>
+            {/* Year goals section */}
+            <div style={{ padding:"10px 12px 4px" }}>
+              <div style={{ borderRadius:16, border:`1.5px solid ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.12)"}`, overflow:"hidden", background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.03)" }}>
+                <div style={{ padding:"10px 14px 8px", display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:16 }}>🎯</span>
+                  <span style={{ fontSize:12, fontWeight:700, letterSpacing:"-0.01em", color:"var(--text)", flex:1 }}>{viewYear}</span>
+                  {activeYearGoals.length > 0 && (
+                    <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{activeYearGoals.filter(g=>g.done).length}/{activeYearGoals.length}</span>
+                  )}
+                  {activeYearGoals.length > 0 && (
+                    <div style={{ width:40, height:3, borderRadius:999, overflow:"hidden", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.08)", flexShrink:0 }}>
+                      <div style={{ height:"100%", borderRadius:999, background:"#34c759", width:`${(activeYearGoals.filter(g=>g.done).length/activeYearGoals.length)*100}%`, transition:"width 0.4s ease" }} />
+                    </div>
+                  )}
+                  <button onClick={onEditYearGoals} title={t("yearGoals")}
+                    style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color:"var(--text-secondary)", opacity:0.7, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; }}
+                  ><PencilIcon /></button>
+                </div>
+                {yearGoals.description.trim() && (
+                  <p style={{ margin:"0 14px 8px", fontSize:11, color:"var(--text-tertiary)", borderLeft:`2px solid rgba(128,128,128,0.3)`, paddingLeft:8, lineHeight:"1.5" }}>{yearGoals.description}</p>
+                )}
+                {activeYearGoals.length === 0 ? (
+                  <div onClick={onEditYearGoals} role="button"
+                    style={{ padding:"0 14px 12px", fontSize:12, color:"var(--text-tertiary)", fontStyle:"italic", cursor:"pointer" }}
+                  >{t("yearGoals")} →</div>
+                ) : (
+                  <div style={{ padding:"4px 14px 10px", display:"flex", flexDirection:"column", gap:3 }}>
+                    {activeYearGoals.map(goal => {
+                      const gc = goal.color ?? "#34c759";
+                      return (
+                        <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 0" }}
+                          onClick={() => onToggleYearGoal(goal.id)}
+                        >
+                          <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                            {goal.done && <CheckIcon />}
+                          </div>
+                          <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {config.quarters.map((qc, qi) => { // eslint-disable-line
               const qr = resolvedQuarters[qi]!;
               const qGoals = quarterGoals[qi]?.goals.filter(g => g.text.trim()) ?? [];
               const blocksWithGoals = qc.blocks.map(b => {
@@ -2355,7 +2441,9 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, resolvedQuarters, dar
                   </div>
                 </div>
               );
-            })
+            })}
+            <div style={{ height:6 }} />
+            </>
           )}
           <div style={{ height:12 }} />
         </div>
