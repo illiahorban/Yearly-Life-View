@@ -1958,11 +1958,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Daily Goals */}
         <div className="px-5 pt-1 pb-3 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}` }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", marginBottom:8 }}>
+          <div style={{ display:"flex", alignItems:"center", width:"100%", marginBottom:8 }}>
             {/* Left: label */}
             <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)", whiteSpace:"nowrap", lineHeight:1, flexShrink:0 }}>{t("dailyGoals")}</span>
-            {/* Center: icon buttons — with justify-between the two gaps are always equal regardless of label/numbers width */}
-            <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+            {/* Center: icon buttons — margin:auto centres them exactly between label and numbers */}
+            <div style={{ marginLeft:"auto", marginRight:"auto", display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
               {!confirmReset && !confirmCopyTomorrow && (
                 <button onClick={() => setTemplateMgrOpen(true)} title={t("applyTemplateBtn")}
                   style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0, flexShrink:0 }}>
@@ -2009,9 +2009,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <button onClick={doCopyToTomorrow} style={{ fontSize:11, padding:"1px 8px", borderRadius:5, border:"none", background:"#007aff", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("replace")}</button>
               </div>
             ) : (
-              <div className="flex items-center gap-1">
+              <div style={{ display:"flex", alignItems:"center", gap:2, flexShrink:0 }}>
                 {Array.from({length:10},(_,i)=>i+1).map(n=>(
-                  <button key={n} onClick={()=>handleGoalCountChange(n)} style={{ width:18,height:18,borderRadius:4,border:"none",cursor:"pointer",background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"),color:goalsDraft.count===n?"white":"var(--text-tertiary)",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0,transition:"background 120ms" }}>{n}</button>
+                  <button key={n} onClick={()=>handleGoalCountChange(n)} style={{ width:15,height:15,borderRadius:3,border:"none",cursor:"pointer",background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"),color:goalsDraft.count===n?"white":"var(--text-tertiary)",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0,transition:"background 120ms" }}>{n}</button>
                 ))}
               </div>
             )}
