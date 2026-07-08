@@ -1859,6 +1859,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }, [focusId]);
 
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
+
+  useEffect(() => {
+    Object.values(areaRefs.current).forEach(el => { if (el) autoResize(el); });
+  }, [entries]);
+
   const { t, lang } = React.useContext(LangContext);
 
   // Milestone inline edit state
@@ -2244,10 +2253,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     ref={el => { areaRefs.current[entry.id] = el; }}
                     value={entry.text}
                     onChange={e => updateEntry(entry.id, e.target.value)}
+                    onInput={e => autoResize(e.currentTarget)}
                     onKeyDown={handleKey}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
-                    rows={3}
-                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", transition:"background 200ms ease, border-color 200ms ease" }}
+                    rows={1}
+                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
                   <button
                     ref={el => { colorBtnRefs.current[entry.id] = el; }}
