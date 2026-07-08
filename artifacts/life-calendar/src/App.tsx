@@ -1859,9 +1859,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }, [focusId]);
 
+  const NOTE_MAX_H = 132; // 3 × minHeight(44)
   const autoResize = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
+    const h = Math.min(el.scrollHeight, NOTE_MAX_H);
+    el.style.height = h + "px";
+    el.style.overflowY = el.scrollHeight > NOTE_MAX_H ? "auto" : "hidden";
   };
 
   useEffect(() => {
@@ -1955,7 +1958,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     setFocusId(id);
   };
   const updateEntry = (id: string, text: string) =>
-    setEntries(prev => prev.map(e => e.id === id ? { ...e, text: text.slice(0, 320) } : e));
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, text } : e));
   const updateEntryColor = (id: string, color: string | undefined) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, color } : e));
   const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<string|null>(null);
@@ -2255,7 +2258,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onKeyDown={handleKey}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                     rows={1}
-                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 20px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
+                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, maxHeight:NOTE_MAX_H, overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
                   <button
                     ref={el => { colorBtnRefs.current[entry.id] = el; }}
@@ -2267,9 +2270,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   />
                   <button onClick={() => setConfirmDeleteEntryId(entry.id)}
                     style={{ position:"absolute", top:8, right:8, width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                  {activeEntryId === entry.id && (
-                    <span style={{ position:"absolute", bottom:5, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{entry.text.length} / 320</span>
-                  )}
                 </div>
               </motion.div>
               );
