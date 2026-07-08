@@ -2156,12 +2156,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 );
               })}
             </div>
-            <div className="mt-3 mb-0 h-px" style={{ background:"var(--border-soft)" }} />
           </div>
         )}
 
         {/* Add event form */}
-        <div className="px-5 pt-3 pb-3 shrink-0">
+        <div className="px-5 pt-1.5 pb-3 shrink-0">
           {/* Button — collapses when form open */}
           <div style={{ maxHeight: addEventOpen ? 0 : "40px", opacity: addEventOpen ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: addEventOpen ? "none" : "auto" }}>
             <button onClick={() => setAddEventOpen(true)}
@@ -2206,7 +2205,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               </div>
             </div>
           </div>
-          {(dayMilestones.length > 0 || addEventOpen) && <div className="mt-3 h-px" style={{ background:"var(--border-soft)" }} />}
         </div>
 
         {/* Scrollable notes list */}
