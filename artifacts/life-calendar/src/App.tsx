@@ -2209,6 +2209,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Scrollable notes list */}
         <div className="px-5 pb-2 flex flex-col gap-3 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
+          <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("note")}</div>
           <AnimatePresence initial={false}>
             {entries.map((entry, idx) => {
               const entryColor = entry.color;
