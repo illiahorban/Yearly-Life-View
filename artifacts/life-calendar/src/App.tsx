@@ -109,7 +109,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
     today:"Today", week:"Week", week2:"weeks", week5:"weeks", done:"done", left:"left", goals:"goals",
     allGoals:"Year Goals", noGoalsYet:"No goals set yet. Open a sprint to add goals.",
-    sprintGoals:"Sprint Goals", quarterGoals:"Quarter Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…",
+    sprintGoals:"Sprint Goals", quarterGoals:"Quarter Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…", quarterDescPlaceholder:"Quarter description (optional)…",
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     yr:"yr", mo:"mo", remaining:"remaining", born:"Born", age:"Age",
@@ -178,7 +178,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
     allGoals:"Цели года", noGoalsYet:"Целей пока нет. Откройте спринт, чтобы добавить цели.",
-    sprintGoals:"Цели спринта", quarterGoals:"Цели квартала", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…",
+    sprintGoals:"Цели спринта", quarterGoals:"Цели квартала", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…", quarterDescPlaceholder:"Описание квартала (необязательно)…",
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     yr:"лет", mo:"мес", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
@@ -1171,6 +1171,7 @@ function App() {
             initial={quarterGoals[editGoalsQi] ?? { description:"", goals:[] }}
             dark={dark} modalBg={modalBg}
             titleLabel={t("quarterGoals")}
+            descPlaceholder={t("quarterDescPlaceholder")}
             onSave={(bg, lbl) => { setQuarterGoals(prev => ({ ...prev, [editGoalsQi!]: bg })); updateQuarterMeta(editGoalsQi!, { name: lbl }); setEditGoalsQi(null); }}
             onClose={() => setEditGoalsQi(null)}
           />
@@ -2829,9 +2830,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
 // ─── GoalsModal ───────────────────────────────────────────────────────────────
 
-function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLabel, onSave, onClose }: {
+function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLabel, descPlaceholder, onSave, onClose }: {
   blockId: string; blockLabel: string; initial: BlockGoals; dark: boolean; modalBg: string;
-  titleLabel?: string;
+  titleLabel?: string; descPlaceholder?: string;
   onSave: (bg: BlockGoals, label: string) => void; onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
@@ -2873,7 +2874,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
 
         <div className="px-5 pb-3">
           <textarea value={description} onChange={e => setDescription(e.target.value.slice(0,200))}
-            placeholder={t("sprintDescPlaceholder")} rows={2}
+            placeholder={descPlaceholder ?? t("sprintDescPlaceholder")} rows={2}
             style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:10, padding:"8px 10px", fontSize:13, lineHeight:1.5, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box" }}
           />
         </div>
