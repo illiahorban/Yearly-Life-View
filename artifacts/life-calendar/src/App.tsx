@@ -244,7 +244,7 @@ type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
 type DayState = "past" | "today" | "future" | "out";
 type Milestone = { id: string; label: string; date: string; color: string; description?: string; recurring?: boolean };
-type Goal = { id: string; text: string; done: boolean };
+type Goal = { id: string; text: string; done: boolean; color?: string };
 type BlockGoals = { description: string; goals: Goal[] };
 type NoteEntry = { id: string; text: string; createdAt: number; color?: string };
 type LifeSettings = { birthDate: string; lifespan: number };
@@ -1025,19 +1025,22 @@ function App() {
                           </p>
                         ) : null}
                         <div className="flex flex-col gap-1">
-                          {activeQGoals.map(goal => (
-                            <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
-                              onClick={() => toggleQuarterGoal(qi, goal.id)}
-                              style={{ color: goal.done ? "var(--text-tertiary)" : "var(--text-secondary)" }}
-                            >
-                              <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? quarter.border : "transparent", border:`1.5px solid ${goal.done ? quarter.border : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
-                                {goal.done && <CheckIcon />}
-                              </div>
-                              <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
-                                {goal.text}
-                              </span>
-                            </label>
-                          ))}
+                          {activeQGoals.map(goal => {
+                            const gc = goal.color ?? quarter.border;
+                            return (
+                              <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
+                                onClick={() => toggleQuarterGoal(qi, goal.id)}
+                                style={{ color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)" }}
+                              >
+                                <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
+                                  {goal.done && <CheckIcon />}
+                                </div>
+                                <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
+                                  {goal.text}
+                                </span>
+                              </label>
+                            );
+                          })}
                         </div>
                       </div>
                     );
@@ -1356,19 +1359,22 @@ function BlocksRenderer({
                 {activeGoals.length > 0 && (
                   <div className="px-3 sm:px-3.5 pb-2">
                     <div className="flex flex-col gap-1">
-                      {activeGoals.map(goal => (
-                        <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
-                          onClick={() => onGoalToggle(block.id, goal.id)}
-                          style={{ color: goal.done ? "var(--text-tertiary)" : "var(--text-secondary)" }}
-                        >
-                          <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? effectiveQ.border : "transparent", border:`1.5px solid ${goal.done ? effectiveQ.border : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
-                            {goal.done && <CheckIcon />}
-                          </div>
-                          <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
-                            {goal.text}
-                          </span>
-                        </label>
-                      ))}
+                      {activeGoals.map(goal => {
+                        const gc = goal.color ?? effectiveQ.border;
+                        return (
+                          <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
+                            onClick={() => onGoalToggle(block.id, goal.id)}
+                            style={{ color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)" }}
+                          >
+                            <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
+                              {goal.done && <CheckIcon />}
+                            </div>
+                            <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
+                              {goal.text}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -2842,21 +2848,40 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
   const activeGoals = goals.filter(g => g.text.trim());
   const canAdd = goals.length < 20;
 
+  // Color picker state
+  const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
+  const [colorPickerGoalId, setColorPickerGoalId] = useState<string|null>(null);
+  const [colorPickerPos, setColorPickerPos] = useState<{ top:number; left:number }|null>(null);
+  const toggleColorPicker = (id: string) => {
+    if (colorPickerGoalId === id) { setColorPickerGoalId(null); return; }
+    const btn = colorBtnRefs.current[id];
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      setColorPickerPos({ top: rect.bottom + 7, left: Math.min(rect.right - 152, window.innerWidth - 164) });
+    }
+    setColorPickerGoalId(id);
+  };
+  const setGoalColor = (id: string, color: string|undefined) => {
+    setGoals(prev => prev.map(x => x.id===id ? { ...x, color } : x));
+    setColorPickerGoalId(null);
+  };
+
   const save = () => onSave({ description:description.trim(), goals: goals.filter(g=>g.text.trim()) }, label.trim() || blockLabel);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)";
 
   return (
+    <>
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={() => { setColorPickerGoalId(null); onClose(); }}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
         style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
       />
       <motion.div layout initial={{ opacity:0, scale:0.96, y:12 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
-        transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
+        transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerGoalId(null); }}
         className="w-full max-w-sm"
         style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
       >
@@ -2879,22 +2904,35 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
           />
         </div>
 
-        <div className="px-5 pb-3">
+        <div className="px-5 pb-3" style={{ maxHeight:320, overflowY:"auto" }}>
           <div className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color:"var(--text-tertiary)" }}>
             {t("goalsLabel")} ({activeGoals.length}/20)
           </div>
           <div className="flex flex-col gap-1.5">
-            {goals.map((g, idx) => (
-              <div key={g.id} className="flex items-center gap-2">
-                <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
-                <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
-                  placeholder={`${t("goalPlaceholder")} ${idx+1}`}
-                  style={{ flex:1, background:inputBg, border:`1px solid ${borderColor}`, borderRadius:8, padding:"6px 9px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit" }}
-                />
-                <button onClick={() => setGoals(prev => prev.filter(x => x.id!==g.id))} disabled={goals.length===1}
-                  style={{ color: goals.length===1?"var(--text-tertiary)":"#ff3b30", background:"none", border:"none", cursor: goals.length===1?"default":"pointer", fontSize:18, lineHeight:1, opacity: goals.length===1?0.3:1, padding:"0 2px", flexShrink:0 }}>×</button>
-              </div>
-            ))}
+            {goals.map((g, idx) => {
+              const gc = g.color;
+              const tintedBorder = gc ? `color-mix(in srgb, ${gc} 55%, ${borderColor})` : borderColor;
+              const tintedBg = gc ? `color-mix(in srgb, ${gc} ${dark?18:12}%, ${inputBg})` : inputBg;
+              return (
+                <div key={g.id} className="flex items-center gap-2">
+                  <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
+                  <div style={{ flex:1, position:"relative" }}>
+                    <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
+                      placeholder={`${t("goalPlaceholder")} ${idx+1}`}
+                      style={{ width:"100%", background:tintedBg, border:`1px solid ${tintedBorder}`, borderRadius:8, padding:"6px 28px 6px 9px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease" }}
+                    />
+                    <button
+                      ref={el => { colorBtnRefs.current[g.id] = el; }}
+                      onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
+                      title={t("chooseColor")}
+                      style={{ position:"absolute", top:"50%", right:7, transform:"translateY(-50%)", width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:`1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.22)", cursor:"pointer", padding:0, flexShrink:0 }}
+                    />
+                  </div>
+                  <button onClick={() => setGoals(prev => prev.filter(x => x.id!==g.id))} disabled={goals.length===1}
+                    style={{ color: goals.length===1?"var(--text-tertiary)":"#ff3b30", background:"none", border:"none", cursor: goals.length===1?"default":"pointer", fontSize:18, lineHeight:1, opacity: goals.length===1?0.3:1, padding:"0 2px", flexShrink:0 }}>×</button>
+                </div>
+              );
+            })}
           </div>
           {canAdd && (
             <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false }])}
@@ -2911,6 +2949,36 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
         </div>
       </motion.div>
     </motion.div>
+    {colorPickerGoalId !== null && colorPickerPos && ReactDOM.createPortal(
+      <AnimatePresence>
+        <motion.div
+          key="goal-color-popover"
+          initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
+          transition={{ type:"spring", stiffness:420, damping:28 }}
+          onClick={e => e.stopPropagation()}
+          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+        >
+          <button onClick={() => setGoalColor(colorPickerGoalId, undefined)}
+            title={t("noColor")}
+            style={{ width:20, height:20, borderRadius:999, background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: !goals.find(g=>g.id===colorPickerGoalId)?.color ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", position:"relative" }}
+          >
+            <span style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
+          </button>
+          {APPLE_COLORS.map(ac => {
+            const hex = dark ? ac.dark : ac.light;
+            const cur = goals.find(g=>g.id===colorPickerGoalId)?.color;
+            return (
+              <button key={ac.key} onClick={() => setGoalColor(colorPickerGoalId, hex)}
+                title={ac.label}
+                style={{ width:20, height:20, borderRadius:999, background:hex, border: cur===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white"||ac.key==="grey")&&!dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+              />
+            );
+          })}
+        </motion.div>
+      </AnimatePresence>,
+      document.body
+    )}
+    </>
   );
 }
 
