@@ -1019,6 +1019,11 @@ function App() {
                     if (activeQGoals.length === 0) return null;
                     return (
                       <div className="px-4 sm:px-5 pb-3">
+                        {qg?.description ? (
+                          <p className="text-[11px] leading-snug mb-2" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${quarter.border}`, paddingLeft:8, opacity:0.8 }}>
+                            {qg.description}
+                          </p>
+                        ) : null}
                         <div className="flex flex-col gap-1">
                           {activeQGoals.map(goal => (
                             <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
@@ -1034,11 +1039,6 @@ function App() {
                             </label>
                           ))}
                         </div>
-                        {qg?.description ? (
-                          <p className="text-[11px] leading-snug mt-2" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${quarter.border}`, paddingLeft:8, opacity:0.8 }}>
-                            {qg.description}
-                          </p>
-                        ) : null}
                       </div>
                     );
                   })()}
@@ -1343,6 +1343,15 @@ function BlocksRenderer({
                   )}
                 </div>
 
+                {/* Sprint description */}
+                {bg?.description && (
+                  <div className="px-3 sm:px-3.5 pb-2">
+                    <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${softColor}`, paddingLeft:8 }}>
+                      {bg.description}
+                    </p>
+                  </div>
+                )}
+
                 {/* Checklist */}
                 {activeGoals.length > 0 && (
                   <div className="px-3 sm:px-3.5 pb-2">
@@ -1361,15 +1370,6 @@ function BlocksRenderer({
                         </label>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {/* Sprint description */}
-                {bg?.description && (
-                  <div className="px-3 sm:px-3.5 pb-2">
-                    <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${softColor}`, paddingLeft:8 }}>
-                      {bg.description}
-                    </p>
                   </div>
                 )}
 
