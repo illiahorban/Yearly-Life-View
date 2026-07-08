@@ -2276,81 +2276,82 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, resolvedQuarters, dar
               const qAllTotal = qGoals.length + qSprintTotal;
 
               return (
-                <div key={qi} style={{ padding:"14px 16px 4px" }}>
-                  {/* Quarter header row */}
-                  <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
-                    <span style={{ width:8, height:8, borderRadius:"50%", background:qr.tint, border:`2px solid ${qr.border}`, flexShrink:0, display:"inline-block" }} />
-                    <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"var(--text-tertiary)" }}>{qr.label ?? t(`q${qi+1}` as keyof typeof t)}</span>
-                    <span style={{ fontSize:10, color:"var(--text-tertiary)" }}>· {qTotal}/{qAllTotal}</span>
-                    <div style={{ flex:1 }} />
-                    <div style={{ width:48, height:3, borderRadius:999, overflow:"hidden", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)" }}>
-                      <div style={{ height:"100%", borderRadius:999, background:qr.border, width:`${qAllTotal > 0 ? (qTotal/qAllTotal)*100 : 0}%`, transition:"width 0.4s ease" }} />
-                    </div>
-                  </div>
+                <div key={qi} style={{ padding:"10px 12px 6px" }}>
+                  {/* Quarter container card */}
+                  <div style={{ borderRadius:16, border:`1.5px solid ${qr.border}55`, overflow:"hidden", background: dark ? `${qr.darkTint}` : `${qr.tint}` }}>
 
-                  {/* Quarter goals card */}
-                  {qGoals.length > 0 && (
-                    <div style={{ borderRadius:12, border:`1px solid ${qr.border}44`, overflow:"hidden", marginBottom:6 }}>
-                      <div style={{ padding:"7px 12px 6px", background: dark ? qr.darkTint : qr.tint, borderBottom:`1px solid ${qr.border}33`, display:"flex", alignItems:"center", gap:6 }}>
-                        <span style={{ fontSize:12, fontWeight:600, color: qr.text, flex:1, minWidth:0 }}>{t("quarterGoals")}</span>
-                        <span style={{ fontSize:11, color: qr.text, opacity:0.65, flexShrink:0 }}>{qQDone}/{qGoals.length}</span>
-                        <button onClick={() => onEditQuarterGoals(qi)} title={t("quarterGoals")}
-                          style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: qr.text, opacity:0.7, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.background = `${qr.border}22`; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                        ><PencilIcon /></button>
-                      </div>
-                      <div style={{ padding:"6px 8px", display:"flex", flexDirection:"column", gap:2 }}>
+                    {/* Quarter card header */}
+                    <div style={{ padding:"10px 14px 8px", display:"flex", alignItems:"center", gap:6 }}>
+                      <span style={{ width:8, height:8, borderRadius:"50%", background:qr.border, flexShrink:0, display:"inline-block" }} />
+                      <span style={{ fontSize:12, fontWeight:700, letterSpacing:"-0.01em", color: qr.text, flex:1 }}>{qr.label ?? t(`q${qi+1}` as keyof typeof t)}</span>
+                      <span style={{ fontSize:11, color: qr.text, opacity:0.6, flexShrink:0 }}>{qTotal}/{qAllTotal}</span>
+                      {qAllTotal > 0 && (
+                        <div style={{ width:40, height:3, borderRadius:999, overflow:"hidden", background: dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.1)", flexShrink:0 }}>
+                          <div style={{ height:"100%", borderRadius:999, background:qr.border, width:`${(qTotal/qAllTotal)*100}%`, transition:"width 0.4s ease" }} />
+                        </div>
+                      )}
+                      <button onClick={() => onEditQuarterGoals(qi)} title={t("quarterGoals")}
+                        style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: qr.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.6"; }}
+                      ><PencilIcon /></button>
+                    </div>
+
+                    {/* Quarter goals checkboxes */}
+                    {qGoals.length > 0 && (
+                      <div style={{ padding:"4px 14px 8px", display:"flex", flexDirection:"column", gap:3 }}>
                         {qGoals.map(goal => {
                           const gc = goal.color ?? qr.border;
                           return (
-                            <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"4px 4px", borderRadius:6 }}
+                            <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 0", borderRadius:6 }}
                               onClick={() => onToggleQuarterGoal(qi, goal.id)}
                             >
-                              <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                              <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? `${qr.border}88`}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                 {goal.done && <CheckIcon />}
                               </div>
-                              <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                              <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? `${qr.text}66` : goal.color ?? qr.text, textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.6 : 1, transition:"all 150ms" }}>{goal.text}</span>
                             </label>
                           );
                         })}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Sprint blocks */}
-                  <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:8 }}>
-                    {blocksWithGoals.map(({ block, goals }) => {
-                      const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : qr;
-                      return (
-                        <div key={block.id} style={{ borderRadius:12, border:`1px solid ${effectiveQ.border}44`, overflow:"hidden" }}>
-                          <div style={{ padding:"7px 12px 6px", background: dark ? effectiveQ.darkTint : effectiveQ.tint, borderBottom:`1px solid ${effectiveQ.border}33`, display:"flex", alignItems:"center", gap:6 }}>
-                            <span style={{ fontSize:12, fontWeight:600, color: effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
-                            <span style={{ fontSize:11, color: effectiveQ.text, opacity:0.65, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
-                            <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                              style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: effectiveQ.text, opacity:0.7, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"opacity 120ms, background 120ms" }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.background = `${effectiveQ.border}22`; }}
-                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                            ><PencilIcon /></button>
-                          </div>
-                          <div style={{ padding:"6px 8px", display:"flex", flexDirection:"column", gap:2 }}>
-                            {goals.map(goal => {
-                              const gc = goal.color ?? effectiveQ.border;
-                              return (
-                                <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"4px 4px", borderRadius:6 }}
-                                  onClick={() => onToggleGoal(block.id, goal.id)}
-                                >
-                                  <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
-                                    {goal.done && <CheckIcon />}
-                                  </div>
-                                  <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {/* Sprint blocks nested inside */}
+                    {blocksWithGoals.length > 0 && (
+                      <div style={{ padding:"0 8px 8px", display:"flex", flexDirection:"column", gap:5 }}>
+                        {blocksWithGoals.map(({ block, goals }) => {
+                          const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : qr;
+                          return (
+                            <div key={block.id} style={{ borderRadius:11, border:`1px solid ${effectiveQ.border}55`, overflow:"hidden", background: dark ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.55)" }}>
+                              <div style={{ padding:"6px 10px 5px", background: dark ? effectiveQ.darkTint : effectiveQ.tint, borderBottom:`1px solid ${effectiveQ.border}33`, display:"flex", alignItems:"center", gap:6 }}>
+                                <span style={{ fontSize:11, fontWeight:600, color: effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
+                                <span style={{ fontSize:10, color: effectiveQ.text, opacity:0.6, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                                <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
+                                  style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", color: effectiveQ.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+                                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.6"; }}
+                                ><PencilIcon /></button>
+                              </div>
+                              <div style={{ padding:"5px 8px", display:"flex", flexDirection:"column", gap:2 }}>
+                                {goals.map(goal => {
+                                  const gc = goal.color ?? effectiveQ.border;
+                                  return (
+                                    <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 2px", borderRadius:5 }}
+                                      onClick={() => onToggleGoal(block.id, goal.id)}
+                                    >
+                                      <div style={{ width:13, height:13, borderRadius:3, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                                        {goal.done && <CheckIcon />}
+                                      </div>
+                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
