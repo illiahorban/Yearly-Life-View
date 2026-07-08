@@ -100,7 +100,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress", expandFullscreen:"Expand to fullscreen", collapseFullscreen:"Collapse",
     search:"Search", searchPlaceholder:"Search notes and events…", searchResults:"results", searchNoResults:"No matches found", jumpTo:"Jump to",
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
-    note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
+    note:"Note", notes:"Notes", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
     remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", deleteDayNotesConfirm:"Delete all notes for this day?", deleteGoalConfirm:"Delete this goal?", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
@@ -171,7 +171,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала", expandFullscreen:"Развернуть на весь экран", collapseFullscreen:"Свернуть",
     search:"Поиск", searchPlaceholder:"Поиск по заметкам и событиям…", searchResults:"совпадений", searchNoResults:"Ничего не найдено", jumpTo:"Перейти к",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
-    note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
+    note:"Заметка", notes:"Заметки", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
     remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", deleteDayNotesConfirm:"Удалить все заметки этого дня?", deleteGoalConfirm:"Удалить эту цель?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
@@ -2221,7 +2221,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Notes section label */}
         <div className="px-5 pt-3 shrink-0">
-          <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("note")}</div>
+          <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("notes")}</div>
         </div>
 
         {/* Scrollable notes list */}
