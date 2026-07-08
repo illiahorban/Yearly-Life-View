@@ -1926,7 +1926,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         onApply={applyTemplate}
         prefillItems={saveTplPrefill ?? undefined}
         onClose={() => { setTemplateMgrOpen(false); setSaveTplPrefill(null); }}
-        onCloseAll={() => { setTemplateMgrOpen(false); setSaveTplPrefill(null); onClose(); }}
+        onCloseAll={onClose}
       />
     );
   }
