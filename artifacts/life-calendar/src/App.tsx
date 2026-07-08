@@ -1924,6 +1924,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         onSave={onSaveTemplates}
         onApply={applyTemplate}
         onClose={() => setTemplateMgrOpen(false)}
+        onCloseAll={onClose}
       />
     );
   }
@@ -3851,12 +3852,13 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
 // ─── DayTemplatesModal ────────────────────────────────────────────────────────
 
-function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose }: {
+function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose, onCloseAll }: {
   dark: boolean; modalBg: string;
   templates: DayTemplate[];
   onSave: (templates: DayTemplate[]) => void;
   onApply?: (tpl: DayTemplate) => void;
   onClose: () => void;
+  onCloseAll?: () => void;
 }) {
   const { t } = React.useContext(LangContext);
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
@@ -3915,7 +3917,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      onClick={onClose}
+      onClick={onCloseAll ?? onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
         style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
@@ -3937,7 +3939,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose 
               <div style={{ fontSize:15, fontWeight:700, color:"var(--text)", marginTop:2 }}>{t("templatesTitle")}</div>
             </div>
           </div>
-          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
+          <button onClick={onCloseAll ?? onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
         </div>
 
         {/* Body */}
