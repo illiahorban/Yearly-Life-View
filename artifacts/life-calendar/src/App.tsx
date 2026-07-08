@@ -2010,12 +2010,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <button onClick={doCopyToTomorrow} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:"none", background:"#007aff", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600, flexShrink:0 }}>{t("replace")}</button>
               </>
             ) : (
-              <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+              <>
+                <div style={{ width:1, height:12, background: dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)", flexShrink:0, borderRadius:1 }} />
+                <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                 {Array.from({length:10},(_,i)=>i+1).map(n=>(
                   <button key={n} onClick={()=>handleGoalCountChange(n)}
                     style={{ width:17, height:17, borderRadius:4, border:"none", cursor:"pointer", background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"), color:goalsDraft.count===n?"white":"var(--text-tertiary)", fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"inherit", flexShrink:0, transition:"background 120ms", padding:0 }}>{n}</button>
                 ))}
-              </div>
+                </div>
+              </>
             )}
           </div>
           {goalsDraft.count > 0 && (
