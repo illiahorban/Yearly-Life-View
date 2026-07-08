@@ -701,11 +701,14 @@ function App() {
   const [qStickyShown, setQStickyShown] = useState<boolean[]>([false,false,false,false]);
   useEffect(() => {
     const update = () => {
-      setQStickyShown(qSectionRefs.current.map(el => {
+      setQStickyShown(prev => qSectionRefs.current.map((el, i) => {
         if (!el) return false;
         const r = el.getBoundingClientRect();
+        const inView = r.bottom > headerH && r.top < window.innerHeight;
+        if (!inView) return false; // section полностью вышла из вида — сбрасываем
         const mid = r.top + r.height / 2;
-        return mid < headerH && r.bottom > headerH;
+        if (mid < headerH) return true; // прошли середину — показываем
+        return prev[i]; // в первой половине — сохраняем текущее состояние (защёлка)
       }));
     };
     window.addEventListener("scroll", update, { passive: true });
