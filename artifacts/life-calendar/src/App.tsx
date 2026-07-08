@@ -2106,7 +2106,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
                         </div>
                         <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                          style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", flexShrink:0, transform:"scaleX(-1)", opacity: hoveredMsId === ms.id ? 0.6 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>✎</button>
+                          style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", flexShrink:0, transform:"scaleX(-1)", opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>✏️</button>
                         <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
                           style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                       </div>
