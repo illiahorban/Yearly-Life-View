@@ -2018,10 +2018,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
           <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
-              {dayMilestones.length > 0 ? t("eventsAndNotes") : t("dayNotes")}
-            </div>
-            <div className="mt-0.5 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <span className="text-[15px] font-semibold tracking-tight" style={{ color:"var(--text)" }}>{label}</span>
             </div>
           </div>
@@ -2289,10 +2286,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     title={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
                     aria-label={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
                     data-testid={`note-color-btn-${idx}`}
-                    style={{ position:"absolute", top:11, right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 51 : 36, width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0, opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", transition:"opacity 150ms, right 150ms" }}
+                    style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 51 : 36, width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0, opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", transition:"opacity 150ms, right 150ms" }}
                   />
                   <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                    style={{ position:"absolute", top:8, right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 23 : 8, width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms, right 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                    style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 23 : 8, width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms, right 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                 </div>
               </motion.div>
               );
