@@ -109,7 +109,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
     today:"Today", week:"Week", week2:"weeks", week5:"weeks", done:"done", left:"left", goals:"goals",
     allGoals:"Year Goals", noGoalsYet:"No goals set yet. Open a sprint to add goals.",
-    sprintGoals:"Sprint Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…",
+    sprintGoals:"Sprint Goals", quarterGoals:"Quarter Goals", addGoal:"Add goal", saveGoals:"Save goals", goalsLabel:"Goals", goalPlaceholder:"Goal", sprintDescPlaceholder:"Sprint description (optional)…",
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     yr:"yr", mo:"mo", remaining:"remaining", born:"Born", age:"Age",
@@ -178,7 +178,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
     allGoals:"Цели года", noGoalsYet:"Целей пока нет. Откройте спринт, чтобы добавить цели.",
-    sprintGoals:"Цели спринта", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…",
+    sprintGoals:"Цели спринта", quarterGoals:"Цели квартала", addGoal:"Добавить цель", saveGoals:"Сохранить цели", goalsLabel:"Цели", goalPlaceholder:"Цель", sprintDescPlaceholder:"Описание спринта (необязательно)…",
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     yr:"лет", mo:"мес", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
@@ -539,6 +539,11 @@ function App() {
   const [blockGoals, setBlockGoals] = useState<Record<string,BlockGoals>>(() => ls<Record<string,BlockGoals>>("lifeCalendar:goals", {}));
   useEffect(() => { lsSet("lifeCalendar:goals", blockGoals); }, [blockGoals]);
   const [editGoalsBlockId, setEditGoalsBlockId] = useState<string|null>(null);
+
+  // Quarter goals
+  const [quarterGoals, setQuarterGoals] = useState<Record<number, BlockGoals>>(() => ls<Record<number, BlockGoals>>("lifeCalendar:quarterGoals", {}));
+  useEffect(() => { lsSet("lifeCalendar:quarterGoals", quarterGoals); }, [quarterGoals]);
+  const [editGoalsQi, setEditGoalsQi] = useState<number|null>(null);
   const editGoalsBlock = useMemo(() => {
     if (!editGoalsBlockId) return null;
     for (const q of config.quarters) { const b = q.blocks.find(b => b.id === editGoalsBlockId); if (b) return b; }
@@ -726,6 +731,12 @@ function App() {
   const toggleGoal = (blockId: string, goalId: string) => setBlockGoals(prev => {
     const bg = prev[blockId]; if (!bg) return prev;
     return { ...prev, [blockId]: { ...bg, goals: bg.goals.map(g => g.id===goalId ? { ...g, done: !g.done } : g) } };
+  });
+  const toggleQuarterGoal = (qi: number, goalId: string) => setQuarterGoals(prev => {
+    const bg = prev[qi] ?? { description: "", goals: [] };
+    const updated = bg.goals.map(g => g.id === goalId ? { ...g, done: !g.done } : g);
+    if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
+    return { ...prev, [qi]: { ...bg, goals: updated } };
   });
 
   // Resolved quarters (color + label derived from meta)
@@ -964,9 +975,14 @@ function App() {
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
                       <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
                     </div>
-                    <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
+                        style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                      ><PencilIcon /></button>
+                      <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
+                    </div>
                   </div>
-                  {/* Quarter progress — pt:0 above, pb:18 below → bar centered between header bottom and sprint card top */}
+                  {/* Quarter progress */}
                   <div className="px-4 sm:px-5" style={{ paddingTop:0, paddingBottom:18 }}>
                     <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, marginBottom:4, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                       {qPct.toFixed(0)}%
@@ -976,8 +992,57 @@ function App() {
                         style={{ height:"100%", background: quarter.border, borderRadius:999, opacity:0.88 }}
                       />
                     </div>
+                    {/* Quarter goal progress bar */}
+                    {(() => {
+                      const qg = quarterGoals[qi];
+                      const activeQGoals = qg?.goals.filter(g => g.text.trim()) ?? [];
+                      if (activeQGoals.length === 0) return null;
+                      const goalPct = (activeQGoals.filter(g => g.done).length / activeQGoals.length) * 100;
+                      return (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)" }}>
+                            <motion.div initial={false} animate={{ width:`${goalPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
+                              style={{ height:"100%", background: quarter.border, borderRadius:999, opacity:0.72 }}
+                            />
+                          </div>
+                          <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
+                            {activeQGoals.filter(g=>g.done).length}/{activeQGoals.length} {t("goals")}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
-                  </div>{/* end sticky quarter header */}
+                  {/* Quarter goal checklist */}
+                  {(() => {
+                    const qg = quarterGoals[qi];
+                    const activeQGoals = qg?.goals.filter(g => g.text.trim()) ?? [];
+                    if (activeQGoals.length === 0) return null;
+                    return (
+                      <div className="px-4 sm:px-5 pb-3">
+                        <div className="flex flex-col gap-1">
+                          {activeQGoals.map(goal => (
+                            <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
+                              onClick={() => toggleQuarterGoal(qi, goal.id)}
+                              style={{ color: goal.done ? "var(--text-tertiary)" : "var(--text-secondary)" }}
+                            >
+                              <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? quarter.border : "transparent", border:`1.5px solid ${goal.done ? quarter.border : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
+                                {goal.done && <CheckIcon />}
+                              </div>
+                              <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
+                                {goal.text}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        {qg?.description ? (
+                          <p className="text-[11px] leading-snug mt-2" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${quarter.border}`, paddingLeft:8, opacity:0.8 }}>
+                            {qg.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })()}
+                  </div>{/* end quarter header wrapper */}
 
                   <div className="pb-3 sm:pb-4 px-3 sm:px-4 pt-0 flex flex-col gap-2">
                     <BlocksRenderer
@@ -1099,6 +1164,20 @@ function App() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {editGoalsQi !== null && (
+          <GoalsModal key="quarter-goals"
+            blockId={String(editGoalsQi)}
+            blockLabel={quarterMeta[editGoalsQi]?.name ?? resolvedQuarters[editGoalsQi]?.label ?? ""}
+            initial={quarterGoals[editGoalsQi] ?? { description:"", goals:[] }}
+            dark={dark} modalBg={modalBg}
+            titleLabel={t("quarterGoals")}
+            onSave={(bg, lbl) => { setQuarterGoals(prev => ({ ...prev, [editGoalsQi!]: bg })); updateQuarterMeta(editGoalsQi!, { name: lbl }); setEditGoalsQi(null); }}
+            onClose={() => setEditGoalsQi(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {lifeCalendarOpen && (
           <LifeCalendarModal key="life-cal"
             dark={dark} modalBg={modalBg}
@@ -1115,6 +1194,7 @@ function App() {
         onConfirm={() => {
           setNotes({});
           setBlockGoals({});
+          setQuarterGoals({});
           setMilestones([]);
           setDayGoals({});
           setConfig(defaultConfig());
@@ -2749,8 +2829,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
 // ─── GoalsModal ───────────────────────────────────────────────────────────────
 
-function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, onClose }: {
+function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLabel, onSave, onClose }: {
   blockId: string; blockLabel: string; initial: BlockGoals; dark: boolean; modalBg: string;
+  titleLabel?: string;
   onSave: (bg: BlockGoals, label: string) => void; onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
@@ -2780,7 +2861,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, onSave, 
       >
         <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-semibold tracking-widest uppercase mb-1" style={{ color:"var(--text-tertiary)" }}>{t("sprintGoals")}</div>
+            <div className="text-[10px] font-semibold tracking-widest uppercase mb-1" style={{ color:"var(--text-tertiary)" }}>{titleLabel ?? t("sprintGoals")}</div>
             <input
               value={label} onChange={e => setLabel(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
