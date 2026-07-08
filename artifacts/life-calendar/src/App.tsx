@@ -963,7 +963,7 @@ function App() {
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
                   {/* Sticky quarter header — sticks just below main app header */}
-                  <div style={{ borderRadius:16, background: dark ? quarter.darkTint : quarter.tint.replace("0.07","0.18") }}>
+                  <div style={{ borderRadius:16 }}>
                   {/* Quarter header row */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
                     <div className="flex items-center gap-2">
