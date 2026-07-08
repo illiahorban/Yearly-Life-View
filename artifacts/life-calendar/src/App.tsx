@@ -2107,11 +2107,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         </div>
                         <button onClick={() => startMsEdit(ms)} title={t("edit")}
                           style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.6, flexShrink:0, transform:"scaleX(-1)" }}>✎</button>
+                        {hoveredMsId === ms.id && (
+                          <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                        )}
                       </div>
-                    )}
-                    {hoveredMsId === ms.id && !isEditing && (
-                      <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                        style={{ position:"absolute", top:6, right:6, width:18, height:18, border:"none", background:"none", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, opacity:0.75 }}><svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                     )}
                   </div>
                 );
@@ -2182,18 +2182,17 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <motion.div key={entry.id}
                 initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
                 transition={{ type:"spring", stiffness:360, damping:28 }}
-                style={{ position:"relative" }}
                 onMouseEnter={() => setHoveredEntryId(entry.id)}
                 onMouseLeave={() => setHoveredEntryId(null)}
               >
-                {hoveredEntryId === entry.id && (
-                  <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                    style={{ position:"absolute", top:6, right:6, width:18, height:18, border:"none", background:"none", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, opacity:0.75, zIndex:2 }}><svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                )}
-                <div className="flex items-center mb-1">
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-medium" style={{ color:"var(--text-tertiary)" }}>
                     {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
                   </span>
+                  {hoveredEntryId === entry.id && (
+                    <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+                      style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                  )}
                 </div>
                 <div style={{ position:"relative" }}>
                   <textarea
