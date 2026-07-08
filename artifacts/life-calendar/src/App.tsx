@@ -685,6 +685,17 @@ function App() {
   const weekRefs = useRef<Array<HTMLDivElement|null>>([]);
   const didScrollRef = useRef(false);
   useEffect(() => { didScrollRef.current = false; }, [viewYear]);
+
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerH, setHeaderH] = useState(0);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setHeaderH(el.offsetHeight));
+    ro.observe(el);
+    setHeaderH(el.offsetHeight);
+    return () => ro.disconnect();
+  }, []);
   useEffect(() => {
     if (didScrollRef.current || currentWeekIndex < 0 || viewYear !== now.getFullYear()) return;
     const el = weekRefs.current[currentWeekIndex];
@@ -747,7 +758,7 @@ function App() {
     <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
 
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
+      <header ref={headerRef} className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
         <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-5 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -929,6 +940,8 @@ function App() {
                 <motion.section layout key={qi} className="overflow-visible"
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
+                  {/* Sticky quarter header — sticks just below main app header */}
+                  <div style={{ position:"sticky", top:headerH, zIndex:9, borderRadius:"16px 16px 0 0", background: dark ? quarter.darkTint : quarter.tint.replace("0.07","0.18"), backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
                   {/* Quarter header row */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
                     <div className="flex items-center gap-2">
@@ -974,6 +987,7 @@ function App() {
                       />
                     </div>
                   </div>
+                  </div>{/* end sticky quarter header */}
 
                   <div className="pb-3 sm:pb-4 px-3 sm:px-4 pt-0 flex flex-col gap-2">
                     <BlocksRenderer
