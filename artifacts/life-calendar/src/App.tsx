@@ -2197,8 +2197,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Add event form */}
         <div className={`px-5 ${dayMilestones.length > 0 ? "pt-1.5" : "pt-3"} pb-0 shrink-0`}>
-          {/* Button — collapses when form open */}
-          <div style={{ maxHeight: addEventOpen ? 0 : "40px", opacity: addEventOpen ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: addEventOpen ? "none" : "auto" }}>
+          {/* Button — collapses when form open or limit reached */}
+          <div style={{ maxHeight: (addEventOpen || dayMilestones.length >= 10) ? 0 : "40px", opacity: (addEventOpen || dayMilestones.length >= 10) ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: (addEventOpen || dayMilestones.length >= 10) ? "none" : "auto" }}>
             <button onClick={() => setAddEventOpen(true)}
               style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
               <span style={{ fontSize:14, lineHeight:1 }}>+</span> {t("addEvent")}
