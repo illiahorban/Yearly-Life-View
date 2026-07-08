@@ -1873,6 +1873,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   // New event form state
   const newLabelInputRef = React.useRef<HTMLInputElement|null>(null);
+  const addEventFormRef = React.useRef<HTMLDivElement|null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newDate, setNewDate] = useState(dk);
@@ -1920,6 +1921,17 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (!addEventOpen) return;
     const t = setTimeout(() => newLabelInputRef.current?.focus(), 320);
     return () => clearTimeout(t);
+  }, [addEventOpen]);
+
+  React.useEffect(() => {
+    if (!addEventOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (addEventFormRef.current && !addEventFormRef.current.contains(e.target as Node)) {
+        setAddEventOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [addEventOpen]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
@@ -2158,7 +2170,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             </button>
           </div>
           {/* Form — expands when open */}
-          <div style={{ maxHeight: addEventOpen ? "400px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
+          <div ref={addEventFormRef} style={{ maxHeight: addEventOpen ? "400px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
             <div style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"}`, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
               <div className="flex gap-1 flex-wrap">
                 {MILESTONE_COLORS.map(c => (
