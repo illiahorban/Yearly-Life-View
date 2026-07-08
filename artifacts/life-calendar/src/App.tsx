@@ -1960,6 +1960,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     setEntries(prev => prev.map(e => e.id === id ? { ...e, color } : e));
   const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<string|null>(null);
   const [hoveredEntryId, setHoveredEntryId] = useState<string|null>(null);
+  const [activeEntryId, setActiveEntryId] = useState<string|null>(null);
   const [confirmDeleteMsIdDay, setConfirmDeleteMsIdDay] = useState<string|null>(null);
   const [hoveredMsId, setHoveredMsId] = useState<string|null>(null);
   const deleteEntry = (id: string) => {
@@ -2249,6 +2250,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     value={entry.text}
                     onChange={e => updateEntry(entry.id, e.target.value)}
                     onInput={e => autoResize(e.currentTarget)}
+                    onFocus={() => setActiveEntryId(entry.id)}
+                    onBlur={() => setActiveEntryId(null)}
                     onKeyDown={handleKey}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                     rows={1}
@@ -2264,7 +2267,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   />
                   <button onClick={() => setConfirmDeleteEntryId(entry.id)}
                     style={{ position:"absolute", top:8, right:8, width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                  <span style={{ position:"absolute", bottom:5, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{entry.text.length} / 320</span>
+                  {activeEntryId === entry.id && (
+                    <span style={{ position:"absolute", bottom:5, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{entry.text.length} / 320</span>
+                  )}
                 </div>
               </motion.div>
               );
