@@ -1827,7 +1827,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   };
   const applyTemplate = (tpl: DayTemplate) => {
     const items = tpl.items.filter(s => s.trim());
-    const n = Math.max(1, Math.min(20, items.length));
+    const n = Math.max(1, Math.min(10, items.length));
     const g: DayGoals = { count: n, done: Array(n).fill(false), labels: items.slice(0, n) };
     setGoalsDraft(g); onDayGoalsChange(g); setTemplateMgrOpen(false);
   };
@@ -2030,7 +2030,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                {Array.from({length:20},(_,i)=>i+1).map(n=>(
+                {Array.from({length:10},(_,i)=>i+1).map(n=>(
                   <button key={n} onClick={()=>handleGoalCountChange(n)} style={{ width:18,height:18,borderRadius:4,border:"none",cursor:"pointer",background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"),color:goalsDraft.count===n?"white":"var(--text-tertiary)",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0,transition:"background 120ms" }}>{n}</button>
                 ))}
               </div>
@@ -3944,7 +3944,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
     onSave(updated);
     setConfirmDeleteId(null);
   };
-  const addItem = () => { if (formItems.length < 20) setFormItems(prev => [...prev, ""]); };
+  const addItem = () => { if (formItems.length < 10) setFormItems(prev => [...prev, ""]); };
   const removeItem = (i: number) => setFormItems(prev => prev.filter((_, j) => j !== i));
   const updateItem = (i: number, v: string) => setFormItems(prev => prev.map((s, j) => j === i ? v : s));
 
@@ -4013,7 +4013,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
                   </div>
                 ))}
               </div>
-              {formItems.length < 20 && (
+              {formItems.length < 10 && (
                 <button onClick={addItem} style={{ marginTop:8, fontSize:11, color:"#007aff", border:"none", background:"transparent", cursor:"pointer", padding:0, fontFamily:"inherit", fontWeight:600 }}>
                   + {t("addTemplateItem")}
                 </button>
