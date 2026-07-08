@@ -2138,19 +2138,19 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "80px", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
-                      <div className="flex gap-2" style={{ padding:"8px 10px", alignItems: ms.description ? "flex-start" : "center" }}>
-                        <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop: ms.description ? 3 : 0 }} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1 text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>
-                            {ms.label}
-                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7 }}>↻</span>}
+                      <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                          <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0 }} />
+                          <div className="flex-1 min-w-0 flex items-center gap-1" style={{ overflow:"hidden" }}>
+                            <span className="text-[13px] font-semibold leading-snug truncate" style={{ color:ms.color }}>{ms.label}</span>
+                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
-                          {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
+                          <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                            style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", flexShrink:0, transform:"scaleX(-1)", opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>✏️</button>
+                          <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                         </div>
-                        <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                          style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", flexShrink:0, transform:"scaleX(-1)", opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>✏️</button>
-                        <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                          style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                        {ms.description && <div className="text-[11px] leading-snug" style={{ color:"var(--text-secondary)", paddingLeft:16 }}>{ms.description}</div>}
                       </div>
                     </div>
                     {/* Edit form — expands when editing */}
