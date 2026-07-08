@@ -3926,9 +3926,16 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose 
       >
         {/* Header */}
         <div style={{ padding:"18px 20px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}` }}>
-          <div>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"var(--text-tertiary)" }}>{t("settings")}</div>
-            <div style={{ fontSize:15, fontWeight:700, color:"var(--text)", marginTop:2 }}>{t("templatesTitle")}</div>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            {onApply && (
+              <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", border:"none", cursor:"pointer", flexShrink:0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+            )}
+            <div>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"var(--text-tertiary)" }}>{t("settings")}</div>
+              <div style={{ fontSize:15, fontWeight:700, color:"var(--text)", marginTop:2 }}>{t("templatesTitle")}</div>
+            </div>
           </div>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
         </div>
