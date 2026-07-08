@@ -2229,7 +2229,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
 
         {/* Divider between events/add-event and notes */}
-        <div className="mx-5 mt-3 h-px shrink-0" style={{ background:"var(--border-soft)" }} />
+        <div className="mt-3 h-px shrink-0" style={{ background:"var(--border-soft)" }} />
 
         {/* Notes section label */}
         <div className="px-5 pt-3 shrink-0">
