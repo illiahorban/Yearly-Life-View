@@ -1958,10 +1958,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Daily Goals */}
         <div className="px-5 pt-1 pb-3 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}` }}>
-          <div className="flex items-center justify-between mb-2">
-            <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"nowrap", flexShrink:0 }}>
-              <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)", whiteSpace:"nowrap", lineHeight:1 }}>{t("dailyGoals")}</span>
-              {/* Template manager button — always shown */}
+          <div style={{ display:"flex", alignItems:"center", width:"100%", marginBottom:8 }}>
+            {/* Left: label */}
+            <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)", whiteSpace:"nowrap", lineHeight:1, flexShrink:0 }}>{t("dailyGoals")}</span>
+            {/* Center: icon buttons — flex:1 + justify-content:center keeps them equidistant from both sides */}
+            <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
               {!confirmReset && !confirmCopyTomorrow && (
                 <button onClick={() => setTemplateMgrOpen(true)} title={t("applyTemplateBtn")}
                   style={{ width:16, height:16, borderRadius:4, border:"none", background:"transparent", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0, flexShrink:0 }}>
