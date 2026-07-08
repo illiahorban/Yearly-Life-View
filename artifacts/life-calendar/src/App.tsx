@@ -730,7 +730,9 @@ function App() {
   });
   const toggleGoal = (blockId: string, goalId: string) => setBlockGoals(prev => {
     const bg = prev[blockId]; if (!bg) return prev;
-    return { ...prev, [blockId]: { ...bg, goals: bg.goals.map(g => g.id===goalId ? { ...g, done: !g.done } : g) } };
+    const updated = bg.goals.map(g => g.id===goalId ? { ...g, done: !g.done } : g);
+    if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
+    return { ...prev, [blockId]: { ...bg, goals: updated } };
   });
   const toggleQuarterGoal = (qi: number, goalId: string) => setQuarterGoals(prev => {
     const bg = prev[qi] ?? { description: "", goals: [] };
