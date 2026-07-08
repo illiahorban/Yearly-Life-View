@@ -102,7 +102,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
-    remove:"Remove", noMilestones:"No milestones yet. Add one above.",
+    remove:"Remove", deleteConfirm:"Delete?", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
     descPlaceholder:"Description (optional, up to 300 chars)…",
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
@@ -173,7 +173,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
-    remove:"Удалить", noMilestones:"Нет событий. Добавьте выше.",
+    remove:"Удалить", deleteConfirm:"Удалить?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
     descPlaceholder:"Описание (необязательно, до 300 символов)…",
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
@@ -1909,8 +1909,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     setEntries(prev => prev.map(e => e.id === id ? { ...e, text: text.slice(0, 320) } : e));
   const updateEntryColor = (id: string, color: string | undefined) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, color } : e));
-  const deleteEntry = (id: string) =>
+  const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<string|null>(null);
+  const deleteEntry = (id: string) => {
     setEntries(prev => prev.filter(e => e.id !== id));
+    setConfirmDeleteEntryId(null);
+  };
   const handleSave = () => { onSave(entries); onClose(); };
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") onClose();
@@ -2176,10 +2179,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
                   </span>
                   {entries.length > 1 && (
-                    <button onClick={() => deleteEntry(entry.id)}
-                      style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                      {t("remove")}
-                    </button>
+                    confirmDeleteEntryId === entry.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>{t("deleteConfirm")}</span>
+                        <button onClick={() => setConfirmDeleteEntryId(null)} style={{ height:18, paddingInline:6, borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
+                        <button onClick={() => deleteEntry(entry.id)} style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"#ff3b30", color:"white", fontSize:11, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+                        style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                        {t("remove")}
+                      </button>
+                    )
                   )}
                 </div>
                 <div style={{ position:"relative" }}>
@@ -2742,6 +2753,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 }) {
   const { t, lang } = React.useContext(LangContext);
   const [items, setItems] = useState<Milestone[]>(() => [...milestones].sort((a,b) => a.date.localeCompare(b.date)));
+  const [confirmDeleteMsId, setConfirmDeleteMsId] = useState<string|null>(null);
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const filteredItems = useMemo(() => {
@@ -2974,8 +2986,15 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           {showDate && <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
                           <button onClick={() => startEdit(ms)} title={t("edit")}
                             style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
-                          <button onClick={() => setItems(prev => prev.filter(x => x.id!==ms.id))}
-                            style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                          {confirmDeleteMsId === ms.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => setConfirmDeleteMsId(null)} style={{ height:18, paddingInline:5, borderRadius:5, border:`1px solid rgba(128,128,128,0.25)`, background:"transparent", color:"var(--text-secondary)", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>{t("no")}</button>
+                              <button onClick={() => { setItems(prev => prev.filter(x => x.id!==ms.id)); setConfirmDeleteMsId(null); }} style={{ height:18, paddingInline:5, borderRadius:5, border:"none", background:"#ff3b30", color:"white", fontSize:11, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>{t("yes")}</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setConfirmDeleteMsId(ms.id)}
+                              style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px" }}>×</button>
+                          )}
                         </div>
                         {ms.description && (
                           <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", margin:0 }}><HighlightText text={ms.description} query={q} /></p>
