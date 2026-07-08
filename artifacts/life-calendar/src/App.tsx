@@ -2172,12 +2172,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   <span className="text-[10px] font-medium" style={{ color:"var(--text-tertiary)" }}>
                     {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
                   </span>
-                  {entries.length > 1 && (
-                    <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                      style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                      {t("remove")}
-                    </button>
-                  )}
+                  <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+                    style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                    {t("remove")}
+                  </button>
                 </div>
                 <div style={{ position:"relative" }}>
                   <textarea
