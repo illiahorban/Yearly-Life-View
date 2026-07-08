@@ -2210,9 +2210,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         {/* Divider between events/add-event and notes */}
         <div className="mx-5 mt-3 h-px shrink-0" style={{ background:"var(--border-soft)" }} />
 
+        {/* Notes section label */}
+        <div className="px-5 pt-3 shrink-0">
+          <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("note")}</div>
+        </div>
+
         {/* Scrollable notes list */}
-        <div className="px-5 pt-3 pb-2 flex flex-col gap-3 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
-          <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("note")}</div>
+        <div className="px-5 pb-2 flex flex-col gap-3 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
           <AnimatePresence initial={false}>
             {entries.map((entry, idx) => {
               const entryColor = entry.color;
