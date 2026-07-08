@@ -2227,11 +2227,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 onMouseEnter={() => setHoveredEntryId(entry.id)}
                 onMouseLeave={() => setHoveredEntryId(null)}
               >
-                <div className="flex items-center mb-1">
-                  <span className="text-[10px] font-medium" style={{ color:"var(--text-tertiary)" }}>
-                    {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
-                  </span>
-                </div>
+                {entries.length > 1 && (
+                  <div className="text-[10px] font-semibold tracking-widest uppercase mb-1" style={{ color:"var(--text-tertiary)" }}>
+                    {t("note")} {idx + 1}
+                  </div>
+                )}
                 <div style={{ position:"relative" }}>
                   <textarea
                     ref={el => { areaRefs.current[entry.id] = el; }}
