@@ -2090,7 +2090,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Milestones for this day */}
         {dayMilestones.length > 0 && (
-          <div className="px-5 pt-3 pb-3 shrink-0">
+          <div className="px-5 pt-3 pb-0 shrink-0">
             <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("events")}</div>
             <div className="flex flex-col gap-1.5">
               {dayMilestones.map(ms => {
@@ -2160,7 +2160,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         )}
 
         {/* Add event form */}
-        <div className="px-5 pt-1.5 pb-3 shrink-0">
+        <div className={`px-5 ${dayMilestones.length > 0 ? "pt-1.5" : "pt-3"} pb-0 shrink-0`}>
           {/* Button — collapses when form open */}
           <div style={{ maxHeight: addEventOpen ? 0 : "40px", opacity: addEventOpen ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: addEventOpen ? "none" : "auto" }}>
             <button onClick={() => setAddEventOpen(true)}
@@ -2207,8 +2207,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           </div>
         </div>
 
+        {/* Divider between events/add-event and notes */}
+        <div className="mx-5 mt-3 h-px shrink-0" style={{ background:"var(--border-soft)" }} />
+
         {/* Scrollable notes list */}
-        <div className="px-5 pb-2 flex flex-col gap-3 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
+        <div className="px-5 pt-3 pb-2 flex flex-col gap-3 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
           <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("note")}</div>
           <AnimatePresence initial={false}>
             {entries.map((entry, idx) => {
