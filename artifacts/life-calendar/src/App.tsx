@@ -1910,8 +1910,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const updateEntryColor = (id: string, color: string | undefined) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, color } : e));
   const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<string|null>(null);
+  const [hoveredEntryId, setHoveredEntryId] = useState<string|null>(null);
   const deleteEntry = (id: string) => {
-    setEntries(prev => prev.filter(e => e.id !== id));
+    setEntries(prev => {
+      const filtered = prev.filter(e => e.id !== id);
+      if (filtered.length === 0) return [{ id: makeId(), text: "", createdAt: Date.now() }];
+      return filtered;
+    });
     setConfirmDeleteEntryId(null);
   };
   const handleSave = () => { onSave(entries); onClose(); };
@@ -2167,15 +2172,19 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <motion.div key={entry.id}
                 initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
                 transition={{ type:"spring", stiffness:360, damping:28 }}
+                onMouseEnter={() => setHoveredEntryId(entry.id)}
+                onMouseLeave={() => setHoveredEntryId(null)}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-medium" style={{ color:"var(--text-tertiary)" }}>
                     {entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}
                   </span>
-                  <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                    style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                    {t("remove")}
-                  </button>
+                  {hoveredEntryId === entry.id && (
+                    <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+                      style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+                      {t("remove")}
+                    </button>
+                  )}
                 </div>
                 <div style={{ position:"relative" }}>
                   <textarea
