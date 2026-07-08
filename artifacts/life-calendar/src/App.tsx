@@ -1772,7 +1772,7 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onSaveTemplates, onMilestoneUpdate, onMilestoneAdd, onMilestoneDelete, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onSaveTemplates, onMilestoneUpdate, onMilestoneAdd, onMilestoneDelete, onReorderDayMilestones, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   initDayGoals?: DayGoals;
@@ -1782,6 +1782,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
   onMilestoneDelete: (id: string) => void;
+  onReorderDayMilestones: (reordered: Milestone[]) => void;
   onDayGoalsChange: (g: DayGoals) => void;
   onCopyGoalsTo: (targetDk: string, g: DayGoals) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
@@ -1975,6 +1976,32 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [activeEntryId, setActiveEntryId] = useState<string|null>(null);
   const [confirmDeleteMsIdDay, setConfirmDeleteMsIdDay] = useState<string|null>(null);
   const [hoveredMsId, setHoveredMsId] = useState<string|null>(null);
+  // Drag-and-drop state
+  const [dragNoteId, setDragNoteId] = useState<string|null>(null);
+  const [dragNoteOverId, setDragNoteOverId] = useState<string|null>(null);
+  const [dragMsId, setDragMsId] = useState<string|null>(null);
+  const [dragMsOverId, setDragMsOverId] = useState<string|null>(null);
+  const [dragGoalIdx, setDragGoalIdx] = useState<number|null>(null);
+  const [dragGoalOverIdx, setDragGoalOverIdx] = useState<number|null>(null);
+  const reorderArr = <T,>(arr: T[], fromIdx: number, toIdx: number): T[] => {
+    const next = [...arr]; const [item] = next.splice(fromIdx, 1); next.splice(toIdx, 0, item!); return next;
+  };
+  const dropNote = (toId: string) => {
+    if (!dragNoteId || dragNoteId === toId) return;
+    setEntries(prev => { const fi = prev.findIndex(e=>e.id===dragNoteId), ti = prev.findIndex(e=>e.id===toId); return fi<0||ti<0 ? prev : reorderArr(prev,fi,ti); });
+  };
+  const dropMs = (toId: string) => {
+    if (!dragMsId || dragMsId === toId) return;
+    const fi = dayMilestones.findIndex(m=>m.id===dragMsId), ti = dayMilestones.findIndex(m=>m.id===toId);
+    if (fi<0||ti<0) return; onReorderDayMilestones(reorderArr(dayMilestones,fi,ti));
+  };
+  const dropGoal = (toIdx: number) => {
+    if (dragGoalIdx === null || dragGoalIdx === toIdx) return;
+    const newDone = reorderArr(goalsDraft.done, dragGoalIdx, toIdx);
+    const newLabels = reorderArr(goalsDraft.labels ?? [], dragGoalIdx, toIdx);
+    const g: DayGoals = { count: goalsDraft.count, done: newDone, labels: newLabels };
+    setGoalsDraft(g); onDayGoalsChange(g);
+  };
   const deleteEntry = (id: string) => {
     setEntries(prev => {
       const filtered = prev.filter(e => e.id !== id);
@@ -2101,14 +2128,26 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <div className="flex flex-col gap-1.5">
                 {Array.from({length:goalsDraft.count},(_,i)=>{
                   const done = goalsDraft.done[i]??false;
+                  const isOverGoal = dragGoalOverIdx===i && dragGoalIdx!==null && dragGoalIdx!==i;
                   return (
-                    <div key={i} className="flex items-center gap-2">
+                    <div key={i} className="flex items-center gap-2"
+                      onDragOver={e=>{e.preventDefault();setDragGoalOverIdx(i);}}
+                      onDrop={e=>{e.preventDefault();dropGoal(i);setDragGoalIdx(null);setDragGoalOverIdx(null);}}
+                      onDragEnd={()=>{setDragGoalIdx(null);setDragGoalOverIdx(null);}}
+                      style={{ borderTop: isOverGoal&&i<(dragGoalIdx??999) ? "2px solid #007aff" : "2px solid transparent", borderBottom: isOverGoal&&i>(dragGoalIdx??-1) ? "2px solid #007aff" : "2px solid transparent", opacity: dragGoalIdx===i ? 0.4 : 1, transition:"opacity 150ms,border-color 80ms" }}
+                    >
+                      <span draggable={true}
+                        onDragStart={e=>{e.dataTransfer.effectAllowed="move";setDragGoalIdx(i);}}
+                        style={{ color:"var(--text-tertiary)", cursor:"grab", display:"flex", alignItems:"center", flexShrink:0, padding:"2px 0" }}>
+                        <GripIcon/>
+                      </span>
                       <div onClick={()=>handleGoalToggle(i)} style={{ width:17,height:17,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
                       <input
                         value={goalsDraft.labels?.[i] ?? ""}
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
+                        onMouseDown={e=>e.stopPropagation()}
                         placeholder={`${t("goal")} ${i+1}`}
                         maxLength={60}
                         style={{ flex:1,background:"transparent",border:"none",outline:"none",fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0 }}
@@ -2131,15 +2170,23 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             <div className="flex flex-col gap-1.5">
               {dayMilestones.map(ms => {
                 const isEditing = msEditId === ms.id;
+                const isMsOver = dragMsOverId===ms.id && dragMsId!==null && dragMsId!==ms.id;
+                const msFromIdx = dayMilestones.findIndex(m=>m.id===dragMsId);
+                const msToIdx = dayMilestones.findIndex(m=>m.id===ms.id);
                 return (
                   <div key={ms.id}
-                    style={{ borderRadius:12, overflow:"hidden", background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${ms.color}${isEditing?"55":"33"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ borderRadius:12, overflow:"hidden", background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${ms.color}${isEditing?"55":"33"}`, transition:"background 0.25s ease, border-color 0.25s ease, opacity 150ms", opacity: dragMsId===ms.id ? 0.4 : 1, borderTop: isMsOver&&msToIdx<msFromIdx ? `2.5px solid ${ms.color}` : undefined, borderBottom: isMsOver&&msToIdx>msFromIdx ? `2.5px solid ${ms.color}` : undefined }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
-                    onMouseLeave={() => setHoveredMsId(null)}>
+                    onMouseLeave={() => setHoveredMsId(null)}
+                    onDragOver={e=>{e.preventDefault();setDragMsOverId(ms.id);}}
+                    onDrop={e=>{e.preventDefault();dropMs(ms.id);setDragMsId(null);setDragMsOverId(null);}}
+                    onDragEnd={()=>{setDragMsId(null);setDragMsOverId(null);}}>
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "80px", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                          <span draggable={true} onDragStart={e=>{e.dataTransfer.effectAllowed="move";setDragMsId(ms.id);}}
+                            style={{ color:`${ms.color}99`, cursor:"grab", display:"flex", alignItems:"center", flexShrink:0 }}><GripIcon/></span>
                           <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0 }} />
                           <div className="flex-1 min-w-0 flex items-center gap-1" style={{ overflow:"hidden" }}>
                             <span className="text-[13px] font-semibold leading-snug truncate" style={{ color:ms.color }}>{ms.label}</span>
@@ -2266,11 +2313,20 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <motion.div key={entry.id}
                 initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0, height:0, marginBottom:0, paddingBottom:0 }}
                 transition={{ duration:0.28, ease:"easeInOut" }}
-                style={{ overflow:"hidden" }}
+                style={{ overflow:"hidden", opacity: dragNoteId===entry.id ? 0.4 : 1, transition:"opacity 150ms", borderTop: dragNoteOverId===entry.id&&dragNoteId!==null&&entries.findIndex(e=>e.id===dragNoteId)>idx ? "2px solid #007aff" : "2px solid transparent", borderBottom: dragNoteOverId===entry.id&&dragNoteId!==null&&entries.findIndex(e=>e.id===dragNoteId)<idx ? "2px solid #007aff" : "2px solid transparent" }}
                 onMouseEnter={() => setHoveredEntryId(entry.id)}
                 onMouseLeave={() => setHoveredEntryId(null)}
+                onDragOver={e=>{e.preventDefault();setDragNoteOverId(entry.id);}}
+                onDrop={e=>{e.preventDefault();dropNote(entry.id);setDragNoteId(null);setDragNoteOverId(null);}}
+                onDragEnd={()=>{setDragNoteId(null);setDragNoteOverId(null);}}
               >
                 <div style={{ position:"relative" }}>
+                  {/* Grip handle — left side, visible on hover */}
+                  <span draggable={true}
+                    onDragStart={e=>{e.dataTransfer.effectAllowed="move";setDragNoteId(entry.id);}}
+                    style={{ position:"absolute", left:8, top:"50%", transform:"translateY(-50%)", color:"var(--text-tertiary)", cursor:"grab", display:"flex", alignItems:"center", opacity: hoveredEntryId===entry.id ? 0.7 : 0, transition:"opacity 150ms", zIndex:1 }}>
+                    <GripIcon/>
+                  </span>
                   <textarea
                     ref={el => { areaRefs.current[entry.id] = el; }}
                     value={entry.text}
@@ -2279,9 +2335,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onFocus={e => { setActiveEntryId(entry.id); autoResize(e.currentTarget); }}
                     onBlur={e => { setActiveEntryId(null); autoResize(e.currentTarget); e.currentTarget.scrollTop = 0; }}
                     onKeyDown={handleKey}
+                    onMouseDown={e=>e.stopPropagation()}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                     rows={1}
-                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 12px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, maxHeight:NOTE_MAX_H, overflowY: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? "auto" : "hidden", transition:"background 200ms ease, border-color 200ms ease" }}
+                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 24px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, maxHeight:NOTE_MAX_H, overflowY: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? "auto" : "hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
                   <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 23 : 8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms, right 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none" }}>
                     <button
@@ -4224,6 +4281,15 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
+function GripIcon() {
+  return (
+    <svg width="8" height="12" viewBox="0 0 8 12" fill="currentColor" style={{ display:"block" }}>
+      <circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/>
+      <circle cx="2" cy="6" r="1.2"/><circle cx="6" cy="6" r="1.2"/>
+      <circle cx="2" cy="10" r="1.2"/><circle cx="6" cy="10" r="1.2"/>
+    </svg>
+  );
+}
 function GearIcon() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
 }
