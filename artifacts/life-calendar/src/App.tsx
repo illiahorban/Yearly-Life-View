@@ -1772,7 +1772,7 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onSaveTemplates, onMilestoneUpdate, onMilestoneAdd, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onSaveTemplates, onMilestoneUpdate, onMilestoneAdd, onMilestoneDelete, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   initDayGoals?: DayGoals;
