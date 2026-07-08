@@ -1860,11 +1860,19 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   }, [focusId]);
 
   const NOTE_MAX_H = 132; // 3 × minHeight(44)
+  const [scrollingEntries, setScrollingEntries] = useState<Set<string>>(new Set());
   const autoResize = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
+    const overflows = el.scrollHeight > NOTE_MAX_H;
     const h = Math.min(el.scrollHeight, NOTE_MAX_H);
     el.style.height = h + "px";
-    el.style.overflowY = el.scrollHeight > NOTE_MAX_H ? "auto" : "hidden";
+    el.style.overflowY = overflows ? "auto" : "hidden";
+    const id = Object.entries(areaRefs.current).find(([, ref]) => ref === el)?.[0];
+    if (id) setScrollingEntries(prev => {
+      const next = new Set(prev);
+      overflows ? next.add(id) : next.delete(id);
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -2266,10 +2274,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     title={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
                     aria-label={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
                     data-testid={`note-color-btn-${idx}`}
-                    style={{ position:"absolute", top:11, right:36, width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0, opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", transition:"opacity 150ms" }}
+                    style={{ position:"absolute", top:11, right: scrollingEntries.has(entry.id) ? 51 : 36, width:16, height:16, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:`2px solid ${dark?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.25)", cursor:"pointer", display:"block", flexShrink:0, padding:0, opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", transition:"opacity 150ms, right 150ms" }}
                   />
                   <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                    style={{ position:"absolute", top:8, right:8, width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                    style={{ position:"absolute", top:8, right: scrollingEntries.has(entry.id) ? 23 : 8, width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms, right 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                 </div>
               </motion.div>
               );
