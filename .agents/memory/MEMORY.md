@@ -1,1 +1,2 @@
 - [Bilingualism rule](bilingual-rule.md) — all new UI text in Life Calendar must be added in both Russian and English via the existing i18n system.
+- [MilestoneModal ConfirmDialog placement](milestone-confirm-placement.md) — ConfirmDialog must live inside MilestoneModal (not GoalsModal), and delete onConfirm must call onChange to persist.

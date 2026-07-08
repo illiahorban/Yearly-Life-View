@@ -3050,6 +3050,21 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
             style={{ height:36, paddingInline:20, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>{t("save")}</button>
         </div>
       </motion.div>
+      <ConfirmDialog
+        open={confirmDeleteMsId !== null}
+        onClose={() => setConfirmDeleteMsId(null)}
+        onConfirm={() => {
+          if (confirmDeleteMsId) {
+            const newItems = items.filter(x => x.id !== confirmDeleteMsId);
+            setItems(newItems);
+            onChange(newItems);
+            setConfirmDeleteMsId(null);
+          }
+        }}
+        message={t("deleteEventConfirm")}
+        confirmLabel={t("remove")}
+        dark={dark}
+      />
     </motion.div>
   );
 }
@@ -3198,14 +3213,6 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
       </AnimatePresence>,
       document.body
     )}
-    <ConfirmDialog
-      open={confirmDeleteMsId !== null}
-      onClose={() => setConfirmDeleteMsId(null)}
-      onConfirm={() => { if (confirmDeleteMsId) { setItems(prev => prev.filter(x => x.id !== confirmDeleteMsId)); setConfirmDeleteMsId(null); } }}
-      message={t("deleteEventConfirm")}
-      confirmLabel={t("remove")}
-      dark={dark}
-    />
     </>
   );
 }
