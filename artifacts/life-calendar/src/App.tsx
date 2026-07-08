@@ -3165,8 +3165,8 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
                       style={{ position:"absolute", top:"50%", right:7, transform:"translateY(-50%)", width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:`1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.22)", cursor:"pointer", padding:0, flexShrink:0 }}
                     />
                   </div>
-                  <button onClick={() => { if (goals.length > 1) setConfirmDeleteGoalId(g.id); }} disabled={goals.length===1}
-                    style={{ color: goals.length===1?"var(--text-tertiary)":"#ff3b30", background:"none", border:"none", cursor: goals.length===1?"default":"pointer", fontSize:18, lineHeight:1, opacity: goals.length===1?0.3:1, padding:"0 2px", flexShrink:0 }}>×</button>
+                  <button onClick={() => setConfirmDeleteGoalId(g.id)}
+                    style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 2px", flexShrink:0 }}>×</button>
                 </div>
               );
             })}
