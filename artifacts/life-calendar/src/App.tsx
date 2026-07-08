@@ -696,6 +696,22 @@ function App() {
     setHeaderH(el.offsetHeight);
     return () => ro.disconnect();
   }, []);
+
+  const qSectionRefs = useRef<Array<HTMLElement|null>>([null,null,null,null]);
+  const [qStickyShown, setQStickyShown] = useState<boolean[]>([false,false,false,false]);
+  useEffect(() => {
+    const update = () => {
+      setQStickyShown(qSectionRefs.current.map(el => {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        const mid = r.top + r.height / 2;
+        return mid < headerH && r.bottom > headerH;
+      }));
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", update);
+  }, [headerH]);
   useEffect(() => {
     if (didScrollRef.current || currentWeekIndex < 0 || viewYear !== now.getFullYear()) return;
     const el = weekRefs.current[currentWeekIndex];
@@ -938,10 +954,11 @@ function App() {
 
               return (
                 <motion.section layout key={qi} className="overflow-visible"
+                  ref={(el: HTMLElement | null) => { qSectionRefs.current[qi] = el; }}
                   style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
                 >
-                  {/* Sticky quarter header — sticks just below main app header */}
-                  <div style={{ position:"sticky", top:headerH, zIndex:9, borderRadius:16, background: dark ? quarter.darkTint : quarter.tint.replace("0.07","0.18"), backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
+                  {/* Sticky quarter header — appears after scrolling past midpoint */}
+                  <div style={{ position:"sticky", top:headerH, zIndex:9, borderRadius:16, background: dark ? quarter.darkTint : quarter.tint.replace("0.07","0.18"), backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", opacity: qStickyShown[qi] ? 1 : 0, transform: qStickyShown[qi] ? "translateY(0)" : "translateY(-6px)", transition:"opacity 0.22s ease, transform 0.22s ease", pointerEvents: qStickyShown[qi] ? "auto" : "none" }}>
                   {/* Quarter header row */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
                     <div className="flex items-center gap-2">
