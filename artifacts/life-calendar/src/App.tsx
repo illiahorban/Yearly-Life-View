@@ -1914,6 +1914,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<string|null>(null);
   const [hoveredEntryId, setHoveredEntryId] = useState<string|null>(null);
   const [confirmDeleteMsIdDay, setConfirmDeleteMsIdDay] = useState<string|null>(null);
+  const [hoveredMsId, setHoveredMsId] = useState<string|null>(null);
   const deleteEntry = (id: string) => {
     setEntries(prev => {
       const filtered = prev.filter(e => e.id !== id);
@@ -2058,7 +2059,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const isEditing = msEditId === ms.id;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2 rounded-xl"
-                    style={{ background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${isEditing ? ms.color+"55" : ms.color+"33"}`, transition:"border 150ms" }}>
+                    style={{ background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${isEditing ? ms.color+"55" : ms.color+"33"}`, transition:"border 150ms", position:"relative" }}
+                    onMouseEnter={() => setHoveredMsId(ms.id)}
+                    onMouseLeave={() => setHoveredMsId(null)}>
                     {isEditing ? (
                       <div className="flex flex-col gap-1.5">
                         <div className="flex gap-1 flex-wrap">
@@ -2104,8 +2107,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         </div>
                         <button onClick={() => startMsEdit(ms)} title={t("edit")}
                           style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:12, lineHeight:1, padding:"1px 2px", opacity:0.6, flexShrink:0, transform:"scaleX(-1)" }}>✎</button>
-                        <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                          style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", opacity:0.7, flexShrink:0 }}>×</button>
+                        {hoveredMsId === ms.id && (
+                          <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", fontSize:14, lineHeight:1, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>×</button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2186,9 +2191,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   </span>
                   {hoveredEntryId === entry.id && (
                     <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-                      style={{ height:18, paddingInline:6, borderRadius:5, border:"none", background:"rgba(255,59,48,0.1)", color:"#ff3b30", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
-                      {t("remove")}
-                    </button>
+                      style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", fontSize:14, lineHeight:1, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>×</button>
                   )}
                 </div>
                 <div style={{ position:"relative" }}>
