@@ -102,7 +102,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
-    remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", deleteDayNotesConfirm:"Delete all notes for this day?", noMilestones:"No milestones yet. Add one above.",
+    remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", deleteDayNotesConfirm:"Delete all notes for this day?", deleteGoalConfirm:"Delete this goal?", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
     descPlaceholder:"Description (optional, up to 300 chars)…",
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
@@ -173,7 +173,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
-    remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", deleteDayNotesConfirm:"Удалить все заметки этого дня?", noMilestones:"Нет событий. Добавьте выше.",
+    remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", deleteDayNotesConfirm:"Удалить все заметки этого дня?", deleteGoalConfirm:"Удалить эту цель?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
     descPlaceholder:"Описание (необязательно, до 300 символов)…",
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
@@ -3083,6 +3083,8 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
   const activeGoals = goals.filter(g => g.text.trim());
   const canAdd = goals.length < 20;
 
+  const [confirmDeleteGoalId, setConfirmDeleteGoalId] = useState<string|null>(null);
+
   // Color picker state
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
   const [colorPickerGoalId, setColorPickerGoalId] = useState<string|null>(null);
@@ -3163,7 +3165,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
                       style={{ position:"absolute", top:"50%", right:7, transform:"translateY(-50%)", width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:`1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.22)", cursor:"pointer", padding:0, flexShrink:0 }}
                     />
                   </div>
-                  <button onClick={() => setGoals(prev => prev.filter(x => x.id!==g.id))} disabled={goals.length===1}
+                  <button onClick={() => { if (goals.length > 1) setConfirmDeleteGoalId(g.id); }} disabled={goals.length===1}
                     style={{ color: goals.length===1?"var(--text-tertiary)":"#ff3b30", background:"none", border:"none", cursor: goals.length===1?"default":"pointer", fontSize:18, lineHeight:1, opacity: goals.length===1?0.3:1, padding:"0 2px", flexShrink:0 }}>×</button>
                 </div>
               );
@@ -3213,6 +3215,14 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
       </AnimatePresence>,
       document.body
     )}
+    <ConfirmDialog
+      open={confirmDeleteGoalId !== null}
+      onClose={() => setConfirmDeleteGoalId(null)}
+      onConfirm={() => { if (confirmDeleteGoalId) { setGoals(prev => prev.filter(x => x.id !== confirmDeleteGoalId)); setConfirmDeleteGoalId(null); } }}
+      message={t("deleteGoalConfirm")}
+      confirmLabel={t("remove")}
+      dark={dark}
+    />
     </>
   );
 }
