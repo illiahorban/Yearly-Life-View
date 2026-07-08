@@ -1866,7 +1866,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const overflows = el.scrollHeight > NOTE_MAX_H;
     const h = Math.min(el.scrollHeight, NOTE_MAX_H);
     el.style.height = h + "px";
-    el.style.overflowY = "hidden"; // scrollbar controlled by focus state in JSX
+    el.style.overflowY = (overflows && document.activeElement === el) ? "auto" : "hidden";
     const id = Object.entries(areaRefs.current).find(([, ref]) => ref === el)?.[0];
     if (id) setScrollingEntries(prev => {
       const next = new Set(prev);
@@ -2261,8 +2261,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     value={entry.text}
                     onChange={e => updateEntry(entry.id, e.target.value)}
                     onInput={e => autoResize(e.currentTarget)}
-                    onFocus={() => setActiveEntryId(entry.id)}
-                    onBlur={() => setActiveEntryId(null)}
+                    onFocus={e => { setActiveEntryId(entry.id); autoResize(e.currentTarget); }}
+                    onBlur={e => { setActiveEntryId(null); autoResize(e.currentTarget); }}
                     onKeyDown={handleKey}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                     rows={1}
