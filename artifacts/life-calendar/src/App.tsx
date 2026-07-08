@@ -2070,60 +2070,68 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               {dayMilestones.map(ms => {
                 const isEditing = msEditId === ms.id;
                 return (
-                  <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2 rounded-xl"
-                    style={{ background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${isEditing ? ms.color+"55" : ms.color+"33"}`, transition:"border 150ms", position:"relative" }}
+                  <motion.div layout key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2 rounded-xl"
+                    style={{ background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${isEditing ? ms.color+"55" : ms.color+"33"}`, position:"relative", overflow:"hidden" }}
+                    animate={{ borderColor: isEditing ? ms.color+"55" : ms.color+"33" }}
+                    transition={{ type:"spring", stiffness:340, damping:30 }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
-                    {isEditing ? (
-                      <div ref={msEditRef} className="flex flex-col gap-1.5">
-                        <div className="flex gap-1 flex-wrap">
-                          {MILESTONE_COLORS.map(c => (
-                            <button key={c} onClick={() => setMsEditColor(c)}
-                              style={{ width:14, height:14, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#c7c7cc" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
-                          ))}
-                        </div>
-                        <div className="flex gap-1.5">
-                          <input value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
-                            onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
-                            placeholder={t("labelPlaceholder")} autoFocus style={{ ...inputStyleMs, flex:2, width:"auto" }} />
-                          <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
-                            lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto" }} />
-                        </div>
-                        <div style={{ position:"relative" }}>
-                          <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value.slice(0,300))}
-                            placeholder={t("editDescPlaceholder")} rows={2}
-                            style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"6px 9px", paddingBottom:16, display:"block" }} />
-                          <span style={{ position:"absolute", bottom:4, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{msEditDesc.length}/300</span>
-                        </div>
-                        <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
-                          <input type="checkbox" checked={msEditRecurring} onChange={e => setMsEditRecurring(e.target.checked)}
-                            style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }} />
-                          <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
-                        </label>
-                        <div className="flex gap-1.5">
-                          <button onClick={() => setMsEditId(null)}
-                            style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
-                          <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
-                            style={{ flex:2, height:28, borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("saveChanges")}</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0 }} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1 text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>
-                            {ms.label}
-                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7 }}>↻</span>}
+                    <AnimatePresence mode="wait" initial={false}>
+                      {isEditing ? (
+                        <motion.div ref={msEditRef} key="edit" className="flex flex-col gap-1.5"
+                          initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
+                          transition={{ type:"spring", stiffness:380, damping:30 }}>
+                          <div className="flex gap-1 flex-wrap">
+                            {MILESTONE_COLORS.map(c => (
+                              <button key={c} onClick={() => setMsEditColor(c)}
+                                style={{ width:14, height:14, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#c7c7cc" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
+                            ))}
                           </div>
-                          {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
-                        </div>
-                        <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                          style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", flexShrink:0, transform:"scaleX(-1)", opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>✏️</button>
-                        <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                          style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                      </div>
-                    )}
-                  </div>
+                          <div className="flex gap-1.5">
+                            <input value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
+                              onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
+                              placeholder={t("labelPlaceholder")} autoFocus style={{ ...inputStyleMs, flex:2, width:"auto" }} />
+                            <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
+                              lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto" }} />
+                          </div>
+                          <div style={{ position:"relative" }}>
+                            <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value.slice(0,300))}
+                              placeholder={t("editDescPlaceholder")} rows={2}
+                              style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"6px 9px", paddingBottom:16, display:"block" }} />
+                            <span style={{ position:"absolute", bottom:4, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{msEditDesc.length}/300</span>
+                          </div>
+                          <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
+                            <input type="checkbox" checked={msEditRecurring} onChange={e => setMsEditRecurring(e.target.checked)}
+                              style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }} />
+                            <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
+                          </label>
+                          <div className="flex gap-1.5">
+                            <button onClick={() => setMsEditId(null)}
+                              style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
+                            <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
+                              style={{ flex:2, height:28, borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("saveChanges")}</button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div key="view" className="flex items-center gap-2"
+                          initial={{ opacity:0, y:4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:4 }}
+                          transition={{ type:"spring", stiffness:380, damping:30 }}>
+                          <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0 }} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1 text-[13px] font-semibold leading-snug" style={{ color:ms.color }}>
+                              {ms.label}
+                              {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7 }}>↻</span>}
+                            </div>
+                            {ms.description && <div className="text-[11px] mt-0.5 leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
+                          </div>
+                          <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                            style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", flexShrink:0, transform:"scaleX(-1)", opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>✏️</button>
+                          <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
                 );
               })}
             </div>
