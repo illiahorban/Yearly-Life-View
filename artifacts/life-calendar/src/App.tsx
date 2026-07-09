@@ -2836,17 +2836,15 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             {entries.slice(0, 3).map((e, i) => (
                               <div key={i} style={{
-                                padding: e.color ? "3px 7px 3px 8px" : "2px 0",
-                                borderRadius: e.color ? 6 : 0,
-                                borderLeft: e.color ? `3px solid ${e.color}` : "none",
+                                padding: e.color ? "8px 10px 8px 12px" : "2px 0",
+                                borderRadius: e.color ? 12 : 0,
+                                border: e.color ? `1px solid color-mix(in srgb, ${e.color} 55%, ${borderColor})` : "none",
                                 background: e.color
-                                  ? (dark
-                                    ? `color-mix(in srgb, ${e.color} 16%, rgba(255,255,255,0.04))`
-                                    : `color-mix(in srgb, ${e.color} 10%, rgba(255,255,255,0.85))`)
+                                  ? `color-mix(in srgb, ${e.color} ${dark ? 22 : 16}%, ${dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)"})`
                                   : "transparent",
                                 overflow: "hidden",
                               }}>
-                                <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                                <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.55, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
                                   <HighlightText text={e.text} query={q} />
                                 </span>
                               </div>
