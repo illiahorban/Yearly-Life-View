@@ -1811,7 +1811,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const g: DayGoals = { ...goalsDraft, labels: newLabels };
     setGoalsDraft(g); onDayGoalsChange(g);
   };
-  const [goalsListOpen, setGoalsListOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [] };
@@ -2034,24 +2033,23 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.2) transparent":"rgba(0,0,0,0.15) transparent" }}>
 
         {/* Daily Goals */}
-        <div className="px-5 pt-1 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}`, paddingBottom: goalsListOpen ? 12 : 8 }}>
-          {/* Clickable header row */}
-          <div onClick={() => setGoalsListOpen(o => !o)} style={{ display:"flex", flexWrap:"nowrap", alignItems:"center", justifyContent:"flex-start", gap:6, cursor:"pointer", marginBottom: goalsListOpen ? 8 : 0, userSelect:"none" }}>
+        <div className="px-5 pt-1 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}`, paddingBottom: 12 }}>
+          {/* Header row — always shows full functionality */}
+          <div style={{ display:"flex", flexWrap:"nowrap", alignItems:"center", justifyContent:"flex-start", gap:6, marginBottom:8, userSelect:"none" }}>
             <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)", whiteSpace:"nowrap", flexShrink:0 }}>{t("dailyGoals")}</span>
-            {/* Action icons — only when expanded */}
-            {goalsListOpen && !confirmReset && !confirmCopyTomorrow && (
+            {!confirmReset && !confirmCopyTomorrow && (
               <button onClick={e => { e.stopPropagation(); setTemplateMgrOpen(true); }} title={t("applyTemplateBtn")}
                 style={{ width:14, height:14, flexShrink:0, border:"none", background:"transparent", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="11" height="4" rx="1"/></svg>
               </button>
             )}
-            {goalsListOpen && goalsDraft.count > 0 && !confirmReset && !confirmCopyTomorrow && dayTemplates.length < 20 && (
+            {goalsDraft.count > 0 && !confirmReset && !confirmCopyTomorrow && dayTemplates.length < 20 && (
               <button onClick={e => { e.stopPropagation(); const labels = (goalsDraft.labels ?? []).slice(0, goalsDraft.count).map(s => s.trim()).filter(Boolean); const items = labels.length > 0 ? labels : Array.from({ length: goalsDraft.count }, (_, i) => `${t("goal")} ${i + 1}`); setSaveTplPrefill(items); setTemplateMgrOpen(true); }} title={t("saveAsTemplate")}
                 style={{ width:14, height:14, flexShrink:0, border:"none", background:"transparent", cursor:"pointer", color:"var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               </button>
             )}
-            {goalsListOpen && goalsDraft.count > 0 && !confirmReset && (
+            {goalsDraft.count > 0 && !confirmReset && (
               <button onClick={e => { e.stopPropagation(); handleCopyToTomorrow(); }} title={t("copyToTomorrow")}
                 style={{ width:14, height:14, flexShrink:0, border:"none", background:"transparent", cursor:"pointer", color: copiedTomorrow ? "#34c759" : "var(--text-tertiary)", display:"flex", alignItems:"center", justifyContent:"center", padding:0, transition:"color 200ms" }}>
                 {copiedTomorrow
@@ -2060,7 +2058,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 }
               </button>
             )}
-            {goalsListOpen && goalsDraft.count > 0 && !confirmReset && (
+            {goalsDraft.count > 0 && !confirmReset && (
               <button onClick={e => { e.stopPropagation(); setConfirmReset(true); }} title={t("resetGoals")}
                 style={{ width:14, height:14, flexShrink:0, border:"none", background:"transparent", cursor:"pointer", color:"#ff3b30", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>
                 <span style={{ fontSize:12, lineHeight:1, fontWeight:400 }}>↺</span>
@@ -2068,17 +2066,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             )}
             {/* Spacer */}
             <div style={{ flex:1 }} />
-            {/* Progress pill — shown when collapsed and there are goals */}
-            {!goalsListOpen && goalsDraft.count > 0 && (
+            {/* Progress pill */}
+            {goalsDraft.count > 0 && (
               <span style={{ fontSize:10, fontWeight:600, color: allGoalsDone ? "#34c759" : "var(--text-tertiary)", background: allGoalsDone ? (dark?"rgba(52,199,89,0.18)":"rgba(52,199,89,0.12)") : (dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)"), borderRadius:99, padding:"1px 7px", flexShrink:0, transition:"color 200ms, background 200ms" }}>
                 {goalsDraft.done.filter(Boolean).length}/{goalsDraft.count}
               </span>
             )}
-            {/* Chevron */}
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="var(--text-tertiary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, transition:"transform 200ms", transform: goalsListOpen ? "rotate(180deg)" : "rotate(0deg)" }}><polyline points="2,3.5 5,6.5 8,3.5"/></svg>
           </div>
-          {/* Collapsible body */}
-          <div style={{ overflow:"hidden", maxHeight: goalsListOpen ? 600 : 0, transition:"max-height 220ms ease, opacity 220ms ease", opacity: goalsListOpen ? 1 : 0 }}>
+          {/* Body — always shown */}
+          <div style={{ overflow:"visible" }}>
             {/* Count buttons / confirm dialogs */}
             <div style={{ display:"flex", flexWrap:"nowrap", alignItems:"center", gap:6, marginBottom:8 }}>
               {confirmCopyTomorrow ? (
