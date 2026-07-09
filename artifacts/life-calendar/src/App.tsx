@@ -3118,9 +3118,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       </div>
                     ) : (
                       <>
-                        <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
-                          <div className="flex-1 min-w-0 flex items-start gap-1">
-                            <span className="text-[13px] font-semibold leading-snug" style={{ color:ms.color, wordBreak:"break-word" }}><HighlightText text={ms.label} query={q} /></span>
+                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                          <div className="flex-1 min-w-0 flex items-center gap-1">
+                            <span className="text-[13px] font-semibold" style={{ color:ms.color, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}><HighlightText text={ms.label} query={q} /></span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
