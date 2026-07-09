@@ -1879,23 +1879,23 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     }
   };
 
-  // useLayoutEffect runs synchronously after DOM mutations but before the browser
-  // paints — this lets us resize textareas and correct the scroll position in one
-  // atomic step so the user never sees a layout shift.
+  // useLayoutEffect runs synchronously after DOM mutations but before paint.
+  // When adding a new note we ONLY resize that one new (empty) textarea —
+  // touching the existing ones would do height="auto" → reflow → scroll jump.
+  // For every other change (typing, delete, template) we resize all but pin scroll.
   React.useLayoutEffect(() => {
     const body = scrollBodyRef.current;
-    if (body) {
-      const savedScroll = body.scrollTop;
-      Object.values(areaRefs.current).forEach(el => { if (el) autoResize(el); });
-      if (pendingAddIdRef.current) {
-        // A new note was just appended — scroll to the bottom to reveal it.
-        body.scrollTop = body.scrollHeight;
-      } else {
-        // Ordinary resize (user is typing) — pin the container so it doesn't jump.
-        body.scrollTop = savedScroll;
-      }
+    const addId = pendingAddIdRef.current;
+    if (addId) {
+      // New note added: only initialise the new empty textarea, then reveal it.
+      const newEl = areaRefs.current[addId];
+      if (newEl) autoResize(newEl);
+      if (body) body.scrollTop = body.scrollHeight;
     } else {
+      // Ordinary change — resize everything but keep the viewport still.
+      const saved = body ? body.scrollTop : 0;
       Object.values(areaRefs.current).forEach(el => { if (el) autoResize(el); });
+      if (body) body.scrollTop = saved;
     }
   }, [entries]);
 
