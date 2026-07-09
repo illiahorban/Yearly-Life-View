@@ -1793,7 +1793,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     initial.length > 0 ? initial : [{ id: makeId(), text: "", createdAt: Date.now() }]
   );
   const [focusId, setFocusId] = useState<string|null>(initial.length === 0 ? (entries[0]?.id ?? null) : null);
-  const [goalsDraft, setGoalsDraft] = useState<DayGoals>(() => initDayGoals ?? { count: 3, done: [] });
+  const [goalsDraft, setGoalsDraft] = useState<DayGoals>(() => initDayGoals ?? { count: 0, done: [] });
   const handleGoalCountChange = (n: number) => {
     const newDone = Array.from({ length: n }, (_, i) => goalsDraft.done[i] ?? false);
     const newLabels = Array.from({ length: n }, (_, i) => goalsDraft.labels?.[i] ?? "");
