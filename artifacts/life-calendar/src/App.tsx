@@ -489,6 +489,23 @@ function App() {
   // Search
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const searchBtnRef = React.useRef<HTMLDivElement>(null);
+  const searchBarRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!searchOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        searchBtnRef.current && !searchBtnRef.current.contains(target) &&
+        searchBarRef.current && !searchBarRef.current.contains(target)
+      ) {
+        setSearchOpen(false);
+        setSearchQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [searchOpen]);
 
   // Milestones
   const [milestones, setMilestones] = useState<Milestone[]>(() => ls<Milestone[]>("lifeCalendar:milestones", []));
@@ -794,7 +811,7 @@ function App() {
                 style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear>=MAX_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear>=MAX_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, lineHeight:1, flexShrink:0 }}>›</button>
             </div>
             <div className="flex items-center gap-2">
-              <IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton>
+              <div ref={searchBtnRef}><IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton></div>
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
               <IconButton title={t("allGoals")} onClick={() => setGoalsOpen(o => !o)} bg={goalsOpen ? "rgba(52,199,89,0.15)" : overlayBg}><GoalsIcon /></IconButton>
               <IconButton title={t("notesPanel")} onClick={() => setNotesPanelOpen(true)} bg={overlayBg}><NotesIcon /></IconButton>
@@ -878,6 +895,7 @@ function App() {
           </AnimatePresence>
 
           {/* Search bar */}
+          <div ref={searchBarRef}>
           <AnimatePresence>
             {searchOpen && (
               <motion.div key="search-bar" initial={{ opacity:0, height:0, marginTop:0 }} animate={{ opacity:1, height:"auto", marginTop:10 }} exit={{ opacity:0, height:0, marginTop:0 }} transition={{ duration:0.2, ease:"easeInOut" }} style={{ overflow:"hidden" }}>
@@ -926,6 +944,7 @@ function App() {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
 
           {/* Sticky weekday labels */}
           <div className="mt-3 pl-[calc(60px+0.75rem)] pr-[calc(60px+0.75rem)] sm:pl-[calc(60px+1rem)] sm:pr-[calc(60px+1rem)]">
