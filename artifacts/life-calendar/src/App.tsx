@@ -1881,7 +1881,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const { t, lang } = React.useContext(LangContext);
 
   // Milestone inline edit state
-  const msEditRef = React.useRef<HTMLDivElement|null>(null);
+  const msEditRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
   const msEditInputRef = React.useRef<HTMLInputElement|null>(null);
   const [msEditId, setMsEditId] = useState<string|null>(null);
   const [msEditLabel, setMsEditLabel] = useState("");
@@ -1922,7 +1922,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   React.useEffect(() => {
     if (!msEditId) return;
     const handler = (e: MouseEvent) => {
-      if (msEditRef.current && !msEditRef.current.contains(e.target as Node)) {
+      const el = msEditRefs.current.get(msEditId);
+      if (el && !el.contains(e.target as Node)) {
         setMsEditId(null);
       }
     };
@@ -2157,7 +2158,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       </div>
                     </div>
                     {/* Edit form — expands when editing */}
-                    <div ref={msEditRef} style={{ maxHeight: isEditing ? "380px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
+                    <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "380px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
                       <div className="flex flex-col gap-1.5" style={{ padding:"8px 10px" }}>
                         <div className="flex gap-1 flex-wrap">
                           {MILESTONE_COLORS.map(c => (
