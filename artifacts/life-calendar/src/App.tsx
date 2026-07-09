@@ -928,7 +928,7 @@ function App() {
           </AnimatePresence>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[calc(51px+0.75rem)] pr-[calc(60px+0.75rem)] sm:pl-[calc(51px+1rem)] sm:pr-[calc(60px+1rem)]">
+          <div className="mt-3 pl-[calc(60px+0.75rem)] pr-[calc(60px+0.75rem)] sm:pl-[calc(60px+1rem)] sm:pr-[calc(60px+1rem)]">
             <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
@@ -1443,10 +1443,10 @@ function BlocksRenderer({
                     const weekTotal = days.reduce((s, d) => { const g = dayGoalsMap[dateKey(d)]; return s + (g ? g.count : 0); }, 0);
                     return (
                       <div key={wi} style={{ display:"flex", flexDirection:"column" }}>
-                        {/* Three-column week row: [left 51px] [tiles flex-1] [right 60px] */}
+                        {/* Three-column week row: [left 60px] [tiles flex-1] [right 60px] */}
                         <div ref={el => { weekRefs.current[wi] = el; }} style={{ display:"flex", flexDirection:"row", alignItems:"center" }}>
-                          {/* LEFT COLUMN — week number, 51px, perfectly centered */}
-                          <div style={{ width:51, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          {/* LEFT COLUMN — week number, 60px, perfectly centered */}
+                          <div style={{ width:60, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                             <button type="button"
                               onClick={() => onWeekLabelClick(_qi, qOffset)}
                               title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
@@ -1468,7 +1468,7 @@ function BlocksRenderer({
                             </button>
                           </div>
                           {/* MIDDLE COLUMN — day tiles, fills remaining space */}
-                          <div className="grid grid-cols-7 gap-2 sm:gap-3" style={{ flex:1, minWidth:0 }}>
+                          <div className="grid grid-cols-7 gap-2 sm:gap-3" style={{ flex:1, minWidth:0, justifyContent:"center" }}>
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
