@@ -2169,7 +2169,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         </div>
                         <div style={{ position:"relative" }}>
                           <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
-                            placeholder={t("editDescPlaceholder")} rows={2}
+                            placeholder={t("editDescPlaceholder")} rows={4}
                             style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"5px 9px", display:"block" }} />
                         </div>
                         <div className="flex items-center gap-2">
@@ -2221,7 +2221,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               </div>
               <div style={{ position:"relative" }}>
                 <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)}
-                  placeholder={t("descPlaceholder")} rows={2}
+                  placeholder={t("descPlaceholder")} rows={4}
                   style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
               </div>
               <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
@@ -3004,7 +3004,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
           </div>
           <div style={{ position:"relative" }}>
             <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
-              placeholder={t("descPlaceholder")} rows={2}
+              placeholder={t("descPlaceholder")} rows={4}
               style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px" }}
             />
           </div>
@@ -3066,7 +3066,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                         </div>
                         <div style={{ position:"relative" }}>
                           <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                            placeholder={t("editDescPlaceholder")} rows={2}
+                            placeholder={t("editDescPlaceholder")} rows={4}
                             style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px" }}
                           />
                         </div>
