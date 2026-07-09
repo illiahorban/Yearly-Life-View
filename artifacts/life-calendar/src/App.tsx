@@ -1882,21 +1882,31 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (id) setNoteHeights(prev => prev[id] === h ? prev : { ...prev, [id]: h });
   };
 
-  // Mount-only: expand any pre-existing notes to their full height before the
-  // first paint.  New notes added later start empty (rows=1, minHeight 44px)
-  // so they need no explicit sizing.
+  // Re-sync every textarea's height after every commit (mount, text change,
+  // entry added/removed). Running this unconditionally — rather than only
+  // from onInput/onFocus/onBlur — closes a race where a textarea resized via
+  // an event handler (e.g. right after a paste) could end up out of sync
+  // with its final laid-out content once a sibling entry is added and the
+  // list re-renders. Since it only ever writes an inline height/overflow
+  // style, re-running it for unchanged entries is a harmless no-op.
   React.useLayoutEffect(() => {
     const heights: Record<string, number> = {};
+    let changed = false;
     Object.entries(areaRefs.current).forEach(([id, el]) => {
       if (!el) return;
       el.style.height = "auto";
-      el.style.height = el.scrollHeight + "px";
+      const h = el.scrollHeight;
+      el.style.height = h + "px";
       el.style.overflowY = "hidden";
-      heights[id] = el.scrollHeight;
+      heights[id] = h;
     });
-    if (Object.keys(heights).length) setNoteHeights(heights);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setNoteHeights(prev => {
+      const keys = Object.keys(heights);
+      if (keys.length !== Object.keys(prev).length) changed = true;
+      else for (const k of keys) if (prev[k] !== heights[k]) { changed = true; break; }
+      return changed ? heights : prev;
+    });
+  }, [entries]);
 
   const { t, lang } = React.useContext(LangContext);
 
