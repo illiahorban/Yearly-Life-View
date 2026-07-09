@@ -1860,18 +1860,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }, [focusId]);
 
-  const NOTE_MAX_H = 132; // 3 × minHeight(44)
-  const [scrollingEntries, setScrollingEntries] = useState<Set<string>>(new Set());
   const [noteHeights, setNoteHeights] = useState<Record<string,number>>({});
   const autoResize = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
-    const overflows = el.scrollHeight > NOTE_MAX_H;
-    const h = Math.min(el.scrollHeight, NOTE_MAX_H);
+    const h = el.scrollHeight;
     el.style.height = h + "px";
-    el.style.overflowY = (overflows && document.activeElement === el) ? "auto" : "hidden";
+    el.style.overflowY = "hidden";
     const id = Object.entries(areaRefs.current).find(([, ref]) => ref === el)?.[0];
     if (id) {
-      setScrollingEntries(prev => { const next = new Set(prev); overflows ? next.add(id) : next.delete(id); return next; });
       setNoteHeights(prev => ({ ...prev, [id]: h }));
     }
   };
@@ -2138,12 +2134,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
-                    <div style={{ maxHeight: isEditing ? 0 : "80px", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
+                    <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0 }} />
-                          <div className="flex-1 min-w-0 flex items-center gap-1" style={{ overflow:"hidden" }}>
-                            <span className="text-[13px] font-semibold leading-snug truncate" style={{ color:ms.color }}>{ms.label}</span>
+                        <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
+                          <span style={{ width:8, height:8, borderRadius:999, background:ms.color, flexShrink:0, marginTop:3 }} />
+                          <div className="flex-1 min-w-0 flex items-start gap-1">
+                            <span className="text-[13px] font-semibold leading-snug" style={{ color:ms.color, wordBreak:"break-word" }}>{ms.label}</span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           <button onClick={() => startMsEdit(ms)} title={t("edit")}
@@ -2283,9 +2279,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseDown={e=>e.stopPropagation()}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                     rows={1}
-                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 24px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, maxHeight:NOTE_MAX_H, overflowY: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? "auto" : "hidden", transition:"background 200ms ease, border-color 200ms ease" }}
+                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, overflowY:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
-                  <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right: (activeEntryId === entry.id && scrollingEntries.has(entry.id)) ? 23 : 8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms, right 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none" }}>
+                  <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none" }}>
                     <button
                       ref={el => { colorBtnRefs.current[entry.id] = el; }}
                       onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
