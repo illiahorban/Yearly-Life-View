@@ -645,7 +645,7 @@ function App() {
         if (ms.date >= todayStr) list.push(ms);
       }
     }
-    return list.sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label)).slice(0, 10);
+    return list.sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label)).slice(0, 20);
   }, [milestones, today]);
 
   const matchedDates = useMemo<Set<string>>(() => {
@@ -852,7 +852,7 @@ function App() {
             <span>{(totalDays-daysCompleted).toFixed(0)} {t("daysRemaining")}</span>
           </div>
 
-          {/* Milestone countdown — up to 7 upcoming */}
+          {/* Milestone countdown — up to 20 upcoming */}
           <AnimatePresence>
             {nextMilestones.length > 0 && (
               <motion.div key="ms-countdown" initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
