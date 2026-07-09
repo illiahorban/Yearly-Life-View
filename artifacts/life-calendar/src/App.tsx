@@ -1842,6 +1842,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   };
   const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
   const allGoalsDone = goalsDraft.count > 0 && _doneSlice.length === goalsDraft.count && _doneSlice.every(Boolean);
+  const scrollBodyRef = useRef<HTMLDivElement|null>(null);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(null);
@@ -1857,7 +1858,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   };
 
   useEffect(() => {
-    if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(el.value.length, el.value.length); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }
+    if (focusId) {
+      requestAnimationFrame(() => {
+        const el = areaRefs.current[focusId];
+        if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(el.value.length, el.value.length); }
+      });
+    }
   }, [focusId]);
 
   const [noteHeights, setNoteHeights] = useState<Record<string,number>>({});
@@ -1961,6 +1967,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const id = makeId();
     setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
     setFocusId(id);
+    setTimeout(() => {
+      const body = scrollBodyRef.current;
+      if (body) body.scrollTop = body.scrollHeight;
+    }, 60);
   };
   const updateEntry = (id: string, text: string) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, text } : e));
@@ -2022,7 +2032,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
 
         {/* Scrollable body */}
-        <div style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.2) transparent":"rgba(0,0,0,0.15) transparent" }}>
+        <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.2) transparent":"rgba(0,0,0,0.15) transparent" }}>
 
         {/* Daily Goals */}
         <div className="px-5 pt-1 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}`, paddingBottom: goalsListOpen ? 12 : 8 }}>
@@ -2247,8 +2257,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("notes")}</div>
         </div>
 
-        {/* Scrollable notes list */}
-        <div className="px-5 pb-2 flex flex-col gap-1.5 overflow-y-auto" onScroll={() => setColorPickerEntryId(null)}>
+        {/* Notes list */}
+        <div className="px-5 pb-2 flex flex-col gap-1.5" onScroll={() => setColorPickerEntryId(null)}>
           <AnimatePresence initial={false}>
             {entries.map((entry, idx) => {
               const entryColor = entry.color;
