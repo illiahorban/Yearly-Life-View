@@ -1988,6 +1988,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     // Chrome from scrolling an overflow container when focus() is called.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        // Re-sync every existing textarea's height before adding the new one.
+        // If a note was pasted and "Add note" clicked right after, the blur
+        // that fires when focus moves away can measure scrollHeight a frame
+        // too early (layout not yet settled for very long pasted text),
+        // leaving that note visually clipped. Recomputing here after paint
+        // guarantees every note reflects its true content height.
+        Object.entries(areaRefs.current).forEach(([entryId, el]) => {
+          if (el && entryId !== id) autoResize(el);
+        });
         const body = scrollBodyRef.current;
         if (body) body.scrollTop = body.scrollHeight;
         const el = areaRefs.current[id];
