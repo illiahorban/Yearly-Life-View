@@ -258,9 +258,46 @@ type DayTemplate = { id: string; name: string; items: string[] };
 
 function fireConfettiCannons() {
   const colors = ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac","#ff922b","#cc5de8"];
-  const opts = { startVelocity: 50, spread: 120, ticks: 220, gravity: 0.75, zIndex: 9999, colors };
-  confetti({ ...opts, particleCount: 160, origin: { x: 0.18, y: 0.82 }, angle: 65 });
-  confetti({ ...opts, particleCount: 160, origin: { x: 0.82, y: 0.82 }, angle: 115 });
+  const base = { zIndex: 9999, colors, disableForReducedMotion: true };
+
+  // Two side cannons for an initial burst of depth.
+  confetti({ ...base, startVelocity: 55, spread: 100, ticks: 250, gravity: 0.8, particleCount: 90, origin: { x: 0.1, y: 0.85 }, angle: 60 });
+  confetti({ ...base, startVelocity: 55, spread: 100, ticks: 250, gravity: 0.8, particleCount: 90, origin: { x: 0.9, y: 0.85 }, angle: 120 });
+
+  // A wide, even top-down rain across the entire width so coverage feels uniform edge-to-edge.
+  const dropCount = 9;
+  for (let i = 0; i < dropCount; i++) {
+    const x = (i + 0.5) / dropCount; // evenly spaced from ~0.06 to ~0.94
+    confetti({
+      ...base,
+      particleCount: 32,
+      startVelocity: 28,
+      spread: 70,
+      ticks: 280,
+      gravity: 0.9,
+      scalar: 0.9,
+      origin: { x, y: -0.05 },
+      angle: 270,
+    });
+  }
+
+  // A second, slightly delayed wave to fill gaps and add duration without feeling sparse.
+  setTimeout(() => {
+    for (let i = 0; i < dropCount; i++) {
+      const x = (i + 1) / (dropCount + 1);
+      confetti({
+        ...base,
+        particleCount: 26,
+        startVelocity: 24,
+        spread: 65,
+        ticks: 260,
+        gravity: 0.9,
+        scalar: 0.85,
+        origin: { x, y: -0.05 },
+        angle: 270,
+      });
+    }
+  }, 180);
 }
 
 const APPLE_COLORS = [
