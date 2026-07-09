@@ -1857,7 +1857,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   };
 
   useEffect(() => {
-    if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+    if (focusId) { const el = areaRefs.current[focusId]; if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(el.value.length, el.value.length); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }
   }, [focusId]);
 
   const [noteHeights, setNoteHeights] = useState<Record<string,number>>({});
@@ -1930,13 +1930,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   React.useEffect(() => {
     if (!msEditId) return;
-    const t = setTimeout(() => msEditInputRef.current?.focus(), 300);
+    const t = setTimeout(() => { const el = msEditInputRef.current; if (el) { el.focus({ preventScroll: true }); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }, 300);
     return () => clearTimeout(t);
   }, [msEditId]);
 
   React.useEffect(() => {
     if (!addEventOpen) return;
-    const t = setTimeout(() => newLabelInputRef.current?.focus(), 320);
+    const t = setTimeout(() => { const el = newLabelInputRef.current; if (el) { el.focus({ preventScroll: true }); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }, 320);
     return () => clearTimeout(t);
   }, [addEventOpen]);
 
