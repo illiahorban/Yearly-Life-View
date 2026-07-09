@@ -3353,7 +3353,7 @@ function ConfirmDialog({ open, onClose, onConfirm, message, confirmLabel, dark }
           initial={false}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.28, ease: "easeOut" }}
-          onClick={onClose}
+          onClick={e => { e.stopPropagation(); onClose(); }}
         >
           <motion.div
             initial={{ opacity:0 }}

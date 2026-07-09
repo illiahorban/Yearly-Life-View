@@ -1,2 +1,3 @@
 - [Bilingualism rule](bilingual-rule.md) — all new UI text in Life Calendar must be added in both Russian and English via the existing i18n system.
 - [MilestoneModal ConfirmDialog placement](milestone-confirm-placement.md) — ConfirmDialog must live inside MilestoneModal (not GoalsModal), and delete onConfirm must call onChange to persist.
+- [Portal click bubbles via React tree, not DOM](portal-event-bubbling.md) — a react-portal dialog's own onClick(onClose) must stopPropagation, or it bubbles to an ancestor modal's backdrop onClick and closes it too.
