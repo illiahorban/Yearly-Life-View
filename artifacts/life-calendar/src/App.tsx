@@ -1867,6 +1867,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   }, [focusId]);
 
   const [noteHeights, setNoteHeights] = useState<Record<string,number>>({});
+  const pendingAddIdRef = React.useRef<string | null>(null);
   const autoResize = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
     const h = el.scrollHeight;
@@ -1878,8 +1879,24 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     }
   };
 
-  useEffect(() => {
-    Object.values(areaRefs.current).forEach(el => { if (el) autoResize(el); });
+  // useLayoutEffect runs synchronously after DOM mutations but before the browser
+  // paints — this lets us resize textareas and correct the scroll position in one
+  // atomic step so the user never sees a layout shift.
+  React.useLayoutEffect(() => {
+    const body = scrollBodyRef.current;
+    if (body) {
+      const savedScroll = body.scrollTop;
+      Object.values(areaRefs.current).forEach(el => { if (el) autoResize(el); });
+      if (pendingAddIdRef.current) {
+        // A new note was just appended — scroll to the bottom to reveal it.
+        body.scrollTop = body.scrollHeight;
+      } else {
+        // Ordinary resize (user is typing) — pin the container so it doesn't jump.
+        body.scrollTop = savedScroll;
+      }
+    } else {
+      Object.values(areaRefs.current).forEach(el => { if (el) autoResize(el); });
+    }
   }, [entries]);
 
   const { t, lang } = React.useContext(LangContext);
@@ -1965,17 +1982,19 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   const addEntry = () => {
     const id = makeId();
+    // Signal to useLayoutEffect that the next entries render is an add-note,
+    // so it should scroll to bottom instead of pinning the current position.
+    pendingAddIdRef.current = id;
     setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
-    // Scroll to bottom first, then focus with preventScroll so the browser
-    // never gets a chance to re-center the viewport around the focused element.
-    setTimeout(() => {
-      const body = scrollBodyRef.current;
-      if (body) body.scrollTop = body.scrollHeight;
+    // Focus after the layout phase (useLayoutEffect) has already scrolled to bottom,
+    // so preventScroll keeps everything exactly where the user sees it.
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const el = areaRefs.current[id];
         if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(0, 0); }
+        pendingAddIdRef.current = null;
       });
-    }, 50);
+    });
   };
   const updateEntry = (id: string, text: string) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, text } : e));
