@@ -1966,11 +1966,16 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const addEntry = () => {
     const id = makeId();
     setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
-    setFocusId(id);
+    // Scroll to bottom first, then focus with preventScroll so the browser
+    // never gets a chance to re-center the viewport around the focused element.
     setTimeout(() => {
       const body = scrollBodyRef.current;
       if (body) body.scrollTop = body.scrollHeight;
-    }, 60);
+      requestAnimationFrame(() => {
+        const el = areaRefs.current[id];
+        if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(0, 0); }
+      });
+    }, 50);
   };
   const updateEntry = (id: string, text: string) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, text } : e));
