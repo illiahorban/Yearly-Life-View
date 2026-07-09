@@ -1868,35 +1868,54 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   const [noteHeights, setNoteHeights] = useState<Record<string,number>>({});
   const pendingAddIdRef = React.useRef<string | null>(null);
-  const autoResize = (el: HTMLTextAreaElement) => {
+
+  // DOM-only resize — no state update, no re-render, safe inside useLayoutEffect.
+  const autoResizeDom = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
-    const h = el.scrollHeight;
-    el.style.height = h + "px";
+    el.style.height = el.scrollHeight + "px";
     el.style.overflowY = "hidden";
+  };
+  // Full resize — updates noteHeights state for button-overlay positioning.
+  const autoResize = (el: HTMLTextAreaElement) => {
+    autoResizeDom(el);
+    const h = el.scrollHeight;
     const id = Object.entries(areaRefs.current).find(([, ref]) => ref === el)?.[0];
-    if (id) {
-      setNoteHeights(prev => ({ ...prev, [id]: h }));
-    }
+    if (id) setNoteHeights(prev => prev[id] === h ? prev : { ...prev, [id]: h });
   };
 
-  // useLayoutEffect runs synchronously after DOM mutations but before paint.
-  // When adding a new note we ONLY resize that one new (empty) textarea —
-  // touching the existing ones would do height="auto" → reflow → scroll jump.
-  // For every other change (typing, delete, template) we resize all but pin scroll.
+  // Runs synchronously after DOM mutations, before the browser paints.
+  // Uses DOM-only resize to avoid triggering a second render (setNoteHeights)
+  // that would fight with our scroll correction.
   React.useLayoutEffect(() => {
     const body = scrollBodyRef.current;
     const addId = pendingAddIdRef.current;
     if (addId) {
-      // New note added: only initialise the new empty textarea, then reveal it.
+      // New note: initialise only the new (empty) textarea — never touch existing
+      // ones, because height="auto" would collapse them and shift the scroll.
+      // Clear the flag immediately so any follow-up entries change is not
+      // misclassified as an add-flow update.
+      pendingAddIdRef.current = null;
       const newEl = areaRefs.current[addId];
-      if (newEl) autoResize(newEl);
+      if (newEl) autoResizeDom(newEl);
       if (body) body.scrollTop = body.scrollHeight;
     } else {
-      // Ordinary change — resize everything but keep the viewport still.
+      // Typing / delete / template — resize all but pin the container position.
       const saved = body ? body.scrollTop : 0;
-      Object.values(areaRefs.current).forEach(el => { if (el) autoResize(el); });
+      Object.values(areaRefs.current).forEach(el => { if (el) autoResizeDom(el); });
       if (body) body.scrollTop = saved;
     }
+  }, [entries]);
+
+  // Separate effect to sync noteHeights state without interfering with scroll.
+  useEffect(() => {
+    const next: Record<string, number> = {};
+    Object.entries(areaRefs.current).forEach(([id, el]) => {
+      if (el) next[id] = el.scrollHeight;
+    });
+    setNoteHeights(prev => {
+      const changed = Object.entries(next).some(([k, v]) => prev[k] !== v);
+      return changed ? { ...prev, ...next } : prev;
+    });
   }, [entries]);
 
   const { t, lang } = React.useContext(LangContext);
@@ -1982,16 +2001,22 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   const addEntry = () => {
     const id = makeId();
-    // Signal to useLayoutEffect that the next entries render is an add-note,
-    // so it should scroll to bottom instead of pinning the current position.
     pendingAddIdRef.current = id;
     setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
-    // Focus after the layout phase (useLayoutEffect) has already scrolled to bottom,
-    // so preventScroll keeps everything exactly where the user sees it.
+    // Two RAFs: first fires after useLayoutEffect+paint, second after any
+    // follow-up renders (e.g. the noteHeights useEffect re-render).
+    // We then focus using the save/restore pattern — the only reliable way to
+    // prevent Chrome from scrolling an overflow container on focus().
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        const body = scrollBodyRef.current;
         const el = areaRefs.current[id];
-        if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(0, 0); }
+        if (el) {
+          const savedTop = body ? body.scrollTop : 0;
+          el.focus();
+          el.setSelectionRange(0, 0);
+          if (body) body.scrollTop = savedTop;
+        }
         pendingAddIdRef.current = null;
       });
     });
