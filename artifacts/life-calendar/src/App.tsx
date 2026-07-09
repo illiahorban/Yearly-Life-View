@@ -2958,6 +2958,8 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
     setDraftRecurring(false);
   };
 
+  const [hoveredId, setHoveredId] = useState<string|null>(null);
+
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputStyle: React.CSSProperties = { background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.03)", border:`1px solid ${borderColor}`, borderRadius:8, padding:"7px 10px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
 
@@ -3068,7 +3070,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const isEditing = editId === ms.id;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background: dark ? `color-mix(in srgb, ${ms.color} 12%, rgba(255,255,255,0.04))` : `color-mix(in srgb, ${ms.color} 8%, rgba(255,255,255,0.85))`, border:`1px solid ${ms.color}${isEditing ? "88" : "44"}`, borderLeft:`3px solid ${ms.color}`, transition:"border 150ms, background 150ms" }}
+                    style={{ background:`${ms.color}18`, border:`1px solid ${ms.color}${isEditing ? "55" : "33"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    onMouseEnter={() => setHoveredId(ms.id)}
+                    onMouseLeave={() => setHoveredId(null)}
                   >
                     {isEditing ? (
                       <div className="flex flex-col gap-2">
@@ -3114,17 +3118,21 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2.5">
-                          <span className="flex-1 text-[13px] font-medium" style={{ color:"var(--text)" }}><HighlightText text={ms.label} query={q} /></span>
-                          {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
-                          {showDate && <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
-                          <button onClick={() => startEdit(ms)} title={t("edit")}
-                            style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"inline-flex", alignItems:"center", transform:"scaleX(-1)" }}>✏️</button>
-                          <button onClick={() => setConfirmDeleteMsId(ms.id)}
-                            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                        <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
+                          <div className="flex-1 min-w-0 flex items-start gap-1">
+                            <span className="text-[13px] font-semibold leading-snug" style={{ color:ms.color, wordBreak:"break-word" }}><HighlightText text={ms.label} query={q} /></span>
+                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
+                          </div>
+                          {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
+                          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredId === ms.id ? 1 : 0, pointerEvents: hoveredId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
+                            <button onClick={() => startEdit(ms)} title={t("edit")}
+                              style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"flex", alignItems:"center", transform:"scaleX(-1)" }}>✏️</button>
+                            <button onClick={() => setConfirmDeleteMsId(ms.id)}
+                              style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                          </div>
                         </div>
                         {ms.description && (
-                          <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", margin:0 }}><HighlightText text={ms.description} query={q} /></p>
+                          <div className="text-[11px] leading-snug" style={{ color:"var(--text-secondary)" }}><HighlightText text={ms.description} query={q} /></div>
                         )}
                       </>
                     )}
