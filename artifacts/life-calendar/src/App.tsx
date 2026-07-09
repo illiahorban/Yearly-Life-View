@@ -2332,7 +2332,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onChange={e => updateEntry(entry.id, e.target.value)}
                     onInput={e => autoResize(e.currentTarget)}
                     onFocus={e => { setActiveEntryId(entry.id); autoResize(e.currentTarget); }}
-                    onBlur={e => { setActiveEntryId(null); autoResize(e.currentTarget); e.currentTarget.scrollTop = 0; }}
+                    onBlur={e => {
+                      setActiveEntryId(null);
+                      // Save/restore scroll container position around autoResize:
+                      // height="auto" momentarily collapses the textarea, shrinks
+                      // scrollHeight, and the browser clips scrollTop — that is the
+                      // jump seen when clicking "Add note" while editing a large note.
+                      const body = scrollBodyRef.current;
+                      const saved = body ? body.scrollTop : 0;
+                      autoResize(e.currentTarget);
+                      if (body) body.scrollTop = saved;
+                      e.currentTarget.scrollTop = 0;
+                    }}
                     onKeyDown={handleKey}
                     onMouseDown={e=>e.stopPropagation()}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
