@@ -1936,7 +1936,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   React.useEffect(() => {
     if (!msEditId) return;
-    const t = setTimeout(() => { const el = msEditInputRef.current; if (el) { el.focus({ preventScroll: true }); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }, 300);
+    const t = setTimeout(() => { const el = msEditInputRef.current; if (el) { el.focus({ preventScroll: true }); } }, 300);
     return () => clearTimeout(t);
   }, [msEditId]);
 
