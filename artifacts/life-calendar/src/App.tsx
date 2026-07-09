@@ -104,7 +104,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     notePlaceholder:"Add a note, emoji, or reflection… ✨", anotherNote:"Another note…",
     remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", deleteDayNotesConfirm:"Delete all notes for this day?", deleteGoalConfirm:"Delete this goal?", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
-    descPlaceholder:"Description (optional, up to 300 chars)…",
+    descPlaceholder:"Description (optional)…",
     repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
     today:"Today", week:"Week", week2:"weeks", week5:"weeks", done:"done", left:"left", goals:"goals",
@@ -175,7 +175,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     notePlaceholder:"Заметка, мысль или эмодзи… ✨", anotherNote:"Ещё заметка…",
     remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", deleteDayNotesConfirm:"Удалить все заметки этого дня?", deleteGoalConfirm:"Удалить эту цель?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
-    descPlaceholder:"Описание (необязательно, до 300 символов)…",
+    descPlaceholder:"Описание (необязательно)…",
     repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
@@ -2168,10 +2168,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto" }} />
                         </div>
                         <div style={{ position:"relative" }}>
-                          <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value.slice(0,300))}
+                          <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
                             placeholder={t("editDescPlaceholder")} rows={2}
-                            style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"5px 9px", paddingBottom:14, display:"block" }} />
-                          <span style={{ position:"absolute", bottom:3, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{msEditDesc.length}/300</span>
+                            style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"5px 9px", display:"block" }} />
                         </div>
                         <div className="flex items-center gap-2">
                           <label className="flex items-center gap-1 cursor-pointer select-none flex-1">
@@ -2221,10 +2220,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:1, width:"auto" }} />
               </div>
               <div style={{ position:"relative" }}>
-                <textarea value={newDesc} onChange={e => setNewDesc(e.target.value.slice(0,300))}
+                <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)}
                   placeholder={t("descPlaceholder")} rows={2}
-                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", paddingBottom:16, fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
-                <span style={{ position:"absolute", bottom:4, right:8, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{newDesc.length}/300</span>
+                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
               </div>
               <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
                 <input type="checkbox" checked={newRecurring} onChange={e => setNewRecurring(e.target.checked)}
@@ -3005,13 +3003,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
             </button>
           </div>
           <div style={{ position:"relative" }}>
-            <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value.slice(0,300))}
+            <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
               placeholder={t("descPlaceholder")} rows={2}
-              style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px", paddingBottom:18 }}
+              style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px" }}
             />
-            <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>
-              {draftDesc.length}/300
-            </span>
           </div>
           <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none" style={{ width:"fit-content" }}>
             <input type="checkbox" checked={draftRecurring} onChange={e => setDraftRecurring(e.target.checked)}
@@ -3070,11 +3065,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           />
                         </div>
                         <div style={{ position:"relative" }}>
-                          <textarea value={editDesc} onChange={e => setEditDesc(e.target.value.slice(0,300))}
+                          <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)}
                             placeholder={t("editDescPlaceholder")} rows={2}
-                            style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px", paddingBottom:18 }}
+                            style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px" }}
                           />
-                          <span style={{ position:"absolute", bottom:6, right:10, fontSize:10, color:"var(--text-tertiary)", pointerEvents:"none" }}>{editDesc.length}/300</span>
                         </div>
                         <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
                           <input type="checkbox" checked={editRecurring} onChange={e => setEditRecurring(e.target.checked)}
@@ -3100,7 +3094,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>↻</span>}
                           {showDate && <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
                           <button onClick={() => startEdit(ms)} title={t("edit")}
-                            style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex", transform:"scaleX(-1)" }}>✎</button>
+                            style={{ color:"var(--text-secondary)", background:"none", border:"none", cursor:"pointer", fontSize:13, lineHeight:1, padding:"0 2px", opacity:0.7, display:"inline-flex" }}>✎</button>
                           <button onClick={() => setConfirmDeleteMsId(ms.id)}
                             style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:"0 2px" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                         </div>
