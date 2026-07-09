@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ReactDOM from "react-dom";
 import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 import confetti from "canvas-confetti";
+import TextareaAutosize from "react-textarea-autosize";
 
 // ─── Tiny localStorage helpers ────────────────────────────────────────────────
 
@@ -1868,45 +1869,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     }
   }, [focusId]);
 
+  // Note height tracking is now delegated entirely to <TextareaAutosize>
+  // (react-textarea-autosize), which measures scrollHeight itself and keeps
+  // it in sync via a ResizeObserver — no manual rAF/height-hack juggling.
+  // We only keep the resulting heights around to position the hover-overlay
+  // buttons (color/delete) below the placeholder-height threshold.
   const [noteHeights, setNoteHeights] = useState<Record<string,number>>({});
-
-  // Resize one textarea and sync its height into noteHeights for button overlay.
-  // Called from onInput / onFocus / onBlur — never from an entries-wide effect,
-  // so it never touches textareas whose content hasn't changed.
-  const autoResize = (el: HTMLTextAreaElement) => {
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
-    el.style.overflowY = "hidden";
-    const h = el.scrollHeight;
-    const id = Object.entries(areaRefs.current).find(([, ref]) => ref === el)?.[0];
-    if (id) setNoteHeights(prev => prev[id] === h ? prev : { ...prev, [id]: h });
+  const handleNoteHeightChange = (id: string, h: number) => {
+    setNoteHeights(prev => prev[id] === h ? prev : { ...prev, [id]: h });
   };
-
-  // Re-sync every textarea's height after every commit (mount, text change,
-  // entry added/removed). Running this unconditionally — rather than only
-  // from onInput/onFocus/onBlur — closes a race where a textarea resized via
-  // an event handler (e.g. right after a paste) could end up out of sync
-  // with its final laid-out content once a sibling entry is added and the
-  // list re-renders. Since it only ever writes an inline height/overflow
-  // style, re-running it for unchanged entries is a harmless no-op.
-  React.useLayoutEffect(() => {
-    const heights: Record<string, number> = {};
-    let changed = false;
-    Object.entries(areaRefs.current).forEach(([id, el]) => {
-      if (!el) return;
-      el.style.height = "auto";
-      const h = el.scrollHeight;
-      el.style.height = h + "px";
-      el.style.overflowY = "hidden";
-      heights[id] = h;
-    });
-    setNoteHeights(prev => {
-      const keys = Object.keys(heights);
-      if (keys.length !== Object.keys(prev).length) changed = true;
-      else for (const k of keys) if (prev[k] !== heights[k]) { changed = true; break; }
-      return changed ? heights : prev;
-    });
-  }, [entries]);
 
   const { t, lang } = React.useContext(LangContext);
 
@@ -1992,31 +1963,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const addEntry = () => {
     const id = makeId();
     setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
-    // After React renders the new textarea, scroll to bottom then focus it.
-    // Two RAFs ensure we run after paint + any follow-up noteHeights re-render.
-    // Save/restore scrollTop around focus() — the only reliable way to stop
-    // Chrome from scrolling an overflow container when focus() is called.
+    // TextareaAutosize handles its own sizing on mount, so we only need to
+    // focus the new (empty) note and scroll it into view once it's painted.
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        // Re-sync every existing textarea's height before adding the new one.
-        // If a note was pasted and "Add note" clicked right after, the blur
-        // that fires when focus moves away can measure scrollHeight a frame
-        // too early (layout not yet settled for very long pasted text),
-        // leaving that note visually clipped. Recomputing here after paint
-        // guarantees every note reflects its true content height.
-        Object.entries(areaRefs.current).forEach(([entryId, el]) => {
-          if (el && entryId !== id) autoResize(el);
-        });
-        const body = scrollBodyRef.current;
-        if (body) body.scrollTop = body.scrollHeight;
-        const el = areaRefs.current[id];
-        if (el) {
-          const savedTop = body ? body.scrollTop : 0;
-          el.focus();
-          el.setSelectionRange(0, 0);
-          if (body) body.scrollTop = savedTop;
-        }
-      });
+      const body = scrollBodyRef.current;
+      if (body) body.scrollTop = body.scrollHeight;
+      areaRefs.current[id]?.focus();
     });
   };
   const updateEntry = (id: string, text: string) =>
@@ -2324,29 +2276,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 onMouseLeave={() => setHoveredEntryId(null)}
               >
                 <div style={{ position:"relative" }}>
-                  <textarea
+                  <TextareaAutosize
                     ref={el => { areaRefs.current[entry.id] = el; }}
                     value={entry.text}
                     onChange={e => updateEntry(entry.id, e.target.value)}
-                    onInput={e => autoResize(e.currentTarget)}
-                    onFocus={e => { setActiveEntryId(entry.id); autoResize(e.currentTarget); }}
-                    onBlur={e => {
-                      setActiveEntryId(null);
-                      // Save/restore scroll container position around autoResize:
-                      // height="auto" momentarily collapses the textarea, shrinks
-                      // scrollHeight, and the browser clips scrollTop — that is the
-                      // jump seen when clicking "Add note" while editing a large note.
-                      const body = scrollBodyRef.current;
-                      const saved = body ? body.scrollTop : 0;
-                      autoResize(e.currentTarget);
-                      if (body) body.scrollTop = saved;
-                      e.currentTarget.scrollTop = 0;
-                    }}
+                    onHeightChange={h => handleNoteHeightChange(entry.id, h)}
+                    onFocus={() => setActiveEntryId(entry.id)}
+                    onBlur={() => setActiveEntryId(null)}
                     onKeyDown={handleKey}
                     onMouseDown={e=>e.stopPropagation()}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
-                    rows={1}
-                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, overflowY:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
+                    minRows={1}
+                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", minHeight:44, overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
                   <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none" }}>
                     <button
