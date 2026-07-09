@@ -1694,7 +1694,12 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   // Compute portal tooltip position so it never clips outside viewport
   const tooltipPortal = hovered && tooltipRect && hasNote ? ReactDOM.createPortal(
     (() => {
-      const TW = 240, TH_EST = activeNotes.length * 60;
+      const TW = 240;
+      const LINE_H = 18.6, MAX_LINES = 10, PADDING_V = 22;
+      const TH_EST = activeNotes.reduce((sum, n) => {
+        const lineCount = Math.min(n.text.split("\n").length, MAX_LINES);
+        return sum + lineCount * LINE_H + PADDING_V + 5;
+      }, 0);
       const spaceAbove = tooltipRect.top;
       const showBelow = spaceAbove < TH_EST + 20;
       const top = showBelow ? tooltipRect.bottom + 8 : tooltipRect.top - 8;
@@ -1706,9 +1711,14 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       return (
         <div style={{ position:"fixed", top, left, width:TW, zIndex:9999, background:"rgba(29,29,31,0.96)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", color:"rgba(255,255,255,0.92)", fontSize:12, lineHeight:1.55, borderRadius:12, padding:"10px 12px", wordBreak:"break-word", boxShadow:"0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset", border:"1px solid rgba(255,255,255,0.08)", pointerEvents:"none", transform: showBelow ? "none" : "translateY(-100%)" }}>
           {arrowOnTop && <div style={{ position:"absolute", bottom:"100%", left:arrowLeft, width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderBottom:"6px solid rgba(29,29,31,0.96)" }} />}
-          {activeNotes.map((n, i) => (
-            <div key={n.id} style={{ marginTop: i > 0 ? 5 : 0, padding:"6px 9px", borderRadius:8, background: n.color ? `color-mix(in srgb, ${n.color} 28%, rgba(255,255,255,0.04))` : "rgba(255,255,255,0.06)", border: n.color ? `1px solid color-mix(in srgb, ${n.color} 50%, rgba(255,255,255,0.12))` : "1px solid rgba(255,255,255,0.08)", whiteSpace:"pre-wrap" }}>{n.text}</div>
-          ))}
+          {activeNotes.map((n, i) => {
+            const lines = n.text.split("\n");
+            const clipped = lines.length > MAX_LINES;
+            const displayText = clipped ? lines.slice(0, MAX_LINES).join("\n") + "\n…" : n.text;
+            return (
+              <div key={n.id} style={{ marginTop: i > 0 ? 5 : 0, padding:"6px 9px", borderRadius:8, background: n.color ? `color-mix(in srgb, ${n.color} 28%, rgba(255,255,255,0.04))` : "rgba(255,255,255,0.06)", border: n.color ? `1px solid color-mix(in srgb, ${n.color} 50%, rgba(255,255,255,0.12))` : "1px solid rgba(255,255,255,0.08)", whiteSpace:"pre-wrap" }}>{displayText}</div>
+            );
+          })}
           {!arrowOnTop && <div style={{ position:"absolute", top:"100%", left:arrowLeft, width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />}
         </div>
       );
