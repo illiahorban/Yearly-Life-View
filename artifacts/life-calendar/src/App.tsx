@@ -261,13 +261,8 @@ function fireConfettiCannons() {
   const base = { zIndex: 9999, colors, disableForReducedMotion: true };
 
   // Two side cannons, angled steeply across the screen so particles travel the full width.
-  const fire = (delay: number, scale: number) => setTimeout(() => {
-    confetti({ ...base, startVelocity: 65 * scale, spread: 80, ticks: 300, gravity: 0.75, particleCount: Math.round(110 * scale), origin: { x: -0.05, y: 0.8 }, angle: 55 });
-    confetti({ ...base, startVelocity: 65 * scale, spread: 80, ticks: 300, gravity: 0.75, particleCount: Math.round(110 * scale), origin: { x: 1.05, y: 0.8 }, angle: 125 });
-  }, delay);
-
-  fire(0, 1);
-  fire(160, 0.7);
+  confetti({ ...base, startVelocity: 65, spread: 80, ticks: 300, gravity: 0.75, particleCount: 150, origin: { x: -0.05, y: 0.8 }, angle: 55 });
+  confetti({ ...base, startVelocity: 65, spread: 80, ticks: 300, gravity: 0.75, particleCount: 150, origin: { x: 1.05, y: 0.8 }, angle: 125 });
 }
 
 const APPLE_COLORS = [
