@@ -2515,12 +2515,9 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
 
         {/* Body */}
         <div className="overflow-y-auto flex-1">
-          {totalGoals === 0 ? (
-            <div style={{ padding:"40px 20px", textAlign:"center", color:"var(--text-tertiary)", fontSize:13 }}>{t("noGoalsYet")}</div>
-          ) : (
-            <>
-            {/* Year goals section */}
-            <div style={{ padding:"10px 12px 4px" }}>
+          <>
+          {/* Year goals section — always visible */}
+          <div style={{ padding:"10px 12px 4px" }}>
               <div style={{ borderRadius:16, border:`1.5px solid ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.12)"}`, overflow:"hidden", background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.03)" }}>
                 <div style={{ padding:"10px 14px 8px", display:"flex", alignItems:"center", gap:8 }}>
                   <span style={{ fontSize:16 }}>🎯</span>
@@ -2664,8 +2661,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
               );
             })}
             <div style={{ height:6 }} />
-            </>
-          )}
+          </>
           <div style={{ height:12 }} />
         </div>
       </motion.div>
