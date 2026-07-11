@@ -376,6 +376,23 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
 }
 
 const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#1c1c1e","#8e8e93","#c7c7cc"];
+
+/** In dark mode, lift colours whose perceived luminance is below 0.45 so they stay legible on dark surfaces.
+ *  Bright colours are returned unchanged; very dark ones become a visible mid-tone while keeping their hue. */
+function adaptColor(hex: string, dark: boolean): string {
+  if (!dark) return hex;
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  if (lum >= 0.45) return hex;
+  const factor = Math.min(0.82, (0.55 - lum) / (1 - lum));
+  const nr = Math.round(r + (255 - r) * factor);
+  const ng = Math.round(g + (255 - g) * factor);
+  const nb = Math.round(b + (255 - b) * factor);
+  return `#${nr.toString(16).padStart(2, '0')}${ng.toString(16).padStart(2, '0')}${nb.toString(16).padStart(2, '0')}`;
+}
 const LIFE_ACCENT = "#007aff";
 
 function LifeIcon() {
@@ -881,9 +898,9 @@ function App() {
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
-                      style={{ background: dark ? `${ms.color}30` : `${ms.color}1a`, border:`1px solid ${ms.color}${dark?"88":"44"}`, color: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, cursor:"pointer" }}
+                      style={{ background:`${ms.color}22`, border:`1.5px solid ${adaptColor(ms.color, dark)}cc`, color:adaptColor(ms.color, dark), cursor:"pointer" }}
                     >
-                      <span style={{ width:6, height:6, borderRadius:999, background: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, display:"inline-block", flexShrink:0 }} />
+                      <span style={{ width:6, height:6, borderRadius:999, background:adaptColor(ms.color, dark), display:"inline-block", flexShrink:0 }} />
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
                       <span>{days === 0 ? t("todayCountdown") : `${days}${t("daysShort")}`}</span>
@@ -1496,6 +1513,7 @@ function BlocksRenderer({
                                 accentColor={effectiveQ.border}
                                 highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
                                 isActiveMatch={activeMatchKey === dateKey(d)}
+                                dark={dark}
                                 onOpen={() => { if (dayState(d)!=="out") onNoteOpen(dateKey(d)); }}
                               />
                             ))}
@@ -1622,9 +1640,9 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, dayGoals, accentColor, highlighted, isActiveMatch, onOpen }: {
+function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, dayGoals, accentColor, highlighted, isActiveMatch, dark, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  notes?: NoteEntry[]; milestones: Milestone[]; dayGoals?: DayGoals; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; onOpen: () => void;
+  notes?: NoteEntry[]; milestones: Milestone[]; dayGoals?: DayGoals; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; dark: boolean; onOpen: () => void;
 }) {
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const tileRef = useRef<HTMLDivElement>(null);
@@ -1682,7 +1700,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const msBar = dayMilestones.length > 0 ? (
     <div style={{ position:"absolute", top:0, left:0, right:0, height:6, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: isPast ? 0.6 : 1 }}>
-      {dayMilestones.map(ms => <div key={ms.id} style={{ flex:1, background:ms.color }} />)}
+      {dayMilestones.map(ms => <div key={ms.id} style={{ flex:1, background:adaptColor(ms.color, dark) }} />)}
     </div>
   ) : null;
 
@@ -2182,7 +2200,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const isEditing = msEditId === ms.id;
                 return (
                   <div key={ms.id}
-                    style={{ borderRadius:12, overflow:"hidden", background: isEditing ? `${ms.color}${dark?"28":"14"}` : `${ms.color}${dark?"30":"18"}`, border:`1px solid ${ms.color}${isEditing?(dark?"99":"55"):(dark?"77":"33")}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ borderRadius:12, overflow:"hidden", background:`${ms.color}20`, border:`1.5px solid ${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
@@ -2190,7 +2208,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-start gap-1">
-                            <span className="text-[13px] font-semibold leading-snug" style={{ color: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, wordBreak:"break-word" }}>{ms.label}</span>
+                            <span className="text-[13px] font-semibold leading-snug" style={{ color:adaptColor(ms.color, dark), wordBreak:"break-word" }}>{ms.label}</span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
@@ -3091,7 +3109,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const isEditing = editId === ms.id;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background:`${ms.color}${dark?"30":"18"}`, border:`1px solid ${ms.color}${isEditing?(dark?"99":"55"):(dark?"77":"33")}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ background:`${ms.color}20`, border:`1.5px solid ${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
@@ -3141,7 +3159,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-center gap-1">
-                            <span className="text-[13px] font-semibold" style={{ color: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}><HighlightText text={ms.label} query={q} /></span>
+                            <span className="text-[13px] font-semibold" style={{ color:adaptColor(ms.color, dark), overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}><HighlightText text={ms.label} query={q} /></span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
