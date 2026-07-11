@@ -933,7 +933,6 @@ function App() {
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
                       style={{ background:msColBg, border:`1.5px solid ${msColBdr}`, color:msColTxt, cursor:"pointer" }}
                     >
-                      <span style={{ width:6, height:6, borderRadius:999, background:msColDot, display:"inline-block", flexShrink:0 }} />
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
                       <span>{days === 0 ? t("todayCountdown") : `${days}${t("daysShort")}`}</span>
