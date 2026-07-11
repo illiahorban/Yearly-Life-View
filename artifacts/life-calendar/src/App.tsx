@@ -2141,6 +2141,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               )}
             </div>
             {goalsDraft.count > 0 && (
+              <div style={{ height:4, borderRadius:999, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)", overflow:"hidden", marginBottom:10 }}>
+                <div style={{ height:"100%", width:`${Math.round((goalsDraft.done.filter(Boolean).length/goalsDraft.count)*100)}%`, background:"#34c759", borderRadius:999, transition:"width 400ms ease" }} />
+              </div>
+            )}
+            {goalsDraft.count > 0 && (
               <div className="flex flex-col gap-1.5">
                 {Array.from({length:goalsDraft.count},(_,i)=>{
                   const done = goalsDraft.done[i]??false;
