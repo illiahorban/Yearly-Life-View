@@ -2237,6 +2237,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const cardBg  = ach2 ? ach2.bg     : `${ms.color}20`;
                 const cardBdr = ach2 ? ach2.border  : `${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`;
                 const cardTxt = ach2 ? ach2.text    : adaptColor(ms.color, dark);
+                const cardFormTxt = ach2 ? ach2.text : "var(--text)";
+                const cardFormSec = ach2 ? ach2.text : "var(--text-secondary)";
+                const cardFormBdr = ach2 ? "rgba(0,0,0,0.15)" : borderColor;
+                const cardFormBg  = ach2 ? "rgba(0,0,0,0.06)" : inputBg;
                 return (
                   <div key={ms.id}
                     style={{ borderRadius:12, overflow:"hidden", background:cardBg, border:`1.5px solid ${cardBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
@@ -2257,7 +2261,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                               style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                           </div>
                         </div>
-                        {ms.description && <div className="text-[11px] leading-snug" style={{ color:"var(--text-secondary)" }}>{ms.description}</div>}
+                        {ms.description && <div className="text-[11px] leading-snug" style={{ color:cardFormSec }}>{ms.description}</div>}
                       </div>
                     </div>
                     {/* Edit form — expands when editing */}
@@ -2272,23 +2276,23 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         <div className="flex gap-1.5">
                           <input ref={msEditInputRef} value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
                             onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
-                            placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:2, width:"auto" }} />
+                            placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:2, width:"auto", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                           <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
-                            lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto" }} />
+                            lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                         </div>
                         <div style={{ position:"relative" }}>
                           <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
                             placeholder={t("editDescPlaceholder")} rows={4}
-                            style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"5px 9px", display:"block" }} />
+                            style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"5px 9px", display:"block", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                         </div>
                         <div className="flex items-center gap-2">
                           <label className="flex items-center gap-1 cursor-pointer select-none flex-1">
                             <input type="checkbox" checked={msEditRecurring} onChange={e => setMsEditRecurring(e.target.checked)}
                               style={{ width:12, height:12, accentColor:"#007aff", cursor:"pointer" }} />
-                            <span style={{ fontSize:11, color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
+                            <span style={{ fontSize:11, color:cardFormSec }}>{t("repeatYearly")}</span>
                           </label>
                           <button onClick={() => setMsEditId(null)}
-                            style={{ height:26, padding:"0 10px", borderRadius:7, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
+                            style={{ height:26, padding:"0 10px", borderRadius:7, border:`1px solid ${cardFormBdr}`, background:"transparent", color:cardFormSec, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
                           <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
                             style={{ height:26, padding:"0 12px", borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:11, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("saveChanges")}</button>
                         </div>
