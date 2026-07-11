@@ -964,10 +964,12 @@ function App() {
           </div>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[calc(60px+0.75rem)] pr-[calc(60px+0.75rem)] sm:pl-[calc(60px+1rem)] sm:pr-[calc(60px+1rem)]">
-            <div className="grid grid-cols-7 gap-2 sm:gap-3">
+          <div className="mt-3 flex flex-row items-center">
+            <div style={{ width:60, flexShrink:0 }} />
+            <div className="grid grid-cols-7 gap-2 sm:gap-3" style={{ flex:1, minWidth:0 }}>
               {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
+            <div style={{ width:60, flexShrink:0 }} />
           </div>
         </div>
       </header>
