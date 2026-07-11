@@ -493,6 +493,17 @@ function App() {
   // Settings dropdown
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [factoryResetStep, setFactoryResetStep] = useState(0);
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(() => {
+      document.documentElement.style.setProperty("--header-h", `${el.getBoundingClientRect().height}px`);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const settingsRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!settingsOpen) return;
@@ -817,7 +828,7 @@ function App() {
     <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
 
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
+      <header ref={headerRef} className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
         <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-5 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -963,16 +974,23 @@ function App() {
           </AnimatePresence>
           </div>
 
-          {/* Sticky weekday labels */}
-          <div className="mt-3 pl-[60px] pr-[60px]">
-            <div className="grid grid-cols-7 gap-2 sm:gap-3">
-              {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
-            </div>
-          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-5 sm:px-8 py-8">
+
+        {/* Weekday labels — same flex structure as week rows for pixel-perfect alignment */}
+        <div className="sticky z-10 pb-2" style={{ top: "var(--header-h, 0px)", background: "var(--bg)" }}>
+          <div style={{ display:"flex", flexDirection:"row", alignItems:"center" }}>
+            <div style={{ width:60, flexShrink:0 }} />
+            <div className="grid grid-cols-7 gap-2 sm:gap-3" style={{ flex:1, minWidth:0 }}>
+              {weekdays.map((w,i) => (
+                <div key={i} className="text-center text-[11px] sm:text-[13px] font-medium tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{w}</div>
+              ))}
+            </div>
+            <div style={{ width:60, flexShrink:0 }} />
+          </div>
+        </div>
 
         <LayoutGroup>
           <div className="flex flex-col gap-6">
