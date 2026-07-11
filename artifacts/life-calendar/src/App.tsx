@@ -881,9 +881,9 @@ function App() {
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
-                      style={{ background:`${ms.color}1a`, border:`1px solid ${ms.color}44`, color:ms.color, cursor:"pointer" }}
+                      style={{ background: dark ? `${ms.color}30` : `${ms.color}1a`, border:`1px solid ${ms.color}${dark?"88":"44"}`, color: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, cursor:"pointer" }}
                     >
-                      <span style={{ width:6, height:6, borderRadius:999, background:ms.color, display:"inline-block", flexShrink:0 }} />
+                      <span style={{ width:6, height:6, borderRadius:999, background: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, display:"inline-block", flexShrink:0 }} />
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
                       <span>{days === 0 ? t("todayCountdown") : `${days}${t("daysShort")}`}</span>
@@ -2182,7 +2182,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const isEditing = msEditId === ms.id;
                 return (
                   <div key={ms.id}
-                    style={{ borderRadius:12, overflow:"hidden", background: isEditing ? `${ms.color}14` : `${ms.color}18`, border:`1px solid ${ms.color}${isEditing?"55":"33"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ borderRadius:12, overflow:"hidden", background: isEditing ? `${ms.color}${dark?"28":"14"}` : `${ms.color}${dark?"30":"18"}`, border:`1px solid ${ms.color}${isEditing?(dark?"99":"55"):(dark?"77":"33")}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
@@ -2190,7 +2190,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-start gap-1">
-                            <span className="text-[13px] font-semibold leading-snug" style={{ color:ms.color, wordBreak:"break-word" }}>{ms.label}</span>
+                            <span className="text-[13px] font-semibold leading-snug" style={{ color: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, wordBreak:"break-word" }}>{ms.label}</span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
@@ -3091,7 +3091,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const isEditing = editId === ms.id;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background:`${ms.color}18`, border:`1px solid ${ms.color}${isEditing ? "55" : "33"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ background:`${ms.color}${dark?"30":"18"}`, border:`1px solid ${ms.color}${isEditing?(dark?"99":"55"):(dark?"77":"33")}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
@@ -3141,7 +3141,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-center gap-1">
-                            <span className="text-[13px] font-semibold" style={{ color:ms.color, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}><HighlightText text={ms.label} query={q} /></span>
+                            <span className="text-[13px] font-semibold" style={{ color: dark ? `color-mix(in srgb, ${ms.color} 60%, white)` : ms.color, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}><HighlightText text={ms.label} query={q} /></span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
