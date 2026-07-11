@@ -3255,7 +3255,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
     setColorPickerGoalId(null);
   };
 
-  const save = () => onSave({ description:description.trim(), goals: goals.filter(g=>g.text.trim()) }, label.trim() || blockLabel);
+  const save = () => onSave({ description:description.trim(), goals: goals.map((g, i) => g.text.trim() ? g : { ...g, text: `${t("goal")} ${i + 1}` }) }, label.trim() || blockLabel);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)";
