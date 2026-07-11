@@ -48,7 +48,7 @@ task = "shell.exec"
 args = "PORT=22196 BASE_PATH=/ pnpm --filter @workspace/life-calendar run dev"
 
 [agent]
-stack = "PNPM_WORKSPACE"
+stack = "BEST_EFFORT_FALLBACK"
 expertMode = true
 
 [postMerge]
