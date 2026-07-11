@@ -410,7 +410,7 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   if (lum > 0.70) {
     return dark
       ? { bg:"#ffffff", border:"rgba(255,255,255,0.55)", text:"#18181b", marker:"#ffffff" }
-      : { bg:"#ffffff", border:"rgba(0,0,0,0.14)",       text:"#27272a", marker:"#ffffff", markerBorder:"inset 0 0 0 1.5px #d4d4d8" };
+      : { bg:"#ffffff", border:"rgba(0,0,0,0.14)",       text:"#27272a", marker:"#ffffff" };
   }
   if (lum < 0.12) {
     return dark
