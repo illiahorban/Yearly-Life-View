@@ -280,7 +280,7 @@ const APPLE_COLORS = [
   { key:"brown",  label:"Brown",  light:"#a2845e", dark:"#ac8e68" },
   { key:"black",  label:"Black",  light:"#1c1c1e", dark:"#3a3a3c" },
   { key:"grey",   label:"Grey",   light:"#8e8e93", dark:"#636366" },
-  { key:"white",  label:"White",  light:"#c7c7cc", dark:"#ebebf5" },
+  { key:"white",  label:"White",  light:"#d2d2d6", dark:"#ebebf5" },
 ] as const;
 
 type AppleColorKey = typeof APPLE_COLORS[number]["key"];
