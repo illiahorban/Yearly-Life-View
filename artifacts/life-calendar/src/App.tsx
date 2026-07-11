@@ -2748,11 +2748,11 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
       />
       <motion.div layout initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }}
         transition={{ type: "spring", stiffness: 360, damping: 30 }} onClick={e => e.stopPropagation()}
-        className="w-full max-w-md flex flex-col"
-        style={{ background: modalBg, backdropFilter: "saturate(180%) blur(28px)", WebkitBackdropFilter: "saturate(180%) blur(28px)", borderRadius: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.24)", border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`, overflow: "hidden", maxHeight: "82vh" }}
+        className="w-full max-w-md"
+        style={{ background: modalBg, backdropFilter: "saturate(180%) blur(28px)", WebkitBackdropFilter: "saturate(180%) blur(28px)", borderRadius: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.24)", border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`, overflowY: "auto", maxHeight: "82vh" }}
       >
         {/* Header */}
-        <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+        <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${borderColor}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <h2 style={{ margin: 0, fontSize: 17, fontWeight: 650, letterSpacing: "-0.01em", color: "var(--text)" }}>{t("allNotes")}</h2>
@@ -2782,7 +2782,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
         </div>
 
         {/* Add note form */}
-        <div style={{ padding: "12px 20px 14px", borderBottom: `1px solid ${borderColor}`, flexShrink: 0 }}>
+        <div style={{ padding: "12px 20px 14px", borderBottom: `1px solid ${borderColor}` }}>
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 9, alignItems: "center" }}>
             <button onClick={() => setDraftColor(null)} title={t("noColor")}
               style={{ width: 20, height: 20, borderRadius: 999, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: draftColor === null ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-tertiary)", flexShrink: 0 }}>
@@ -2829,7 +2829,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
         </div>
 
         {/* Body */}
-        <div style={{ overflowY: "auto", padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
           {allDaysCount === 0 && !draftText ? (
             <p style={{ textAlign: "center", color: "var(--text-tertiary)", fontSize: 13, padding: "24px 0", margin: 0 }}>{t("noNotesAtAll")}</p>
           ) : totalCount === 0 && q ? (
@@ -2994,7 +2994,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
       <motion.div layout initial={{ opacity:0, scale:0.96, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md"
-        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
+        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflowY:"auto", maxHeight:"82vh" }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -3064,7 +3064,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
         </div>
 
         {/* List */}
-        <div className="px-6 max-h-64 overflow-y-auto">
+        <div className="px-6">
           {items.length === 0 && (
             <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("noMilestones")}</div>
           )}
