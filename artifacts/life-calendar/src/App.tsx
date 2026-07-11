@@ -393,6 +393,34 @@ function adaptColor(hex: string, dark: boolean): string {
   const nb = Math.round(b + (255 - b) * factor);
   return `#${nr.toString(16).padStart(2, '0')}${ng.toString(16).padStart(2, '0')}${nb.toString(16).padStart(2, '0')}`;
 }
+
+/** Returns adaptive styles for achromatic colours (white/grey/black) that stay legible in both themes.
+ *  Returns null for any chromatic (saturated) colour so callers fall back to adaptColor. */
+type AchromaticStyle = { bg: string; border: string; text: string; marker: string };
+function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
+  const h = hex.replace('#', '').toLowerCase();
+  if (h.length !== 6) return null;
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  const maxC = Math.max(r,g,b);
+  const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
+  if (sat > 0.18) return null;
+  if (lum > 0.70) {
+    return dark
+      ? { bg:"#ffffff", border:"rgba(255,255,255,0.55)", text:"#18181b", marker:"#ffffff" }
+      : { bg:"#ffffff", border:"rgba(0,0,0,0.14)",       text:"#27272a", marker:"#c8c8cd" };
+  }
+  if (lum < 0.12) {
+    return dark
+      ? { bg:"#27272a", border:"rgba(255,255,255,0.18)", text:"#e4e4e7", marker:"#52525b" }
+      : { bg:"#09090b", border:"rgba(9,9,11,0.6)",       text:"#ffffff", marker:"#09090b" };
+  }
+  return dark
+    ? { bg:"#a1a1aa", border:"rgba(161,161,170,0.55)",   text:"#18181b", marker:"#a1a1aa" }
+    : { bg:"#e4e4e7", border:"rgba(113,113,122,0.45)",   text:"#27272a", marker:"#8e8e93" };
+}
 const LIFE_ACCENT = "#007aff";
 
 function LifeIcon() {
@@ -894,13 +922,18 @@ function App() {
                 {nextMilestones.map(ms => {
                   const [y2, m2, d2] = ms.date.split("-").map(Number) as [number,number,number];
                   const days = daysBetween(today, new Date(y2, m2-1, d2));
+                  const ach = achromaticStyle(ms.color, dark);
+                  const msColBg  = ach ? ach.bg     : `${ms.color}22`;
+                  const msColBdr = ach ? ach.border  : `${adaptColor(ms.color, dark)}cc`;
+                  const msColTxt = ach ? ach.text    : adaptColor(ms.color, dark);
+                  const msColDot = ach ? ach.marker  : adaptColor(ms.color, dark);
                   return (
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
-                      style={{ background:`${ms.color}22`, border:`1.5px solid ${adaptColor(ms.color, dark)}cc`, color:adaptColor(ms.color, dark), cursor:"pointer" }}
+                      style={{ background:msColBg, border:`1.5px solid ${msColBdr}`, color:msColTxt, cursor:"pointer" }}
                     >
-                      <span style={{ width:6, height:6, borderRadius:999, background:adaptColor(ms.color, dark), display:"inline-block", flexShrink:0 }} />
+                      <span style={{ width:6, height:6, borderRadius:999, background:msColDot, display:"inline-block", flexShrink:0 }} />
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
                       <span>{days === 0 ? t("todayCountdown") : `${days}${t("daysShort")}`}</span>
@@ -1702,7 +1735,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const msBar = dayMilestones.length > 0 ? (
     <div style={{ position:"absolute", top:0, left:0, right:0, height:6, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: isPast ? 0.6 : 1 }}>
-      {dayMilestones.map(ms => <div key={ms.id} style={{ flex:1, background:adaptColor(ms.color, dark) }} />)}
+      {dayMilestones.map(ms => { const ach = achromaticStyle(ms.color, dark); return <div key={ms.id} style={{ flex:1, background: ach ? ach.marker : adaptColor(ms.color, dark) }} />; })}
     </div>
   ) : null;
 
@@ -2200,9 +2233,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             <div className="flex flex-col gap-1.5">
               {dayMilestones.map(ms => {
                 const isEditing = msEditId === ms.id;
+                const ach2 = achromaticStyle(ms.color, dark);
+                const cardBg  = ach2 ? ach2.bg     : `${ms.color}20`;
+                const cardBdr = ach2 ? ach2.border  : `${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`;
+                const cardTxt = ach2 ? ach2.text    : adaptColor(ms.color, dark);
                 return (
                   <div key={ms.id}
-                    style={{ borderRadius:12, overflow:"hidden", background:`${ms.color}20`, border:`1.5px solid ${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ borderRadius:12, overflow:"hidden", background:cardBg, border:`1.5px solid ${cardBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
@@ -2210,7 +2247,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-start gap-1">
-                            <span className="text-[13px] font-semibold leading-snug" style={{ color:adaptColor(ms.color, dark), wordBreak:"break-word" }}>{ms.label}</span>
+                            <span className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word" }}>{ms.label}</span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
@@ -3109,9 +3146,13 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
               const renderCard = (ms: Milestone, showDate: boolean) => {
                 const isEditing = editId === ms.id;
+                const ach3 = achromaticStyle(ms.color, dark);
+                const rcBg  = ach3 ? ach3.bg     : `${ms.color}20`;
+                const rcBdr = ach3 ? ach3.border  : `${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`;
+                const rcTxt = ach3 ? ach3.text    : adaptColor(ms.color, dark);
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background:`${ms.color}20`, border:`1.5px solid ${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ background:rcBg, border:`1.5px solid ${rcBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
@@ -3161,7 +3202,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-center gap-1">
-                            <span className="text-[13px] font-semibold" style={{ color:adaptColor(ms.color, dark), overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}><HighlightText text={ms.label} query={q} /></span>
+                            <span className="text-[13px] font-semibold" style={{ color:rcTxt, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}><HighlightText text={ms.label} query={q} /></span>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
