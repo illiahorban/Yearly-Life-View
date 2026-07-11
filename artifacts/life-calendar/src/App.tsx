@@ -396,7 +396,7 @@ function adaptColor(hex: string, dark: boolean): string {
 
 /** Returns adaptive styles for achromatic colours (white/grey/black) that stay legible in both themes.
  *  Returns null for any chromatic (saturated) colour so callers fall back to adaptColor. */
-type AchromaticStyle = { bg: string; border: string; text: string; marker: string };
+type AchromaticStyle = { bg: string; border: string; text: string; marker: string; markerBorder?: string };
 function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   const h = hex.replace('#', '').toLowerCase();
   if (h.length !== 6) return null;
@@ -410,7 +410,7 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   if (lum > 0.70) {
     return dark
       ? { bg:"#ffffff", border:"rgba(255,255,255,0.55)", text:"#18181b", marker:"#ffffff" }
-      : { bg:"#ffffff", border:"rgba(0,0,0,0.14)",       text:"#27272a", marker:"#c8c8cd" };
+      : { bg:"#ffffff", border:"rgba(0,0,0,0.14)",       text:"#27272a", marker:"#ffffff", markerBorder:"inset 0 0 0 1.5px #d4d4d8" };
   }
   if (lum < 0.12) {
     return dark
@@ -1735,7 +1735,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const msBar = dayMilestones.length > 0 ? (
     <div style={{ position:"absolute", top:0, left:0, right:0, height:6, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: isPast ? 0.6 : 1 }}>
-      {dayMilestones.map(ms => { const ach = achromaticStyle(ms.color, dark); return <div key={ms.id} style={{ flex:1, background: ach ? ach.marker : adaptColor(ms.color, dark) }} />; })}
+      {dayMilestones.map(ms => { const ach = achromaticStyle(ms.color, dark); return <div key={ms.id} style={{ flex:1, background: ach ? ach.marker : adaptColor(ms.color, dark), boxShadow: ach?.markerBorder }} />; })}
     </div>
   ) : null;
 
