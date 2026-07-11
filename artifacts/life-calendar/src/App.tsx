@@ -4093,24 +4093,20 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
   const [formName, setFormName] = useState("");
   const [formItems, setFormItems] = useState<string[]>(() => {
     if (prefillItems && prefillItems.length > 0) {
-      const padded = [...prefillItems];
-      while (padded.length < 3) padded.push("");
-      return padded;
+      return [...prefillItems];
     }
-    return ["","",""];
+    return [""];
   });
 
   const startNew = () => {
     setEditingId("__new__");
     setFormName("");
-    setFormItems(["","",""]);
+    setFormItems([""]);
   };
   const startEdit = (tpl: DayTemplate) => {
     setEditingId(tpl.id);
     setFormName(tpl.name);
-    const items = [...tpl.items];
-    while (items.length < 3) items.push("");
-    setFormItems(items);
+    setFormItems(tpl.items.length > 0 ? [...tpl.items] : [""]);
   };
   const cancelEdit = () => setEditingId(null);
 
