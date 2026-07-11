@@ -1691,6 +1691,17 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const handleMouseLeave = () => setTooltipRect(null);
   const hov = { onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave, onClick: onOpen };
 
+  useEffect(() => {
+    if (!hovered) return;
+    const hide = () => setTooltipRect(null);
+    window.addEventListener("wheel", hide, { passive: true });
+    window.addEventListener("scroll", hide, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener("wheel", hide);
+      window.removeEventListener("scroll", hide, { capture: true });
+    };
+  }, [hovered]);
+
   // Compute portal tooltip position so it never clips outside viewport
   const tooltipPortal = hovered && tooltipRect && hasNote ? ReactDOM.createPortal(
     (() => {
