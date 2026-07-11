@@ -860,7 +860,7 @@ function App() {
           </div>
 
           <div className="mt-3 h-1.5 w-full overflow-hidden" style={{ background: "var(--border-soft)", borderRadius: 999 }}>
-            <div className="h-full transition-[width] duration-700 ease-out" style={{ width: `${yearProgress}%`, background: "linear-gradient(90deg,#5ed47b 0%,#34c759 55%,#28a745 100%)", borderRadius: 999 }} />
+            <div className="h-full transition-[width] duration-700 ease-out" style={{ width: `${yearProgress}%`, background: "#34c759", borderRadius: 999 }} />
           </div>
 
           <div className="mt-2 flex items-center justify-between text-xs tabular-nums" style={{ color: "var(--text-tertiary)" }}>
@@ -1399,7 +1399,7 @@ function BlocksRenderer({
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                     <motion.div initial={false} animate={{ width:`${pct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                      style={{ height:"100%", background: `linear-gradient(90deg,${effectiveQ.text},${effectiveQ.border})`, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
+                      style={{ height:"100%", background: effectiveQ.text, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
                     />
                   </div>
                   {goalPct !== null && (
@@ -1748,7 +1748,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
             <div className="relative w-full h-full overflow-hidden">
-              <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(180deg,${accentColor}d9 0%,${accentColor} 100%)` }} />
+              <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor }} />
               <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone={labelTone} /></div>
             </div>
             {noteDot}{microMarkers}
@@ -3891,7 +3891,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   <span className="text-[13px] font-semibold tabular-nums" style={{ color:LIFE_ACCENT }}>{pct.toFixed(1)}%</span>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.08)" }}>
-                  <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${LIFE_ACCENT}cc,${LIFE_ACCENT})`, borderRadius:999, transition:"width 700ms ease" }} />
+                  <div style={{ height:"100%", width:`${pct}%`, background:LIFE_ACCENT, borderRadius:999, transition:"width 700ms ease" }} />
                 </div>
                 <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
                   {remainingYears > 0 ? `${remainingYears} ${t("yr")} ${remainingMonths} ${t("mo")} ${t("remaining")} · ` : ""}{t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
