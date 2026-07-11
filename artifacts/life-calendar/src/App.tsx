@@ -3151,9 +3151,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
               const renderCard = (ms: Milestone, showDate: boolean) => {
                 const isEditing = editId === ms.id;
                 const ach3 = achromaticStyle(ms.color, dark);
-                const rcBg  = ach3 ? ach3.bg     : `${ms.color}20`;
-                const rcBdr = ach3 ? ach3.border  : `${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`;
-                const rcTxt = ach3 ? ach3.text    : adaptColor(ms.color, dark);
+                const rcBg      = ach3 ? ach3.bg    : `${ms.color}20`;
+                const rcBdr     = ach3 ? ach3.border : `${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`;
+                const rcTxt     = ach3 ? ach3.text   : adaptColor(ms.color, dark);
+                const rcSecTxt  = ach3 ? ach3.text   : "var(--text-secondary)";
+                const rcBdrForm = ach3 ? "rgba(0,0,0,0.15)" : borderColor;
+                const rcBgForm  = ach3 ? "rgba(0,0,0,0.06)" : (dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)");
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
                     style={{ background:rcBg, border:`1.5px solid ${rcBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
@@ -3173,27 +3176,27 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           <input value={editLabel} onChange={e => setEditLabel(e.target.value)}
                             onKeyDown={e => { if (e.key==="Enter") saveEdit(); if (e.key==="Escape") cancelEdit(); }}
                             placeholder={t("labelPlaceholder")} autoFocus
-                            style={{ ...inputStyle, flex:2, width:"auto" }}
+                            style={{ ...inputStyle, flex:2, width:"auto", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
                           />
                           <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                            lang={lang} style={{ ...inputStyle, flex:1, width:"auto" }}
+                            lang={lang} style={{ ...inputStyle, flex:1, width:"auto", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
                           />
                         </div>
                         <div style={{ position:"relative" }}>
                           <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)}
                             placeholder={t("editDescPlaceholder")} rows={4}
-                            style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px" }}
+                            style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
                           />
                         </div>
                         <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
                           <input type="checkbox" checked={editRecurring} onChange={e => setEditRecurring(e.target.checked)}
                             style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
                           />
-                          <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
+                          <span className="text-[12px]" style={{ color:rcSecTxt }}>{t("repeatYearly")}</span>
                         </label>
                         <div className="flex gap-2">
                           <button onClick={cancelEdit}
-                            style={{ flex:1, height:30, borderRadius:8, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>
+                            style={{ flex:1, height:30, borderRadius:8, border:`1px solid ${rcBdrForm}`, background:"transparent", color:rcSecTxt, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>
                             {t("cancel")}
                           </button>
                           <button onClick={saveEdit} disabled={!editLabel.trim()}
@@ -3218,7 +3221,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           </div>
                         </div>
                         {ms.description && (
-                          <div className="text-[11px] leading-snug" style={{ color:"var(--text-secondary)" }}><HighlightText text={ms.description} query={q} /></div>
+                          <div className="text-[11px] leading-snug" style={{ color:rcSecTxt }}><HighlightText text={ms.description} query={q} /></div>
                         )}
                       </>
                     )}
