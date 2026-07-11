@@ -1273,6 +1273,7 @@ function App() {
           setDayTemplates([]);
           setConfig(defaultConfig());
           setQuarterMeta(DEFAULT_QUARTER_META);
+          setLifeSettings({ birthDate: "", lifespan: 80 });
         }}
         dark={dark}
       />
