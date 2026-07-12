@@ -789,7 +789,7 @@ function App() {
         if (ms.date >= todayStr) list.push(ms);
       }
     }
-    return list.sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label)).slice(0, 20);
+    return list.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 20);
   }, [milestones, today]);
 
   const matchedDates = useMemo<Set<string>>(() => {
