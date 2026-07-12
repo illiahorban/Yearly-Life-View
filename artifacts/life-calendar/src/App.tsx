@@ -2186,7 +2186,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      onClick={onClose}
+      onClick={() => { setColorPickerEntryId(null); onClose(); }}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
         style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)" }}
@@ -2508,14 +2508,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
       </motion.div>
       {colorPickerEntryId !== null && colorPickerPos && ReactDOM.createPortal(
-        <AnimatePresence>
-          <motion.div
-            key="color-popover"
-            initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
-            transition={{ type:"spring", stiffness:420, damping:28 }}
-            onClick={e => e.stopPropagation()}
-            style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
-          >
+        <motion.div
+          key="color-popover"
+          initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
+          transition={{ type:"spring", stiffness:420, damping:28 }}
+          onClick={e => e.stopPropagation()}
+          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+        >
             {(() => {
               const entry = entries.find(e => e.id === colorPickerEntryId);
               const entryColor = entry?.color;
@@ -2539,8 +2538,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 </>
               );
             })()}
-          </motion.div>
-        </AnimatePresence>,
+        </motion.div>,
         document.body
       )}
       <ConfirmDialog
