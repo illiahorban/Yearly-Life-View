@@ -1154,7 +1154,7 @@ function App() {
                     <div className="flex items-center gap-1">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
                         style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
-                      ><PencilIcon /></button>
+                      ><GoalsIcon /></button>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
                   </div>
@@ -1519,7 +1519,7 @@ function BlocksRenderer({
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
                       style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
-                    ><PencilIcon /></button>
+                    ><GoalsIcon /></button>
                     <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{pluralWeeks(block.weeks, lang, t)}</span>
                   </div>
                 </div>
@@ -2672,7 +2672,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                     style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color:"var(--text-secondary)", opacity:0.7, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; }}
-                  ><PencilIcon /></button>
+                  ><GoalsIcon /></button>
                 </div>
                 {yearGoals.description.trim() && (
                   <p style={{ margin:"0 14px 8px", fontSize:11, color:"var(--text-tertiary)", borderLeft:`2px solid rgba(128,128,128,0.3)`, paddingLeft:8, lineHeight:"1.5" }}>{yearGoals.description}</p>
@@ -2736,7 +2736,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                         style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: qr.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.6"; }}
-                      ><PencilIcon /></button>
+                      ><GoalsIcon /></button>
                     </div>
 
                     {/* Quarter goals checkboxes */}
@@ -2772,7 +2772,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                                   style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", color: effectiveQ.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
                                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.6"; }}
-                                ><PencilIcon /></button>
+                                ><GoalsIcon /></button>
                               </div>
                               <div style={{ padding:"5px 8px", display:"flex", flexDirection:"column", gap:2 }}>
                                 {goals.map(goal => {
