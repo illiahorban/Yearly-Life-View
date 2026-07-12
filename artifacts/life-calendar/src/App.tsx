@@ -414,7 +414,7 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   }
   if (lum < 0.12) {
     return dark
-      ? { bg:"#18181b", border:"#18181b", ring:"0 0 8px rgba(255,255,255,0.12)", text:"#ffffff", marker:"#52525b" }
+      ? { bg:"rgba(0,0,0,0.60)", border:"rgba(255,255,255,0.15)", text:"#ffffff", marker:"#52525b" }
       : { bg:"#09090b", border:"rgba(9,9,11,0.6)", text:"#ffffff", marker:"#09090b" };
   }
   return dark
@@ -1003,7 +1003,7 @@ function App() {
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
                       className="h-7 inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium shrink-0 box-border"
-                      style={{ background:msColBg, border:`1.5px solid ${ec.border || "transparent"}`, boxShadow: ec.boxShadow || undefined, color:msColTxt, cursor:"pointer" }}
+                      style={{ background:msColBg, border:`1.5px solid ${ec.border || "transparent"}`, color:msColTxt, cursor:"pointer" }}
                     >
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
