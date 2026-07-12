@@ -424,6 +424,14 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
     : { bg:"#e4e4e7",                border:"rgba(113,113,122,0.45)", text:"#27272a", marker:"#a1a1aa" };
 }
 
+/** Maps any APPLE_COLORS hex variant (light or dark) to the canonical light-mode
+ *  hex so achromaticStyle always classifies it correctly regardless of theme.
+ *  Custom hex values not in APPLE_COLORS are returned unchanged. */
+function resolveNoteHex(hex: string): string {
+  const ac = APPLE_COLORS.find(c => c.light === hex || c.dark === hex);
+  return ac ? ac.light : hex;
+}
+
 // ─── Centralized event/milestone color helper ─────────────────────────────────
 // Returns all semantic color values needed to render an event card (background,
 // title, description, icon, borders, marker bar, and inline-form surfaces) with
@@ -2438,7 +2446,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <AnimatePresence initial={false}>
             {entries.map((entry, idx) => {
               const entryColor = entry.color;
-              const ec = entryColor ? getEventColors(entryColor, dark) : null;
+              const ec = entryColor ? getEventColors(resolveNoteHex(entryColor), dark) : null;
               const tintedBg     = ec ? ec.bg         : inputBg;
               const tintedBorder = ec ? ec.border     : borderColor;
               const tintedText   = ec ? ec.textTitle  : "var(--text)";
@@ -2990,7 +2998,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                           <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             {entries.slice(0, 3).map((e, i) => {
-                              const eec = e.color ? getEventColors(e.color, dark) : null;
+                              const eec = e.color ? getEventColors(resolveNoteHex(e.color), dark) : null;
                               return (
                               <div key={i} style={{
                                 padding: e.color ? "8px 10px 8px 12px" : "2px 0",
