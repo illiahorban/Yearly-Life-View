@@ -1002,8 +1002,8 @@ function App() {
                   return (
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
-                      style={{ background:msColBg, border: `1.5px solid ${ec.border || "transparent"}`, boxShadow: ec.boxShadow || undefined, color:msColTxt, cursor:"pointer", boxSizing:"border-box" }}
+                      className="h-7 inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium shrink-0 box-border"
+                      style={{ background:msColBg, border:`1.5px solid ${ec.border || "transparent"}`, color:msColTxt, cursor:"pointer" }}
                     >
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
