@@ -414,11 +414,11 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   }
   if (lum < 0.12) {
     return dark
-      ? { bg:"#27272a", border:"rgba(255,255,255,0.18)", text:"#e4e4e7", marker:"#52525b" }
-      : { bg:"#09090b", border:"rgba(9,9,11,0.6)",       text:"#ffffff", marker:"#09090b" };
+      ? { bg:"rgba(0,0,0,0.60)", border:"rgba(255,255,255,0.10)", text:"#e4e4e7", marker:"#52525b" }
+      : { bg:"#09090b", border:"rgba(9,9,11,0.6)",                text:"#ffffff", marker:"#09090b" };
   }
   return dark
-    ? { bg:"rgba(255,255,255,0.15)", border:"rgba(255,255,255,0.22)", text:"#e4e4e7", marker:"rgba(255,255,255,0.55)" }
+    ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"rgba(255,255,255,0.60)" }
     : { bg:"#e4e4e7",                border:"rgba(113,113,122,0.45)", text:"#27272a", marker:"#8e8e93" };
 }
 
