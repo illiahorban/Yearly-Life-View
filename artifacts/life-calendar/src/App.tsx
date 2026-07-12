@@ -2314,7 +2314,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             <div className="flex flex-col gap-1.5">
               {dayMilestones.map(ms => {
                 const isEditing = msEditId === ms.id;
-                const ec2 = getEventColors(ms.color, dark);
+                const ec2 = getEventColors(isEditing ? msEditColor : ms.color, dark);
                 const cardBg  = ec2.bg;
                 const cardBdr = isEditing ? ec2.borderEditing : ec2.border;
                 const cardTxt = ec2.textTitle;
