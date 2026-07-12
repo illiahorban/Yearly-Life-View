@@ -421,6 +421,75 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
     ? { bg:"#a1a1aa", border:"rgba(161,161,170,0.55)",   text:"#18181b", marker:"#a1a1aa" }
     : { bg:"#e4e4e7", border:"rgba(113,113,122,0.45)",   text:"#27272a", marker:"#8e8e93" };
 }
+
+// ─── Centralized event/milestone color helper ─────────────────────────────────
+// Returns all semantic color values needed to render an event card (background,
+// title, description, icon, borders, marker bar, and inline-form surfaces) with
+// guaranteed readable contrast in both light and dark themes.
+type EventColors = {
+  bg: string;            // card background
+  textTitle: string;     // primary / title text
+  textDesc: string;      // secondary / description text
+  icon: string;          // action icon color
+  border: string;        // normal card border
+  borderEditing: string; // border while inline edit form is open
+  marker: string;        // day-cell color bar segment
+  formBg: string;        // input background inside card
+  formBorder: string;    // input border inside card
+};
+
+function getEventColors(hex: string, dark: boolean): EventColors {
+  // ── Achromatic path (white / grey / black) ──────────────────────────────────
+  const ach = achromaticStyle(hex, dark);
+  if (ach) {
+    return {
+      bg:            ach.bg,
+      textTitle:     ach.text,
+      textDesc:      ach.text,
+      icon:          ach.text,
+      border:        ach.border,
+      borderEditing: ach.border,
+      marker:        ach.marker,
+      formBg:        dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+      formBorder:    dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)",
+    };
+  }
+
+  // ── Chromatic path ───────────────────────────────────────────────────────────
+  // adaptColor lifts very-dark hues in dark mode so they stay visible.
+  const adapted = adaptColor(hex, dark);
+
+  // Perceived luminance of the *original* hex determines text contrast on the
+  // card surface.  In light mode the card bg is near-white with a subtle tint,
+  // so very bright colours (yellow, mint, light-teal, orange) need a strongly
+  // darkened variant to remain legible.  In dark mode adaptColor handles it.
+  const [r, g, b] = hexToRgb(hex);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  let textTitle: string;
+  if (!dark && lum > 0.55) {
+    // Shift lightness down to ~0.33 to guarantee contrast on near-white surfaces.
+    const { h, s } = rgbToHsl(r, g, b);
+    const [nr, ng, nb] = hslToRgb(h, Math.min(1, s * 1.05), 0.33);
+    const toH = (n: number) => n.toString(16).padStart(2, "0");
+    textTitle = `#${toH(nr)}${toH(ng)}${toH(nb)}`;
+  } else {
+    textTitle = adapted;
+  }
+
+  return {
+    bg:            `${hex}20`,
+    textTitle,
+    textDesc:      textTitle,
+    icon:          textTitle,
+    border:        `${adapted}99`,
+    borderEditing: `${adapted}cc`,
+    marker:        adapted,
+    formBg:        dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.70)",
+    formBorder:    dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
+  };
+}
+
 const LIFE_ACCENT = "#007aff";
 
 function LifeIcon() {
@@ -922,11 +991,11 @@ function App() {
                 {nextMilestones.map(ms => {
                   const [y2, m2, d2] = ms.date.split("-").map(Number) as [number,number,number];
                   const days = daysBetween(today, new Date(y2, m2-1, d2));
-                  const ach = achromaticStyle(ms.color, dark);
-                  const msColBg  = ach ? ach.bg     : `${ms.color}22`;
-                  const msColBdr = ach ? ach.border  : `${adaptColor(ms.color, dark)}cc`;
-                  const msColTxt = ach ? ach.text    : adaptColor(ms.color, dark);
-                  const msColDot = ach ? ach.marker  : adaptColor(ms.color, dark);
+                  const ec = getEventColors(ms.color, dark);
+                  const msColBg  = ec.bg;
+                  const msColBdr = ec.borderEditing;
+                  const msColTxt = ec.textTitle;
+                  const msColDot = ec.marker;
                   return (
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
@@ -1734,7 +1803,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const msBar = dayMilestones.length > 0 ? (
     <div style={{ position:"absolute", top:0, left:0, right:0, height:6, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: isPast ? 0.6 : 1 }}>
-      {dayMilestones.map(ms => { const ach = achromaticStyle(ms.color, dark); return <div key={ms.id} style={{ flex:1, background: ach ? ach.marker : adaptColor(ms.color, dark), boxShadow: ach?.markerBorder }} />; })}
+      {dayMilestones.map(ms => { const ec = getEventColors(ms.color, dark); return <div key={ms.id} style={{ flex:1, background: ec.marker }} />; })}
     </div>
   ) : null;
 
@@ -2232,14 +2301,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             <div className="flex flex-col gap-1.5">
               {dayMilestones.map(ms => {
                 const isEditing = msEditId === ms.id;
-                const ach2 = achromaticStyle(ms.color, dark);
-                const cardBg  = ach2 ? ach2.bg     : `${ms.color}20`;
-                const cardBdr = ach2 ? ach2.border  : `${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`;
-                const cardTxt = ach2 ? ach2.text    : adaptColor(ms.color, dark);
-                const cardFormTxt = ach2 ? ach2.text : "var(--text)";
-                const cardFormSec = ach2 ? ach2.text : "var(--text-secondary)";
-                const cardFormBdr = ach2 ? "rgba(0,0,0,0.15)" : borderColor;
-                const cardFormBg  = ach2 ? "rgba(0,0,0,0.06)" : inputBg;
+                const ec2 = getEventColors(ms.color, dark);
+                const cardBg  = ec2.bg;
+                const cardBdr = isEditing ? ec2.borderEditing : ec2.border;
+                const cardTxt = ec2.textTitle;
+                const cardFormTxt = ec2.textTitle;
+                const cardFormSec = ec2.textDesc;
+                const cardFormBdr = ec2.formBorder;
+                const cardFormBg  = ec2.formBg;
                 return (
                   <div key={ms.id}
                     style={{ borderRadius:12, overflow:"hidden", background:cardBg, border:`1.5px solid ${cardBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
@@ -3149,13 +3218,13 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
               const renderCard = (ms: Milestone, showDate: boolean) => {
                 const isEditing = editId === ms.id;
-                const ach3 = achromaticStyle(ms.color, dark);
-                const rcBg      = ach3 ? ach3.bg    : `${ms.color}20`;
-                const rcBdr     = ach3 ? ach3.border : `${adaptColor(ms.color, dark)}${isEditing?"cc":"99"}`;
-                const rcTxt     = ach3 ? ach3.text   : adaptColor(ms.color, dark);
-                const rcSecTxt  = ach3 ? ach3.text   : "var(--text-secondary)";
-                const rcBdrForm = ach3 ? "rgba(0,0,0,0.15)" : borderColor;
-                const rcBgForm  = ach3 ? "rgba(0,0,0,0.06)" : (dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)");
+                const ec3 = getEventColors(ms.color, dark);
+                const rcBg      = ec3.bg;
+                const rcBdr     = isEditing ? ec3.borderEditing : ec3.border;
+                const rcTxt     = ec3.textTitle;
+                const rcSecTxt  = ec3.textDesc;
+                const rcBdrForm = ec3.formBorder;
+                const rcBgForm  = ec3.formBg;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
                     style={{ background:rcBg, border:`1.5px solid ${rcBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
