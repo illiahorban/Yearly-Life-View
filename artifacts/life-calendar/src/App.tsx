@@ -418,8 +418,8 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
       : { bg:"#09090b", border:"rgba(9,9,11,0.6)",       text:"#ffffff", marker:"#09090b" };
   }
   return dark
-    ? { bg:"#a1a1aa", border:"rgba(161,161,170,0.55)",   text:"#18181b", marker:"#a1a1aa" }
-    : { bg:"#e4e4e7", border:"rgba(113,113,122,0.45)",   text:"#27272a", marker:"#8e8e93" };
+    ? { bg:"rgba(255,255,255,0.15)", border:"rgba(255,255,255,0.22)", text:"#e4e4e7", marker:"rgba(255,255,255,0.55)" }
+    : { bg:"#e4e4e7",                border:"rgba(113,113,122,0.45)", text:"#27272a", marker:"#8e8e93" };
 }
 
 // ─── Centralized event/milestone color helper ─────────────────────────────────
