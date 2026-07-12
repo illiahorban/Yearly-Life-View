@@ -2438,12 +2438,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <AnimatePresence initial={false}>
             {entries.map((entry, idx) => {
               const entryColor = entry.color;
-              const tintedBg = entryColor
-                ? `color-mix(in srgb, ${entryColor} ${dark ? 22 : 16}%, ${dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)"})`
-                : inputBg;
-              const tintedBorder = entryColor
-                ? `color-mix(in srgb, ${entryColor} 55%, ${borderColor})`
-                : borderColor;
+              const ec = entryColor ? getEventColors(entryColor, dark) : null;
+              const tintedBg     = ec ? ec.bg         : inputBg;
+              const tintedBorder = ec ? ec.border     : borderColor;
+              const tintedText   = ec ? ec.textTitle  : "var(--text)";
               return (
               <motion.div key={entry.id} layout="position"
                 initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
@@ -2464,7 +2462,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseDown={e=>e.stopPropagation()}
                     placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
                     minRows={1}
-                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:"var(--text)", boxSizing:"border-box", display:"block", overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
+                    style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:tintedText, boxSizing:"border-box", display:"block", overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
                   <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none" }}>
                     <button
@@ -2991,21 +2989,22 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                         >
                           <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                            {entries.slice(0, 3).map((e, i) => (
+                            {entries.slice(0, 3).map((e, i) => {
+                              const eec = e.color ? getEventColors(e.color, dark) : null;
+                              return (
                               <div key={i} style={{
                                 padding: e.color ? "8px 10px 8px 12px" : "2px 0",
                                 borderRadius: e.color ? 12 : 0,
-                                border: e.color ? `1px solid color-mix(in srgb, ${e.color} 55%, ${borderColor})` : "none",
-                                background: e.color
-                                  ? `color-mix(in srgb, ${e.color} ${dark ? 22 : 16}%, ${dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)"})`
-                                  : "transparent",
+                                border: eec ? `1px solid ${eec.border}` : "none",
+                                background: eec ? eec.bg : "transparent",
                                 overflow: "hidden",
                               }}>
-                                <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.55, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                                <span style={{ fontSize: 13, color: eec ? eec.textTitle : "var(--text)", lineHeight: 1.55, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
                                   <HighlightText text={e.text} query={q} />
                                 </span>
                               </div>
-                            ))}
+                              );
+                            })}
                             {entries.length > 3 && (
                               <span style={{ fontSize: 11, color: "var(--text-tertiary)", paddingLeft: 2 }}>+{entries.length - 3}</span>
                             )}
