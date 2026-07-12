@@ -408,14 +408,16 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
   if (sat > 0.18) return null;
   if (lum > 0.70) {
+    // white — border-zinc-700 dark / border-zinc-200 light
     return dark
-      ? { bg:"#ffffff", border:"rgba(255,255,255,0.15)", text:"#18181b", marker:"#ffffff" }
-      : { bg:"#ffffff", border:"rgba(0,0,0,0.14)",       text:"#27272a", marker:"#ffffff" };
+      ? { bg:"#ffffff", border:"#3f3f46", text:"#18181b", marker:"#ffffff" }
+      : { bg:"#ffffff", border:"#e4e4e7", text:"#18181b", marker:"#ffffff" };
   }
   if (lum < 0.12) {
+    // black — bg-zinc-950 dark / bg-black light; border-zinc-800 dark / border-zinc-300 light
     return dark
-      ? { bg:"rgba(0,0,0,0.60)", border:"rgba(255,255,255,0.15)", text:"#ffffff", marker:"#52525b" }
-      : { bg:"#09090b", border:"rgba(0,0,0,0.15)",                text:"#ffffff", marker:"#09090b" };
+      ? { bg:"#09090b", border:"#27272a", text:"#ffffff", marker:"#27272a" }
+      : { bg:"#000000", border:"#d4d4d8", text:"#ffffff", marker:"#000000" };
   }
   return dark
     ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"rgba(255,255,255,0.60)" }
