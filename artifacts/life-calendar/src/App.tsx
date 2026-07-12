@@ -1003,7 +1003,7 @@ function App() {
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
-                      style={{ background:msColBg, border: ec.border ? `1.5px solid ${msColBdr}` : "none", boxShadow: ec.boxShadow || undefined, color:msColTxt, cursor:"pointer", boxSizing:"border-box" }}
+                      style={{ background:msColBg, border: `1.5px solid ${ec.border || "transparent"}`, boxShadow: ec.boxShadow || undefined, color:msColTxt, cursor:"pointer", boxSizing:"border-box" }}
                     >
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
@@ -2314,7 +2314,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const cardFormBg  = ec2.formBg;
                 return (
                   <div key={ms.id}
-                    style={{ borderRadius:12, overflow:"hidden", background:cardBg, border: ec2.border ? `1.5px solid ${cardBdr}` : "none", boxShadow: ec2.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ borderRadius:12, overflow:"hidden", background:cardBg, border: `1.5px solid ${ec2.border || "transparent"}`, boxShadow: ec2.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
@@ -3230,7 +3230,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const rcBgForm  = ec3.formBg;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background:rcBg, border: ec3.border ? `1.5px solid ${rcBdr}` : "none", boxShadow: ec3.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ background:rcBg, border: `1.5px solid ${ec3.border || "transparent"}`, boxShadow: ec3.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
