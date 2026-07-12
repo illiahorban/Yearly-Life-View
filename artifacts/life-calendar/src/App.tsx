@@ -375,7 +375,7 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   };
 }
 
-const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#1c1c1e","#8e8e93","#c7c7cc"];
+const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#1c1c1e","#8e8e93","#ffffff"];
 
 /** In dark mode, lift colours whose perceived luminance is below 0.45 so they stay legible on dark surfaces.
  *  Bright colours are returned unchanged; very dark ones become a visible mid-tone while keeping their hue. */
@@ -2338,7 +2338,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         <div className="flex gap-1 flex-wrap">
                           {MILESTONE_COLORS.map(c => (
                             <button key={c} onClick={() => setMsEditColor(c)}
-                              style={{ width:13, height:13, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#c7c7cc" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
+                              style={{ width:13, height:13, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
                           ))}
                         </div>
                         <div className="flex gap-1.5">
@@ -2388,7 +2388,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <div className="flex gap-1 flex-wrap">
                 {MILESTONE_COLORS.map(c => (
                   <button key={c} onClick={() => setNewColor(c)}
-                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#c7c7cc" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
+                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
                 ))}
               </div>
               <div className="flex gap-1.5">
