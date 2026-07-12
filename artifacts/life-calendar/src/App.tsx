@@ -409,13 +409,13 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   if (sat > 0.18) return null;
   if (lum > 0.70) {
     return dark
-      ? { bg:"#ffffff", border:"rgba(255,255,255,0.55)", text:"#18181b", marker:"#ffffff" }
+      ? { bg:"#ffffff", border:"rgba(255,255,255,0.15)", text:"#18181b", marker:"#ffffff" }
       : { bg:"#ffffff", border:"rgba(0,0,0,0.14)",       text:"#27272a", marker:"#ffffff" };
   }
   if (lum < 0.12) {
     return dark
       ? { bg:"rgba(0,0,0,0.60)", border:"rgba(255,255,255,0.15)", text:"#ffffff", marker:"#52525b" }
-      : { bg:"#09090b", border:"rgba(9,9,11,0.6)", text:"#ffffff", marker:"#09090b" };
+      : { bg:"#09090b", border:"rgba(0,0,0,0.15)",                text:"#ffffff", marker:"#09090b" };
   }
   return dark
     ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"rgba(255,255,255,0.60)" }
