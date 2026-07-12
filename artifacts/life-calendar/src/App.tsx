@@ -396,7 +396,7 @@ function adaptColor(hex: string, dark: boolean): string {
 
 /** Returns adaptive styles for achromatic colours (white/grey/black) that stay legible in both themes.
  *  Returns null for any chromatic (saturated) colour so callers fall back to adaptColor. */
-type AchromaticStyle = { bg: string; border: string; text: string; marker: string; markerBorder?: string };
+type AchromaticStyle = { bg: string; border: string; text: string; marker: string; markerBorder?: string; ring?: string };
 function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   const h = hex.replace('#', '').toLowerCase();
   if (h.length !== 6) return null;
@@ -414,8 +414,8 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   }
   if (lum < 0.12) {
     return dark
-      ? { bg:"rgba(0,0,0,0.60)", border:"rgba(255,255,255,0.10)", text:"#ffffff", marker:"#52525b" }
-      : { bg:"#09090b", border:"rgba(9,9,11,0.6)",                text:"#ffffff", marker:"#09090b" };
+      ? { bg:"rgba(0,0,0,0.60)", border:"", ring:"inset 0 0 0 1.5px rgba(255,255,255,0.10)", text:"#ffffff", marker:"#52525b" }
+      : { bg:"#09090b", border:"rgba(9,9,11,0.6)", text:"#ffffff", marker:"#09090b" };
   }
   return dark
     ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"rgba(255,255,255,0.60)" }
@@ -431,8 +431,9 @@ type EventColors = {
   textTitle: string;     // primary / title text
   textDesc: string;      // secondary / description text
   icon: string;          // action icon color
-  border: string;        // normal card border
+  border: string;        // normal card border colour (empty = use boxShadow ring instead)
   borderEditing: string; // border while inline edit form is open
+  boxShadow: string;     // inset ring substitute (used when border is empty)
   marker: string;        // day-cell color bar segment
   formBg: string;        // input background inside card
   formBorder: string;    // input border inside card
@@ -449,6 +450,7 @@ function getEventColors(hex: string, dark: boolean): EventColors {
       icon:          ach.text,
       border:        ach.border,
       borderEditing: ach.border,
+      boxShadow:     ach.ring ?? "",
       marker:        ach.marker,
       formBg:        dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
       formBorder:    dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)",
@@ -484,6 +486,7 @@ function getEventColors(hex: string, dark: boolean): EventColors {
     icon:          textTitle,
     border:        `${adapted}99`,
     borderEditing: `${adapted}cc`,
+    boxShadow:     "",
     marker:        adapted,
     formBg:        dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.70)",
     formBorder:    dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
@@ -1000,7 +1003,7 @@ function App() {
                     <button key={ms.id}
                       onClick={() => setMilestonePanelOpen(true)}
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium shrink-0"
-                      style={{ background:msColBg, border:`1.5px solid ${msColBdr}`, color:msColTxt, cursor:"pointer" }}
+                      style={{ background:msColBg, border: ec.border ? `1.5px solid ${msColBdr}` : "none", boxShadow: ec.boxShadow || undefined, color:msColTxt, cursor:"pointer", boxSizing:"border-box" }}
                     >
                       <span className="font-semibold">{ms.label}</span>
                       <span style={{ opacity:0.65 }}>·</span>
@@ -2311,7 +2314,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const cardFormBg  = ec2.formBg;
                 return (
                   <div key={ms.id}
-                    style={{ borderRadius:12, overflow:"hidden", background:cardBg, border:`1.5px solid ${cardBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ borderRadius:12, overflow:"hidden", background:cardBg, border: ec2.border ? `1.5px solid ${cardBdr}` : "none", boxShadow: ec2.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
@@ -3227,7 +3230,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const rcBgForm  = ec3.formBg;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background:rcBg, border:`1.5px solid ${rcBdr}`, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ background:rcBg, border: ec3.border ? `1.5px solid ${rcBdr}` : "none", boxShadow: ec3.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
