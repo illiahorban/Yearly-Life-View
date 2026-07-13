@@ -2499,8 +2499,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               // Buttons: white theme gets dark zinc-900 primary, light-bordered cancel
               const cancelBorder  = isWhite ? "1px solid #a1a1aa" : `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}`;
               const cancelColor   = isWhite ? "#18181b" : "var(--text-secondary)";
-              const submitBg      = newLabel.trim() ? (isWhite ? "#18181b" : "#007aff") : "rgba(128,128,128,0.15)";
-              const submitColor   = newLabel.trim() ? "#ffffff" : "var(--text-tertiary)";
+              const submitBg      = newLabel.trim() ? "#007aff" : (isWhite ? "#e4e4e7" : "rgba(128,128,128,0.15)");
+              const submitColor   = newLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
             <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
               <div className="flex gap-1 flex-wrap items-center">
