@@ -374,27 +374,33 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // stay legible — the card/day-tile surface itself keeps each colour's true hue (grey
   // stays grey, black stays black), only the content drawn on top gets the contrast boost.
   const fill = (isAchromaticDark && dark) ? "#ffffff" : hex;
-  // Black in light mode: the quarter card and the sprint/block card inside it each wash
-  // their background with this same near-black colour (tint, then soft stacked on top of
-  // it) — two grey overlays compounding into a mid-grey that sits too close in luminance
-  // to the app's own grey "tertiary" text (week numbers, day counts, etc. — which have no
-  // idea what colour the quarter is, so they can't compensate). Every other colour reads
-  // fine here because its hue differs from that grey text; black is the one hue that
-  // collides with it. Lowering black's own alpha keeps the composited card close to the
-  // page background so that ordinary grey text stays legible on top of it.
-  const isBlackLight = meta.colorKey === "black" && !dark;
-  const tintAlpha = isBlackLight ? 0.035 : 0.07;
-  const softAlpha = isBlackLight ? 0.10 : 0.22;
   return {
     key: meta.colorKey,
     label: meta.name,
-    tint:     `rgba(${r},${g},${b},${tintAlpha})`,
+    tint:     `rgba(${r},${g},${b},0.07)`,
     darkTint: `rgba(${r},${g},${b},0.14)`,
     border: hex,
     fill,
     text: textHex,
-    soft:     `rgba(${r},${g},${b},${softAlpha})`,
+    soft:     `rgba(${r},${g},${b},0.22)`,
     darkSoft: `rgba(${r},${g},${b},0.36)`,
+  };
+}
+
+/** Black/Grey in light mode wash the quarter card and the sprint/block card inside it
+ *  with the *same* grey hue as the app's own "muted" text colours (week numbers, day
+ *  counts, etc.) — those text spots don't know what colour the quarter is, so on every
+ *  other colour they read fine (different hue = contrast), but on black/grey they sit
+ *  right on top of a near-identical grey and disappear. Rather than fight the card's own
+ *  wash colour, boost just this text: swap the theme's generic grey for solid dark ink
+ *  (anchored to the same "#1c1c1e" already used for quarter.text) whenever the active
+ *  quarter/block colour is achromatic and the theme is light.
+ */
+function mutedTextColors(colorKey: AppleColorKey, dark: boolean) {
+  const isAchroLight = (colorKey === "black" || colorKey === "grey") && !dark;
+  return {
+    tertiary:  isAchroLight ? "rgba(28,28,30,0.62)" : "var(--text-tertiary)",
+    secondary: isAchroLight ? "rgba(28,28,30,0.88)" : "var(--text-secondary)",
   };
 }
 
@@ -1205,6 +1211,7 @@ function App() {
               const qCompleted = qPastDays + (qHasToday ? todayProgress / 100 : 0);
               const qPct = Math.max(0, Math.min(100, (qCompleted / qTotalDays) * 100));
               const qStreak = computeQuarterStreak(qAllDays);
+              const mt = mutedTextColors(meta.colorKey, dark);
 
               return (
                 <motion.section layout key={qi} className="overflow-visible"
@@ -1242,11 +1249,11 @@ function App() {
                       </div>
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
-                      <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
+                      <span className="text-[11px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
-                        style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                        style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.text : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                       ><GoalsIcon /></button>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
@@ -1274,7 +1281,7 @@ function App() {
                               style={{ height:"100%", background: quarter.fill, borderRadius:999, opacity:0.72 }}
                             />
                           </div>
-                          <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
+                          <span className="text-[9px] tabular-nums shrink-0" style={{ color:mt.tertiary }}>
                             {activeQGoals.filter(g=>g.done).length}/{activeQGoals.length} {t("goals")}
                           </span>
                         </div>
@@ -1289,7 +1296,7 @@ function App() {
                     return (
                       <div className="px-4 sm:px-5 pb-3">
                         {qg?.description ? (
-                          <p className="text-[11px] leading-snug mb-2" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${quarter.fill}`, paddingLeft:8, opacity:0.8 }}>
+                          <p className="text-[11px] leading-snug mb-2" style={{ color:mt.tertiary, borderLeft:`2px solid ${quarter.fill}`, paddingLeft:8, opacity:0.8 }}>
                             {qg.description}
                           </p>
                         ) : null}
@@ -1299,7 +1306,7 @@ function App() {
                             return (
                               <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                                 onClick={() => toggleQuarterGoal(qi, goal.id)}
-                                style={{ color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)" }}
+                                style={{ color: goal.done ? mt.tertiary : goal.color ?? mt.secondary }}
                               >
                                 <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
                                   {goal.done && <CheckIcon color={cb.icon} />}
@@ -1594,6 +1601,7 @@ function BlocksRenderer({
             })();
             const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : quarter;
             const softColor = dark ? effectiveQ.darkSoft : effectiveQ.soft;
+            const mt = mutedTextColors(block.color ?? quarter.key, dark);
 
             return (
               <motion.div layout key={block.id}
@@ -1612,18 +1620,18 @@ function BlocksRenderer({
                   )}
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.text : "var(--text-tertiary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.text : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                     ><GoalsIcon /></button>
-                    <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>{pluralWeeks(block.weeks, lang, t)}</span>
+                    <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{pluralWeeks(block.weeks, lang, t)}</span>
                   </div>
                 </div>
 
                 {/* Progress strip */}
                 <div className="px-3 sm:px-3.5 pb-2">
                   <div className="relative flex items-center justify-between text-[10px] tabular-nums mb-1">
-                    <span style={{ color:"var(--text-tertiary)" }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
-                    <span style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", color: isFuture ? "var(--text-tertiary)" : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
-                    <span style={{ color:"var(--text-tertiary)" }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
+                    <span style={{ color:mt.tertiary }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
+                    <span style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", color: isFuture ? mt.tertiary : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
+                    <span style={{ color:mt.tertiary }}>{isComplete ? t("done") : `${daysLeft} ${t("left")}`}</span>
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                     <motion.div initial={false} animate={{ width:`${pct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
@@ -1637,7 +1645,7 @@ function BlocksRenderer({
                           style={{ height:"100%", background:effectiveQ.fill, borderRadius:999, opacity:0.72 }}
                         />
                       </div>
-                      <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
+                      <span className="text-[9px] tabular-nums shrink-0" style={{ color:mt.tertiary }}>
                         {activeGoals.filter(g=>g.done).length}/{activeGoals.length} {t("goals")}
                       </span>
                     </div>
@@ -1647,7 +1655,7 @@ function BlocksRenderer({
                 {/* Sprint description */}
                 {bg?.description && (
                   <div className="px-3 sm:px-3.5 pb-2">
-                    <p className="text-[11px] leading-snug" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${softColor}`, paddingLeft:8 }}>
+                    <p className="text-[11px] leading-snug" style={{ color:mt.tertiary, borderLeft:`2px solid ${softColor}`, paddingLeft:8 }}>
                       {bg.description}
                     </p>
                   </div>
@@ -1662,7 +1670,7 @@ function BlocksRenderer({
                         return (
                           <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                             onClick={() => onGoalToggle(block.id, goal.id)}
-                            style={{ color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)" }}
+                            style={{ color: goal.done ? mt.tertiary : goal.color ?? mt.secondary }}
                           >
                             <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
                               {goal.done && <CheckIcon color={cb.icon} />}
@@ -1698,7 +1706,7 @@ function BlocksRenderer({
                               onClick={() => onWeekLabelClick(_qi, qOffset)}
                               title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
                               style={{
-                                color: isSel || isCurrent ? "var(--text-secondary)" : "var(--text-tertiary)",
+                                color: isSel || isCurrent ? mt.secondary : mt.tertiary,
                                 fontWeight: isCurrent ? 600 : 400,
                                 background: "transparent",
                                 borderRadius: 4,
