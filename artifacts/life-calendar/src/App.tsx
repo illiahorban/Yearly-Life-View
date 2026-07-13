@@ -1998,9 +1998,19 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
-            <div className="relative w-full h-full overflow-hidden">
-              <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor }} />
-              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone={labelTone} /></div>
+            {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
+                the SAME stacking context as the text below — `isolation: isolate` on the
+                outer tile is what scopes mix-blend-mode, and any nested element that sets
+                its own z-index would create a second, isolated stacking context and cut
+                the text off from seeing this layer entirely. */}
+            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor }} />
+            {/* Text layer: position:absolute WITHOUT an explicit z-index. Paint order inside
+                a stacking context follows DOM order, so being declared after the fill layer
+                above is enough to sit visually on top — no z-index needed, and adding one
+                here would re-introduce the bug (a new isolated context that hides the fill
+                from `mix-blend-mode: difference`). */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
             </div>
             {noteDot}{microMarkers}
           </div>
