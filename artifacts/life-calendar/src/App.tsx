@@ -3455,6 +3455,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                   <React.Fragment key={group.date}>
                     {_showQHeader && (
                       <div className="flex items-center gap-1.5 pt-1.5 pb-0 px-0.5">
+                        <span style={{ width:8, height:8, borderRadius:"50%", background: resolvedQuarters[group.qi]?.tint, border:`2px solid ${resolvedQuarters[group.qi]?.border}`, flexShrink:0, display:"inline-block" }} />
                         <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
                           {resolvedQuarters[group.qi]?.label ?? t("q" + String(group.qi + 1))}
                         </span>
