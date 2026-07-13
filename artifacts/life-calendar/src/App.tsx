@@ -374,15 +374,26 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // stay legible — the card/day-tile surface itself keeps each colour's true hue (grey
   // stays grey, black stays black), only the content drawn on top gets the contrast boost.
   const fill = (isAchromaticDark && dark) ? "#ffffff" : hex;
+  // Black in light mode: the quarter card and the sprint/block card inside it each wash
+  // their background with this same near-black colour (tint, then soft stacked on top of
+  // it) — two grey overlays compounding into a mid-grey that sits too close in luminance
+  // to the app's own grey "tertiary" text (week numbers, day counts, etc. — which have no
+  // idea what colour the quarter is, so they can't compensate). Every other colour reads
+  // fine here because its hue differs from that grey text; black is the one hue that
+  // collides with it. Lowering black's own alpha keeps the composited card close to the
+  // page background so that ordinary grey text stays legible on top of it.
+  const isBlackLight = meta.colorKey === "black" && !dark;
+  const tintAlpha = isBlackLight ? 0.035 : 0.07;
+  const softAlpha = isBlackLight ? 0.10 : 0.22;
   return {
     key: meta.colorKey,
     label: meta.name,
-    tint:     `rgba(${r},${g},${b},0.07)`,
+    tint:     `rgba(${r},${g},${b},${tintAlpha})`,
     darkTint: `rgba(${r},${g},${b},0.14)`,
     border: hex,
     fill,
     text: textHex,
-    soft:     `rgba(${r},${g},${b},0.22)`,
+    soft:     `rgba(${r},${g},${b},${softAlpha})`,
     darkSoft: `rgba(${r},${g},${b},0.36)`,
   };
 }
