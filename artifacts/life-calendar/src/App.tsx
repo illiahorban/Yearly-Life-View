@@ -837,7 +837,6 @@ function App() {
   // Quarter meta (names + colors)
   const [quarterMeta, setQuarterMeta] = useState<QuarterMeta[]>(() => ls<QuarterMeta[]>("lifeCalendar:quarterMeta", DEFAULT_QUARTER_META));
   useEffect(() => { lsSet("lifeCalendar:quarterMeta", quarterMeta); }, [quarterMeta]);
-  const [colorPickerQi, setColorPickerQi] = useState<number|null>(null);
 
   // Calendar data
   const weeks = useMemo(() => {
@@ -1210,11 +1209,6 @@ function App() {
 
         <LayoutGroup>
           <div className="flex flex-col gap-6">
-            {/* Backdrop to close color picker */}
-            {colorPickerQi !== null && (
-              <div style={{ position:"fixed", inset:0, zIndex:38 }} onClick={() => setColorPickerQi(null)} />
-            )}
-
             {[0,1,2,3].map(qi => {
               const quarter = resolvedQuarters[qi]!;
               const meta = quarterMeta[qi]!;
@@ -1241,31 +1235,6 @@ function App() {
                   {/* Quarter header row */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
                     <div className="flex items-center gap-2">
-                      {/* Color swatch */}
-                      <div style={{ position:"relative" }}>
-                        <button
-                          onClick={() => setColorPickerQi(colorPickerQi === qi ? null : qi)}
-                          title={t("chooseColor")}
-                          style={{ width:13, height:13, borderRadius:999, background:quarter.border, border:`2px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)"}`, cursor:"pointer", display:"block", flexShrink:0 }}
-                        />
-                        <AnimatePresence>
-                          {colorPickerQi === qi && (
-                            <motion.div
-                              initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
-                              transition={{ type:"spring", stiffness:420, damping:28 }}
-                              onClick={e => e.stopPropagation()}
-                              style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:40, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
-                            >
-                              {APPLE_COLORS.map(ac => (
-                                <button key={ac.key} onClick={() => { updateQuarterMeta(qi, { colorKey: ac.key }); setColorPickerQi(null); }}
-                                  title={ac.label}
-                                  style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: meta.colorKey===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
-                                />
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
                       <span className="text-[11px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
