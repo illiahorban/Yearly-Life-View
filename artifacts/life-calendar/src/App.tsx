@@ -2941,13 +2941,18 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                       <div style={{ padding:"0 8px 8px", display:"flex", flexDirection:"column", gap:5 }}>
                         {blocksWithGoals.map(({ block, goals }) => {
                           const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : qr;
+                          // Tint this sprint card using the same colour logic as note/event
+                          // cards (getEventColors), consistent with the sprint distribution modal.
+                          const blockAc = block.color ? APPLE_COLORS.find(c => c.key === block.color) : null;
+                          const blockHex = blockAc ? (dark ? blockAc.dark : blockAc.light) : "";
+                          const blockEc = blockHex ? getEventColors(blockHex, dark) : null;
                           return (
-                            <div key={block.id} style={{ borderRadius:11, border:`1px solid ${effectiveQ.border}55`, overflow:"hidden", background: dark ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.55)" }}>
-                              <div style={{ padding:"6px 10px 5px", background: dark ? effectiveQ.darkTint : effectiveQ.tint, borderBottom:`1px solid ${effectiveQ.border}33`, display:"flex", alignItems:"center", gap:6 }}>
-                                <span style={{ fontSize:11, fontWeight:600, color: effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
-                                <span style={{ fontSize:10, color: effectiveQ.text, opacity:0.6, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                            <div key={block.id} style={{ borderRadius:11, border:`1px solid ${blockEc ? blockEc.border : `${effectiveQ.border}55`}`, overflow:"hidden", background: blockEc ? blockEc.bg : (dark ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.55)"), transition:"background 200ms ease, border-color 200ms ease" }}>
+                              <div style={{ padding:"6px 10px 5px", background: blockEc ? blockEc.bg : (dark ? effectiveQ.darkTint : effectiveQ.tint), borderBottom:`1px solid ${blockEc ? blockEc.border : `${effectiveQ.border}33`}`, display:"flex", alignItems:"center", gap:6 }}>
+                                <span style={{ fontSize:11, fontWeight:600, color: blockEc ? blockEc.textTitle : effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
+                                <span style={{ fontSize:10, color: blockEc ? blockEc.textTitle : effectiveQ.text, opacity:0.6, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
                                 <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                                  style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", color: effectiveQ.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                                  style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", color: blockEc ? blockEc.textTitle : effectiveQ.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
                                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.6"; }}
                                 ><GoalsIcon /></button>
