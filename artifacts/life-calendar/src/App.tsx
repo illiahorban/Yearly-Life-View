@@ -1851,23 +1851,28 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
   // Pale accents (e.g. "White") are too light for a single flat text colour to read
   // against reliably: the tile is part accent-fill / part theme surface, and — for
-  // "today" — that split moves as the day progresses. "invertPale" tells Label to use
-  // mix-blend-mode instead of guessing one colour (see Label for the mechanics).
-  const isLightAccent = (isPast || isToday) && luminanceOf(accentColor) > 0.62;
+  // "today" — that split moves as the day progresses. Very dark accents (e.g. "Black"
+  // in light mode) hit the mirror-image problem: the theme's own dark ink then merges
+  // into the dark fill. Either way a flat colour can't win on both sides, so both
+  // extremes fall back to "invertPale", which uses mix-blend-mode instead of guessing
+  // one colour (see Label for the mechanics).
+  const isPaleAccent = luminanceOf(accentColor) > 0.62;    // e.g. White
+  const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
+  const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
-    isPast ? (isLightAccent ? "invertPale" : "onGreen") : isToday ? (isLightAccent ? "invertPale" : "auto") : "muted";
+    isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: dayGoals.count }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         return done ? (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
-            <circle cx="3" cy="3" r="3" fill={isPast ? (isLightAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
-            <path d="M1.5 3l1 1 2-2" stroke={isPast ? (isLightAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="3" cy="3" r="3" fill={isPast ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
+            <path d="M1.5 3l1 1 2-2" stroke={isPast ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.5 }}>
-            <circle cx="3" cy="3" r="2.5" stroke={isPast ? (isLightAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="0.9"/>
+            <circle cx="3" cy="3" r="2.5" stroke={isPast ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="0.9"/>
           </svg>
         );
       })}
