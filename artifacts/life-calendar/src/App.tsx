@@ -479,8 +479,8 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
       : { bg:"#000000", border:"#000000", text:"#ffffff", marker:"#000000", tier:"black" };
   }
   return dark
-    ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"#a1a1aa", tier:"grey" }
-    : { bg:"#e4e4e7",                border:"rgba(113,113,122,0.45)", text:"#27272a", marker:"#a1a1aa", tier:"grey" };
+    ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.20)", text:"#ffffff", marker:"#a1a1aa", tier:"grey" }
+    : { bg:"#e4e4e7",                border:"#e4e4e7",                text:"#27272a", marker:"#a1a1aa", tier:"grey" };
 }
 
 /** Maps any APPLE_COLORS hex variant (light or dark) to the canonical light-mode
@@ -514,7 +514,7 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
   if (lum < 0.12) {
     return dark ? { bg:"#09090b", border:"#000000", icon:"#ffffff" } : { bg:"#000000", border:"#000000", icon:"#ffffff" };
   }
-  return { bg:"#71717a", border:"#52525b", icon:"#ffffff" };
+  return { bg:"#71717a", border:"#71717a", icon:"#ffffff" };
 }
 
 /** Resolves the background/border/checkmark colours for a single sprint or quarter
