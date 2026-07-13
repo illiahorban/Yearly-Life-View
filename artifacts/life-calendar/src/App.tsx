@@ -509,9 +509,7 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
   const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
   if (sat > 0.18) return null;
   if (lum > 0.70) {
-    // White border is invisible on white card surfaces — use a visible grey outline instead.
-    const border = dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.22)";
-    return { bg:"#ffffff", border, icon:"#18181b" };
+    return { bg:"#ffffff", border:"#ffffff", icon:"#18181b" };
   }
   if (lum < 0.12) {
     return dark ? { bg:"#09090b", border:"#000000", icon:"#ffffff" } : { bg:"#000000", border:"#000000", icon:"#ffffff" };
@@ -524,14 +522,6 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
  *  and falling back to the plain chromatic colour (or the block/quarter accent)
  *  otherwise. `emptyBorder` is always defined so the outline is visible whether or
  *  not the goal is done, matching the box's fixed h/w regardless of colour. */
-/** Semi-transparent empty-state bg for an achromatic checkbox.
- *  White bg is invisible on light surfaces, so we substitute a faint ink tint instead. */
-function achromaticCheckboxEmptyBg(bg: string, dark: boolean): string {
-  const lum = luminanceOf(bg);
-  if (lum > 0.70) return dark ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.08)";
-  return `${bg}55`;
-}
-
 /** fallbackColorKey: the sprint/quarter AppleColorKey, used to derive achromatic checkbox
  *  colours from the raw APPLE_COLORS hex rather than from `fill`, which is overridden to
  *  "#ffffff" for black/grey in dark mode (for content contrast) and would produce a white
@@ -539,20 +529,18 @@ function achromaticCheckboxEmptyBg(bg: string, dark: boolean): string {
 function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
   if (ach) {
-    const emptyBg = achromaticCheckboxEmptyBg(ach.bg, dark);
-    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: ach.border, icon: ach.icon };
+    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg: "transparent", emptyBorder: ach.border, icon: ach.icon };
   }
 
-  // When no goal colour, try to get the achromatic style from the sprint/quarter color key
-  // using the real APPLE_COLORS hex (not fill, which can be white for black/grey in dark mode).
+  // When no goal colour, derive from the sprint/quarter color key using the real APPLE_COLORS
+  // hex (not fill, which is overridden to "#ffffff" for black/grey in dark mode).
   if (!colorHex && fallbackColorKey) {
     const ac = APPLE_COLORS.find(c => c.key === fallbackColorKey);
     if (ac) {
       const rawHex = dark ? ac.dark : ac.light;
       const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
       if (kAch) {
-        const emptyBg = achromaticCheckboxEmptyBg(kAch.bg, dark);
-        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: kAch.border, icon: kAch.icon };
+        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg: "transparent", emptyBorder: kAch.border, icon: kAch.icon };
       }
     }
   }
@@ -560,8 +548,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
   const hex = colorHex ?? fallbackHex;
   const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
   const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
-  const emptyBg = fallbackAch ? achromaticCheckboxEmptyBg(fallbackAch.bg, dark) : `${hex}55`;
-  return { doneBg: hex, doneBorder: hex, emptyBg, emptyBorder: colorHex ?? "var(--border-soft)", icon };
+  return { doneBg: hex, doneBorder: hex, emptyBg: "transparent", emptyBorder: hex, icon };
 }
 
 // ─── Centralized event/milestone color helper ─────────────────────────────────
@@ -2934,7 +2921,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
               return (
                 <div key={qi} style={{ padding:"10px 12px 6px" }}>
                   {/* Quarter container card */}
-                  <div style={{ borderRadius:16, border:`1.5px solid ${qr.border}55`, overflow:"hidden", background: dark ? `${qr.darkTint}` : `${qr.tint}` }}>
+                  <div style={{ borderRadius:16, border:`1.5px solid ${qr.border}`, overflow:"hidden", background:"transparent" }}>
 
                     {/* Quarter card header */}
                     <div style={{ padding:"10px 14px 8px", display:"flex", alignItems:"center", gap:6 }}>
@@ -2976,18 +2963,13 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                       <div style={{ padding:"0 8px 8px", display:"flex", flexDirection:"column", gap:5 }}>
                         {blocksWithGoals.map(({ block, goals }) => {
                           const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : qr;
-                          // Tint this sprint card using the same colour logic as note/event
-                          // cards (getEventColors), consistent with the sprint distribution modal.
-                          const blockAc = block.color ? APPLE_COLORS.find(c => c.key === block.color) : null;
-                          const blockHex = blockAc ? (dark ? blockAc.dark : blockAc.light) : "";
-                          const blockEc = blockHex ? getEventColors(blockHex, dark) : null;
                           return (
-                            <div key={block.id} style={{ borderRadius:11, border:`1px solid ${blockEc ? blockEc.border : `${effectiveQ.border}55`}`, overflow:"hidden", background: blockEc ? blockEc.bg : (dark ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.55)"), transition:"background 200ms ease, border-color 200ms ease" }}>
-                              <div style={{ padding:"6px 10px 5px", background: blockEc ? blockEc.bg : (dark ? effectiveQ.darkTint : effectiveQ.tint), borderBottom:`1px solid ${blockEc ? blockEc.border : `${effectiveQ.border}33`}`, display:"flex", alignItems:"center", gap:6 }}>
-                                <span style={{ fontSize:11, fontWeight:600, color: blockEc ? blockEc.textTitle : effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
-                                <span style={{ fontSize:10, color: blockEc ? blockEc.textTitle : effectiveQ.text, opacity:0.6, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                            <div key={block.id} style={{ borderRadius:11, border:`1.5px solid ${effectiveQ.border}`, overflow:"hidden", background:"transparent" }}>
+                              <div style={{ padding:"6px 10px 5px", background:"transparent", borderBottom:`1px solid ${effectiveQ.border}55`, display:"flex", alignItems:"center", gap:6 }}>
+                                <span style={{ fontSize:11, fontWeight:600, color: effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
+                                <span style={{ fontSize:10, color: effectiveQ.text, opacity:0.6, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
                                 <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                                  style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", color: blockEc ? blockEc.textTitle : effectiveQ.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                                  style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", color: effectiveQ.text, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
                                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.6"; }}
                                 ><GoalsIcon /></button>
@@ -3002,7 +2984,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                                       <div style={{ boxSizing:"border-box", width:13, height:13, borderRadius:3, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : cb.emptyBg, border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                         {goal.done && <CheckIcon color={cb.icon} />}
                                       </div>
-                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? (blockEc ? `${blockEc.textTitle}88` : "var(--text-tertiary)") : readableGoalTextColor(goal.color, dark, blockEc ? blockEc.textDesc : "var(--text-secondary)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text-secondary)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
                                     </label>
                                   );
                                 })}
