@@ -4045,7 +4045,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                         setColorPickerAnchor(prev => prev?.id === b.id ? null : { id: b.id, rect });
                       }}
                         title={t("sprintColor")}
-                        style={{ width:16, height:16, borderRadius:999, background: bHex, border:`2px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", display:"block" }}
+                        style={{ width:16, height:16, borderRadius:999, background: bHex, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block" }}
                       />
                     </div>
                     {/* Number badge */}
