@@ -856,6 +856,12 @@ function App() {
   const didScrollRef = useRef(false);
   useEffect(() => { didScrollRef.current = false; }, [viewYear]);
 
+  // When paging to a year other than the current one, start at the first week instead of
+  // keeping whatever scroll offset the previous year was left at.
+  useEffect(() => {
+    if (viewYear !== now.getFullYear()) window.scrollTo({ top: 0, behavior: "auto" });
+  }, [viewYear]);
+
   useEffect(() => {
     if (didScrollRef.current || currentWeekIndex < 0 || viewYear !== now.getFullYear()) return;
     const el = weekRefs.current[currentWeekIndex];
