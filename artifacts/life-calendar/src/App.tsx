@@ -526,7 +526,11 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
   if (ach) return { doneBg: ach.bg, doneBorder: ach.border, emptyBorder: ach.border, icon: ach.icon };
   const hex = colorHex ?? fallbackHex;
-  return { doneBg: hex, doneBorder: hex, emptyBorder: colorHex ?? "var(--border-soft)", icon: "#ffffff" };
+  // When no goal-specific color, also check if the fallback itself is achromatic
+  // (e.g. white sprint fill) so we pick a legible checkmark color instead of always #ffffff.
+  const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
+  const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
+  return { doneBg: hex, doneBorder: hex, emptyBorder: colorHex ?? "var(--border-soft)", icon };
 }
 
 // ─── Centralized event/milestone color helper ─────────────────────────────────
@@ -2967,7 +2971,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                                       <div style={{ boxSizing:"border-box", width:13, height:13, borderRadius:3, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                         {goal.done && <CheckIcon color={cb.icon} />}
                                       </div>
-                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text-secondary)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? (blockEc ? `${blockEc.textTitle}88` : "var(--text-tertiary)") : readableGoalTextColor(goal.color, dark, blockEc ? blockEc.textDesc : "var(--text-secondary)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
                                     </label>
                                   );
                                 })}
