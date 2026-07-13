@@ -389,6 +389,17 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
 
 const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#1c1c1e","#8e8e93","#ffffff"];
 
+/** Perceived luminance (0–1) of a hex colour, used to decide whether light or dark
+ *  content reads best against it. */
+function luminanceOf(hex: string): number {
+  const h = hex.replace('#', '');
+  if (h.length !== 6) return 0;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
 /** In dark mode, lift colours whose perceived luminance is below 0.45 so they stay legible on dark surfaces.
  *  Bright colours are returned unchanged; very dark ones become a visible mid-tone while keeping their hue. */
 function adaptColor(hex: string, dark: boolean): string {
@@ -1838,20 +1849,23 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const hovered = tooltipRect !== null;
   const isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
-  const labelTone: "onGreen" | "muted" | "auto" =
-    isPast ? "onGreen" : isToday ? "auto" : "muted";
+  // Pale accent colours (e.g. "White") are too light for white day-number/text/markers to
+  // read against — flip to dark ink on those tiles so content never blends into the tile.
+  const isLightAccent = isPast && luminanceOf(accentColor) > 0.62;
+  const labelTone: "onGreen" | "onLight" | "muted" | "auto" =
+    isPast ? (isLightAccent ? "onLight" : "onGreen") : isToday ? "auto" : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: dayGoals.count }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         return done ? (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
-            <circle cx="3" cy="3" r="3" fill={isPast ? "rgba(255,255,255,0.92)" : "#34c759"} />
-            <path d="M1.5 3l1 1 2-2" stroke={isPast ? accentColor : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="3" cy="3" r="3" fill={isPast ? (isLightAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
+            <path d="M1.5 3l1 1 2-2" stroke={isPast ? (isLightAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0, opacity:0.5 }}>
-            <circle cx="3" cy="3" r="2.5" stroke={isPast ? "rgba(255,255,255,0.7)" : "var(--text-tertiary)"} strokeWidth="0.9"/>
+            <circle cx="3" cy="3" r="2.5" stroke={isPast ? (isLightAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="0.9"/>
           </svg>
         );
       })}
@@ -2008,14 +2022,15 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 
-function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"muted"|"auto"|"gold"|"goldBright"|"silver"|"silverBright" }) {
+function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"onLight"|"muted"|"auto"|"gold"|"goldBright"|"silver"|"silverBright" }) {
   const isGold = tone === "gold";
   const isGoldBright = tone === "goldBright";
   const isSilver = tone === "silver";
   const isSilverBright = tone === "silverBright";
   const isOnGreen = tone === "onGreen";
-  const nc = isOnGreen ? "white" : "var(--text)";
-  const mc = isOnGreen ? "rgba(255,255,255,0.85)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+  const isOnLight = tone === "onLight";
+  const nc = isOnGreen ? "white" : isOnLight ? "#18181b" : "var(--text)";
+  const mc = isOnGreen ? "rgba(255,255,255,0.85)" : isOnLight ? "rgba(24,24,27,0.65)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
   // solid colours — work on any background without gradient-clip artefacts
   const goldCol  = "#e8b338";        // warm gold, readable on dark & light
   const silverCol = "#9e9eae";       // steel silver, readable on light/dark
