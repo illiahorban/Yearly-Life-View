@@ -79,6 +79,11 @@ function sameDay(a: Date, b: Date) {
   return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
 }
 function daysBetween(a: Date, b: Date) { return Math.round((b.getTime()-a.getTime())/86_400_000); }
+function monthsBetween(a: Date, b: Date) {
+  let months = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+  if (b.getDate() < a.getDate()) months -= 1;
+  return Math.max(0, months);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -3931,17 +3936,20 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const ageDays = useMemo(() => birthDate ? Math.max(0, daysBetween(birthDate, today)) : 0, [birthDate, today]);
   const lifespanDays = settings.lifespan * 365.25;
   const pct = Math.min(100, (ageDays / lifespanDays) * 100);
-  const ageYears = Math.floor(ageDays / 365.25);
-  const ageMonths = Math.floor((ageDays % 365.25) / 30.44);
-  const remainingDays = Math.max(0, lifespanDays - ageDays);
-  const remainingYears = Math.floor(remainingDays / 365.25);
-  const remainingMonths = Math.floor((remainingDays % 365.25) / 30.44);
+  // Age/remaining are derived from exact calendar months so they always sum to exactly `lifespan` years.
+  const ageMonthsTotal = useMemo(() => birthDate ? monthsBetween(birthDate, today) : 0, [birthDate, today]);
+  const lifespanMonths = settings.lifespan * 12;
+  const ageYears = Math.floor(ageMonthsTotal / 12);
+  const ageMonths = ageMonthsTotal % 12;
+  const remainingMonthsTotal = Math.max(0, lifespanMonths - ageMonthsTotal);
+  const remainingYears = Math.floor(remainingMonthsTotal / 12);
+  const remainingMonths = remainingMonthsTotal % 12;
 
   const { cols, cellPx, gapPx, totalUnits, currentUnit, labelW, headerH } = useMemo(() => {
     const ls = settings.lifespan;
     let c: number, gap: number, total: number, curr: number;
     switch (view) {
-      case "years":  c = 10;  gap = 3; total = ls;       curr = Math.floor(ageDays / 365.25); break;
+      case "years":  c = 10;  gap = 3; total = ls + 1;   curr = birthDate ? today.getFullYear() - birthDate.getFullYear() : 0; break;
       case "months": c = 12;  gap = 1; total = ls * 12;  curr = Math.floor(ageDays / 30.44);  break;
       case "weeks":  c = 52;  gap = 1; total = ls * 52;  curr = Math.floor(ageDays / 7);      break;
       default:       c = 0;   gap = 1; total = ls * 365; curr = ageDays;                      break;
@@ -3965,7 +3973,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       cell = Math.max(minCell, natural);
     }
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, labelW: lw, headerH: lh };
-  }, [view, settings.lifespan, ageDays]);
+  }, [view, settings.lifespan, ageDays, birthDate, today]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
   const inputStyle: React.CSSProperties = {
