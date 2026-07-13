@@ -1991,23 +1991,13 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     );
   }
   if (isToday) {
-    // A pale accent (e.g. "White") sits too close to the tile's own surface colour for its
-    // border/fill ring to read — swap in a neutral ink ring + fill so today's progress stays
-    // visible no matter the chosen accent, while other colours keep their true accent look.
-    const surfaceLum = dark ? luminanceOf("#1c1c1e") : luminanceOf("#ffffff");
-    const todayLowContrast = Math.abs(luminanceOf(accentColor) - surfaceLum) < 0.3;
-    const todayRingColor = todayLowContrast ? (dark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)") : accentColor;
-    const todayFillColor = todayLowContrast ? (dark ? "rgba(255,255,255,0.5)" : "rgba(24,24,27,0.5)") : accentColor;
-    const todayGlow = todayLowContrast
-      ? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.14)")
-      : `${accentColor}2e`;
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${todayRingColor}`, boxShadow: hovered ? `0 0 0 4px ${todayGlow},0 4px 18px ${todayGlow}` : `0 0 0 4px ${todayGlow},0 4px 14px ${todayGlow}`, color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
             <div className="relative w-full h-full overflow-hidden">
-              <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:todayFillColor }} />
+              <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor }} />
               <div className="relative z-10 flex h-full w-full flex-col items-center justify-center"><Label number={dayNumber} month={monthAbbr} tone={labelTone} /></div>
             </div>
             {noteDot}{microMarkers}
