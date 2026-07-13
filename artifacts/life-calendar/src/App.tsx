@@ -248,7 +248,7 @@ const LangContext = React.createContext<LangCtx>({ t: k => I18N.en[k] ?? k, mont
 const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
-type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; text: string; soft: string; darkSoft: string; noColor: boolean };
+type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; text: string; soft: string; darkSoft: string };
 type Block = { id: string; weeks: number; label: string; color?: AppleColorKey };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
@@ -289,7 +289,7 @@ const APPLE_COLORS = [
 ] as const;
 
 type AppleColorKey = typeof APPLE_COLORS[number]["key"];
-type QuarterMeta = { name: string; colorKey: AppleColorKey | null };
+type QuarterMeta = { name: string; colorKey: AppleColorKey };
 
 const DEFAULT_QUARTER_META: QuarterMeta[] = [
   { name:"Q1", colorKey:"blue" }, { name:"Q2", colorKey:"green" },
@@ -358,22 +358,6 @@ function hexSaturate(hex: string, factor: number) {
 }
 
 function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
-  if (meta.colorKey === null) {
-    const neutralBorder = dark ? "rgba(255,255,255,0.26)" : "rgba(0,0,0,0.20)";
-    const neutralText   = dark ? "#ffffff" : "#1c1c1e";
-    return {
-      key:      "grey" as AppleColorKey,
-      label:    meta.name,
-      tint:     dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
-      darkTint: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
-      border:   neutralBorder,
-      fill:     dark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.38)",
-      text:     neutralText,
-      soft:     dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.13)",
-      darkSoft: dark ? "rgba(255,255,255,0.26)" : "rgba(0,0,0,0.20)",
-      noColor:  true,
-    };
-  }
   const ac = APPLE_COLORS.find(c => c.key === meta.colorKey) ?? APPLE_COLORS[0]!;
   const rawHex = dark ? ac.dark : ac.light;
   const hex = (!dark) ? hexSaturate(rawHex, LIGHT_SAT_FACTOR) : rawHex;
@@ -400,7 +384,6 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
     text: textHex,
     soft:     `rgba(${r},${g},${b},0.22)`,
     darkSoft: `rgba(${r},${g},${b},0.36)`,
-    noColor:  false,
   };
 }
 
@@ -413,8 +396,8 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
  *  (anchored to the same "#1c1c1e" already used for quarter.text) whenever the active
  *  quarter/block colour is achromatic and the theme is light.
  */
-function mutedTextColors(colorKey: AppleColorKey | null, dark: boolean) {
-  const isAchroLight = (colorKey === "black" || colorKey === "grey" || colorKey === null) && !dark;
+function mutedTextColors(colorKey: AppleColorKey, dark: boolean) {
+  const isAchroLight = (colorKey === "black" || colorKey === "grey") && !dark;
   return {
     tertiary:  isAchroLight ? "rgba(28,28,30,0.62)" : "var(--text-tertiary)",
     secondary: isAchroLight ? "rgba(28,28,30,0.88)" : "var(--text-secondary)",
@@ -1244,14 +1227,8 @@ function App() {
                         <button
                           onClick={() => setColorPickerQi(colorPickerQi === qi ? null : qi)}
                           title={t("chooseColor")}
-                          style={{ width:13, height:13, borderRadius:999, background: meta.colorKey ? quarter.border : "transparent", border:`2px solid ${meta.colorKey ? (dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)") : (dark?"rgba(255,255,255,0.40)":"rgba(0,0,0,0.30)")}`, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden", position:"relative" }}
-                        >
-                          {!meta.colorKey && (
-                            <svg width="9" height="9" viewBox="0 0 9 9" style={{ position:"absolute" }}>
-                              <line x1="1" y1="8" x2="8" y2="1" stroke={dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.35)"} strokeWidth="1.5" strokeLinecap="round"/>
-                            </svg>
-                          )}
-                        </button>
+                          style={{ width:13, height:13, borderRadius:999, background:quarter.border, border:`2px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)"}`, cursor:"pointer", display:"block", flexShrink:0 }}
+                        />
                         <AnimatePresence>
                           {colorPickerQi === qi && (
                             <motion.div
@@ -1260,15 +1237,6 @@ function App() {
                               onClick={e => e.stopPropagation()}
                               style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:40, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
                             >
-                              {/* No-color option */}
-                              <button onClick={() => { updateQuarterMeta(qi, { colorKey: null }); setColorPickerQi(null); }}
-                                title={lang==="ru" ? "Без цвета" : "No color"}
-                                style={{ width:20, height:20, borderRadius:999, background:"transparent", border: meta.colorKey===null ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.18)"}`, cursor:"pointer", transition:"border 120ms ease", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}
-                              >
-                                <svg width="12" height="12" viewBox="0 0 12 12" style={{ position:"absolute" }}>
-                                  <line x1="2" y1="10" x2="10" y2="2" stroke={dark?"rgba(255,255,255,0.45)":"rgba(0,0,0,0.30)"} strokeWidth="1.5" strokeLinecap="round"/>
-                                </svg>
-                              </button>
                               {APPLE_COLORS.map(ac => (
                                 <button key={ac.key} onClick={() => { updateQuarterMeta(qi, { colorKey: ac.key }); setColorPickerQi(null); }}
                                   title={ac.label}
@@ -1760,7 +1728,7 @@ function BlocksRenderer({
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 dayGoals={dayGoalsMap[dateKey(d)]}
-                                accentColor={effectiveQ.noColor ? null : effectiveQ.border}
+                                accentColor={effectiveQ.border}
                                 highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
                                 isActiveMatch={activeMatchKey === dateKey(d)}
                                 dark={dark}
@@ -1892,7 +1860,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
 
 function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayMilestones, dayGoals, accentColor, highlighted, isActiveMatch, dark, onOpen }: {
   date: Date; state: DayState; todayProgress: number;
-  notes?: NoteEntry[]; milestones: Milestone[]; dayGoals?: DayGoals; accentColor: string | null; highlighted?: boolean; isActiveMatch?: boolean; dark: boolean; onOpen: () => void;
+  notes?: NoteEntry[]; milestones: Milestone[]; dayGoals?: DayGoals; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; dark: boolean; onOpen: () => void;
 }) {
   const isOut = state==="out";
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
@@ -1907,14 +1875,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   // into the dark fill. Either way a flat colour can't win on both sides, so both
   // extremes fall back to "invertPale", which uses mix-blend-mode instead of guessing
   // one colour (see Label for the mechanics).
-  const isPaleAccent = accentColor ? luminanceOf(accentColor) > 0.80 : false;
-  const isDeepAccent = accentColor ? luminanceOf(accentColor) < 0.3  : false;
+  const isPaleAccent = luminanceOf(accentColor) > 0.80;    // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
+  const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
-    !accentColor ? "muted"
-    : isPast ? (needsInvertText ? "invertPale" : "onGreen")
-    : isToday ? (needsInvertText ? "invertPale" : "auto")
-    : "muted";
+    isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: dayGoals.count }, (_, i) => {
@@ -2038,39 +2003,36 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
 
   if (isPast) {
-    const neutralPastBg   = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.055)";
-    const neutralPastBdr  = dark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.10)";
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-          {accentColor ? (
-            <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
-              {msBar}
-              <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
-              {noteDot}{microMarkers}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:neutralPastBg, border:`1px solid ${neutralPastBdr}`, color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 8px rgba(0,0,0,0.07)" : undefined }}>
-              {msBar}
-              <Label number={dayNumber} month={monthAbbr} tone="muted" />
-              {noteDot}{microMarkers}
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+            {msBar}
+            <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
+            {noteDot}{microMarkers}
+          </div>
         </div>
         {tooltipPortal}
       </>
     );
   }
   if (isToday) {
-    const neutralFill = dark ? "rgba(255,255,255,0.13)" : "rgba(0,0,0,0.07)";
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:"var(--surface)", border: accentColor ? `1.5px solid ${accentColor}` : "1.5px solid var(--border-soft)", boxShadow: accentColor ? (hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`) : (hovered ? "0 2px 10px rgba(0,0,0,0.09)" : undefined), color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
-            {/* Fill layer */}
-            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background: accentColor ?? neutralFill }} />
-            {/* Text layer */}
+            {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
+                the SAME stacking context as the text below — `isolation: isolate` on the
+                outer tile is what scopes mix-blend-mode, and any nested element that sets
+                its own z-index would create a second, isolated stacking context and cut
+                the text off from seeing this layer entirely. */}
+            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor }} />
+            {/* Text layer: position:absolute WITHOUT an explicit z-index. Paint order inside
+                a stacking context follows DOM order, so being declared after the fill layer
+                above is enough to sit visually on top — no z-index needed, and adding one
+                here would re-introduce the bug (a new isolated context that hides the fill
+                from `mix-blend-mode: difference`). */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
             </div>
