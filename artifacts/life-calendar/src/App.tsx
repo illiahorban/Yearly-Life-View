@@ -423,6 +423,19 @@ function luminanceOf(hex: string): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 
+/** Returns a colour safe to use as goal-title text directly on the app's page
+ *  background: the goal's own colour normally, but swapped for the theme's
+ *  standard text colour when that colour would be unreadable against the
+ *  current background (e.g. near-black text in dark mode, near-white text in
+ *  light mode). `fallback` is used when the goal has no colour at all. */
+function readableGoalTextColor(colorHex: string | undefined, dark: boolean, fallback: string): string {
+  if (!colorHex) return fallback;
+  const lum = luminanceOf(colorHex);
+  if (dark && lum < 0.25) return "var(--text)";
+  if (!dark && lum > 0.75) return "var(--text)";
+  return colorHex;
+}
+
 /** In dark mode, lift colours whose perceived luminance is below 0.45 so they stay legible on dark surfaces.
  *  Bright colours are returned unchanged; very dark ones become a visible mid-tone while keeping their hue. */
 function adaptColor(hex: string, dark: boolean): string {
@@ -1312,7 +1325,7 @@ function App() {
                             return (
                               <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                                 onClick={() => toggleQuarterGoal(qi, goal.id)}
-                                style={{ color: goal.done ? mt.tertiary : goal.color ?? mt.secondary }}
+                                style={{ color: goal.done ? mt.tertiary : readableGoalTextColor(goal.color, dark, mt.secondary) }}
                               >
                                 <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
                                   {goal.done && <CheckIcon color={cb.icon} />}
@@ -1676,7 +1689,7 @@ function BlocksRenderer({
                         return (
                           <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                             onClick={() => onGoalToggle(block.id, goal.id)}
-                            style={{ color: goal.done ? mt.tertiary : goal.color ?? mt.secondary }}
+                            style={{ color: goal.done ? mt.tertiary : readableGoalTextColor(goal.color, dark, mt.secondary) }}
                           >
                             <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
                               {goal.done && <CheckIcon color={cb.icon} />}
@@ -2887,7 +2900,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                           <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                             {goal.done && <CheckIcon />}
                           </div>
-                          <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                          <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
                         </label>
                       );
                     })}
@@ -2945,7 +2958,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                               <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : (goal.color ? cb.emptyBorder : `${qr.fill}88`)}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                 {goal.done && <CheckIcon color={cb.icon} />}
                               </div>
-                              <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? `${qr.text}66` : goal.color ?? qr.text, textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.6 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                              <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? `${qr.text}66` : readableGoalTextColor(goal.color, dark, qr.text), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.6 : 1, transition:"all 150ms" }}>{goal.text}</span>
                             </label>
                           );
                         })}
@@ -2978,7 +2991,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                                       <div style={{ boxSizing:"border-box", width:13, height:13, borderRadius:3, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                         {goal.done && <CheckIcon color={cb.icon} />}
                                       </div>
-                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text-secondary)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
                                     </label>
                                   );
                                 })}
