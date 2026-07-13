@@ -370,28 +370,20 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
                 : meta.colorKey==="white"             ? (dark ? "#ebebf5" : "#3a3a3c")
                 : isAchromaticDark                    ? (dark ? "#ffffff" : "#1c1c1e")
                 : hex;
-  // Black/Grey in dark mode: keep border as a fully-opaque near-black surface so cards,
-  // progress tracks, and day tiles read with the same crisp contrast as pure Black —
-  // fill/text turn white so content stays legible on that dark surface.
+  // Black/Grey in dark mode: fill/text turn white so percent numbers, headers and icons
+  // stay legible — the card/day-tile surface itself keeps each colour's true hue (grey
+  // stays grey, black stays black), only the content drawn on top gets the contrast boost.
   const fill = (isAchromaticDark && dark) ? "#ffffff" : hex;
-  // Grey's true hex (#636366) is too light a backdrop for white text/fill to pop against —
-  // in dark mode we render it on the exact same near-black surface Black uses (its own
-  // border/tint/day-tile accent all key off this), so Grey stops looking washed-out and
-  // reads just as graphic as Black. The colour picker's swatches still show the true grey
-  // hue, so the two remain distinguishable there.
-  const blackAc = APPLE_COLORS.find(c => c.key === "black")!;
-  const resolvedSurfaceHex = (meta.colorKey === "grey" && dark) ? blackAc.dark : hex;
-  const [sr, sg, sb] = hexToRgb(resolvedSurfaceHex);
   return {
     key: meta.colorKey,
     label: meta.name,
     tint:     `rgba(${r},${g},${b},0.07)`,
-    darkTint: `rgba(${sr},${sg},${sb},0.14)`,
-    border: resolvedSurfaceHex,
+    darkTint: `rgba(${r},${g},${b},0.14)`,
+    border: hex,
     fill,
     text: textHex,
     soft:     `rgba(${r},${g},${b},0.22)`,
-    darkSoft: `rgba(${sr},${sg},${sb},0.36)`,
+    darkSoft: `rgba(${r},${g},${b},0.36)`,
   };
 }
 
