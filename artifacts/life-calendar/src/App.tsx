@@ -522,15 +522,44 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
  *  and falling back to the plain chromatic colour (or the block/quarter accent)
  *  otherwise. `emptyBorder` is always defined so the outline is visible whether or
  *  not the goal is done, matching the box's fixed h/w regardless of colour. */
-function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string) {
+/** Semi-transparent empty-state bg for an achromatic checkbox.
+ *  White bg is invisible on light surfaces, so we substitute a faint ink tint instead. */
+function achromaticCheckboxEmptyBg(bg: string, dark: boolean): string {
+  const lum = luminanceOf(bg);
+  if (lum > 0.70) return dark ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.08)";
+  return `${bg}55`;
+}
+
+/** fallbackColorKey: the sprint/quarter AppleColorKey, used to derive achromatic checkbox
+ *  colours from the raw APPLE_COLORS hex rather than from `fill`, which is overridden to
+ *  "#ffffff" for black/grey in dark mode (for content contrast) and would produce a white
+ *  checkbox on a dark card. */
+function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
-  if (ach) return { doneBg: ach.bg, doneBorder: ach.border, emptyBg: `${ach.bg}55`, emptyBorder: ach.border, icon: ach.icon };
+  if (ach) {
+    const emptyBg = achromaticCheckboxEmptyBg(ach.bg, dark);
+    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: ach.border, icon: ach.icon };
+  }
+
+  // When no goal colour, try to get the achromatic style from the sprint/quarter color key
+  // using the real APPLE_COLORS hex (not fill, which can be white for black/grey in dark mode).
+  if (!colorHex && fallbackColorKey) {
+    const ac = APPLE_COLORS.find(c => c.key === fallbackColorKey);
+    if (ac) {
+      const rawHex = dark ? ac.dark : ac.light;
+      const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
+      if (kAch) {
+        const emptyBg = achromaticCheckboxEmptyBg(kAch.bg, dark);
+        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: kAch.border, icon: kAch.icon };
+      }
+    }
+  }
+
   const hex = colorHex ?? fallbackHex;
-  // When no goal-specific color, also check if the fallback itself is achromatic
-  // (e.g. white sprint fill) so we pick a legible checkmark color instead of always #ffffff.
   const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
   const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
-  return { doneBg: hex, doneBorder: hex, emptyBg: `${hex}55`, emptyBorder: colorHex ?? "var(--border-soft)", icon };
+  const emptyBg = fallbackAch ? achromaticCheckboxEmptyBg(fallbackAch.bg, dark) : `${hex}55`;
+  return { doneBg: hex, doneBorder: hex, emptyBg, emptyBorder: colorHex ?? "var(--border-soft)", icon };
 }
 
 // ─── Centralized event/milestone color helper ─────────────────────────────────
@@ -1294,7 +1323,7 @@ function App() {
                         ) : null}
                         <div className="flex flex-col gap-1">
                           {activeQGoals.map(goal => {
-                            const cb = goalCheckboxColors(goal.color, dark, quarter.fill);
+                            const cb = goalCheckboxColors(goal.color, dark, quarter.fill, quarter.key);
                             return (
                               <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                                 onClick={() => toggleQuarterGoal(qi, goal.id)}
@@ -1660,7 +1689,7 @@ function BlocksRenderer({
                   <div className="px-3 sm:px-3.5 pb-2">
                     <div className="flex flex-col gap-1">
                       {activeGoals.map(goal => {
-                        const cb = goalCheckboxColors(goal.color, dark, effectiveQ.fill);
+                        const cb = goalCheckboxColors(goal.color, dark, effectiveQ.fill, effectiveQ.key);
                         return (
                           <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                             onClick={() => onGoalToggle(block.id, goal.id)}
@@ -2925,7 +2954,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                     {qGoals.length > 0 && (
                       <div style={{ padding:"4px 14px 8px", display:"flex", flexDirection:"column", gap:3 }}>
                         {qGoals.map(goal => {
-                          const cb = goalCheckboxColors(goal.color, dark, qr.fill);
+                          const cb = goalCheckboxColors(goal.color, dark, qr.fill, qr.key);
                           return (
                             <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 0", borderRadius:6 }}
                               onClick={() => onToggleQuarterGoal(qi, goal.id)}
@@ -2963,7 +2992,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                               </div>
                               <div style={{ padding:"5px 8px", display:"flex", flexDirection:"column", gap:2 }}>
                                 {goals.map(goal => {
-                                  const cb = goalCheckboxColors(goal.color, dark, effectiveQ.fill);
+                                  const cb = goalCheckboxColors(goal.color, dark, effectiveQ.fill, effectiveQ.key);
                                   return (
                                     <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 2px", borderRadius:5 }}
                                       onClick={() => onToggleGoal(block.id, goal.id)}
