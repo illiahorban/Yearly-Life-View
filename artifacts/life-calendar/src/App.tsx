@@ -1215,7 +1215,7 @@ function App() {
 
               return (
                 <motion.section layout key={qi} className="overflow-visible"
-                  style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `2px solid ${quarter.border}` }}
+                  style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `3px solid ${quarter.border}` }}
                 >
                   {/* Sticky quarter header — sticks just below main app header */}
                   <div style={{ borderRadius:16 }}>
