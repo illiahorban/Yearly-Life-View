@@ -367,13 +367,16 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
                 : (!dark && meta.colorKey==="mint")   ? "#008a82"
                 : (!dark && meta.colorKey==="teal")   ? "#007ea5"
                 : meta.colorKey==="white"             ? (dark ? "#ebebf5" : "#3a3a3c")
+                : meta.colorKey==="black"             ? (dark ? "#ffffff" : "#1c1c1e")
                 : hex;
+  // Black in dark mode: use white for the border/dot/progress-fill so content stays readable on the near-black card.
+  const borderHex = (meta.colorKey==="black" && dark) ? "#ffffff" : hex;
   return {
     key: meta.colorKey,
     label: meta.name,
     tint:     `rgba(${r},${g},${b},0.07)`,
     darkTint: `rgba(${r},${g},${b},0.14)`,
-    border: hex,
+    border: borderHex,
     text: textHex,
     soft:     `rgba(${r},${g},${b},0.22)`,
     darkSoft: `rgba(${r},${g},${b},0.36)`,
