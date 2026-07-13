@@ -509,9 +509,7 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
   const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
   if (sat > 0.18) return null;
   if (lum > 0.70) {
-    // White border is invisible on white card surfaces — use a visible grey outline instead.
-    const border = dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.22)";
-    return { bg:"#ffffff", border, icon:"#18181b" };
+    return { bg:"#ffffff", border:"#ffffff", icon:"#18181b" };
   }
   if (lum < 0.12) {
     return dark ? { bg:"#09090b", border:"#000000", icon:"#ffffff" } : { bg:"#000000", border:"#000000", icon:"#ffffff" };
@@ -537,10 +535,18 @@ function achromaticCheckboxEmptyBg(bg: string, dark: boolean): string {
  *  "#ffffff" for black/grey in dark mode (for content contrast) and would produce a white
  *  checkbox on a dark card. */
 function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
+  // For white achromatic colours the border is #ffffff — invisible on white card surfaces.
+  // Override emptyBorder to a subtle grey outline so the unchecked box is always visible.
+  function visibleEmptyBorder(bg: string): string {
+    return luminanceOf(bg) > 0.70
+      ? (dark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.22)")
+      : bg;
+  }
+
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
   if (ach) {
     const emptyBg = achromaticCheckboxEmptyBg(ach.bg, dark);
-    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: ach.border, icon: ach.icon };
+    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: visibleEmptyBorder(ach.bg), icon: ach.icon };
   }
 
   // When no goal colour, try to get the achromatic style from the sprint/quarter color key
@@ -552,7 +558,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
       const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
       if (kAch) {
         const emptyBg = achromaticCheckboxEmptyBg(kAch.bg, dark);
-        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: kAch.border, icon: kAch.icon };
+        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: visibleEmptyBorder(kAch.bg), icon: kAch.icon };
       }
     }
   }
