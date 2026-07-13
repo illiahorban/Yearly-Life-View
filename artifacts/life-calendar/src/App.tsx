@@ -436,7 +436,7 @@ function adaptColor(hex: string, dark: boolean): string {
 
 /** Returns adaptive styles for achromatic colours (white/grey/black) that stay legible in both themes.
  *  Returns null for any chromatic (saturated) colour so callers fall back to adaptColor. */
-type AchromaticStyle = { bg: string; border: string; text: string; marker: string; markerBorder?: string; ring?: string };
+type AchromaticStyle = { bg: string; border: string; text: string; marker: string; markerBorder?: string; ring?: string; tier: "black"|"grey"|"white" };
 function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   const h = hex.replace('#', '').toLowerCase();
   if (h.length !== 6) return null;
@@ -450,18 +450,18 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   if (lum > 0.70) {
     // white — border-zinc-700 dark / border-zinc-200 light
     return dark
-      ? { bg:"#ffffff", border:"#3f3f46", text:"#18181b", marker:"#ffffff" }
-      : { bg:"#ffffff", border:"#e4e4e7", text:"#18181b", marker:"#ffffff" };
+      ? { bg:"#ffffff", border:"#3f3f46", text:"#18181b", marker:"#ffffff", tier:"white" }
+      : { bg:"#ffffff", border:"#e4e4e7", text:"#18181b", marker:"#ffffff", tier:"white" };
   }
   if (lum < 0.12) {
     // black — bg-zinc-950 dark / bg-black light; border-zinc-800 dark / border-zinc-300 light
     return dark
-      ? { bg:"#09090b", border:"#27272a", text:"#ffffff", marker:"#27272a" }
-      : { bg:"#000000", border:"#d4d4d8", text:"#ffffff", marker:"#000000" };
+      ? { bg:"#09090b", border:"#27272a", text:"#ffffff", marker:"#27272a", tier:"black" }
+      : { bg:"#000000", border:"#d4d4d8", text:"#ffffff", marker:"#000000", tier:"black" };
   }
   return dark
-    ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"#a1a1aa" }
-    : { bg:"#e4e4e7",                border:"rgba(113,113,122,0.45)", text:"#27272a", marker:"#a1a1aa" };
+    ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"#a1a1aa", tier:"grey" }
+    : { bg:"#e4e4e7",                border:"rgba(113,113,122,0.45)", text:"#27272a", marker:"#a1a1aa", tier:"grey" };
 }
 
 /** Maps any APPLE_COLORS hex variant (light or dark) to the canonical light-mode
@@ -3656,21 +3656,28 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
           <div className="flex flex-col gap-1.5">
             {goals.map((g, idx) => {
               const gc = g.color;
+              const ach = gc ? achromaticStyle(resolveNoteHex(gc), dark) : null;
               const tintedBorder = gc ? `color-mix(in srgb, ${gc} 55%, ${borderColor})` : borderColor;
               const tintedBg = gc ? `color-mix(in srgb, ${gc} ${dark?18:12}%, ${inputBg})` : inputBg;
+              const inputBackground = ach ? ach.bg : tintedBg;
+              const inputBorderColor = ach ? ach.border : tintedBorder;
+              const inputTextColor = ach ? ach.text : "var(--text)";
+              const placeholderClass = ach ? `placeholder-goal-${ach.tier}` : undefined;
+              const dotBorder = ach?.tier === "white" ? "1.5px solid rgba(0,0,0,0.35)" : `1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`;
               return (
                 <div key={g.id} className="flex items-center gap-2">
                   <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
                   <div style={{ flex:1, position:"relative" }}>
                     <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
                       placeholder={`${t("goalPlaceholder")} ${idx+1}`}
-                      style={{ width:"100%", background:tintedBg, border:`1px solid ${tintedBorder}`, borderRadius:8, padding:"6px 28px 6px 9px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease" }}
+                      className={placeholderClass}
+                      style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 28px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
                     <button
                       ref={el => { colorBtnRefs.current[g.id] = el; }}
                       onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
                       title={t("chooseColor")}
-                      style={{ position:"absolute", top:"50%", right:7, transform:"translateY(-50%)", width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:`1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`, boxShadow:"0 1px 3px rgba(0,0,0,0.22)", cursor:"pointer", padding:0, flexShrink:0 }}
+                      style={{ position:"absolute", top:"50%", right:7, transform:"translateY(-50%)", width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:dotBorder, boxShadow:"0 1px 3px rgba(0,0,0,0.22)", cursor:"pointer", padding:0, flexShrink:0 }}
                     />
                   </div>
                   <button onClick={() => setConfirmDeleteGoalId(g.id)}

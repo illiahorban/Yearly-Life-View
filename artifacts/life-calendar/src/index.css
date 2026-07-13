@@ -47,6 +47,11 @@ body {
 
 .placeholder-dark::placeholder { color: rgba(0,0,0,0.40); }
 
+/* Goal-input placeholder tones — matched to the achromatic note styling (black/grey/white). */
+.placeholder-goal-black::placeholder { color: #a1a1aa; }
+.placeholder-goal-grey::placeholder { color: #d4d4d8; }
+.placeholder-goal-white::placeholder { color: #71717a; }
+
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
   filter: invert(var(--date-invert, 0));
