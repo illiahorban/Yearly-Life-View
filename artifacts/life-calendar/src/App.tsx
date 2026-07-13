@@ -1607,7 +1607,7 @@ function BlocksRenderer({
               <motion.div layout key={block.id}
                 initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                 transition={{ type:"spring", stiffness:320, damping:30 }}
-                style={{ background:cardBg, borderRadius:14, border:`1px solid ${effectiveQ.border}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
+                style={{ background:cardBg, borderRadius:14, border:`1.5px solid ${effectiveQ.border}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
