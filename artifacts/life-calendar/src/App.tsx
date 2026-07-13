@@ -509,7 +509,9 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
   const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
   if (sat > 0.18) return null;
   if (lum > 0.70) {
-    return { bg:"#ffffff", border:"#ffffff", icon:"#18181b" };
+    // White border is invisible on white card surfaces — use a visible grey outline instead.
+    const border = dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.22)";
+    return { bg:"#ffffff", border, icon:"#18181b" };
   }
   if (lum < 0.12) {
     return dark ? { bg:"#09090b", border:"#000000", icon:"#ffffff" } : { bg:"#000000", border:"#000000", icon:"#ffffff" };
