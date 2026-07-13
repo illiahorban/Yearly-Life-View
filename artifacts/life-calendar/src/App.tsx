@@ -1376,6 +1376,8 @@ function App() {
             key="sprint-settings"
             quarterIndex={settingsQuarter} quarter={resolvedQuarters[settingsQuarter]!}
             initial={config.quarters[settingsQuarter]!} dark={dark} modalBg={modalBg}
+            colorKey={quarterMeta[settingsQuarter]!.colorKey}
+            onColorChange={key => updateQuarterMeta(settingsQuarter, { colorKey: key })}
             onClose={() => setSettingsQuarter(null)}
             onSave={next => { updateQuarter(settingsQuarter, next); setSettingsQuarter(null); }}
             onResetBlock={(blockId) => {
@@ -3971,8 +3973,9 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
 
 // ─── SprintSettingsModal ──────────────────────────────────────────────────────
 
-function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, onClose, onSave, onResetBlock }: {
+function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, colorKey, onColorChange, onClose, onSave, onResetBlock }: {
   quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
+  colorKey: AppleColorKey; onColorChange: (key: AppleColorKey) => void;
   onClose: () => void; onSave: (next: QuarterConfig) => void; onResetBlock: (blockId: string) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
@@ -3986,6 +3989,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   const activeColorPickerBlock = colorPickerAnchor ? blocks.find(b => b.id === colorPickerAnchor.id) : null;
   const [confirmResetId, setConfirmResetId] = useState<string|null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
+  const [quarterColorOpen, setQuarterColorOpen] = useState(false);
 
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -4004,6 +4008,39 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
       >
         <div className="px-6 pt-6 pb-3">
           <div className="flex items-center gap-2">
+            <div style={{ position:"relative" }}>
+              <button type="button" onClick={() => setQuarterColorOpen(v => !v)} title={t("chooseColor")}
+                style={{ width:13, height:13, borderRadius:999, background:quarter.border, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0 }}
+              />
+              <AnimatePresence>
+                {quarterColorOpen && (
+                  <>
+                    <div style={{ position:"fixed", inset:0, zIndex:49 }} onClick={() => setQuarterColorOpen(false)} />
+                    <motion.div
+                      initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
+                      transition={{ type:"spring", stiffness:420, damping:28 }}
+                      onClick={e => e.stopPropagation()}
+                      style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:50, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+                    >
+                      {APPLE_COLORS.map(ac => {
+                        const selected = colorKey === ac.key;
+                        const swatchHex = dark ? ac.dark : ac.light;
+                        return (
+                          <button key={ac.key} onClick={() => { onColorChange(ac.key); setQuarterColorOpen(false); }}
+                            title={ac.label}
+                            style={{ width:20, height:20, borderRadius:999, background: swatchHex, border:"1.5px solid rgba(128,128,128,0.28)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)", transition:"transform 120ms ease" }}
+                          >
+                            {selected && (
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={swatchCheckColor(swatchHex)} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
             <span className="inline-flex items-center justify-center text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
               style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>{quarter.label}</span>
             <h2 className="text-base font-semibold tracking-tight" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("sprintConfig")}</h2>
