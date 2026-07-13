@@ -3226,7 +3226,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
           <div className="flex gap-1.5 mb-2.5 flex-wrap">
             {MILESTONE_COLORS.map(c => (
               <button key={c} onClick={() => setDraftColor(c)}
-                style={{ width:18, height:18, borderRadius:999, background:c, border: draftColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease" }}
+                style={{ width:18, height:18, borderRadius:999, background:c, border: draftColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
               />
             ))}
           </div>
@@ -3300,7 +3300,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                         <div className="flex gap-1 flex-wrap">
                           {MILESTONE_COLORS.map(c => (
                             <button key={c} onClick={() => setEditColor(c)}
-                              style={{ width:16, height:16, borderRadius:999, background:c, border: editColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms" }}
+                              style={{ width:16, height:16, borderRadius:999, background:c, border: editColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
                             />
                           ))}
                         </div>
