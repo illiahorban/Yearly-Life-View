@@ -536,13 +536,13 @@ function achromaticCheckboxEmptyBg(bg: string): string {
  *  "#ffffff" for black/grey in dark mode (for content contrast) and would produce a white
  *  checkbox on a dark card. */
 function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
-  // For achromatic colours the checkbox border/bg must contrast with the card surface.
-  // White card → dark outline; black card → light outline; grey → grey.
+  // For achromatic colours the checkbox empty-state border should match the sprint colour.
+  // Exception: black (#09090b) on a dark card is invisible → override to a light outline.
+  // White keeps its white border (emptyBg provides the visual shape via a dark tint fill).
   function visibleEmptyBorder(bg: string): string {
     const lum = luminanceOf(bg);
-    if (lum > 0.70) return "rgba(0,0,0,0.22)";
-    if (lum < 0.12) return "rgba(255,255,255,0.42)";
-    return bg;
+    if (lum < 0.12) return "rgba(255,255,255,0.42)";  // black → light outline on dark card
+    return bg;                                          // white/grey → original colour
   }
 
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
