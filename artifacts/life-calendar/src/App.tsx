@@ -1875,7 +1875,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   // into the dark fill. Either way a flat colour can't win on both sides, so both
   // extremes fall back to "invertPale", which uses mix-blend-mode instead of guessing
   // one colour (see Label for the mechanics).
-  const isPaleAccent = luminanceOf(accentColor) > 0.62;    // e.g. White
+  const isPaleAccent = luminanceOf(accentColor) > 0.80;    // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
   const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
