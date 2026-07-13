@@ -2921,7 +2921,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
               return (
                 <div key={qi} style={{ padding:"10px 12px 6px" }}>
                   {/* Quarter container card */}
-                  <div style={{ borderRadius:16, border:`1.5px solid ${qr.border}`, overflow:"hidden", background:"transparent" }}>
+                  <div style={{ borderRadius:16, border:`1.5px solid ${qr.border}`, overflow:"hidden", background: dark ? qr.darkTint : qr.tint }}>
 
                     {/* Quarter card header */}
                     <div style={{ padding:"10px 14px 8px", display:"flex", alignItems:"center", gap:6 }}>
@@ -2964,7 +2964,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                         {blocksWithGoals.map(({ block, goals }) => {
                           const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : qr;
                           return (
-                            <div key={block.id} style={{ borderRadius:11, border:`1.5px solid ${effectiveQ.border}`, overflow:"hidden", background:"transparent" }}>
+                            <div key={block.id} style={{ borderRadius:11, border:`1.5px solid ${effectiveQ.border}`, overflow:"hidden", background: dark ? effectiveQ.darkTint : effectiveQ.tint }}>
                               <div style={{ padding:"6px 10px 5px", background:"transparent", borderBottom:`1px solid ${effectiveQ.border}55`, display:"flex", alignItems:"center", gap:6 }}>
                                 <span style={{ fontSize:11, fontWeight:600, color: effectiveQ.text, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
                                 <span style={{ fontSize:10, color: effectiveQ.text, opacity:0.6, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
