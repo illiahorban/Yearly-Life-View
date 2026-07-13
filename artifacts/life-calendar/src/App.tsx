@@ -548,8 +548,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
   const hex = colorHex ?? fallbackHex;
   const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
   const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
-  const emptyBorder = fallbackAch ? fallbackAch.border : (colorHex ?? "var(--border-soft)");
-  return { doneBg: hex, doneBorder: hex, emptyBg: "transparent", emptyBorder, icon };
+  return { doneBg: hex, doneBorder: hex, emptyBg: "transparent", emptyBorder: hex, icon };
 }
 
 // ─── Centralized event/milestone color helper ─────────────────────────────────
