@@ -1215,7 +1215,7 @@ function App() {
 
               return (
                 <motion.section layout key={qi} className="overflow-visible"
-                  style={{ background: dark ? quarter.darkTint : quarter.tint.replace("0.07", "0.18"), borderRadius: 18, border: `3px solid ${quarter.border}` }}
+                  style={{ background: "transparent", borderRadius: 18, border: `3px solid ${quarter.border}` }}
                 >
                   {/* Sticky quarter header — sticks just below main app header */}
                   <div style={{ borderRadius:16 }}>
@@ -1607,7 +1607,7 @@ function BlocksRenderer({
               <motion.div layout key={block.id}
                 initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                 transition={{ type:"spring", stiffness:320, damping:30 }}
-                style={{ background:softColor, borderRadius:14, border:`1px solid ${softColor}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
+                style={{ background:cardBg, borderRadius:14, border:"1px solid var(--border-soft)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
