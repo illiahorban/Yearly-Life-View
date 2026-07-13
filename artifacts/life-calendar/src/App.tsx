@@ -3918,7 +3918,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   onClose: () => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
-  const [view, setView] = useState<LifeView>("weeks");
+  const [view, setView] = useState<LifeView>("years");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
 
