@@ -248,7 +248,7 @@ const LangContext = React.createContext<LangCtx>({ t: k => I18N.en[k] ?? k, mont
 const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
-type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; text: string; soft: string; darkSoft: string };
+type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; text: string; soft: string; darkSoft: string };
 type Block = { id: string; weeks: number; label: string; color?: AppleColorKey };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
@@ -369,14 +369,16 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
                 : meta.colorKey==="white"             ? (dark ? "#ebebf5" : "#3a3a3c")
                 : meta.colorKey==="black"             ? (dark ? "#ffffff" : "#1c1c1e")
                 : hex;
-  // Black in dark mode: use white for the border/dot/progress-fill so content stays readable on the near-black card.
-  const borderHex = (meta.colorKey==="black" && dark) ? "#ffffff" : hex;
+  // Black in dark mode: keep border as the true hex (so DayTile accentColor stays dark),
+  // but use white for fill (progress bars, dots, checkboxes) so content is readable.
+  const fill = (meta.colorKey==="black" && dark) ? "#ffffff" : hex;
   return {
     key: meta.colorKey,
     label: meta.name,
     tint:     `rgba(${r},${g},${b},0.07)`,
     darkTint: `rgba(${r},${g},${b},0.14)`,
-    border: borderHex,
+    border: hex,
+    fill,
     text: textHex,
     soft:     `rgba(${r},${g},${b},0.22)`,
     darkSoft: `rgba(${r},${g},${b},0.36)`,
@@ -1232,7 +1234,7 @@ function App() {
                     </div>
                     <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                       <motion.div initial={false} animate={{ width:`${qPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                        style={{ height:"100%", background: quarter.border, borderRadius:999, opacity:0.88 }}
+                        style={{ height:"100%", background: quarter.fill, borderRadius:999, opacity:0.88 }}
                       />
                     </div>
                     {/* Quarter goal progress bar */}
@@ -1245,7 +1247,7 @@ function App() {
                         <div className="mt-1.5 flex items-center gap-2">
                           <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)" }}>
                             <motion.div initial={false} animate={{ width:`${goalPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                              style={{ height:"100%", background: quarter.border, borderRadius:999, opacity:0.72 }}
+                              style={{ height:"100%", background: quarter.fill, borderRadius:999, opacity:0.72 }}
                             />
                           </div>
                           <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
@@ -1263,13 +1265,13 @@ function App() {
                     return (
                       <div className="px-4 sm:px-5 pb-3">
                         {qg?.description ? (
-                          <p className="text-[11px] leading-snug mb-2" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${quarter.border}`, paddingLeft:8, opacity:0.8 }}>
+                          <p className="text-[11px] leading-snug mb-2" style={{ color:"var(--text-tertiary)", borderLeft:`2px solid ${quarter.fill}`, paddingLeft:8, opacity:0.8 }}>
                             {qg.description}
                           </p>
                         ) : null}
                         <div className="flex flex-col gap-1">
                           {activeQGoals.map(goal => {
-                            const cb = goalCheckboxColors(goal.color, dark, quarter.border);
+                            const cb = goalCheckboxColors(goal.color, dark, quarter.fill);
                             return (
                               <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                                 onClick={() => toggleQuarterGoal(qi, goal.id)}
@@ -1601,14 +1603,14 @@ function BlocksRenderer({
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
                     <motion.div initial={false} animate={{ width:`${pct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                      style={{ height:"100%", background: effectiveQ.border, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
+                      style={{ height:"100%", background: effectiveQ.fill, borderRadius:999, boxShadow: pct>0 ? `0 0 6px ${softColor}` : "none" }}
                     />
                   </div>
                   {goalPct !== null && (
                     <div className="mt-1.5 flex items-center gap-2">
                       <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)" }}>
                         <motion.div initial={false} animate={{ width:`${goalPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
-                          style={{ height:"100%", background:effectiveQ.border, borderRadius:999, opacity:0.72 }}
+                          style={{ height:"100%", background:effectiveQ.fill, borderRadius:999, opacity:0.72 }}
                         />
                       </div>
                       <span className="text-[9px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>
@@ -1632,7 +1634,7 @@ function BlocksRenderer({
                   <div className="px-3 sm:px-3.5 pb-2">
                     <div className="flex flex-col gap-1">
                       {activeGoals.map(goal => {
-                        const cb = goalCheckboxColors(goal.color, dark, effectiveQ.border);
+                        const cb = goalCheckboxColors(goal.color, dark, effectiveQ.fill);
                         return (
                           <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                             onClick={() => onGoalToggle(block.id, goal.id)}
@@ -2846,7 +2848,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                       <span style={{ fontSize:11, color: qr.text, opacity:0.6, flexShrink:0 }}>{qTotal}/{qAllTotal}</span>
                       {qAllTotal > 0 && (
                         <div style={{ width:40, height:3, borderRadius:999, overflow:"hidden", background: dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.1)", flexShrink:0 }}>
-                          <div style={{ height:"100%", borderRadius:999, background:qr.border, width:`${(qTotal/qAllTotal)*100}%`, transition:"width 0.4s ease" }} />
+                          <div style={{ height:"100%", borderRadius:999, background:qr.fill, width:`${(qTotal/qAllTotal)*100}%`, transition:"width 0.4s ease" }} />
                         </div>
                       )}
                       <button onClick={() => onEditQuarterGoals(qi)} title={t("quarterGoals")}
@@ -2860,12 +2862,12 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                     {qGoals.length > 0 && (
                       <div style={{ padding:"4px 14px 8px", display:"flex", flexDirection:"column", gap:3 }}>
                         {qGoals.map(goal => {
-                          const cb = goalCheckboxColors(goal.color, dark, qr.border);
+                          const cb = goalCheckboxColors(goal.color, dark, qr.fill);
                           return (
                             <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 0", borderRadius:6 }}
                               onClick={() => onToggleQuarterGoal(qi, goal.id)}
                             >
-                              <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : (goal.color ? cb.emptyBorder : `${qr.border}88`)}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                              <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : (goal.color ? cb.emptyBorder : `${qr.fill}88`)}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                 {goal.done && <CheckIcon color={cb.icon} />}
                               </div>
                               <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? `${qr.text}66` : goal.color ?? qr.text, textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.6 : 1, transition:"all 150ms" }}>{goal.text}</span>
@@ -2893,7 +2895,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                               </div>
                               <div style={{ padding:"5px 8px", display:"flex", flexDirection:"column", gap:2 }}>
                                 {goals.map(goal => {
-                                  const cb = goalCheckboxColors(goal.color, dark, effectiveQ.border);
+                                  const cb = goalCheckboxColors(goal.color, dark, effectiveQ.fill);
                                   return (
                                     <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 2px", borderRadius:5 }}
                                       onClick={() => onToggleGoal(block.id, goal.id)}
