@@ -2488,39 +2488,38 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             {(() => {
               const ecNew = getEventColors(newColor, dark);
               const isWhite = newColor === "#ffffff";
-              const hasColor = !!newColor;
-              // Card: never show a white bg — fall back to neutral when white is selected
-              const cardBg = isWhite
-                ? (dark ? "#18181b" : "#f4f4f5")
-                : ecNew.bg;
-              const cardBorder = isWhite
-                ? (dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.07)")
-                : (ecNew.border || (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"));
-              // Inputs: white → white bg + black text; any other color → dark bg + white text; no color → neutral
-              const inputBg   = isWhite ? "#ffffff" : hasColor ? (dark ? "#27272a" : ecNew.formBg) : ecNew.formBg;
-              const inputText = isWhite ? "#000000" : (hasColor && dark ? "#ffffff" : "var(--text)");
-              const inputBorder = isWhite ? "1px solid #3f3f46" : `1px solid ${ecNew.formBorder}`;
+              // White theme: fully light card regardless of dark mode
+              const cardBg     = isWhite ? "#ffffff" : ecNew.bg;
+              const cardBorder = isWhite ? "#d4d4d8" : (ecNew.border || (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"));
+              const inputBg     = isWhite ? "transparent" : ecNew.formBg;
+              const inputBorder = isWhite ? "1px solid #d4d4d8" : `1px solid ${ecNew.formBorder}`;
+              const inputText   = isWhite ? "#18181b" : "var(--text)";
               const inputStyle: React.CSSProperties = { background: inputBg, border: inputBorder, borderRadius:8, padding:"6px 9px", fontSize:12, color: inputText, outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
-              // Submit button: black label text when white is selected
-              const submitTextColor = newLabel.trim() ? (isWhite ? "#000000" : "white") : "var(--text-tertiary)";
+              const labelText   = isWhite ? "#18181b" : "var(--text-secondary)";
+              // Buttons: white theme gets dark zinc-900 primary, light-bordered cancel
+              const cancelBorder  = isWhite ? "1px solid #a1a1aa" : `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}`;
+              const cancelColor   = isWhite ? "#18181b" : "var(--text-secondary)";
+              const submitBg      = newLabel.trim() ? (isWhite ? "#18181b" : "#007aff") : "rgba(128,128,128,0.15)";
+              const submitColor   = newLabel.trim() ? "#ffffff" : "var(--text-tertiary)";
               return (
-            <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: (!isWhite && ecNew.boxShadow) || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
+            <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
               <div className="flex gap-1 flex-wrap items-center">
                 {/* No-color swatch */}
                 <button onClick={() => setNewColor("")}
                   title="No colour"
-                  style={{ width:14, height:14, borderRadius:999, background:"transparent", border: newColor==="" ? "2px solid var(--text)" : "2px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
-                  <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
+                  style={{ width:14, height:14, borderRadius:999, background:"transparent", border: newColor==="" ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : `2px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+                  <span style={{ position:"absolute", width:"150%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)", left:"-25%" }} />
                 </button>
                 {MILESTONE_COLORS.map(c => (
                   <button key={c} onClick={() => setNewColor(newColor === c ? "" : c)}
-                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
+                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
                 ))}
               </div>
               <div className="flex gap-1.5">
                 <input ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
                   placeholder={t("labelPlaceholder")}
+                  className={isWhite ? "placeholder-dark" : undefined}
                   style={{ ...inputStyle, flex:2, width:"auto" }} />
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                   lang={lang}
@@ -2534,14 +2533,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               </div>
               <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
                 <input type="checkbox" checked={newRecurring} onChange={e => setNewRecurring(e.target.checked)}
-                  style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }} />
-                <span style={{ fontSize:12, color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
+                  style={{ width:13, height:13, accentColor: isWhite ? "#18181b" : "#007aff", cursor:"pointer" }} />
+                <span style={{ fontSize:12, color: labelText }}>{t("repeatYearly")}</span>
               </label>
               <div className="flex gap-1.5">
                 <button onClick={() => setAddEventOpen(false)}
-                  style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
+                  style={{ flex:1, height:28, borderRadius:7, border: cancelBorder, background:"transparent", color: cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
                 <button onClick={submitNewEvent} disabled={!newLabel.trim()}
-                  style={{ flex:2, height:28, borderRadius:7, border:"none", background: newLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: submitTextColor, fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
+                  style={{ flex:2, height:28, borderRadius:7, border:"none", background: submitBg, color: submitColor, fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
               </div>
             </div>
               );
