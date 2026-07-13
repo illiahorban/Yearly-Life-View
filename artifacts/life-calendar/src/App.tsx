@@ -2571,16 +2571,16 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               const submitColor   = newLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
             <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
-              <div className="flex gap-1 flex-wrap items-center">
+              <div className="flex gap-1 flex-wrap items-center" style={{ isolation:"isolate" }}>
                 {/* No-color swatch */}
                 <button onClick={() => setNewColor("")}
                   title="No colour"
-                  style={{ width:14, height:14, borderRadius:999, background:"transparent", border: newColor==="" ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : `2px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+                  style={{ width:14, height:14, borderRadius:999, background:"transparent", border: newColor==="" ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : `2px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden", mixBlendMode:"normal", isolation:"isolate" }}>
                   <span style={{ position:"absolute", width:"150%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)", left:"-25%" }} />
                 </button>
                 {MILESTONE_COLORS.map(c => (
                   <button key={c} onClick={() => setNewColor(newColor === c ? "" : c)}
-                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
+                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate" }} />
                 ))}
               </div>
               <div className="flex gap-1.5">
@@ -2658,14 +2658,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     className={notePlaceholderClass}
                     style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:tintedText, boxSizing:"border-box", display:"block", overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease" }}
                   />
-                  <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none" }}>
+                  <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", isolation:"isolate" }}>
                     <button
                       ref={el => { colorBtnRefs.current[entry.id] = el; }}
                       onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
                       title={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
                       aria-label={`${t("chooseColor")} — ${entries.length > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
                       data-testid={`note-color-btn-${idx}`}
-                      style={{ width:13, height:13, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0 }}
+                      style={{ width:13, height:13, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0, mixBlendMode:"normal", isolation:"isolate" }}
                     />
                     <button onClick={() => setConfirmDeleteEntryId(entry.id)}
                       style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
@@ -2699,7 +2699,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
           transition={{ type:"spring", stiffness:420, damping:28 }}
           onClick={e => e.stopPropagation()}
-          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate", mixBlendMode:"normal" }}
         >
             {(() => {
               const entry = entries.find(e => e.id === colorPickerEntryId);
@@ -2708,7 +2708,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <>
                   <button onClick={() => { updateEntryColor(colorPickerEntryId, undefined); setColorPickerEntryId(null); }}
                     title={t("noColor")}
-                    style={{ width:20, height:20, borderRadius:999, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", border: !entryColor ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", position:"relative" }}
+                    style={{ width:20, height:20, borderRadius:999, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", border: !entryColor ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
                   >
                     <span style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                   </button>
@@ -2717,7 +2717,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     return (
                       <button key={ac.key} onClick={() => { updateEntryColor(colorPickerEntryId, hex); setColorPickerEntryId(null); }}
                         title={ac.label}
-                        style={{ width:20, height:20, borderRadius:999, background:hex, border: entryColor===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                        style={{ width:20, height:20, borderRadius:999, background:hex, border: entryColor===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate" }}
                       />
                     );
                   })}
@@ -3680,12 +3680,12 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
                       className={placeholderClass}
                       style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 56px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
-                    <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:4, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms" }}>
+                    <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:4, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
                       <button
                         ref={el => { colorBtnRefs.current[g.id] = el; }}
                         onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
                         title={t("chooseColor")}
-                        style={{ width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", padding:0, flexShrink:0, display:"block" }}
+                        style={{ width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", padding:0, flexShrink:0, display:"block", mixBlendMode:"normal", isolation:"isolate" }}
                       />
                       <button onClick={() => setConfirmDeleteGoalId(g.id)}
                         style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
@@ -3718,11 +3718,11 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
           initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
           transition={{ type:"spring", stiffness:420, damping:28 }}
           onClick={e => e.stopPropagation()}
-          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate", mixBlendMode:"normal" }}
         >
           <button onClick={() => setGoalColor(colorPickerGoalId, undefined)}
             title={t("noColor")}
-            style={{ width:20, height:20, borderRadius:999, background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: !goals.find(g=>g.id===colorPickerGoalId)?.color ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", position:"relative" }}
+            style={{ width:20, height:20, borderRadius:999, background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: !goals.find(g=>g.id===colorPickerGoalId)?.color ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
           >
             <span style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
           </button>
@@ -3732,7 +3732,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
             return (
               <button key={ac.key} onClick={() => setGoalColor(colorPickerGoalId, hex)}
                 title={ac.label}
-                style={{ width:20, height:20, borderRadius:999, background:hex, border: cur===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white"||ac.key==="grey")&&!dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                style={{ width:20, height:20, borderRadius:999, background:hex, border: cur===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white"||ac.key==="grey")&&!dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate" }}
               />
             );
           })}
