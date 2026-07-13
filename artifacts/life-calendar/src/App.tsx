@@ -4059,7 +4059,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       style={{ width:20, height:20, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>{idx+1}</div>
                     <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder={t("sprintLabelPlaceholder")}
                       className="flex-1 bg-transparent outline-none text-[13px]" style={{ color: bEc ? bEc.textTitle : "var(--text)" }} />
-                    <div className="flex items-center gap-1" style={{ background: dark?"rgba(255,255,255,0.10)":"rgba(0,0,0,0.045)", border:`1px solid ${dark?"rgba(255,255,255,0.16)":"rgba(0,0,0,0.12)"}`, borderRadius:8, padding:2 }}>
+                    <div className="flex items-center gap-1" style={{ background:"rgba(120,120,128,0.20)", border:"1px solid rgba(120,120,128,0.40)", borderRadius:8, padding:2 }}>
                       <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bEc ? bEc.textTitle : "var(--text-secondary)" }}>−</button>
                       <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bEc ? bEc.textTitle : "var(--text)" }}>{b.weeks}</span>
                       <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bEc ? bEc.textTitle : "var(--text-secondary)" }}>+</button>
