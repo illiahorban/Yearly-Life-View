@@ -522,13 +522,13 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
  *  and falling back to the plain chromatic colour (or the block/quarter accent)
  *  otherwise. `emptyBorder` is always defined so the outline is visible whether or
  *  not the goal is done, matching the box's fixed h/w regardless of colour. */
-/** Semi-transparent empty-state bg for an achromatic checkbox.
- *  Uses a contrasting tint relative to the surface (white→dark, black→light, grey→grey). */
-function achromaticCheckboxEmptyBg(bg: string): string {
+/** Contrasting border colour for the unchecked achromatic checkbox.
+ *  White bg → dark border; black bg → light border; grey → use colour as-is. */
+function contrastingEmptyBorder(bg: string): string {
   const lum = luminanceOf(bg);
-  if (lum > 0.70) return "rgba(0,0,0,0.09)";          // white card → dark tint
-  if (lum < 0.12) return "rgba(255,255,255,0.18)";     // black card → light tint
-  return `${bg}55`;                                     // grey → semi-transparent grey
+  if (lum > 0.70) return "rgba(0,0,0,0.25)";
+  if (lum < 0.12) return "rgba(255,255,255,0.42)";
+  return bg;
 }
 
 /** fallbackColorKey: the sprint/quarter AppleColorKey, used to derive achromatic checkbox
@@ -538,9 +538,7 @@ function achromaticCheckboxEmptyBg(bg: string): string {
 function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
   if (ach) {
-    const emptyBg = achromaticCheckboxEmptyBg(ach.bg);
-    // Border matches the sprint colour; emptyBg provides the visual shape.
-    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: ach.border, icon: ach.icon };
+    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg: "transparent", emptyBorder: contrastingEmptyBorder(ach.bg), icon: ach.icon };
   }
 
   // When no goal colour, try to get the achromatic style from the sprint/quarter color key
@@ -551,8 +549,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
       const rawHex = dark ? ac.dark : ac.light;
       const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
       if (kAch) {
-        const emptyBg = achromaticCheckboxEmptyBg(kAch.bg);
-        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: kAch.border, icon: kAch.icon };
+        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg: "transparent", emptyBorder: contrastingEmptyBorder(kAch.bg), icon: kAch.icon };
       }
     }
   }
@@ -560,8 +557,8 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
   const hex = colorHex ?? fallbackHex;
   const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
   const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
-  const emptyBg = fallbackAch ? achromaticCheckboxEmptyBg(fallbackAch.bg) : `${hex}55`;
-  return { doneBg: hex, doneBorder: hex, emptyBg, emptyBorder: colorHex ?? "var(--border-soft)", icon };
+  const emptyBorder = fallbackAch ? contrastingEmptyBorder(fallbackAch.bg) : (colorHex ?? "var(--border-soft)");
+  return { doneBg: hex, doneBorder: hex, emptyBg: "transparent", emptyBorder, icon };
 }
 
 // ─── Centralized event/milestone color helper ─────────────────────────────────
