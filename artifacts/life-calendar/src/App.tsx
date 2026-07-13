@@ -2529,6 +2529,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <div style={{ position:"relative" }}>
                 <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)}
                   placeholder={t("descPlaceholder")} rows={4}
+                  className={isWhite ? "placeholder-dark" : undefined}
                   style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
               </div>
               <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>

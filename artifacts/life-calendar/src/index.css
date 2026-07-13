@@ -45,6 +45,8 @@ body {
 
 * { box-sizing: border-box; }
 
+.placeholder-dark::placeholder { color: rgba(0,0,0,0.40); }
+
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
   filter: invert(var(--date-invert, 0));
