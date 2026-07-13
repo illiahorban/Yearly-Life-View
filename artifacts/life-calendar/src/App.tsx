@@ -1765,10 +1765,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   date: Date; state: DayState; todayProgress: number;
   notes?: NoteEntry[]; milestones: Milestone[]; dayGoals?: DayGoals; accentColor: string; highlighted?: boolean; isActiveMatch?: boolean; dark: boolean; onOpen: () => void;
 }) {
+  const isOut = state==="out";
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const tileRef = useRef<HTMLDivElement>(null);
   const hovered = tooltipRect !== null;
-  const isOut = state==="out", isPast = state==="past", isToday = state==="today";
+  const isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
   const labelTone: "onGreen" | "muted" | "auto" =
     isPast ? "onGreen" : isToday ? "auto" : "muted";
@@ -1808,6 +1809,20 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   }
   const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", boxShadow: isAllDone ? undefined : highlightRing, ...(isAllDone ? { animationDelay: fireDelayRef.current } : {}) };
 
+  // All hooks must run unconditionally on every render (regardless of `isOut`) to keep hook order
+  // stable — this effect used to live after the early-return below, crashing when a tile toggled
+  // in/out of the "out" state (e.g. when paging between years/months) because hook counts differed.
+  useEffect(() => {
+    if (!hovered) return;
+    const hide = () => setTooltipRect(null);
+    window.addEventListener("wheel", hide, { passive: true });
+    window.addEventListener("scroll", hide, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener("wheel", hide);
+      window.removeEventListener("scroll", hide, { capture: true });
+    };
+  }, [hovered]);
+
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
   const hasEvents = dayMilestones.length > 0;
@@ -1830,17 +1845,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   };
   const handleMouseLeave = () => setTooltipRect(null);
   const hov = { onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave, onClick: onOpen };
-
-  useEffect(() => {
-    if (!hovered) return;
-    const hide = () => setTooltipRect(null);
-    window.addEventListener("wheel", hide, { passive: true });
-    window.addEventListener("scroll", hide, { passive: true, capture: true });
-    return () => {
-      window.removeEventListener("wheel", hide);
-      window.removeEventListener("scroll", hide, { capture: true });
-    };
-  }, [hovered]);
 
   // Compute portal tooltip position so it never clips outside viewport
   const tooltipPortal = hovered && tooltipRect && hasNote ? ReactDOM.createPortal(
