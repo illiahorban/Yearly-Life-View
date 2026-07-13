@@ -3689,12 +3689,12 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
                       className={placeholderClass}
                       style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 56px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
-                    <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:4, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
+                    <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:6, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
                       <button
                         ref={el => { colorBtnRefs.current[g.id] = el; }}
                         onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
                         title={t("chooseColor")}
-                        style={{ width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", padding:0, flexShrink:0, display:"block", mixBlendMode:"normal", isolation:"isolate" }}
+                        style={{ width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", padding:0, flexShrink:0, display:"block", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
                       />
                       <button onClick={() => setConfirmDeleteGoalId(g.id)}
                         style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
