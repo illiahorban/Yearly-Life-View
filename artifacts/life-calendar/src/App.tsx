@@ -536,19 +536,11 @@ function achromaticCheckboxEmptyBg(bg: string): string {
  *  "#ffffff" for black/grey in dark mode (for content contrast) and would produce a white
  *  checkbox on a dark card. */
 function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
-  // For achromatic colours the checkbox empty-state border should match the sprint colour.
-  // Exception: black (#09090b) on a dark card is invisible → override to a light outline.
-  // White keeps its white border (emptyBg provides the visual shape via a dark tint fill).
-  function visibleEmptyBorder(bg: string): string {
-    const lum = luminanceOf(bg);
-    if (lum < 0.12) return "rgba(255,255,255,0.42)";  // black → light outline on dark card
-    return bg;                                          // white/grey → original colour
-  }
-
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
   if (ach) {
     const emptyBg = achromaticCheckboxEmptyBg(ach.bg);
-    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: visibleEmptyBorder(ach.bg), icon: ach.icon };
+    // Border matches the sprint colour; emptyBg provides the visual shape.
+    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: ach.border, icon: ach.icon };
   }
 
   // When no goal colour, try to get the achromatic style from the sprint/quarter color key
@@ -560,7 +552,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
       const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
       if (kAch) {
         const emptyBg = achromaticCheckboxEmptyBg(kAch.bg);
-        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: visibleEmptyBorder(kAch.bg), icon: kAch.icon };
+        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: kAch.border, icon: kAch.icon };
       }
     }
   }
