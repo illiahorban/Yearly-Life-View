@@ -1849,11 +1849,14 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const hovered = tooltipRect !== null;
   const isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
-  // Pale accent colours (e.g. "White") are too light for white day-number/text/markers to
-  // read against — flip to dark ink on those tiles so content never blends into the tile.
-  const isLightAccent = isPast && luminanceOf(accentColor) > 0.62;
+  // Pale accent colours (e.g. "White") are too light for white/theme-adaptive day-number
+  // text to read against — flip to dark ink on those tiles so content never blends in.
+  // Today's tile fills with the accent colour as the day progresses, and in dark mode the
+  // theme's default light text would then sit on that same light fill, so it needs the
+  // same override as the "past" tile.
+  const isLightAccent = (isPast || isToday) && luminanceOf(accentColor) > 0.62;
   const labelTone: "onGreen" | "onLight" | "muted" | "auto" =
-    isPast ? (isLightAccent ? "onLight" : "onGreen") : isToday ? "auto" : "muted";
+    isPast ? (isLightAccent ? "onLight" : "onGreen") : isToday ? (isLightAccent ? "onLight" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: dayGoals.count }, (_, i) => {
