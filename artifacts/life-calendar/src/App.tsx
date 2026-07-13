@@ -2842,7 +2842,6 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
 
                     {/* Quarter card header */}
                     <div style={{ padding:"10px 14px 8px", display:"flex", alignItems:"center", gap:6 }}>
-                      <span style={{ width:8, height:8, borderRadius:"50%", background:qr.border, flexShrink:0, display:"inline-block" }} />
                       <span style={{ fontSize:12, fontWeight:700, letterSpacing:"-0.01em", color: qr.text, flex:1 }}>{qr.label ?? t(`q${qi+1}` as keyof typeof t)}</span>
                       <span style={{ fontSize:11, color: qr.text, opacity:0.6, flexShrink:0 }}>{qTotal}/{qAllTotal}</span>
                       {qAllTotal > 0 && (
