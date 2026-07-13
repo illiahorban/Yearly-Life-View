@@ -522,15 +522,6 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
  *  and falling back to the plain chromatic colour (or the block/quarter accent)
  *  otherwise. `emptyBorder` is always defined so the outline is visible whether or
  *  not the goal is done, matching the box's fixed h/w regardless of colour. */
-/** Contrasting border colour for the unchecked achromatic checkbox.
- *  White bg → dark border; black bg → light border; grey → use colour as-is. */
-function contrastingEmptyBorder(bg: string): string {
-  const lum = luminanceOf(bg);
-  if (lum > 0.70) return "rgba(0,0,0,0.25)";
-  if (lum < 0.12) return "rgba(255,255,255,0.42)";
-  return bg;
-}
-
 /** fallbackColorKey: the sprint/quarter AppleColorKey, used to derive achromatic checkbox
  *  colours from the raw APPLE_COLORS hex rather than from `fill`, which is overridden to
  *  "#ffffff" for black/grey in dark mode (for content contrast) and would produce a white
@@ -538,18 +529,18 @@ function contrastingEmptyBorder(bg: string): string {
 function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
   if (ach) {
-    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg: "transparent", emptyBorder: contrastingEmptyBorder(ach.bg), icon: ach.icon };
+    return { doneBg: ach.bg, doneBorder: ach.border, emptyBg: "transparent", emptyBorder: ach.border, icon: ach.icon };
   }
 
-  // When no goal colour, try to get the achromatic style from the sprint/quarter color key
-  // using the real APPLE_COLORS hex (not fill, which can be white for black/grey in dark mode).
+  // When no goal colour, derive from the sprint/quarter color key using the real APPLE_COLORS
+  // hex (not fill, which is overridden to "#ffffff" for black/grey in dark mode).
   if (!colorHex && fallbackColorKey) {
     const ac = APPLE_COLORS.find(c => c.key === fallbackColorKey);
     if (ac) {
       const rawHex = dark ? ac.dark : ac.light;
       const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
       if (kAch) {
-        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg: "transparent", emptyBorder: contrastingEmptyBorder(kAch.bg), icon: kAch.icon };
+        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg: "transparent", emptyBorder: kAch.border, icon: kAch.icon };
       }
     }
   }
@@ -557,7 +548,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
   const hex = colorHex ?? fallbackHex;
   const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
   const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
-  const emptyBorder = fallbackAch ? contrastingEmptyBorder(fallbackAch.bg) : (colorHex ?? "var(--border-soft)");
+  const emptyBorder = fallbackAch ? fallbackAch.border : (colorHex ?? "var(--border-soft)");
   return { doneBg: hex, doneBorder: hex, emptyBg: "transparent", emptyBorder, icon };
 }
 
