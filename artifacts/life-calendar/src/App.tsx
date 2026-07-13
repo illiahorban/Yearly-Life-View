@@ -1389,6 +1389,7 @@ function App() {
             descPlaceholder={t("yearDescPlaceholder")}
             onSave={(bg) => { setYearGoals(prev => ({ ...prev, [viewYear]: bg })); setEditYearGoals(false); }}
             onClose={() => setEditYearGoals(false)}
+            onBack={() => { setEditYearGoals(false); setGoalsOpen(true); }}
           />
         )}
       </AnimatePresence>
@@ -3384,10 +3385,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
 // ─── GoalsModal ───────────────────────────────────────────────────────────────
 
-function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLabel, descPlaceholder, onSave, onClose }: {
+function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLabel, descPlaceholder, onSave, onClose, onBack }: {
   blockId: string; blockLabel: string; initial: BlockGoals; dark: boolean; modalBg: string;
   titleLabel?: string; descPlaceholder?: string;
-  onSave: (bg: BlockGoals, label: string) => void; onClose: () => void;
+  onSave: (bg: BlockGoals, label: string) => void; onClose: () => void; onBack?: () => void;
 }) {
   const { t } = React.useContext(LangContext);
   const [label, setLabel] = useState(blockLabel);
@@ -3436,6 +3437,11 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
         style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
       >
         <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+          {onBack && (
+            <button onClick={onBack} title={t("back")} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", border:"none", cursor:"pointer", flexShrink:0, marginTop:1 }}>
+              <ChevronLeftIcon />
+            </button>
+          )}
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-semibold tracking-widest uppercase mb-1" style={{ color:"var(--text-tertiary)" }}>{titleLabel ?? t("sprintGoals")}</div>
             <input
