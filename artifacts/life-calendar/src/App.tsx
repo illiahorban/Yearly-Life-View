@@ -3587,6 +3587,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
   const canAdd = true;
 
   const [confirmDeleteGoalId, setConfirmDeleteGoalId] = useState<string|null>(null);
+  const [hoveredGoalId, setHoveredGoalId] = useState<string|null>(null);
 
   // Color picker state
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
@@ -3665,23 +3666,29 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
               const placeholderClass = ach ? `placeholder-goal-${ach.tier}` : undefined;
               const dotBorder = ach?.tier === "white" ? "1.5px solid rgba(0,0,0,0.35)" : `1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`;
               return (
-                <div key={g.id} className="flex items-center gap-2">
+                <div key={g.id} className="flex items-center gap-2"
+                  onMouseEnter={() => setHoveredGoalId(g.id)}
+                  onMouseLeave={() => setHoveredGoalId(null)}
+                >
                   <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
                   <div style={{ flex:1, position:"relative" }}>
                     <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
                       placeholder={`${t("goalPlaceholder")} ${idx+1}`}
                       className={placeholderClass}
-                      style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 28px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
+                      style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 56px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
-                    <button
-                      ref={el => { colorBtnRefs.current[g.id] = el; }}
-                      onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
-                      title={t("chooseColor")}
-                      style={{ position:"absolute", top:"50%", right:7, transform:"translateY(-50%)", width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:dotBorder, boxShadow:"0 1px 3px rgba(0,0,0,0.22)", cursor:"pointer", padding:0, flexShrink:0 }}
-                    />
+                    <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:4, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms" }}>
+                      <button
+                        ref={el => { colorBtnRefs.current[g.id] = el; }}
+                        onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
+                        title={t("chooseColor")}
+                        style={{ width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:dotBorder, boxShadow:"0 1px 3px rgba(0,0,0,0.22)", cursor:"pointer", padding:0, flexShrink:0, display:"block" }}
+                      />
+                      <button onClick={() => setConfirmDeleteGoalId(g.id)}
+                        style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                      ><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                    </div>
                   </div>
-                  <button onClick={() => setConfirmDeleteGoalId(g.id)}
-                    style={{ color:"#ff3b30", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:"0 2px", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                 </div>
               );
             })}
