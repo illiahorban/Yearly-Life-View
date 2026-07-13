@@ -2486,12 +2486,25 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           {/* Form — expands when open */}
           <div ref={addEventFormRef} style={{ maxHeight: addEventOpen ? "400px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
             {(() => {
-              // Live-preview the chosen color on the draft form itself, exactly like the
-              // inline edit form does, so the color is visible immediately (not only
-              // after the event is saved).
               const ecNew = getEventColors(newColor, dark);
+              const isWhite = newColor === "#ffffff";
+              const hasColor = !!newColor;
+              // Card: never show a white bg — fall back to neutral when white is selected
+              const cardBg = isWhite
+                ? (dark ? "#18181b" : "#f4f4f5")
+                : ecNew.bg;
+              const cardBorder = isWhite
+                ? (dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.07)")
+                : (ecNew.border || (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"));
+              // Inputs: white → white bg + black text; any other color → dark bg + white text; no color → neutral
+              const inputBg   = isWhite ? "#ffffff" : hasColor ? (dark ? "#27272a" : ecNew.formBg) : ecNew.formBg;
+              const inputText = isWhite ? "#000000" : (hasColor && dark ? "#ffffff" : "var(--text)");
+              const inputBorder = isWhite ? "1px solid #3f3f46" : `1px solid ${ecNew.formBorder}`;
+              const inputStyle: React.CSSProperties = { background: inputBg, border: inputBorder, borderRadius:8, padding:"6px 9px", fontSize:12, color: inputText, outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
+              // Submit button: black label text when white is selected
+              const submitTextColor = newLabel.trim() ? (isWhite ? "#000000" : "white") : "var(--text-tertiary)";
               return (
-            <div style={{ background: ecNew.bg, border:`1px solid ${ecNew.border || (dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)")}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
+            <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: (!isWhite && ecNew.boxShadow) || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
               <div className="flex gap-1 flex-wrap items-center">
                 {/* No-color swatch */}
                 <button onClick={() => setNewColor("")}
@@ -2508,15 +2521,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <input ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
                   placeholder={t("labelPlaceholder")}
-                  style={{ background: ecNew.formBg, border:`1px solid ${ecNew.formBorder}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:2, width:"auto" }} />
+                  style={{ ...inputStyle, flex:2, width:"auto" }} />
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                   lang={lang}
-                  style={{ background: ecNew.formBg, border:`1px solid ${ecNew.formBorder}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:1, width:"auto" }} />
+                  style={{ ...inputStyle, flex:1, width:"auto" }} />
               </div>
               <div style={{ position:"relative" }}>
                 <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)}
                   placeholder={t("descPlaceholder")} rows={4}
-                  style={{ background: ecNew.formBg, border:`1px solid ${ecNew.formBorder}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
+                  style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
               </div>
               <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
                 <input type="checkbox" checked={newRecurring} onChange={e => setNewRecurring(e.target.checked)}
@@ -2527,7 +2540,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <button onClick={() => setAddEventOpen(false)}
                   style={{ flex:1, height:28, borderRadius:7, border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
                 <button onClick={submitNewEvent} disabled={!newLabel.trim()}
-                  style={{ flex:2, height:28, borderRadius:7, border:"none", background: newLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: newLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
+                  style={{ flex:2, height:28, borderRadius:7, border:"none", background: newLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: submitTextColor, fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
               </div>
             </div>
               );
