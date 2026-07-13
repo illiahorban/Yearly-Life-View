@@ -523,11 +523,12 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
  *  otherwise. `emptyBorder` is always defined so the outline is visible whether or
  *  not the goal is done, matching the box's fixed h/w regardless of colour. */
 /** Semi-transparent empty-state bg for an achromatic checkbox.
- *  White bg is invisible on light surfaces, so we substitute a faint ink tint instead. */
-function achromaticCheckboxEmptyBg(bg: string, dark: boolean): string {
+ *  Uses a contrasting tint relative to the surface (white→dark, black→light, grey→grey). */
+function achromaticCheckboxEmptyBg(bg: string): string {
   const lum = luminanceOf(bg);
-  if (lum > 0.70) return dark ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.08)";
-  return `${bg}55`;
+  if (lum > 0.70) return "rgba(0,0,0,0.09)";          // white card → dark tint
+  if (lum < 0.12) return "rgba(255,255,255,0.18)";     // black card → light tint
+  return `${bg}55`;                                     // grey → semi-transparent grey
 }
 
 /** fallbackColorKey: the sprint/quarter AppleColorKey, used to derive achromatic checkbox
@@ -535,17 +536,18 @@ function achromaticCheckboxEmptyBg(bg: string, dark: boolean): string {
  *  "#ffffff" for black/grey in dark mode (for content contrast) and would produce a white
  *  checkbox on a dark card. */
 function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string, fallbackColorKey?: string) {
-  // For white achromatic colours the border is #ffffff — invisible on white card surfaces.
-  // Override emptyBorder to a subtle grey outline so the unchecked box is always visible.
+  // For achromatic colours the checkbox border/bg must contrast with the card surface.
+  // White card → dark outline; black card → light outline; grey → grey.
   function visibleEmptyBorder(bg: string): string {
-    return luminanceOf(bg) > 0.70
-      ? (dark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.22)")
-      : bg;
+    const lum = luminanceOf(bg);
+    if (lum > 0.70) return "rgba(0,0,0,0.22)";
+    if (lum < 0.12) return "rgba(255,255,255,0.42)";
+    return bg;
   }
 
   const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
   if (ach) {
-    const emptyBg = achromaticCheckboxEmptyBg(ach.bg, dark);
+    const emptyBg = achromaticCheckboxEmptyBg(ach.bg);
     return { doneBg: ach.bg, doneBorder: ach.border, emptyBg, emptyBorder: visibleEmptyBorder(ach.bg), icon: ach.icon };
   }
 
@@ -557,7 +559,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
       const rawHex = dark ? ac.dark : ac.light;
       const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
       if (kAch) {
-        const emptyBg = achromaticCheckboxEmptyBg(kAch.bg, dark);
+        const emptyBg = achromaticCheckboxEmptyBg(kAch.bg);
         return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg, emptyBorder: visibleEmptyBorder(kAch.bg), icon: kAch.icon };
       }
     }
@@ -566,7 +568,7 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
   const hex = colorHex ?? fallbackHex;
   const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
   const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
-  const emptyBg = fallbackAch ? achromaticCheckboxEmptyBg(fallbackAch.bg, dark) : `${hex}55`;
+  const emptyBg = fallbackAch ? achromaticCheckboxEmptyBg(fallbackAch.bg) : `${hex}55`;
   return { doneBg: hex, doneBorder: hex, emptyBg, emptyBorder: colorHex ?? "var(--border-soft)", icon };
 }
 
