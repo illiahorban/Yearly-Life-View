@@ -1849,14 +1849,13 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const hovered = tooltipRect !== null;
   const isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
-  // Pale accent colours (e.g. "White") are too light for white/theme-adaptive day-number
-  // text to read against — flip to dark ink on those tiles so content never blends in.
-  // Today's tile fills with the accent colour as the day progresses, and in dark mode the
-  // theme's default light text would then sit on that same light fill, so it needs the
-  // same override as the "past" tile.
+  // Pale accents (e.g. "White") are too light for a single flat text colour to read
+  // against reliably: the tile is part accent-fill / part theme surface, and — for
+  // "today" — that split moves as the day progresses. "invertPale" tells Label to use
+  // mix-blend-mode instead of guessing one colour (see Label for the mechanics).
   const isLightAccent = (isPast || isToday) && luminanceOf(accentColor) > 0.62;
-  const labelTone: "onGreen" | "onLight" | "muted" | "auto" =
-    isPast ? (isLightAccent ? "onLight" : "onGreen") : isToday ? (isLightAccent ? "onLight" : "auto") : "muted";
+  const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
+    isPast ? (isLightAccent ? "invertPale" : "onGreen") : isToday ? (isLightAccent ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: dayGoals.count }, (_, i) => {
@@ -1983,7 +1982,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
             {noteDot}{microMarkers}
@@ -1997,7 +1996,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background: isLightAccent ? "#e4e4e7" : "var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
             {msBar}
             <div className="relative w-full h-full overflow-hidden">
               <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor }} />
@@ -2025,15 +2024,21 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 
-function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"onLight"|"muted"|"auto"|"gold"|"goldBright"|"silver"|"silverBright" }) {
+function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"invertPale"|"muted"|"auto"|"gold"|"goldBright"|"silver"|"silverBright" }) {
   const isGold = tone === "gold";
   const isGoldBright = tone === "goldBright";
   const isSilver = tone === "silver";
   const isSilverBright = tone === "silverBright";
   const isOnGreen = tone === "onGreen";
-  const isOnLight = tone === "onLight";
-  const nc = isOnGreen ? "white" : isOnLight ? "#18181b" : "var(--text)";
-  const mc = isOnGreen ? "rgba(255,255,255,0.85)" : isOnLight ? "rgba(24,24,27,0.65)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+  // "invertPale" is used for pale accents (e.g. "White") where a single flat text colour
+  // can never work: the tile is part light fill / part theme surface, and which part is
+  // which changes with fill % and light/dark mode. Instead of guessing a colour, we paint
+  // the text pure white and let `mix-blend-mode: difference` invert it per-pixel against
+  // whatever sits directly underneath — dark backdrop -> stays light, light fill -> flips
+  // to near-black — so the boundary is always correct, at any fill level.
+  const isInvertPale = tone === "invertPale";
+  const nc = isOnGreen ? "white" : isInvertPale ? "#ffffff" : "var(--text)";
+  const mc = isOnGreen ? "rgba(255,255,255,0.85)" : isInvertPale ? "#ffffff" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
   // solid colours — work on any background without gradient-clip artefacts
   const goldCol  = "#e8b338";        // warm gold, readable on dark & light
   const silverCol = "#9e9eae";       // steel silver, readable on light/dark
@@ -2045,8 +2050,12 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
   const monColor =
     isGold ? goldCol : isGoldBright ? goldBrightCol :
     isSilver ? silverCol : isSilverBright ? silverBrightCol : mc;
-  const numStyle: React.CSSProperties = { color: numColor, letterSpacing:"-0.02em" };
-  const monStyle: React.CSSProperties = { color: monColor };
+  // `mixBlendMode: "difference"` on both lines is what performs the auto-inversion.
+  // It must be paired with `isolation: "isolate"` on an ancestor (set on the tile's
+  // fill wrapper) so the blend only reacts to the fill/backdrop inside this tile,
+  // not to unrelated elements elsewhere on the page.
+  const numStyle: React.CSSProperties = { color: numColor, letterSpacing:"-0.02em", ...(isInvertPale ? { mixBlendMode: "difference" } : null) };
+  const monStyle: React.CSSProperties = { color: monColor, ...(isInvertPale ? { mixBlendMode: "difference", opacity: 0.85 } : null) };
   return (
     <div className="flex flex-col items-center justify-center leading-none select-none">
       <div className="text-[21px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
