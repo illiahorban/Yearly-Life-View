@@ -283,10 +283,16 @@ const APPLE_COLORS = [
   { key:"yellow", label:"Yellow", light:"#ffcc00", dark:"#ffd60a" },
   { key:"mint",   label:"Mint",   light:"#00c7be", dark:"#63e6e2" },
   { key:"brown",  label:"Brown",  light:"#a2845e", dark:"#ac8e68" },
-  { key:"black",  label:"Black",  light:"#1c1c1e", dark:"#3a3a3c" },
+  { key:"black",  label:"Black",  light:"#121212", dark:"#121212" },
   { key:"grey",   label:"Grey",   light:"#8e8e93", dark:"#636366" },
-  { key:"white",  label:"White",  light:"#d2d2d6", dark:"#ebebf5" },
+  { key:"white",  label:"White",  light:"#ffffff", dark:"#ffffff" },
 ] as const;
+
+/** Colour to draw the selection checkmark in so it reads on any swatch —
+ *  dark ink on light/bright swatches, white ink on dark/saturated ones. */
+function swatchCheckColor(hex: string): string {
+  return luminanceOf(hex) > 0.6 ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.95)";
+}
 
 type AppleColorKey = typeof APPLE_COLORS[number]["key"];
 type QuarterMeta = { name: string; colorKey: AppleColorKey };
@@ -404,7 +410,7 @@ function mutedTextColors(colorKey: AppleColorKey, dark: boolean) {
   };
 }
 
-const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#1c1c1e","#8e8e93","#ffffff"];
+const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#121212","#8e8e93","#ffffff"];
 
 /** Perceived luminance (0–1) of a hex colour, used to decide whether light or dark
  *  content reads best against it. */
@@ -2708,17 +2714,20 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <>
                   <button onClick={() => { updateEntryColor(colorPickerEntryId, undefined); setColorPickerEntryId(null); }}
                     title={t("noColor")}
-                    style={{ width:20, height:20, borderRadius:999, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", border: !entryColor ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
+                    style={{ width:20, height:20, borderRadius:999, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", border: !entryColor ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
                   >
                     <span style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                   </button>
                   {APPLE_COLORS.map(ac => {
                     const hex = dark ? ac.dark : ac.light;
+                    const selected = entryColor === hex;
                     return (
                       <button key={ac.key} onClick={() => { updateEntryColor(colorPickerEntryId, hex); setColorPickerEntryId(null); }}
                         title={ac.label}
-                        style={{ width:20, height:20, borderRadius:999, background:hex, border: entryColor===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate" }}
-                      />
+                        style={{ width:20, height:20, borderRadius:999, background:hex, border:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)" }}
+                      >
+                        {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color: swatchCheckColor(hex) }}>✓</span>}
+                      </button>
                     );
                   })}
                 </>
@@ -3722,18 +3731,21 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
         >
           <button onClick={() => setGoalColor(colorPickerGoalId, undefined)}
             title={t("noColor")}
-            style={{ width:20, height:20, borderRadius:999, background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: !goals.find(g=>g.id===colorPickerGoalId)?.color ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"}`, cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
+            style={{ width:20, height:20, borderRadius:999, background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: !goals.find(g=>g.id===colorPickerGoalId)?.color ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
           >
             <span style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
           </button>
           {APPLE_COLORS.map(ac => {
             const hex = dark ? ac.dark : ac.light;
             const cur = goals.find(g=>g.id===colorPickerGoalId)?.color;
+            const selected = cur === hex;
             return (
               <button key={ac.key} onClick={() => setGoalColor(colorPickerGoalId, hex)}
                 title={ac.label}
-                style={{ width:20, height:20, borderRadius:999, background:hex, border: cur===hex ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white"||ac.key==="grey")&&!dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate" }}
-              />
+                style={{ width:20, height:20, borderRadius:999, background:hex, border:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (ac.key==="white"||ac.key==="grey") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)" }}
+              >
+                {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color: swatchCheckColor(hex) }}>✓</span>}
+              </button>
             );
           })}
         </motion.div>
