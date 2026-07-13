@@ -493,6 +493,21 @@ type EventColors = {
 };
 
 function getEventColors(hex: string, dark: boolean): EventColors {
+  // ── No-color path (empty string) ────────────────────────────────────────────
+  if (!hex) {
+    return {
+      bg:            dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+      textTitle:     "var(--text)",
+      textDesc:      "var(--text-secondary)",
+      icon:          "var(--text-secondary)",
+      border:        dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)",
+      borderEditing: dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.14)",
+      boxShadow:     "",
+      marker:        dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.20)",
+      formBg:        dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+      formBorder:    dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)",
+    };
+  }
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
   const ach = achromaticStyle(hex, dark);
   if (ach) {
@@ -2115,7 +2130,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [msEditId, setMsEditId] = useState<string|null>(null);
   const [msEditLabel, setMsEditLabel] = useState("");
   const [msEditDate, setMsEditDate] = useState("");
-  const [msEditColor, setMsEditColor] = useState(MILESTONE_COLORS[0]!);
+  const [msEditColor, setMsEditColor] = useState("");
   const [msEditDesc, setMsEditDesc] = useState("");
   const [msEditRecurring, setMsEditRecurring] = useState(false);
 
@@ -2125,14 +2140,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newDate, setNewDate] = useState(dk);
-  const [newColor, setNewColor] = useState(MILESTONE_COLORS[4]!);
+  const [newColor, setNewColor] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newRecurring, setNewRecurring] = useState(false);
 
   const submitNewEvent = () => {
     if (!newLabel.trim()) return;
     onMilestoneAdd({ id: makeId(), label: newLabel.trim(), date: newDate, color: newColor, description: newDesc.trim() || undefined, recurring: newRecurring || undefined });
-    setNewLabel(""); setNewDesc(""); setNewRecurring(false); setNewColor(MILESTONE_COLORS[4]!); setNewDate(dk);
+    setNewLabel(""); setNewDesc(""); setNewRecurring(false); setNewColor(""); setNewDate(dk);
     setAddEventOpen(false);
   };
 
@@ -2402,9 +2417,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     {/* Edit form — expands when editing */}
                     <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "380px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
                       <div className="flex flex-col gap-1.5" style={{ padding:"8px 10px" }}>
-                        <div className="flex gap-1 flex-wrap">
+                        <div className="flex gap-1 flex-wrap items-center">
+                          {/* No-color swatch */}
+                          <button onClick={() => setMsEditColor("")}
+                            title="No colour"
+                            style={{ width:13, height:13, borderRadius:999, background:"transparent", border: msEditColor==="" ? "2px solid var(--text)" : "2px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+                            <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
+                          </button>
                           {MILESTONE_COLORS.map(c => (
-                            <button key={c} onClick={() => setMsEditColor(c)}
+                            <button key={c} onClick={() => setMsEditColor(msEditColor === c ? "" : c)}
                               style={{ width:13, height:13, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
                           ))}
                         </div>
@@ -2458,9 +2479,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               const ecNew = getEventColors(newColor, dark);
               return (
             <div style={{ background: ecNew.bg, border:`1px solid ${ecNew.border || (dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)")}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
-              <div className="flex gap-1 flex-wrap">
+              <div className="flex gap-1 flex-wrap items-center">
+                {/* No-color swatch */}
+                <button onClick={() => setNewColor("")}
+                  title="No colour"
+                  style={{ width:14, height:14, borderRadius:999, background:"transparent", border: newColor==="" ? "2px solid var(--text)" : "2px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+                  <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
+                </button>
                 {MILESTONE_COLORS.map(c => (
-                  <button key={c} onClick={() => setNewColor(c)}
+                  <button key={c} onClick={() => setNewColor(newColor === c ? "" : c)}
                     style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
                 ))}
               </div>
@@ -3142,7 +3169,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   }, [filteredItems, dateToQi]);
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
-  const [draftColor, setDraftColor] = useState(MILESTONE_COLORS[4]!);
+  const [draftColor, setDraftColor] = useState("");
   const [draftDesc, setDraftDesc] = useState("");
 
   const [draftRecurring, setDraftRecurring] = useState(false);
@@ -3150,7 +3177,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   const [editId, setEditId] = useState<string|null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editDate, setEditDate] = useState("");
-  const [editColor, setEditColor] = useState(MILESTONE_COLORS[0]!);
+  const [editColor, setEditColor] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editRecurring, setEditRecurring] = useState(false);
 
@@ -3239,9 +3266,15 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
             const draftInputStyle: React.CSSProperties = { ...inputStyle, background: ecDraft.formBg, border:`1px solid ${ecDraft.formBorder}`, transition:"background 0.25s ease, border-color 0.25s ease" };
             return (
           <>
-          <div className="flex gap-1.5 mb-2.5 flex-wrap">
+          <div className="flex gap-1.5 mb-2.5 flex-wrap items-center">
+            {/* No-color swatch */}
+            <button onClick={() => setDraftColor("")}
+              title="No colour"
+              style={{ width:18, height:18, borderRadius:999, background:"transparent", border: draftColor==="" ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms ease", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden", flexShrink:0 }}>
+              <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
+            </button>
             {MILESTONE_COLORS.map(c => (
-              <button key={c} onClick={() => setDraftColor(c)}
+              <button key={c} onClick={() => setDraftColor(draftColor === c ? "" : c)}
                 style={{ width:18, height:18, borderRadius:999, background:c, border: draftColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
               />
             ))}
@@ -3316,9 +3349,15 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                   >
                     {isEditing ? (
                       <div className="flex flex-col gap-2">
-                        <div className="flex gap-1 flex-wrap">
+                        <div className="flex gap-1 flex-wrap items-center">
+                          {/* No-color swatch */}
+                          <button onClick={() => setEditColor("")}
+                            title="No colour"
+                            style={{ width:16, height:16, borderRadius:999, background:"transparent", border: editColor==="" ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden", flexShrink:0 }}>
+                            <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
+                          </button>
                           {MILESTONE_COLORS.map(c => (
-                            <button key={c} onClick={() => setEditColor(c)}
+                            <button key={c} onClick={() => setEditColor(editColor === c ? "" : c)}
                               style={{ width:16, height:16, borderRadius:999, background:c, border: editColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
                             />
                           ))}
