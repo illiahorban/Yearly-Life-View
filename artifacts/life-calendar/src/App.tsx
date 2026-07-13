@@ -289,7 +289,7 @@ const APPLE_COLORS = [
 ] as const;
 
 type AppleColorKey = typeof APPLE_COLORS[number]["key"];
-type QuarterMeta = { name: string; colorKey: AppleColorKey };
+type QuarterMeta = { name: string; colorKey: AppleColorKey | null };
 
 const DEFAULT_QUARTER_META: QuarterMeta[] = [
   { name:"Q1", colorKey:"blue" }, { name:"Q2", colorKey:"green" },
@@ -358,6 +358,21 @@ function hexSaturate(hex: string, factor: number) {
 }
 
 function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
+  if (meta.colorKey === null) {
+    const neutralBorder = dark ? "rgba(255,255,255,0.26)" : "rgba(0,0,0,0.20)";
+    const neutralText   = dark ? "#ffffff" : "#1c1c1e";
+    return {
+      key:      "grey" as AppleColorKey,
+      label:    meta.name,
+      tint:     dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+      darkTint: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
+      border:   neutralBorder,
+      fill:     dark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.38)",
+      text:     neutralText,
+      soft:     dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.13)",
+      darkSoft: dark ? "rgba(255,255,255,0.26)" : "rgba(0,0,0,0.20)",
+    };
+  }
   const ac = APPLE_COLORS.find(c => c.key === meta.colorKey) ?? APPLE_COLORS[0]!;
   const rawHex = dark ? ac.dark : ac.light;
   const hex = (!dark) ? hexSaturate(rawHex, LIGHT_SAT_FACTOR) : rawHex;
@@ -396,8 +411,8 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
  *  (anchored to the same "#1c1c1e" already used for quarter.text) whenever the active
  *  quarter/block colour is achromatic and the theme is light.
  */
-function mutedTextColors(colorKey: AppleColorKey, dark: boolean) {
-  const isAchroLight = (colorKey === "black" || colorKey === "grey") && !dark;
+function mutedTextColors(colorKey: AppleColorKey | null, dark: boolean) {
+  const isAchroLight = (colorKey === "black" || colorKey === "grey" || colorKey === null) && !dark;
   return {
     tertiary:  isAchroLight ? "rgba(28,28,30,0.62)" : "var(--text-tertiary)",
     secondary: isAchroLight ? "rgba(28,28,30,0.88)" : "var(--text-secondary)",
@@ -1227,8 +1242,14 @@ function App() {
                         <button
                           onClick={() => setColorPickerQi(colorPickerQi === qi ? null : qi)}
                           title={t("chooseColor")}
-                          style={{ width:13, height:13, borderRadius:999, background:quarter.border, border:`2px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)"}`, cursor:"pointer", display:"block", flexShrink:0 }}
-                        />
+                          style={{ width:13, height:13, borderRadius:999, background: meta.colorKey ? quarter.border : "transparent", border:`2px solid ${meta.colorKey ? (dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.14)") : (dark?"rgba(255,255,255,0.40)":"rgba(0,0,0,0.30)")}`, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden", position:"relative" }}
+                        >
+                          {!meta.colorKey && (
+                            <svg width="9" height="9" viewBox="0 0 9 9" style={{ position:"absolute" }}>
+                              <line x1="1" y1="8" x2="8" y2="1" stroke={dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.35)"} strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                          )}
+                        </button>
                         <AnimatePresence>
                           {colorPickerQi === qi && (
                             <motion.div
@@ -1237,6 +1258,15 @@ function App() {
                               onClick={e => e.stopPropagation()}
                               style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:40, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
                             >
+                              {/* No-color option */}
+                              <button onClick={() => { updateQuarterMeta(qi, { colorKey: null }); setColorPickerQi(null); }}
+                                title={lang==="ru" ? "Без цвета" : "No color"}
+                                style={{ width:20, height:20, borderRadius:999, background:"transparent", border: meta.colorKey===null ? "2.5px solid var(--text)" : `2.5px solid ${dark?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.18)"}`, cursor:"pointer", transition:"border 120ms ease", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" style={{ position:"absolute" }}>
+                                  <line x1="2" y1="10" x2="10" y2="2" stroke={dark?"rgba(255,255,255,0.45)":"rgba(0,0,0,0.30)"} strokeWidth="1.5" strokeLinecap="round"/>
+                                </svg>
+                              </button>
                               {APPLE_COLORS.map(ac => (
                                 <button key={ac.key} onClick={() => { updateQuarterMeta(qi, { colorKey: ac.key }); setColorPickerQi(null); }}
                                   title={ac.label}
