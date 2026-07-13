@@ -473,10 +473,10 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
       : { bg:"#ffffff", border:"#ffffff", text:"#18181b", marker:"#ffffff", tier:"white" };
   }
   if (lum < 0.12) {
-    // black — bg-zinc-950 dark / bg-black light; border-zinc-800 dark / border-zinc-300 light
+    // black — pure black border in both themes, to match the white tier above
     return dark
-      ? { bg:"#09090b", border:"#27272a", text:"#ffffff", marker:"#27272a", tier:"black" }
-      : { bg:"#000000", border:"#d4d4d8", text:"#ffffff", marker:"#000000", tier:"black" };
+      ? { bg:"#09090b", border:"#000000", text:"#ffffff", marker:"#27272a", tier:"black" }
+      : { bg:"#000000", border:"#000000", text:"#ffffff", marker:"#000000", tier:"black" };
   }
   return dark
     ? { bg:"rgba(255,255,255,0.20)", border:"rgba(255,255,255,0.26)", text:"#ffffff", marker:"#a1a1aa", tier:"grey" }
@@ -512,7 +512,7 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
     return { bg:"#ffffff", border:"#ffffff", icon:"#18181b" };
   }
   if (lum < 0.12) {
-    return dark ? { bg:"#09090b", border:"#27272a", icon:"#ffffff" } : { bg:"#000000", border:"#d4d4d8", icon:"#ffffff" };
+    return dark ? { bg:"#09090b", border:"#000000", icon:"#ffffff" } : { bg:"#000000", border:"#000000", icon:"#ffffff" };
   }
   return { bg:"#71717a", border:"#52525b", icon:"#ffffff" };
 }
