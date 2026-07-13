@@ -437,6 +437,44 @@ function resolveNoteHex(hex: string): string {
   return ac ? ac.light : hex;
 }
 
+/** Mirror of achromaticStyle, tuned for the tiny sprint/quarter goal checkboxes:
+ *  black gets a fully-opaque zinc-950/zinc-800 pairing (no translucency, so it never
+ *  blends into a colored card), grey is a flat opaque zinc-500 chip (like the day-cell
+ *  color indicators) instead of a translucent overlay, and white keeps a matching
+ *  zinc-700/zinc-200 outline so its footprint lines up exactly with black's.
+ *  Returns null for chromatic colours so callers fall back to the raw hex. */
+type GoalCheckboxStyle = { bg: string; border: string; icon: string };
+function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxStyle | null {
+  const h = hex.replace('#', '').toLowerCase();
+  if (h.length !== 6) return null;
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  const maxC = Math.max(r,g,b);
+  const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
+  if (sat > 0.18) return null;
+  if (lum > 0.70) {
+    return dark ? { bg:"#ffffff", border:"#3f3f46", icon:"#18181b" } : { bg:"#ffffff", border:"#e4e4e7", icon:"#18181b" };
+  }
+  if (lum < 0.12) {
+    return dark ? { bg:"#09090b", border:"#27272a", icon:"#ffffff" } : { bg:"#000000", border:"#d4d4d8", icon:"#ffffff" };
+  }
+  return { bg:"#71717a", border:"#52525b", icon:"#ffffff" };
+}
+
+/** Resolves the background/border/checkmark colours for a single sprint or quarter
+ *  goal checkbox, applying the opaque achromatic mirror above for black/grey/white
+ *  and falling back to the plain chromatic colour (or the block/quarter accent)
+ *  otherwise. `emptyBorder` is always defined so the outline is visible whether or
+ *  not the goal is done, matching the box's fixed h/w regardless of colour. */
+function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbackHex: string) {
+  const ach = colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark) : null;
+  if (ach) return { doneBg: ach.bg, doneBorder: ach.border, emptyBorder: ach.border, icon: ach.icon };
+  const hex = colorHex ?? fallbackHex;
+  return { doneBg: hex, doneBorder: hex, emptyBorder: colorHex ?? "var(--border-soft)", icon: "#ffffff" };
+}
+
 // ─── Centralized event/milestone color helper ─────────────────────────────────
 // Returns all semantic color values needed to render an event card (background,
 // title, description, icon, borders, marker bar, and inline-form surfaces) with
@@ -1213,14 +1251,14 @@ function App() {
                         ) : null}
                         <div className="flex flex-col gap-1">
                           {activeQGoals.map(goal => {
-                            const gc = goal.color ?? quarter.border;
+                            const cb = goalCheckboxColors(goal.color, dark, quarter.border);
                             return (
                               <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                                 onClick={() => toggleQuarterGoal(qi, goal.id)}
                                 style={{ color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)" }}
                               >
-                                <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
-                                  {goal.done && <CheckIcon />}
+                                <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
+                                  {goal.done && <CheckIcon color={cb.icon} />}
                                 </div>
                                 <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
                                   {goal.text}
@@ -1576,14 +1614,14 @@ function BlocksRenderer({
                   <div className="px-3 sm:px-3.5 pb-2">
                     <div className="flex flex-col gap-1">
                       {activeGoals.map(goal => {
-                        const gc = goal.color ?? effectiveQ.border;
+                        const cb = goalCheckboxColors(goal.color, dark, effectiveQ.border);
                         return (
                           <label key={goal.id} className="flex items-start gap-2 cursor-pointer select-none"
                             onClick={() => onGoalToggle(block.id, goal.id)}
                             style={{ color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)" }}
                           >
-                            <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
-                              {goal.done && <CheckIcon />}
+                            <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
+                              {goal.done && <CheckIcon color={cb.icon} />}
                             </div>
                             <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
                               {goal.text}
@@ -2759,13 +2797,13 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                     {qGoals.length > 0 && (
                       <div style={{ padding:"4px 14px 8px", display:"flex", flexDirection:"column", gap:3 }}>
                         {qGoals.map(goal => {
-                          const gc = goal.color ?? qr.border;
+                          const cb = goalCheckboxColors(goal.color, dark, qr.border);
                           return (
                             <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 0", borderRadius:6 }}
                               onClick={() => onToggleQuarterGoal(qi, goal.id)}
                             >
-                              <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? `${qr.border}88`}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
-                                {goal.done && <CheckIcon />}
+                              <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : (goal.color ? cb.emptyBorder : `${qr.border}88`)}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                                {goal.done && <CheckIcon color={cb.icon} />}
                               </div>
                               <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? `${qr.text}66` : goal.color ?? qr.text, textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.6 : 1, transition:"all 150ms" }}>{goal.text}</span>
                             </label>
@@ -2792,13 +2830,13 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                               </div>
                               <div style={{ padding:"5px 8px", display:"flex", flexDirection:"column", gap:2 }}>
                                 {goals.map(goal => {
-                                  const gc = goal.color ?? effectiveQ.border;
+                                  const cb = goalCheckboxColors(goal.color, dark, effectiveQ.border);
                                   return (
                                     <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 2px", borderRadius:5 }}
                                       onClick={() => onToggleGoal(block.id, goal.id)}
                                     >
-                                      <div style={{ width:13, height:13, borderRadius:3, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
-                                        {goal.done && <CheckIcon />}
+                                      <div style={{ boxSizing:"border-box", width:13, height:13, borderRadius:3, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : "transparent", border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                                        {goal.done && <CheckIcon color={cb.icon} />}
                                       </div>
                                       <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : goal.color ?? "var(--text-secondary)", textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
                                     </label>
@@ -4472,8 +4510,8 @@ function FlagIcon() {
 function PencilIcon() {
   return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
 }
-function CheckIcon() {
-  return <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="2 6 5 9 10 3"/></svg>;
+function CheckIcon({ color = "white" }: { color?: string }) {
+  return <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="2 6 5 9 10 3"/></svg>;
 }
 function SearchIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
