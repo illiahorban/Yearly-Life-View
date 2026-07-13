@@ -1902,7 +1902,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
         return <div key={ms.id} style={{
           flex: 1,
           background: noColor ? "transparent" : ec.marker,
-          border: noColor ? `2px solid ${dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.20)"}` : "none",
+          border: noColor ? `1px solid ${dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.20)"}` : "none",
           boxSizing: "border-box",
           boxShadow: noColor ? (dark ? "inset 0 1px 3px rgba(0,0,0,0.45)" : "inset 0 1px 3px rgba(0,0,0,0.18)") : undefined,
         }} />;
