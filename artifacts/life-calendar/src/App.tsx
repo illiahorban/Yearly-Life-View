@@ -4061,7 +4061,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   <div style={{ height:"100%", width:`${pct}%`, background:LIFE_ACCENT, borderRadius:999, transition:"width 700ms ease" }} />
                 </div>
                 <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
-                  {remainingYears > 0 ? `${remainingYears} ${t("yr")} ${remainingMonths} ${t("mo")} ${t("remaining")} · ` : ""}{t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
+                  {t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}{remainingYears > 0 ? ` · ${remainingYears} ${t("yr")} ${remainingMonths} ${t("mo")} ${t("remaining")}` : ""}
                 </div>
               </div>
             </div>
