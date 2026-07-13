@@ -2451,7 +2451,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           </div>
           {/* Form — expands when open */}
           <div ref={addEventFormRef} style={{ maxHeight: addEventOpen ? "400px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
-            <div style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.02)", border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"}`, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
+            {(() => {
+              // Live-preview the chosen color on the draft form itself, exactly like the
+              // inline edit form does, so the color is visible immediately (not only
+              // after the event is saved).
+              const ecNew = getEventColors(newColor, dark);
+              return (
+            <div style={{ background: ecNew.bg, border:`1px solid ${ecNew.border || (dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)")}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
               <div className="flex gap-1 flex-wrap">
                 {MILESTONE_COLORS.map(c => (
                   <button key={c} onClick={() => setNewColor(c)}
@@ -2462,15 +2468,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <input ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
                   placeholder={t("labelPlaceholder")}
-                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:2, width:"auto" }} />
+                  style={{ background: ecNew.formBg, border:`1px solid ${ecNew.formBorder}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:2, width:"auto" }} />
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                   lang={lang}
-                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:1, width:"auto" }} />
+                  style={{ background: ecNew.formBg, border:`1px solid ${ecNew.formBorder}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, flex:1, width:"auto" }} />
               </div>
               <div style={{ position:"relative" }}>
                 <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)}
                   placeholder={t("descPlaceholder")} rows={4}
-                  style={{ background: dark?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.7)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)"}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
+                  style={{ background: ecNew.formBg, border:`1px solid ${ecNew.formBorder}`, borderRadius:8, padding:"6px 9px", fontSize:12, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" as const, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
               </div>
               <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
                 <input type="checkbox" checked={newRecurring} onChange={e => setNewRecurring(e.target.checked)}
@@ -2484,6 +2490,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   style={{ flex:2, height:28, borderRadius:7, border:"none", background: newLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: newLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
               </div>
             </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -3223,6 +3231,14 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
         {/* Color picker + add form */}
         <div className="px-6 pb-4">
+          {(() => {
+            // Live-preview the chosen color on the draft inputs immediately, the same
+            // way the inline edit form's card recolors as soon as a swatch is clicked —
+            // otherwise the color only becomes visible after the event is saved.
+            const ecDraft = getEventColors(draftColor, dark);
+            const draftInputStyle: React.CSSProperties = { ...inputStyle, background: ecDraft.formBg, border:`1px solid ${ecDraft.formBorder}`, transition:"background 0.25s ease, border-color 0.25s ease" };
+            return (
+          <>
           <div className="flex gap-1.5 mb-2.5 flex-wrap">
             {MILESTONE_COLORS.map(c => (
               <button key={c} onClick={() => setDraftColor(c)}
@@ -3233,10 +3249,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
           <div className="flex gap-2 mb-2">
             <input value={draftLabel} onChange={e => setDraftLabel(e.target.value)} placeholder={t("labelPlaceholder")}
               onKeyDown={e => { if (e.key==="Enter") add(); }}
-              style={{ ...inputStyle, flex:2, width:"auto" }}
+              style={{ ...draftInputStyle, flex:2, width:"auto" }}
             />
             <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-              lang={lang} style={{ ...inputStyle, flex:1, width:"auto" }}
+              lang={lang} style={{ ...draftInputStyle, flex:1, width:"auto" }}
             />
             <button onClick={add} disabled={!draftLabel.trim()}
               style={{ height:36, paddingInline:14, borderRadius:9, background: draftLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: draftLabel.trim()?"white":"var(--text-tertiary)", fontSize:13, fontWeight:600, border:"none", cursor: draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, transition:"background 150ms" }}>
@@ -3246,7 +3262,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
           <div style={{ position:"relative" }}>
             <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
               placeholder={t("descPlaceholder")} rows={4}
-              style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px" }}
+              style={{ ...draftInputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px" }}
             />
           </div>
           <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none" style={{ width:"fit-content" }}>
@@ -3255,6 +3271,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
             />
             <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
           </label>
+          </>
+            );
+          })()}
         </div>
 
         {/* List */}
