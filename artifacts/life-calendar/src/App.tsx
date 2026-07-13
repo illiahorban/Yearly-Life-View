@@ -1621,18 +1621,12 @@ function BlocksRenderer({
             const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : quarter;
             const softColor = dark ? effectiveQ.darkSoft : effectiveQ.soft;
             const mt = mutedTextColors(block.color ?? quarter.key, dark);
-            // Tint the sprint card itself using the same colour logic as note/event
-            // cards (getEventColors), so choosing a sprint colour visibly colours
-            // its container the same way a note or event colour does.
-            const blockAc = block.color ? APPLE_COLORS.find(c => c.key === block.color) : null;
-            const blockHex = blockAc ? (dark ? blockAc.dark : blockAc.light) : "";
-            const blockEc = blockHex ? getEventColors(blockHex, dark) : null;
 
             return (
               <motion.div layout key={block.id}
                 initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                 transition={{ type:"spring", stiffness:320, damping:30 }}
-                style={{ background: blockEc ? blockEc.bg : cardBg, borderRadius:14, border:`2px solid ${blockEc ? blockEc.border : effectiveQ.border}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
+                style={{ background:cardBg, borderRadius:14, border:`2px solid ${effectiveQ.border}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
@@ -4035,11 +4029,15 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               {blocks.map((b, idx) => {
                 const bAc = b.color ? APPLE_COLORS.find(c => c.key === b.color) : null;
                 const bHex = bAc ? (dark ? bAc.dark : bAc.light) : (dark ? quarter.darkSoft : quarter.soft);
+                // Tint the sprint row itself using the same colour logic as note/event
+                // cards (getEventColors), so choosing a sprint colour visibly colours
+                // its row here, in the sprint distribution modal.
+                const bEc = bAc ? getEventColors(bHex, dark) : null;
                 return (
                 <motion.div layout key={b.id} initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                   className="flex items-center gap-2" style={{ position:"relative" }}
                 >
-                  <div style={{ background: dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)", border:`1px solid ${borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", alignItems:"center", gap:8, flex:1 }}>
+                  <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", alignItems:"center", gap:8, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
                     {/* Color dot */}
                     <div style={{ position:"relative", flexShrink:0 }}>
                       <button type="button" onClick={(e) => {
