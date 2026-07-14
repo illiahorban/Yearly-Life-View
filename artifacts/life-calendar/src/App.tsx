@@ -2636,30 +2636,22 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           )}
           {/* Body — always shown */}
           <div style={{ overflow:"visible" }}>
-            {/* Count buttons / confirm dialogs */}
-            <div style={{ display:"flex", flexWrap:"nowrap", alignItems:"center", gap:6, marginBottom:8 }}>
-              {confirmCopyTomorrow ? (
-                <>
-                  <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{t("tomorrowHasGoals")}</span>
-                  <button onClick={() => setConfirmCopyTomorrow(false)} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("no")}</button>
-                  <button onClick={doCopyToTomorrow} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:"none", background:"#007aff", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600, flexShrink:0 }}>{t("replace")}</button>
-                </>
-              ) : confirmReset ? (
-                <>
-                  <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{t("deleteConfirm")}</span>
-                  <button onClick={() => setConfirmReset(false)} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("no")}</button>
-                  <button onClick={handleGoalReset} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600, flexShrink:0 }}>{t("remove")}</button>
-                </>
-              ) : (
-                <button onClick={e => { e.stopPropagation(); handleGoalAdd(); }}
-                  style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
-                  <span style={{ fontSize:14, lineHeight:1 }}>+</span> {t("addGoal")}
-                </button>
-              )}
-            </div>
-            {goalsDraft.count > 0 && (
-              <div style={{ height:4, borderRadius:999, background: dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)", overflow:"hidden", marginBottom:10 }}>
-                <div style={{ height:"100%", width:`${Math.round((goalsDraft.done.filter(Boolean).length/goalsDraft.count)*100)}%`, background:"#34c759", borderRadius:999, transition:"width 400ms ease" }} />
+            {/* Confirm dialogs (copy-to-tomorrow / reset) */}
+            {(confirmCopyTomorrow || confirmReset) && (
+              <div style={{ display:"flex", flexWrap:"nowrap", alignItems:"center", gap:6, marginBottom:8 }}>
+                {confirmCopyTomorrow ? (
+                  <>
+                    <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{t("tomorrowHasGoals")}</span>
+                    <button onClick={() => setConfirmCopyTomorrow(false)} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("no")}</button>
+                    <button onClick={doCopyToTomorrow} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:"none", background:"#007aff", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600, flexShrink:0 }}>{t("replace")}</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize:11, color:"var(--text-tertiary)", flexShrink:0 }}>{t("deleteConfirm")}</span>
+                    <button onClick={() => setConfirmReset(false)} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:`1px solid ${dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.12)"}`, background:"transparent", color:"var(--text-secondary)", cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("no")}</button>
+                    <button onClick={handleGoalReset} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600, flexShrink:0 }}>{t("remove")}</button>
+                  </>
+                )}
               </div>
             )}
             {goalsDraft.count > 0 && (
@@ -2722,6 +2714,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             )}
             {goalsDraft.count > 0 && allGoalsDone && (
               <div className="mt-0.5 text-center text-[12px] font-semibold" style={{ color:"#34c759" }}>{t("allDone")}</div>
+            )}
+            {!confirmCopyTomorrow && !confirmReset && (
+              <button onClick={e => { e.stopPropagation(); handleGoalAdd(); }}
+                style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5, marginTop: goalsDraft.count > 0 ? 8 : 0 }}>
+                <span style={{ fontSize:14, lineHeight:1 }}>+</span> {t("addGoal")}
+              </button>
             )}
             {goalColorPickerIdx !== null && goalColorPickerPos && ReactDOM.createPortal(
               <motion.div
