@@ -2650,8 +2650,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 </>
               ) : (
                 <button onClick={e => { e.stopPropagation(); handleGoalAdd(); }}
-                  style={{ display:"flex", alignItems:"center", gap:4, height:20, padding:"0 8px", borderRadius:6, border:"none", cursor:"pointer", background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color:"var(--text-secondary)", fontSize:11, fontWeight:600, fontFamily:"inherit", flexShrink:0 }}>
-                  <span style={{ fontSize:13, lineHeight:1 }}>+</span> {t("addGoal")}
+                  style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+                  <span style={{ fontSize:14, lineHeight:1 }}>+</span> {t("addGoal")}
                 </button>
               )}
             </div>
