@@ -183,7 +183,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", deleteDayNotesConfirm:"Удалить все заметки этого дня?", deleteGoalConfirm:"Удалить эту цель?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
     descPlaceholder:"Описание (необязательно)…",
-    repeatYearly:"↻ Повторять ежегодно", cancel:"Отмена", saveChanges:"Сохранить",
+    repeatYearly:"↻ Каждый год", cancel:"Отмена", saveChanges:"Сохранить",
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
     allGoals:"Все цели", noGoalsYet:"Целей пока нет. Откройте спринт, чтобы добавить цели.",
