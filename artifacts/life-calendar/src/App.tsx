@@ -2533,6 +2533,32 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (!addEventOpen) setNewColorPickerOpen(false);
   }, [addEventOpen]);
 
+  React.useEffect(() => {
+    if (!newColorPickerOpen) return;
+    const handler = (e: MouseEvent) => {
+      const popover = newColorPopoverRef.current;
+      const btn = newColorBtnRef.current;
+      if (popover && popover.contains(e.target as Node)) return;
+      if (btn && btn.contains(e.target as Node)) return;
+      setNewColorPickerOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [newColorPickerOpen]);
+
+  React.useEffect(() => {
+    if (!msEditColorPickerOpen) return;
+    const handler = (e: MouseEvent) => {
+      const popover = msEditColorPopoverRef.current;
+      const btn = msEditColorBtnRef.current;
+      if (popover && popover.contains(e.target as Node)) return;
+      if (btn && btn.contains(e.target as Node)) return;
+      setMsEditColorPickerOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [msEditColorPickerOpen]);
+
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
   const label = new Date(y, m-1, d).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { weekday:"long", month:"long", day:"numeric" });
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
