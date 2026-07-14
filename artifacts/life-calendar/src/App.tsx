@@ -3698,22 +3698,20 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
               const inputBorderColor = ach ? ach.border : tintedBorder;
               const inputTextColor = ach ? ach.text : "var(--text)";
               const placeholderClass = ach ? `placeholder-goal-${ach.tier}` : undefined;
+              const dotBorder = ach?.tier === "white" ? "1.5px solid rgba(0,0,0,0.35)" : `1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`;
               return (
-                <div key={g.id} className="flex items-start gap-2"
+                <div key={g.id} className="flex items-center gap-2"
                   onMouseEnter={() => setHoveredGoalId(g.id)}
                   onMouseLeave={() => setHoveredGoalId(null)}
                 >
-                  <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)", paddingTop:7 }}>{idx+1}.</span>
+                  <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
                   <div style={{ flex:1, position:"relative" }}>
-                    <TextareaAutosize
-                      minRows={1}
-                      value={g.text}
-                      onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
+                    <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
                       placeholder={`${t("goalPlaceholder")} ${idx+1}`}
                       className={placeholderClass}
-                      style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 56px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", resize:"none", lineHeight:1.5, display:"block", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
+                      style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 56px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
-                    <div style={{ position:"absolute", top:6, right:6, display:"flex", alignItems:"center", gap:6, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
+                    <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:6, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
                       <button
                         ref={el => { colorBtnRefs.current[g.id] = el; }}
                         onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
