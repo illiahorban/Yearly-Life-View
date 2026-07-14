@@ -3983,10 +3983,14 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const rcBgForm  = ec3.formBg;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ background:rcBg, border: `1.5px solid ${ec3.border || "transparent"}`, boxShadow: ec3.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ position:"relative", background:rcBg, border: `1.5px solid ${ec3.border || "transparent"}`, boxShadow: ec3.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
+                    {!isEditing && ms.recurring && (
+                      <span title={t("repeatYearly")}
+                        style={{ position:"absolute", top:6, right:6, fontSize:10, opacity: hoveredId === ms.id ? 0 : 0.7, pointerEvents:"none", transition:"opacity 150ms" }}>↻</span>
+                    )}
                     {isEditing ? (
                       <div className="flex flex-col gap-2">
                         <div className="flex gap-1 flex-wrap items-center">
@@ -4040,7 +4044,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                         <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-start gap-1">
                             <span className="text-[13px] font-semibold" style={{ color:rcTxt, wordBreak:"break-word" }}><HighlightText text={ms.label} query={q} /></span>
-                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
                           {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
                           <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredId === ms.id ? 1 : 0, pointerEvents: hoveredId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
