@@ -2894,8 +2894,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             style={{ width:16, height:16, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                           </button>
-                          <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
-                            lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                           <label className="flex items-center gap-1 cursor-pointer select-none" style={{ flexShrink:0, marginLeft:"auto" }}>
                             <input type="checkbox" checked={msEditRecurring} onChange={e => setMsEditRecurring(e.target.checked)}
                               style={{ width:12, height:12, accentColor:"#007aff", cursor:"pointer" }} />
