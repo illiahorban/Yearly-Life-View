@@ -2786,7 +2786,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 self-center">
                             <span className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word" }}>{ms.label}</span>
                           </div>
                           {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0, alignSelf:"center" }}>↻</span>}
