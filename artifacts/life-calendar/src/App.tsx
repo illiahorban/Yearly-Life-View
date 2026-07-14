@@ -1884,7 +1884,7 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
       style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, minWidth:100, padding:"1px 2px" }}
     />;
   }
-  return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color:"var(--text)", letterSpacing:"-0.01em" }} title={t("clickToRename")}>{value}</button>;
+  return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color, letterSpacing:"-0.01em" }} title={t("clickToRename")}>{value}</button>;
 }
 
 // ─── Fire animation ───────────────────────────────────────────────────────────
