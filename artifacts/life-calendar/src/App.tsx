@@ -3976,7 +3976,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
               const renderCard = (ms: Milestone, showDate: boolean) => {
                 const isEditing = editId === ms.id;
-                const ec3 = getEventColors(ms.color, dark);
+                const ec3 = getEventColors(isEditing ? editColor : ms.color, dark);
                 const rcBg      = ec3.bg;
                 const rcBdr     = isEditing ? ec3.borderEditing : ec3.border;
                 const rcTxt     = ec3.textTitle;
