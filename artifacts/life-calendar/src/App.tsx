@@ -2367,6 +2367,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [goalColorPickerIdx, setGoalColorPickerIdx] = useState<number|null>(null);
   const [goalColorPickerPos, setGoalColorPickerPos] = useState<{top:number;left:number}|null>(null);
   const goalColorBtnRefs = useRef<(HTMLButtonElement|null)[]>([]);
+  const goalColorPopoverRef = useRef<HTMLDivElement|null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmDeleteGoalIdx, setConfirmDeleteGoalIdx] = useState<number|null>(null);
   const handleGoalReset = () => {
@@ -2558,6 +2559,19 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [msEditColorPickerOpen]);
+
+  React.useEffect(() => {
+    if (goalColorPickerIdx === null) return;
+    const handler = (e: MouseEvent) => {
+      const popover = goalColorPopoverRef.current;
+      const btn = goalColorBtnRefs.current[goalColorPickerIdx];
+      if (popover && popover.contains(e.target as Node)) return;
+      if (btn && btn.contains(e.target as Node)) return;
+      setGoalColorPickerIdx(null);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [goalColorPickerIdx]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
   const label = new Date(y, m-1, d).toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { weekday:"long", month:"long", day:"numeric" });
@@ -2785,6 +2799,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             {goalColorPickerIdx !== null && goalColorPickerPos && ReactDOM.createPortal(
               <motion.div
                 key="goal-color-popover"
+                ref={goalColorPopoverRef}
                 initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
                 transition={{ type:"spring", stiffness:420, damping:28 }}
                 onClick={e => e.stopPropagation()}
