@@ -2586,7 +2586,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.2) transparent":"rgba(0,0,0,0.15) transparent" }}>
 
         {/* Daily Goals */}
-        <div className="px-5 pt-1 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}`, paddingBottom: 12 }}>
+        <div className="px-5 pt-1 shrink-0" style={{ borderBottom:"1px solid var(--border-soft)", paddingBottom: 12 }}>
           {/* Header row — only appears once goals exist */}
           {goalsDraft.count > 0 && (
           <div style={{ display:"flex", flexWrap:"nowrap", alignItems:"center", justifyContent:"flex-start", gap:6, marginBottom:8, userSelect:"none" }}>
