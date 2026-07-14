@@ -2256,6 +2256,11 @@ function DraggableCard({ id, dark, children }: { id: string; dark: boolean; chil
       transition={{ duration:0.2, ease:"easeOut" }}
       whileDrag={{ scale:1.02, boxShadow:"0 10px 28px rgba(0,0,0,0.22)", zIndex:5 }}
       style={{ overflow:"visible", listStyle:"none" }}
+      // Dragging the handle moves the pointer across sibling textareas/inputs
+      // while the mouse button is held — the browser's default is to treat
+      // that as a text selection. Suspend selection app-wide for the drag.
+      onDragStart={() => { document.body.style.userSelect = "none"; document.body.style.webkitUserSelect = "none" as any; }}
+      onDragEnd={() => { document.body.style.userSelect = ""; document.body.style.webkitUserSelect = "" as any; }}
     >
       <div style={{ position:"relative", display:"flex", alignItems:"stretch", gap:2 }}>
         <div
