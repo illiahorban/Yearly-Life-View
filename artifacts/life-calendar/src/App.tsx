@@ -296,6 +296,17 @@ function swatchCheckColor(hex: string): string {
   return luminanceOf(hex) > 0.6 ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.95)";
 }
 
+/** Position a fixed-position popover relative to an anchor rect, flipping above
+ *  the anchor and clamping to both viewport edges so it never renders off-screen. */
+function clampedPopoverPos(rect: DOMRect, popoverWidth: number, popoverHeight: number, gap = 7) {
+  const below = rect.bottom + gap;
+  const top = (below + popoverHeight <= window.innerHeight)
+    ? Math.max(8, below)
+    : Math.max(8, Math.min(rect.top - popoverHeight - gap, window.innerHeight - popoverHeight - 8));
+  const left = Math.min(Math.max(8, rect.left), window.innerWidth - popoverWidth - 8);
+  return { top, left };
+}
+
 type AppleColorKey = typeof APPLE_COLORS[number]["key"];
 type QuarterMeta = { name: string; colorKey: AppleColorKey };
 
@@ -2773,7 +2784,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
                         <button
                           ref={el => { goalColorBtnRefs.current[i] = el; }}
-                          onClick={e => { e.stopPropagation(); if (goalColorPickerIdx===i) { setGoalColorPickerIdx(null); return; } const btn=goalColorBtnRefs.current[i]; if(btn){const r=btn.getBoundingClientRect();setGoalColorPickerPos({top:r.bottom+7,left:Math.min(r.right-152,window.innerWidth-164)});} setGoalColorPickerIdx(i); }}
+                          onClick={e => { e.stopPropagation(); if (goalColorPickerIdx===i) { setGoalColorPickerIdx(null); return; } const btn=goalColorBtnRefs.current[i]; if(btn){setGoalColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 152, 100));} setGoalColorPickerIdx(i); }}
                           title={t("chooseColor")}
                           style={{ width:13,height:13,borderRadius:999,background:goalColor??(dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"),border:"none",boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",cursor:"pointer",display:"block",flexShrink:0,padding:0,mixBlendMode:"normal",isolation:"isolate" }}
                         />
@@ -2891,7 +2902,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
                           <button
                             ref={msEditColorBtnRef}
-                            onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRef.current; if (btn) { const r = btn.getBoundingClientRect(); setMsEditColorPickerPos({ top: r.bottom + 7, left: Math.min(r.left, window.innerWidth - 168) }); } setMsEditColorPickerOpen(true); }}
+                            onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRef.current; if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
                             title={t("chooseColor")}
                             style={{ width:16, height:16, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
@@ -2989,7 +3000,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
                 <button
                   ref={newColorBtnRef}
-                  onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { const r = btn.getBoundingClientRect(); setNewColorPickerPos({ top: r.bottom + 7, left: Math.min(r.left, window.innerWidth - 168) }); } setNewColorPickerOpen(true); }}
+                  onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
                   title={t("chooseColor")}
                   style={{ width:18, height:18, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                   {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
