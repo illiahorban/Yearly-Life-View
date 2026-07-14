@@ -1925,7 +1925,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
-      {Array.from({ length: dayGoals.count }, (_, i) => {
+      {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         return done ? (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
@@ -2314,13 +2314,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   // local, non-persisted id list tracks 1:1 with goalsDraft's slots and is
   // kept in sync everywhere the slot count changes.
   const [goalIds, setGoalIds] = useState<string[]>(() => Array.from({ length: initDayGoals?.count ?? 0 }, () => makeId()));
-  const handleGoalCountChange = (n: number) => {
-    const newDone = Array.from({ length: n }, (_, i) => goalsDraft.done[i] ?? false);
-    const newLabels = Array.from({ length: n }, (_, i) => goalsDraft.labels?.[i] ?? "");
-    const newColors: (string|undefined)[] = Array.from({ length: n }, (_, i) => goalsDraft.colors?.[i]);
+  const handleGoalAdd = () => {
+    const n = goalsDraft.count + 1;
+    const newDone = [...goalsDraft.done, false];
+    const newLabels = [...(goalsDraft.labels ?? Array(goalsDraft.count).fill("")), ""];
+    const newColors = [...(goalsDraft.colors ?? Array(goalsDraft.count).fill(undefined)), undefined];
     const g: DayGoals = { count: n, done: newDone, labels: newLabels, colors: newColors };
     setGoalsDraft(g); onDayGoalsChange(g);
-    setGoalIds(prev => Array.from({ length: n }, (_, i) => prev[i] ?? makeId()));
+    setGoalIds(prev => [...prev, makeId()]);
   };
   const handleGoalReorder = (newIds: string[]) => {
     const perm = newIds.map(id => goalIds.indexOf(id));
@@ -2373,7 +2374,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [saveTplPrefill, setSaveTplPrefill] = useState<string[] | null>(null);
   const applyTemplate = (tpl: DayTemplate) => {
     const items = tpl.items.filter(s => s.trim());
-    const n = Math.max(1, Math.min(10, items.length));
+    const n = Math.max(1, items.length);
     const g: DayGoals = { count: n, done: Array(n).fill(false), labels: items.slice(0, n) };
     setGoalsDraft(g); onDayGoalsChange(g); setTemplateMgrOpen(false);
     setGoalIds(Array.from({ length: n }, () => makeId()));
@@ -2648,12 +2649,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   <button onClick={handleGoalReset} style={{ fontSize:11, padding:"1px 7px", borderRadius:5, border:"none", background:"#ff3b30", color:"white", cursor:"pointer", fontFamily:"inherit", fontWeight:600, flexShrink:0 }}>{t("remove")}</button>
                 </>
               ) : (
-                <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                  {Array.from({length:10},(_,i)=>i+1).map(n=>(
-                    <button key={n} onClick={()=>handleGoalCountChange(n)}
-                      style={{ width:17, height:17, borderRadius:4, border:"none", cursor:"pointer", background:goalsDraft.count===n?"#007aff":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"), color:goalsDraft.count===n?"white":"var(--text-tertiary)", fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"inherit", flexShrink:0, transition:"background 120ms", padding:0 }}>{n}</button>
-                  ))}
-                </div>
+                <button onClick={e => { e.stopPropagation(); handleGoalAdd(); }}
+                  style={{ display:"flex", alignItems:"center", gap:4, height:20, padding:"0 8px", borderRadius:6, border:"none", cursor:"pointer", background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color:"var(--text-secondary)", fontSize:11, fontWeight:600, fontFamily:"inherit", flexShrink:0 }}>
+                  <span style={{ fontSize:13, lineHeight:1 }}>+</span> {t("addGoal")}
+                </button>
               )}
             </div>
             {goalsDraft.count > 0 && (
