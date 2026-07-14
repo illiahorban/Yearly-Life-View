@@ -2763,7 +2763,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         ref={el => { if (el && focusGoalIdx === i) { el.focus(); setFocusGoalIdx(null); } }}
                         value={goalsDraft.labels?.[i] ?? ""}
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
-                        onMouseDown={e=>e.stopPropagation()}
+                        onMouseDown={e => { if (goalColorPickerIdx !== null) setGoalColorPickerIdx(null); e.stopPropagation(); }}
                         placeholder={`${t("goal")} ${i+1}`}
                         minRows={1}
                         style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
