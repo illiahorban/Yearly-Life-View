@@ -3898,9 +3898,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     className={isWhite?"placeholder-dark":undefined}
                     style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
                   />
-                  <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
+                  <div className="flex items-center gap-1.5" style={{ isolation:"isolate", flexWrap:"wrap" }}>
                     <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-                      lang={lang} style={{ ...draftInputStyle, flex:1, minWidth:0 }}
+                      lang={lang} style={{ ...draftInputStyle, flex:1, minWidth:120 }}
                     />
                     <button
                       ref={draftColorBtnRef}
@@ -3915,6 +3915,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       style={{ flexShrink:0, width:22, height:22, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:15, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:draftRecurring?"var(--apple-green)":labelText, opacity:draftRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
                       <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
                     </button>
+                    <button onClick={resetDraft}
+                      style={{ height:28, padding:"0 12px", borderRadius:7, border:cancelBorder, background:"transparent", color:cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, marginLeft:"auto" }}>{t("cancel")}</button>
+                    <button onClick={add} disabled={!draftLabel.trim()}
+                      style={{ height:28, padding:"0 14px", borderRadius:7, border:"none", background:submitBg, color:submitColor, fontSize:12, fontWeight:600, cursor:draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("addEventBtn")}</button>
                   </div>
                   {draftColorPickerOpen && draftColorPickerPos && ReactDOM.createPortal(
                     <motion.div key="ms-draft-color-popover"
@@ -3937,12 +3941,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     </motion.div>,
                     document.body
                   )}
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button onClick={resetDraft}
-                      style={{ height:28, padding:"0 12px", borderRadius:7, border:cancelBorder, background:"transparent", color:cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
-                    <button onClick={add} disabled={!draftLabel.trim()}
-                      style={{ height:28, padding:"0 14px", borderRadius:7, border:"none", background:submitBg, color:submitColor, fontSize:12, fontWeight:600, cursor:draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("addEventBtn")}</button>
-                  </div>
                 </div>
               );
             })()
