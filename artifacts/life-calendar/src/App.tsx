@@ -2304,10 +2304,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   onCopyGoalsTo: (targetDk: string, g: DayGoals) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
 }) {
-  const [entries, setEntries] = useState<NoteEntry[]>(() =>
-    initial.length > 0 ? initial : [{ id: makeId(), text: "", createdAt: Date.now() }]
-  );
-  const [focusId, setFocusId] = useState<string|null>(initial.length === 0 ? (entries[0]?.id ?? null) : null);
+  const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
+  const [focusId, setFocusId] = useState<string|null>(null);
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(() => initDayGoals ?? { count: 0, done: [] });
   // Goals are stored as parallel arrays (no per-item id), but drag-reorder
   // needs a stable identity per item that survives position changes. This
@@ -2536,11 +2534,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [confirmDeleteMsIdDay, setConfirmDeleteMsIdDay] = useState<string|null>(null);
   const [hoveredMsId, setHoveredMsId] = useState<string|null>(null);
   const deleteEntry = (id: string) => {
-    setEntries(prev => {
-      const filtered = prev.filter(e => e.id !== id);
-      if (filtered.length === 0) return [{ id: makeId(), text: "", createdAt: Date.now() }];
-      return filtered;
-    });
+    setEntries(prev => prev.filter(e => e.id !== id));
     setConfirmDeleteEntryId(null);
   };
   const handleReorderEntryIds = (newIds: string[]) => {
@@ -2925,51 +2919,55 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         {/* Divider between events/add-event and notes */}
         <div className="mt-3 h-px shrink-0" style={{ background:"var(--border-soft)" }} />
 
-        {/* Notes section label */}
-        <div className="px-5 pt-3 shrink-0">
-          <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("notes")}</div>
-        </div>
+        {/* Notes section label — only appears once notes exist */}
+        {entries.length > 0 && (
+          <div className="px-5 pt-3 shrink-0">
+            <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("notes")}</div>
+          </div>
+        )}
 
         {/* Notes list — drag the card itself to reorder (press-and-hold first on touch) */}
-        <div className="px-5 pb-2" onScroll={() => setColorPickerEntryId(null)}>
-          <Reorder.Group
-            as="div"
-            axis="y"
-            values={entries.map(e => e.id)}
-            onReorder={handleReorderEntryIds}
-            className="flex flex-col gap-1.5"
-            style={{ listStyle:"none", margin:0, padding:0 }}
-          >
-            <AnimatePresence initial={false}>
-              {entries.map((entry, idx) => (
-                <NoteEntryItem
-                  key={entry.id}
-                  entry={entry}
-                  idx={idx}
-                  entriesCount={entries.length}
-                  dark={dark}
-                  inputBg={inputBg}
-                  borderColor={borderColor}
-                  hoveredEntryId={hoveredEntryId}
-                  setHoveredEntryId={setHoveredEntryId}
-                  areaRefs={areaRefs}
-                  updateEntry={updateEntry}
-                  handleNoteHeightChange={handleNoteHeightChange}
-                  setActiveEntryId={setActiveEntryId}
-                  handleKey={handleKey}
-                  noteHeights={noteHeights}
-                  colorBtnRefs={colorBtnRefs}
-                  toggleColorPicker={toggleColorPicker}
-                  colorPickerEntryId={colorPickerEntryId}
-                  setConfirmDeleteEntryId={setConfirmDeleteEntryId}
-                />
-              ))}
-            </AnimatePresence>
-          </Reorder.Group>
-        </div>
+        {entries.length > 0 && (
+          <div className="px-5 pb-2" onScroll={() => setColorPickerEntryId(null)}>
+            <Reorder.Group
+              as="div"
+              axis="y"
+              values={entries.map(e => e.id)}
+              onReorder={handleReorderEntryIds}
+              className="flex flex-col gap-1.5"
+              style={{ listStyle:"none", margin:0, padding:0 }}
+            >
+              <AnimatePresence initial={false}>
+                {entries.map((entry, idx) => (
+                  <NoteEntryItem
+                    key={entry.id}
+                    entry={entry}
+                    idx={idx}
+                    entriesCount={entries.length}
+                    dark={dark}
+                    inputBg={inputBg}
+                    borderColor={borderColor}
+                    hoveredEntryId={hoveredEntryId}
+                    setHoveredEntryId={setHoveredEntryId}
+                    areaRefs={areaRefs}
+                    updateEntry={updateEntry}
+                    handleNoteHeightChange={handleNoteHeightChange}
+                    setActiveEntryId={setActiveEntryId}
+                    handleKey={handleKey}
+                    noteHeights={noteHeights}
+                    colorBtnRefs={colorBtnRefs}
+                    toggleColorPicker={toggleColorPicker}
+                    colorPickerEntryId={colorPickerEntryId}
+                    setConfirmDeleteEntryId={setConfirmDeleteEntryId}
+                  />
+                ))}
+              </AnimatePresence>
+            </Reorder.Group>
+          </div>
+        )}
 
         {/* Add note button */}
-        <div className="px-5 pb-3">
+        <div className={`px-5 pb-3 ${entries.length === 0 ? "pt-3" : ""}`}>
           <button onClick={addEntry}
             style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
             <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addNote")}
