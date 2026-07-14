@@ -3442,6 +3442,9 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   const [draftText, setDraftText] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState<string | null>(null);
+  const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
+  const [draftColorPickerPos, setDraftColorPickerPos] = useState<{ top: number; left: number } | null>(null);
+  const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
   const [hoveredDk, setHoveredDk] = useState<string | null>(null);
   const [confirmDeleteDk, setConfirmDeleteDk] = useState<string | null>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
@@ -3489,6 +3492,16 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   const formatDate = (dk: string) => {
     const [, m, d] = dk.split("-").map(Number);
     return `${d} ${months[m! - 1]}`;
+  };
+
+  const toggleDraftColorPicker = () => {
+    if (draftColorPickerOpen) { setDraftColorPickerOpen(false); return; }
+    const btn = draftColorBtnRef.current;
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      setDraftColorPickerPos({ top: rect.bottom + 7, left: rect.right - 152 });
+    }
+    setDraftColorPickerOpen(true);
   };
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
@@ -3539,34 +3552,28 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
 
         {/* Add note form */}
         <div style={{ padding: "12px 20px 14px", borderBottom: `1px solid ${borderColor}` }}>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 9, alignItems: "center" }}>
-            <button onClick={() => setDraftColor(null)} title={t("noColor")}
-              style={{ width: 20, height: 20, borderRadius: 999, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: draftColor === null ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-tertiary)", flexShrink: 0 }}>
-              ∅
-            </button>
-            {APPLE_COLORS.map(ac => {
-              const c = dark ? ac.dark : ac.light;
-              return (
-                <button key={ac.key} onClick={() => setDraftColor(c)} title={ac.label}
-                  style={{ width: 20, height: 20, borderRadius: 999, background: c, border: draftColor === c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor: "pointer", transition: "border 120ms ease", flexShrink: 0, boxShadow: (ac.key === "white" || ac.key === "grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
-                />
-              );
-            })}
+          <div style={{ position: "relative", marginBottom: 8 }}>
+            <textarea
+              value={draftText}
+              onChange={e => setDraftText(e.target.value)}
+              placeholder={t("notePlaceholder")}
+              rows={2}
+              style={{ width: "100%", borderRadius: 10, border: `1px solid ${borderColor}`, background: draftColor ? (dark ? `color-mix(in srgb, ${draftColor} 14%, ${inputBg})` : `color-mix(in srgb, ${draftColor} 10%, rgba(255,255,255,0.9))`) : inputBg, color: "var(--text)", fontSize: 13, padding: "8px 32px 8px 10px", fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box", display: "block", transition: "background 200ms ease" }}
+              onKeyDown={e => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && draftText.trim()) {
+                  e.preventDefault();
+                  onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
+                  setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false);
+                }
+              }}
+            />
+            <button
+              ref={draftColorBtnRef}
+              onClick={e => { e.stopPropagation(); toggleDraftColorPicker(); }}
+              title={t("chooseColor")}
+              style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", right: 10, width: 13, height: 13, borderRadius: 999, background: draftColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border: "none", boxShadow: "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor: "pointer", display: "block", padding: 0 }}
+            />
           </div>
-          <textarea
-            value={draftText}
-            onChange={e => setDraftText(e.target.value)}
-            placeholder={t("notePlaceholder")}
-            rows={2}
-            style={{ width: "100%", borderRadius: 10, border: `1px solid ${borderColor}`, background: draftColor ? (dark ? `color-mix(in srgb, ${draftColor} 14%, ${inputBg})` : `color-mix(in srgb, ${draftColor} 10%, rgba(255,255,255,0.9))`) : inputBg, color: "var(--text)", fontSize: 13, padding: "8px 10px", fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box", display: "block", marginBottom: 8, transition: "background 200ms ease" }}
-            onKeyDown={e => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && draftText.trim()) {
-                e.preventDefault();
-                onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
-                setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date()));
-              }
-            }}
-          />
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)} lang={lang}
               style={{ flex: 1, borderRadius: 9, border: `1px solid ${borderColor}`, background: inputBg, color: "var(--text)", fontSize: 13, padding: "7px 10px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
@@ -3575,7 +3582,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
               onClick={() => {
                 if (!draftText.trim()) return;
                 onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
-                setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date()));
+                setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false);
               }}
               disabled={!draftText.trim()}
               style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: draftText.trim() ? "linear-gradient(135deg,#5ed47b 0%,#34c759 100%)" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), color: draftText.trim() ? "white" : "var(--text-tertiary)", fontWeight: 600, fontSize: 13, cursor: draftText.trim() ? "pointer" : "default", fontFamily: "inherit", whiteSpace: "nowrap" as const, transition: "background 150ms, color 150ms" }}>
@@ -3648,6 +3655,34 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
           )}
         </div>
       </motion.div>
+      {draftColorPickerOpen && draftColorPickerPos && ReactDOM.createPortal(
+        <motion.div
+          key="draft-color-popover"
+          initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
+          transition={{ type:"spring", stiffness:420, damping:28 }}
+          onClick={e => e.stopPropagation()}
+          style={{ position:"fixed", top:draftColorPickerPos.top, left:draftColorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate" }}
+        >
+          <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setDraftColorPickerOpen(false)} />
+          <button onClick={() => { setDraftColor(null); setDraftColorPickerOpen(false); }}
+            title={t("noColor")}
+            style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: draftColor===null ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
+          </button>
+          {APPLE_COLORS.map(ac => {
+            const hex = dark ? ac.dark : ac.light;
+            const selected = draftColor === hex;
+            return (
+              <button key={ac.key} onClick={() => { setDraftColor(selected ? null : hex); setDraftColorPickerOpen(false); }}
+                title={ac.label}
+                style={{ width:20, height:20, borderRadius:999, background:hex, border: selected ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(ac.key==="white"||ac.key==="grey")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:selected?"scale(1.08)":"scale(1)" }}>
+                {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(hex) }}>✓</span>}
+              </button>
+            );
+          })}
+        </motion.div>,
+        document.body
+      )}
       <ConfirmDialog
         open={confirmDeleteDk !== null}
         onClose={() => setConfirmDeleteDk(null)}
