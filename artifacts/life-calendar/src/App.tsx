@@ -2490,7 +2490,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
                       style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1px solid ${containerBorder}`, borderRadius:10, padding:"8px 46px 8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
-                      {(() => { const checkColor = goalColor ?? "#34c759"; const _lum = goalColor ? luminanceOf(goalColor) : 0.5; const _greyBorder = dark ? "#636366" : "#8e8e93"; const uncheckedBorder = goalColor ? (_lum > 0.8 || _lum < 0.015 ? _greyBorder : `${checkColor}80`) : "var(--border-soft)"; return (
+                      {(() => { const checkColor = goalColor ?? "#34c759"; const _lum = goalColor ? luminanceOf(goalColor) : 0.5; const uncheckedBorder = goalColor ? (_lum > 0.8 ? "#121212" : _lum < 0.015 ? "#ffffff" : `${checkColor}80`) : "var(--border-soft)"; return (
                       <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?checkColor:"transparent",border:`1.5px solid ${done?checkColor:uncheckedBorder}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke={swatchCheckColor(checkColor)} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
