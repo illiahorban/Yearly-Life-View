@@ -2877,12 +2877,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           <div className="flex-1 min-w-0 flex items-center" style={{ paddingTop:2 }}>
                             <span className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.label}</span>
                           </div>
-                          {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0, marginTop:3 }}>↻</span>}
-                          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: (hoveredMsId === ms.id && !isEditing) ? 1 : 0, pointerEvents: (hoveredMsId === ms.id && !isEditing) ? "auto" : "none", transition:"opacity 150ms" }}>
-                            <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                              style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)", cursor:"pointer", fontSize:12, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", transform:"scaleX(-1)" }}>✏️</button>
-                            <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                              style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
+                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0, display:"flex", alignItems:"center" }}>↻</span>}
+                            <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: (hoveredMsId === ms.id && !isEditing) ? 1 : 0, pointerEvents: (hoveredMsId === ms.id && !isEditing) ? "auto" : "none", transition:"opacity 150ms" }}>
+                              <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                                style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)", cursor:"pointer", fontSize:12, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", transform:"scaleX(-1)" }}>✏️</button>
+                              <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                                style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                            </div>
                           </div>
                         </div>
                         {ms.description && <div className="text-[11px] leading-snug" style={{ color:cardFormSec, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.description}</div>}
