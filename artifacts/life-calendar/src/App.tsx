@@ -2363,6 +2363,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [goalColorPickerPos, setGoalColorPickerPos] = useState<{top:number;left:number}|null>(null);
   const goalColorBtnRefs = useRef<(HTMLButtonElement|null)[]>([]);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmDeleteGoalIdx, setConfirmDeleteGoalIdx] = useState<number|null>(null);
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [] };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
@@ -2707,7 +2708,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           style={{ width:13,height:13,borderRadius:999,background:goalColor??(dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"),border:"none",boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",cursor:"pointer",display:"block",flexShrink:0,padding:0,mixBlendMode:"normal",isolation:"isolate" }}
                         />
                         <button
-                          onClick={e => { e.stopPropagation(); handleGoalDelete(i); }}
+                          onClick={e => { e.stopPropagation(); setConfirmDeleteGoalIdx(i); }}
                           style={{ width:22,height:22,borderRadius:6,border:"none",background:dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)",color:"#ff3b30",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}
                         ><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                       </div>
@@ -3043,6 +3044,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         onConfirm={handleGoalReset}
         message={t("resetGoalsConfirm")}
         confirmLabel={t("resetGoals")}
+        dark={dark}
+      />
+      <ConfirmDialog
+        open={confirmDeleteGoalIdx !== null}
+        onClose={() => setConfirmDeleteGoalIdx(null)}
+        onConfirm={() => { if (confirmDeleteGoalIdx !== null) { handleGoalDelete(confirmDeleteGoalIdx); setConfirmDeleteGoalIdx(null); } }}
+        message={t("deleteGoalConfirm")}
+        confirmLabel={t("remove")}
         dark={dark}
       />
     </motion.div>
