@@ -648,6 +648,21 @@ function LifeIcon() {
 // ─── Config helpers ───────────────────────────────────────────────────────────
 
 function makeId() { return Math.random().toString(36).slice(2,10); }
+
+// Reorders the subset of `list` whose id is in `orderedIds` into that new
+// relative order, while leaving every other item's position untouched.
+// Matching by id (not by any grouping key) keeps this safe for lists like
+// milestones where a rendered day's items can be synthetic recurring copies
+// that share an id with a differently-dated original.
+function reorderByIds<T extends { id: string }>(list: T[], orderedIds: string[]): T[] {
+  const byId = new Map(list.map(item => [item.id, item]));
+  const targetSlots: number[] = [];
+  list.forEach((item, i) => { if (byId.has(item.id) && orderedIds.includes(item.id)) targetSlots.push(i); });
+  const reordered = orderedIds.map(id => byId.get(id)).filter((x): x is T => x !== undefined);
+  const next = [...list];
+  targetSlots.forEach((pos, i) => { if (reordered[i]) next[pos] = reordered[i]!; });
+  return next;
+}
 function defaultBlock(): Block { return { id: makeId(), weeks: WEEKS_PER_QUARTER, label: "All weeks" }; }
 
 /** Returns correct plural form of "week/неделя" for a given count and language. */
@@ -1417,6 +1432,7 @@ function App() {
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
             onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
             onMilestoneDelete={id => setMilestones(prev => prev.filter(m => m.id !== id))}
+            onMilestoneReorder={ids => setMilestones(prev => reorderByIds(prev, ids))}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
             onCopyGoalsTo={(targetDk, g) => updateDayGoals(targetDk, g)}
             onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
@@ -2153,29 +2169,6 @@ function NoteEntryItem({
   setConfirmDeleteEntryId: (id: string | null) => void;
 }) {
   const { t } = React.useContext(LangContext);
-  const dragControls = useDragControls();
-  const holdTimer = useRef<number | null>(null);
-  const holdStartPos = useRef<{ x: number; y: number } | null>(null);
-  const clearHoldTimer = () => {
-    if (holdTimer.current !== null) { window.clearTimeout(holdTimer.current); holdTimer.current = null; }
-    holdStartPos.current = null;
-  };
-  const startDragFromContainer = (e: React.PointerEvent) => {
-    if (e.pointerType === "touch" || e.pointerType === "pen") {
-      holdStartPos.current = { x: e.clientX, y: e.clientY };
-      holdTimer.current = window.setTimeout(() => { dragControls.start(e); }, NOTE_LONG_PRESS_MS);
-    } else {
-      // Mouse: grabbing the card starts the drag right away.
-      dragControls.start(e);
-    }
-  };
-  const cancelHoldOnMove = (e: React.PointerEvent) => {
-    if (holdTimer.current === null || !holdStartPos.current) return;
-    const dx = Math.abs(e.clientX - holdStartPos.current.x);
-    const dy = Math.abs(e.clientY - holdStartPos.current.y);
-    if (dx > NOTE_LONG_PRESS_MOVE_TOLERANCE || dy > NOTE_LONG_PRESS_MOVE_TOLERANCE) clearHoldTimer();
-  };
-
   const entryColor = entry.color;
   const ec = entryColor ? getEventColors(resolveNoteHex(entryColor), dark) : null;
   const tintedBg     = ec ? ec.bg         : inputBg;
@@ -2185,8 +2178,76 @@ function NoteEntryItem({
   const notePlaceholderClass = noteAch ? `placeholder-note-${noteAch.tier}` : undefined;
 
   return (
+    <DraggableCard id={entry.id} dark={dark}>
+      <div
+        style={{ position:"relative" }}
+        onMouseEnter={() => setHoveredEntryId(entry.id)}
+        onMouseLeave={() => setHoveredEntryId(null)}
+      >
+        <TextareaAutosize
+          ref={el => { areaRefs.current[entry.id] = el; }}
+          value={entry.text}
+          onChange={e => updateEntry(entry.id, e.target.value)}
+          onHeightChange={h => handleNoteHeightChange(entry.id, h)}
+          onFocus={() => setActiveEntryId(entry.id)}
+          onBlur={() => setActiveEntryId(null)}
+          onKeyDown={handleKey}
+          placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
+          minRows={1}
+          className={notePlaceholderClass}
+          style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:tintedText, boxSizing:"border-box", display:"block", overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease", cursor:"text" }}
+        />
+        <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", isolation:"isolate" }}>
+          <button
+            ref={el => { colorBtnRefs.current[entry.id] = el; }}
+            onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
+            onPointerDown={e => e.stopPropagation()}
+            title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+            aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+            data-testid={`note-color-btn-${idx}`}
+            style={{ width:13, height:13, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0, mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+          />
+          <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+            onPointerDown={e => e.stopPropagation()}
+            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+        </div>
+      </div>
+    </DraggableCard>
+  );
+}
+
+// ─── DraggableCard ────────────────────────────────────────────────────────────
+// Generic drag-handle wrapper reused by both notes and events: a fixed-width
+// grip strip triggers the reorder drag (instantly on mouse, after a brief
+// press-and-hold on touch) while the wrapped content keeps its own clicks,
+// text editing, etc. untouched.
+function DraggableCard({ id, dark, children }: { id: string; dark: boolean; children: React.ReactNode }) {
+  const { t } = React.useContext(LangContext);
+  const dragControls = useDragControls();
+  const holdTimer = useRef<number | null>(null);
+  const holdStartPos = useRef<{ x: number; y: number } | null>(null);
+  const [handleHover, setHandleHover] = useState(false);
+  const clearHoldTimer = () => {
+    if (holdTimer.current !== null) { window.clearTimeout(holdTimer.current); holdTimer.current = null; }
+    holdStartPos.current = null;
+  };
+  const startDragFromHandle = (e: React.PointerEvent) => {
+    if (e.pointerType === "touch" || e.pointerType === "pen") {
+      holdStartPos.current = { x: e.clientX, y: e.clientY };
+      holdTimer.current = window.setTimeout(() => { dragControls.start(e); }, NOTE_LONG_PRESS_MS);
+    } else {
+      dragControls.start(e);
+    }
+  };
+  const cancelHoldOnMove = (e: React.PointerEvent) => {
+    if (holdTimer.current === null || !holdStartPos.current) return;
+    const dx = Math.abs(e.clientX - holdStartPos.current.x);
+    const dy = Math.abs(e.clientY - holdStartPos.current.y);
+    if (dx > NOTE_LONG_PRESS_MOVE_TOLERANCE || dy > NOTE_LONG_PRESS_MOVE_TOLERANCE) clearHoldTimer();
+  };
+  return (
     <Reorder.Item
-      value={entry.id}
+      value={id}
       as="div"
       dragListener={false}
       dragControls={dragControls}
@@ -2195,21 +2256,19 @@ function NoteEntryItem({
       transition={{ duration:0.2, ease:"easeOut" }}
       whileDrag={{ scale:1.02, boxShadow:"0 10px 28px rgba(0,0,0,0.22)", zIndex:5 }}
       style={{ overflow:"visible", listStyle:"none" }}
-      onMouseEnter={() => setHoveredEntryId(entry.id)}
-      onMouseLeave={() => setHoveredEntryId(null)}
     >
       <div style={{ position:"relative", display:"flex", alignItems:"stretch", gap:2 }}>
-        {/* Drag handle — the note text fills the rest of the card, so the
-            grab area lives in this dedicated strip instead of the textarea. */}
         <div
-          onPointerDown={startDragFromContainer}
+          onPointerDown={startDragFromHandle}
           onPointerMove={cancelHoldOnMove}
           onPointerUp={clearHoldTimer}
           onPointerCancel={clearHoldTimer}
           onPointerLeave={clearHoldTimer}
+          onMouseEnter={() => setHandleHover(true)}
+          onMouseLeave={() => setHandleHover(false)}
           title={t("dragNote")}
           aria-label={t("dragNote")}
-          style={{ width:16, flexShrink:0, borderRadius:8, cursor:"grab", display:"flex", alignItems:"center", justifyContent:"center", touchAction:"none", background: hoveredEntryId===entry.id ? (dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.045)") : "transparent", transition:"background 150ms" }}
+          style={{ width:16, flexShrink:0, borderRadius:8, cursor:"grab", display:"flex", alignItems:"center", justifyContent:"center", touchAction:"none", background: handleHover ? (dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.045)") : "transparent", transition:"background 150ms" }}
         >
           <svg width="8" height="16" viewBox="0 0 8 16" fill={dark?"rgba(255,255,255,0.4)":"rgba(0,0,0,0.32)"}>
             <circle cx="2" cy="2" r="1.3" /><circle cx="6" cy="2" r="1.3" />
@@ -2217,35 +2276,7 @@ function NoteEntryItem({
             <circle cx="2" cy="14" r="1.3" /><circle cx="6" cy="14" r="1.3" />
           </svg>
         </div>
-        <div style={{ position:"relative", flex:1, minWidth:0 }}>
-          <TextareaAutosize
-            ref={el => { areaRefs.current[entry.id] = el; }}
-            value={entry.text}
-            onChange={e => updateEntry(entry.id, e.target.value)}
-            onHeightChange={h => handleNoteHeightChange(entry.id, h)}
-            onFocus={() => setActiveEntryId(entry.id)}
-            onBlur={() => setActiveEntryId(null)}
-            onKeyDown={handleKey}
-            placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
-            minRows={1}
-            className={notePlaceholderClass}
-            style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:tintedText, boxSizing:"border-box", display:"block", overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease", cursor:"text" }}
-          />
-          <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", isolation:"isolate" }}>
-            <button
-              ref={el => { colorBtnRefs.current[entry.id] = el; }}
-              onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
-              onPointerDown={e => e.stopPropagation()}
-              title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-              aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-              data-testid={`note-color-btn-${idx}`}
-              style={{ width:13, height:13, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0, mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
-            />
-            <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-              onPointerDown={e => e.stopPropagation()}
-              style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-          </div>
-        </div>
+        <div style={{ position:"relative", flex:1, minWidth:0 }}>{children}</div>
       </div>
     </Reorder.Item>
   );
@@ -2253,7 +2284,7 @@ function NoteEntryItem({
 
 // ─── NoteModal ────────────────────────────────────────────────────────────────
 
-function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onSaveTemplates, onMilestoneUpdate, onMilestoneAdd, onMilestoneDelete, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
+function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDayGoals, tomorrowInitGoals, dayTemplates, onSaveTemplates, onMilestoneUpdate, onMilestoneAdd, onMilestoneDelete, onMilestoneReorder, onDayGoalsChange, onCopyGoalsTo, onSave, onClose }: {
   dateKey: string; initial: NoteEntry[]; dark: boolean; modalBg: string;
   dayMilestones: Milestone[];
   initDayGoals?: DayGoals;
@@ -2263,6 +2294,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   onMilestoneUpdate: (updated: Milestone) => void;
   onMilestoneAdd: (ms: Milestone) => void;
   onMilestoneDelete: (id: string) => void;
+  onMilestoneReorder: (orderedIds: string[]) => void;
   onDayGoalsChange: (g: DayGoals) => void;
   onCopyGoalsTo: (targetDk: string, g: DayGoals) => void;
   onSave: (entries: NoteEntry[]) => void; onClose: () => void;
@@ -2689,7 +2721,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         {dayMilestones.length > 0 && (
           <div className="px-5 pt-3 pb-0 shrink-0">
             <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color:"var(--text-tertiary)" }}>{t("events")}</div>
-            <div className="flex flex-col gap-1.5">
+            <Reorder.Group
+              as="div"
+              axis="y"
+              values={dayMilestones.map(ms => ms.id)}
+              onReorder={onMilestoneReorder}
+              className="flex flex-col gap-1.5"
+              style={{ listStyle:"none", margin:0, padding:0 }}
+            >
+            <AnimatePresence initial={false}>
               {dayMilestones.map(ms => {
                 const isEditing = msEditId === ms.id;
                 const ec2 = getEventColors(isEditing ? msEditColor : ms.color, dark);
@@ -2701,7 +2741,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 const cardFormBdr = ec2.formBorder;
                 const cardFormBg  = ec2.formBg;
                 return (
-                  <div key={ms.id}
+                  <DraggableCard key={ms.id} id={ms.id} dark={dark}>
+                  <div
                     style={{ borderRadius:12, overflow:"hidden", background:cardBg, border: `1.5px solid ${ec2.border || "transparent"}`, boxShadow: ec2.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
@@ -2764,9 +2805,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       </div>
                     </div>
                   </div>
+                  </DraggableCard>
                 );
               })}
-            </div>
+            </AnimatePresence>
+            </Reorder.Group>
           </div>
         )}
 
