@@ -2898,10 +2898,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
-                      {/* position:relative anchors the absolute action buttons; minHeight keeps short cards neat */}
-                      <div style={{ padding:"8px 10px", minHeight:36, position:"relative" }}>
-                        {/* Content block — paddingRight: 64px is the hard safety zone, text always wraps before the buttons */}
-                        <div style={{ paddingRight:64 }}>
+                      {/* position:relative anchors the absolute action buttons; minHeight gives breathing room */}
+                      <div style={{ padding:"8px 10px", minHeight:48, position:"relative" }}>
+                        {/* Content block — paddingRight: 44px (vertical button stack is narrower, saves text space) */}
+                        <div style={{ paddingRight:44 }}>
                           <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word", overflowWrap:"anywhere", display:"block" }}>{ms.label}</span>
                           {ms.description && <div className="text-[11px] leading-snug" style={{ marginTop:3, color:cardFormSec, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.description}</div>}
                           {/* Repeat badge — always visible at bottom, never moves or disappears */}
@@ -2912,19 +2912,19 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             </div>
                           )}
                         </div>
-                        {/* Action buttons — absolute top-right, opacity transition only, zero layout shift on appearance */}
-                        <div style={{ position:"absolute", top:8, right:10, display:"flex", alignItems:"center", gap:4, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out" }}>
-                          <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
-                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
-                          </button>
+                        {/* Action buttons — vertical stack (×↑ ✎↓), centered on short cards / top-anchored on tall cards */}
+                        <div style={{ position:"absolute", top: ms.description ? 10 : "50%", right:10, transform: ms.description ? "none" : "translateY(-50%)", display:"flex", flexDirection:"column", alignItems:"center", gap:3, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out" }}>
                           <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
                             style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
                             onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
                             onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
                             <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
+                          </button>
+                          <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
+                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
                           </button>
                         </div>
                       </div>
@@ -4129,8 +4129,8 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       </div>
                     ) : (
                       <>
-                        {/* Content block — paddingRight is the hard safety zone so text never slides under the buttons */}
-                        <div style={{ paddingRight:64 }}>
+                        {/* Content block — paddingRight 44px (vertical stack is narrower, frees text space) */}
+                        <div style={{ paddingRight:44 }}>
                           {showDate && (
                             <div className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)", marginBottom:2 }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</div>
                           )}
@@ -4146,21 +4146,23 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             </div>
                           )}
                         </div>
-                        {/* Action buttons — position:absolute on parent card, top-right corner, opacity transition only */}
-                        <div style={{ position:"absolute", top:10, right:10, display:"flex", alignItems:"center", gap:4, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out" }}>
-                          <button onClick={() => startEdit(ms)} title={t("edit")}
-                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
-                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
-                          </button>
-                          <button onClick={() => setConfirmDeleteMsId(ms.id)} title={t("delete")}
-                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
-                            <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
-                          </button>
-                        </div>
+                        {/* Action buttons — vertical stack (×↑ ✎↓), centered on short / top-anchored on tall cards */}
+                        {(() => { const isLarge = !!(ms.description || showDate); return (
+                          <div style={{ position:"absolute", top: isLarge ? 10 : "50%", right:10, transform: isLarge ? "none" : "translateY(-50%)", display:"flex", flexDirection:"column", alignItems:"center", gap:3, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out" }}>
+                            <button onClick={() => setConfirmDeleteMsId(ms.id)} title={t("delete")}
+                              style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
+                              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
+                            </button>
+                            <button onClick={() => startEdit(ms)} title={t("edit")}
+                              style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
+                              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
+                            </button>
+                          </div>
+                        ); })()}
                       </>
                     )}
                   </div>
