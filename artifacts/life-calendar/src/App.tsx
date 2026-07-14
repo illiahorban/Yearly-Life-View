@@ -4019,19 +4019,15 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                         <span className="text-[10px]" style={{ color:"var(--text-tertiary)" }}>· {quarterCounts[group.qi]}</span>
                       </div>
                     )}
-                    {isMulti ? (
-                      <div style={{ borderRadius:14, border:`1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"}`, overflow:"hidden" }}>
-                        <div style={{ padding:"6px 10px 5px", background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderBottom:`1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"}`, display:"flex", alignItems:"center", gap:6 }}>
-                          <span style={{ fontSize:11, fontWeight:600, color:"var(--text-secondary)", letterSpacing:"0.01em" }}>{group.lbl}</span>
-                          <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>· {group.items.length}</span>
-                        </div>
-                        <div style={{ display:"flex", flexDirection:"column", gap:4, padding:"6px 6px" }}>
-                          {group.items.map(ms => renderCard(ms, false))}
-                        </div>
+                    <div style={{ borderRadius:14, border:`1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"}`, overflow:"hidden" }}>
+                      <div style={{ padding:"6px 10px 5px", background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderBottom:`1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"}`, display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ fontSize:11, fontWeight:600, color:"var(--text-secondary)", letterSpacing:"0.01em" }}>{group.lbl}</span>
+                        {isMulti && <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>· {group.items.length}</span>}
                       </div>
-                    ) : (
-                      renderCard(group.items[0]!, true)
-                    )}
+                      <div style={{ display:"flex", flexDirection:"column", gap:4, padding:"6px 6px" }}>
+                        {group.items.map(ms => renderCard(ms, false))}
+                      </div>
+                    </div>
                   </React.Fragment>
                 );
               });
