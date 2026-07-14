@@ -2992,9 +2992,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   style={{ width:18, height:18, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                   {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
                 </button>
-                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
-                  lang={lang}
-                  style={{ ...inputStyle, flex:1, width:"auto" }} />
                 <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ flexShrink:0, marginLeft:"auto" }}>
                   <input type="checkbox" checked={newRecurring} onChange={e => setNewRecurring(e.target.checked)}
                     style={{ width:13, height:13, accentColor: isWhite ? "#18181b" : "#007aff", cursor:"pointer" }} />
