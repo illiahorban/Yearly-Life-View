@@ -3761,7 +3761,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   const [showAddForm, setShowAddForm] = useState(false);
   const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
   const [draftColorPickerPos, setDraftColorPickerPos] = useState<{ top: number; left: number } | null>(null);
-  const draftLabelInputRef = React.useRef<HTMLInputElement | null>(null);
+  const draftLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const [editId, setEditId] = useState<string|null>(null);
@@ -3879,15 +3879,16 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
               const submitColor = draftLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
                 <div style={{ background:cardBg, border:`1px solid ${cardBorder}`, boxShadow:ecDraft.boxShadow||undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
+                  <textarea ref={draftLabelInputRef} value={draftLabel} rows={1}
+                    onChange={e => { setDraftLabel(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
+                    onKeyDown={e => { if (e.key==="Escape") resetDraft(); }}
+                    placeholder={t("labelPlaceholder")}
+                    className={isWhite ? "placeholder-dark" : undefined}
+                    style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
+                  />
                   <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
-                    <input ref={draftLabelInputRef} value={draftLabel} onChange={e => setDraftLabel(e.target.value)}
-                      onKeyDown={e => { if (e.key==="Enter") add(); if (e.key==="Escape") resetDraft(); }}
-                      placeholder={t("labelPlaceholder")}
-                      className={isWhite ? "placeholder-dark" : undefined}
-                      style={{ ...draftInputStyle, flex:1, minWidth:0 }}
-                    />
                     <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-                      lang={lang} style={{ ...draftInputStyle, width:"auto" }}
+                      lang={lang} style={{ ...draftInputStyle, flex:1, minWidth:0 }}
                     />
                     <button
                       ref={draftColorBtnRef}
@@ -3903,13 +3904,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
                     </button>
                   </div>
-                  <div style={{ position:"relative" }}>
-                    <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
-                      placeholder={t("descPlaceholder")} rows={4}
-                      className={isWhite?"placeholder-dark":undefined}
-                      style={{ ...draftInputStyle, width:"100%", resize:"none", lineHeight:1.5, display:"block" }}
-                    />
-                  </div>
+                  <textarea value={draftDesc} rows={2}
+                    onChange={e => { setDraftDesc(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
+                    placeholder={t("descPlaceholder")}
+                    className={isWhite?"placeholder-dark":undefined}
+                    style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
+                  />
                   {draftColorPickerOpen && draftColorPickerPos && ReactDOM.createPortal(
                     <motion.div key="ms-draft-color-popover"
                       initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
