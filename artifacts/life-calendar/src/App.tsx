@@ -3983,14 +3983,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const rcBgForm  = ec3.formBg;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
-                    style={{ position:"relative", background:rcBg, border: `1.5px solid ${ec3.border || "transparent"}`, boxShadow: ec3.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ background:rcBg, border: `1.5px solid ${ec3.border || "transparent"}`, boxShadow: ec3.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
-                    {!isEditing && ms.recurring && (
-                      <span title={t("repeatYearly")}
-                        style={{ position:"absolute", top:6, right:6, fontSize:10, opacity: hoveredId === ms.id ? 0 : 0.7, pointerEvents:"none", transition:"opacity 150ms" }}>↻</span>
-                    )}
                     {isEditing ? (
                       <div className="flex flex-col gap-2">
                         <div className="flex gap-1 flex-wrap items-center">
@@ -4081,6 +4077,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <div style={{ padding:"6px 10px 5px", background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderBottom:`1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"}`, display:"flex", alignItems:"center", gap:6 }}>
                         <span style={{ fontSize:11, fontWeight:600, color:"var(--text-secondary)", letterSpacing:"0.01em" }}>{group.lbl}</span>
                         {isMulti && <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>· {group.items.length}</span>}
+                        {group.items.some(x => x.recurring) && (
+                          <span title={t("repeatYearly")} style={{ fontSize:11, opacity:0.7, marginLeft:"auto", color:"var(--text-secondary)" }}>↻</span>
+                        )}
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", gap:4, padding:"6px 6px" }}>
                         {group.items.map(ms => renderCard(ms, false))}
