@@ -2490,9 +2490,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
                       style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1px solid ${containerBorder}`, borderRadius:10, padding:"8px 46px 8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
-                      <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
-                        {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      {(() => { const checkColor = goalColor ?? "#34c759"; return (
+                      <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?checkColor:"transparent",border:`1.5px solid ${done?checkColor:"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
+                        {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke={swatchCheckColor(checkColor)} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
+                      ); })()}
                       <TextareaAutosize
                         value={goalsDraft.labels?.[i] ?? ""}
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
@@ -2501,7 +2503,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         minRows={1}
                         style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
                       />
-                      <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:5, opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
+                      <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
                         <button
                           ref={el => { goalColorBtnRefs.current[i] = el; }}
                           onClick={e => { e.stopPropagation(); if (goalColorPickerIdx===i) { setGoalColorPickerIdx(null); return; } const btn=goalColorBtnRefs.current[i]; if(btn){const r=btn.getBoundingClientRect();setGoalColorPickerPos({top:r.bottom+7,left:Math.min(r.right-152,window.innerWidth-164)});} setGoalColorPickerIdx(i); }}
