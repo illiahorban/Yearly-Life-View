@@ -2489,8 +2489,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     <div key={i}
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
-                      style={{ position:"relative", display:"flex", alignItems:"flex-start", gap:8, background: containerBg, border:`1px solid ${containerBorder}`, borderRadius:10, padding:"8px 46px 8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
-                      <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,marginTop:2,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
+                      style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1px solid ${containerBorder}`, borderRadius:10, padding:"8px 46px 8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
+                      <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
                       <TextareaAutosize
