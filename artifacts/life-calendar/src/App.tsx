@@ -2453,7 +2453,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   // Milestone inline edit state
   const msEditRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
-  const msEditInputRef = React.useRef<HTMLInputElement|null>(null);
+  const msEditInputRef = React.useRef<HTMLTextAreaElement|null>(null);
   const [msEditId, setMsEditId] = useState<string|null>(null);
   const [msEditLabel, setMsEditLabel] = useState("");
   const [msEditDate, setMsEditDate] = useState("");
@@ -2467,7 +2467,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [msEditColorPickerPos, setMsEditColorPickerPos] = useState<{top:number;left:number}|null>(null);
 
   // New event form state
-  const newLabelInputRef = React.useRef<HTMLInputElement|null>(null);
+  const newLabelInputRef = React.useRef<HTMLTextAreaElement|null>(null);
   const addEventFormRef = React.useRef<HTMLDivElement|null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -2889,12 +2889,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       </div>
                     </div>
                     {/* Edit form — expands when editing */}
-                    <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "380px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
+                    <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "2000px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
                       <div className="flex flex-col gap-1.5" style={{ padding:"8px 10px" }}>
                         <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
-                          <input ref={msEditInputRef} value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
-                            onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
-                            placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:1, minWidth:0, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
+                          <TextareaAutosize ref={msEditInputRef} value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
+                            onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); saveMsEdit(); } if (e.key==="Escape") setMsEditId(null); }}
+                            placeholder={t("labelPlaceholder")} minRows={1}
+                            style={{ ...inputStyleMs, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` } as any} />
                           <button
                             ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
                             onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
@@ -2911,9 +2912,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           </button>
                         </div>
                         <div style={{ position:"relative" }}>
-                          <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
-                            placeholder={t("editDescPlaceholder")} rows={4}
-                            style={{ ...inputStyleMs, width:"100%", resize:"none", lineHeight:1.5, borderRadius:8, padding:"5px 9px", display:"block", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
+                          <TextareaAutosize value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
+                            placeholder={t("editDescPlaceholder")} minRows={2}
+                            style={{ ...inputStyleMs, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, borderRadius:8, padding:"5px 9px", display:"block", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` } as any} />
                         </div>
                         {msEditColorPickerOpen && msEditColorPickerPos && ReactDOM.createPortal(
                           <motion.div
@@ -2967,7 +2968,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             </button>
           </div>
           {/* Form — expands when open */}
-          <div ref={addEventFormRef} style={{ maxHeight: addEventOpen ? "400px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
+          <div ref={addEventFormRef} style={{ maxHeight: addEventOpen ? "2000px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
             {(() => {
               const ecNew = getEventColors(newColor, dark);
               const isWhite = newColor === "#ffffff";
@@ -2987,11 +2988,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               return (
             <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
               <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
-                <input ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
-                  onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
+                <TextareaAutosize ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
+                  onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); submitNewEvent(); } if (e.key==="Escape") setAddEventOpen(false); }}
                   placeholder={t("labelPlaceholder")}
                   className={isWhite ? "placeholder-dark" : undefined}
-                  style={{ ...inputStyle, flex:1, minWidth:0 }} />
+                  minRows={1}
+                  style={{ ...inputStyle, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5 } as any} />
                 <button
                   ref={newColorBtnRef}
                   onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
@@ -3008,10 +3010,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 </button>
               </div>
               <div style={{ position:"relative" }}>
-                <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)}
-                  placeholder={t("descPlaceholder")} rows={4}
+                <TextareaAutosize value={newDesc} onChange={e => setNewDesc(e.target.value)}
+                  placeholder={t("descPlaceholder")} minRows={2}
                   className={isWhite ? "placeholder-dark" : undefined}
-                  style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, display:"block" }} />
+                  style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" } as any} />
               </div>
               {newColorPickerOpen && newColorPickerPos && ReactDOM.createPortal(
                 <motion.div
