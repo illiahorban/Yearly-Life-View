@@ -1998,7 +1998,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
               background: noColor ? "transparent" : ec.marker,
               borderBottom: noColor ? `1px solid ${msSep}` : "none",
               boxSizing: "border-box",
-              boxShadow: noColor ? (dark ? "inset 0 1px 3px rgba(0,0,0,0.45)" : "inset 0 1px 3px rgba(0,0,0,0.18)") : undefined,
+              boxShadow: noColor && dark ? "inset 0 1px 3px rgba(0,0,0,0.45)" : undefined,
             }} />
             {!isLast && <div style={{ width:1, flexShrink:0, background: msSep }} />}
           </React.Fragment>
