@@ -1061,7 +1061,7 @@ function App() {
       const ac = APPLE_COLORS.find(c => c.key === block.color);
       if (ac) return dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR);
     }
-    return resolvedQuarters[qi]?.fill;
+    return resolvedQuarters[qi]?.border;
   }, [editGoalsBlockId, config, resolvedQuarters, dark]);
 
   const updateQuarterMeta = (qi: number, patch: Partial<QuarterMeta>) =>
@@ -4074,7 +4074,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 const bAc = b.color ? APPLE_COLORS.find(c => c.key === b.color) : null;
                 const bHex = bAc ? (dark ? bAc.dark : bAc.light) : (dark ? quarter.darkSoft : quarter.soft);
                 // Dot always shows the vivid colour — the block's own if set, else the quarter's fill
-                const bDotHex = bAc ? (dark ? bAc.dark : hexSaturate(bAc.light, LIGHT_SAT_FACTOR)) : quarter.fill;
+                const bDotHex = bAc ? (dark ? bAc.dark : hexSaturate(bAc.light, LIGHT_SAT_FACTOR)) : quarter.border;
                 // Tint the sprint row itself using the same colour logic as note/event
                 // cards (getEventColors), so choosing a sprint colour visibly colours
                 // its row here, in the sprint distribution modal.
