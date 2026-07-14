@@ -3776,6 +3776,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   const [editColor, setEditColor] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editRecurring, setEditRecurring] = useState(false);
+  const [editRecurSpinKey, setEditRecurSpinKey] = useState(0);
+  const [editColorPickerOpen, setEditColorPickerOpen] = useState(false);
+  const [editColorPickerPos, setEditColorPickerPos] = useState<{ top: number; left: number } | null>(null);
+  const editColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const startEdit = (ms: Milestone) => {
     setEditId(ms.id);
@@ -3986,52 +3990,65 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     onMouseLeave={() => setHoveredId(null)}
                   >
                     {isEditing ? (
-                      <div className="flex flex-col gap-2">
-                        <div className="flex gap-1 flex-wrap items-center">
-                          {/* No-color swatch */}
-                          <button onClick={() => setEditColor("")}
-                            title="No colour"
-                            style={{ width:16, height:16, borderRadius:999, background:"transparent", border: editColor==="" ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden", flexShrink:0 }}>
-                            <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
-                          </button>
-                          {MILESTONE_COLORS.map(c => (
-                            <button key={c} onClick={() => setEditColor(editColor === c ? "" : c)}
-                              style={{ width:16, height:16, borderRadius:999, background:c, border: editColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex gap-2">
-                          <input value={editLabel} onChange={e => setEditLabel(e.target.value)}
-                            onKeyDown={e => { if (e.key==="Enter") saveEdit(); if (e.key==="Escape") cancelEdit(); }}
-                            placeholder={t("labelPlaceholder")} autoFocus
-                            style={{ ...inputStyle, flex:2, width:"auto", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
-                          />
+                      <div className="flex flex-col gap-2" style={{ isolation:"isolate" }}>
+                        <textarea value={editLabel} rows={1}
+                          onChange={e => { setEditLabel(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
+                          onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); saveEdit(); } if (e.key==="Escape") cancelEdit(); }}
+                          placeholder={t("labelPlaceholder")} autoFocus
+                          style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
+                        />
+                        <textarea value={editDesc} rows={2}
+                          onChange={e => { setEditDesc(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
+                          placeholder={t("editDescPlaceholder")}
+                          style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
+                        />
+                        <div className="flex items-center" style={{ gap:8, flexWrap:"nowrap" }}>
                           <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                            lang={lang} style={{ ...inputStyle, flex:1, width:"auto", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
+                            lang={lang} style={{ ...inputStyle, flex:"0 0 104px", minWidth:0, width:104, padding:"0 6px", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
                           />
-                        </div>
-                        <div style={{ position:"relative" }}>
-                          <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                            placeholder={t("editDescPlaceholder")} rows={4}
-                            style={{ ...inputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"7px 10px", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
-                          />
-                        </div>
-                        <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ width:"fit-content" }}>
-                          <input type="checkbox" checked={editRecurring} onChange={e => setEditRecurring(e.target.checked)}
-                            style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
-                          />
-                          <span className="text-[12px]" style={{ color:rcSecTxt }}>{t("repeatYearly")}</span>
-                        </label>
-                        <div className="flex gap-2">
+                          <button
+                            ref={editColorBtnRef}
+                            onClick={e => { e.stopPropagation(); if (editColorPickerOpen) { setEditColorPickerOpen(false); return; } const btn = editColorBtnRef.current; if (btn) { setEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setEditColorPickerOpen(true); }}
+                            title={t("chooseColor")}
+                            style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:editColor||"transparent", border:editColor?"none":"1.5px solid var(--border-soft)", boxShadow:editColor?"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)":undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                            {!editColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
+                          </button>
+                          <button type="button"
+                            onClick={() => { const next = !editRecurring; setEditRecurring(next); if (next) setEditRecurSpinKey(k => k + 1); }}
+                            title={t("repeatYearly")}
+                            style={{ flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:14, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:editRecurring?"var(--apple-green)":rcSecTxt, opacity:editRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
+                            <span key={editRecurSpinKey} className={editRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
+                          </button>
                           <button onClick={cancelEdit}
-                            style={{ flex:1, height:30, borderRadius:8, border:`1px solid ${rcBdrForm}`, background:"transparent", color:rcSecTxt, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>
+                            style={{ height:28, padding:"0 9px", borderRadius:7, border:`1px solid ${rcBdrForm}`, background:"transparent", color:rcSecTxt, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>
                             {t("cancel")}
                           </button>
                           <button onClick={saveEdit} disabled={!editLabel.trim()}
-                            style={{ flex:2, height:30, borderRadius:8, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"white":"var(--text-tertiary)", fontSize:12, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>
+                            style={{ height:28, padding:"0 10px", borderRadius:7, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"#ffffff":"var(--text-tertiary)", fontSize:11, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>
                             {t("saveChanges")}
                           </button>
                         </div>
+                        {editColorPickerOpen && editColorPickerPos && ReactDOM.createPortal(
+                          <motion.div key="ms-edit-color-popover"
+                            initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
+                            transition={{ type:"spring", stiffness:420, damping:28 }}
+                            onClick={e => e.stopPropagation()}
+                            style={{ position:"fixed", top:editColorPickerPos.top, left:editColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                          >
+                            <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setEditColorPickerOpen(false)} />
+                            <button onClick={() => { setEditColor(""); setEditColorPickerOpen(false); }} title={t("noColor")}
+                              style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:editColor===""?`1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}`:"1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
+                            </button>
+                            {MILESTONE_COLORS.map(c => (
+                              <button key={c} onClick={() => { setEditColor(editColor===c?"":c); setEditColorPickerOpen(false); }} title={c}
+                                style={{ width:20, height:20, borderRadius:999, background:c, border:editColor===c?`1.5px solid ${dark?"var(--text)":"var(--text)"}`:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(c==="#ffffff"||c==="#8e8e93")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:editColor===c?"scale(1.08)":"scale(1)" }}>
+                                {editColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
+                              </button>
+                            ))}
+                          </motion.div>,
+                          document.body
+                        )}
                       </div>
                     ) : (
                       <>
