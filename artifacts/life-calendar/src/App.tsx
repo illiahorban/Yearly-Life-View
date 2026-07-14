@@ -3996,13 +3996,13 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           onChange={e => { setEditLabel(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
                           onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); saveEdit(); } if (e.key==="Escape") cancelEdit(); }}
                           placeholder={t("labelPlaceholder")} autoFocus
-                          style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
+                          style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", fontSize:13, fontWeight:600, lineHeight:1.35, display:"block", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
                         />
                         <textarea value={editDesc} rows={2}
                           ref={el => { if (el) { el.style.height="auto"; el.style.height=el.scrollHeight+"px"; } }}
                           onChange={e => { setEditDesc(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
                           placeholder={t("editDescPlaceholder")}
-                          style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block", color:rcTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
+                          style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", fontSize:11, fontWeight:400, lineHeight:1.375, display:"block", color:rcSecTxt, background:rcBgForm, border:`1px solid ${rcBdrForm}` }}
                         />
                         <div className="flex items-center" style={{ gap:8, flexWrap:"nowrap" }}>
                           <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
