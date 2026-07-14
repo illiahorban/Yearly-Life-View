@@ -4018,7 +4018,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                     >
                       {APPLE_COLORS.map(ac => {
                         const selected = colorKey === ac.key;
-                        const swatchHex = dark ? ac.dark : ac.light;
+                        const swatchHex = dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR);
                         return (
                           <button key={ac.key} onClick={() => { onColorChange(ac.key); setQuarterColorOpen(false); }}
                             title={ac.label}
@@ -4138,7 +4138,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   {APPLE_COLORS.map(ac => (
                     <button key={ac.key} type="button" onClick={() => { update(activeColorPickerBlock.id, { color: ac.key }); setColorPickerAnchor(null); }}
                       title={ac.label}
-                      style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : ac.light, border: activeColorPickerBlock.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                      style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR), border: activeColorPickerBlock.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
                     />
                   ))}
                 </motion.div>
