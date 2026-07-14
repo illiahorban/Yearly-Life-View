@@ -3445,6 +3445,8 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
   const [draftColorPickerPos, setDraftColorPickerPos] = useState<{ top: number; left: number } | null>(null);
   const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
+  const draftTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [hoveredDk, setHoveredDk] = useState<string | null>(null);
   const [confirmDeleteDk, setConfirmDeleteDk] = useState<string | null>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
@@ -3453,6 +3455,12 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
     const timer = setTimeout(() => searchRef.current?.focus(), 120);
     return () => clearTimeout(timer);
   }, []);
+
+  React.useEffect(() => {
+    if (!showAddForm) return;
+    const timer = setTimeout(() => draftTextareaRef.current?.focus(), 60);
+    return () => clearTimeout(timer);
+  }, [showAddForm]);
 
   const q = query.trim().toLowerCase();
 
@@ -3550,45 +3558,62 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
           </div>
         </div>
 
-        {/* Add note form */}
+        {/* Add note — button or inline form */}
         <div style={{ padding: "12px 20px 14px", borderBottom: `1px solid ${borderColor}` }}>
-          <div style={{ position: "relative", marginBottom: 8 }}>
-            <textarea
-              value={draftText}
-              onChange={e => setDraftText(e.target.value)}
-              placeholder={t("notePlaceholder")}
-              rows={2}
-              style={{ width: "100%", borderRadius: 10, border: `1px solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`, background: draftColor ? getEventColors(resolveNoteHex(draftColor), dark).bg : inputBg, color: draftColor ? getEventColors(resolveNoteHex(draftColor), dark).textTitle : "var(--text)", fontSize: 13, padding: "8px 32px 8px 10px", fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box", display: "block", transition: "background 200ms ease" }}
-              onKeyDown={e => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && draftText.trim()) {
-                  e.preventDefault();
-                  onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
-                  setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false);
-                }
-              }}
-            />
+          {!showAddForm ? (
             <button
-              ref={draftColorBtnRef}
-              onClick={e => { e.stopPropagation(); toggleDraftColorPicker(); }}
-              title={t("chooseColor")}
-              style={{ position: "absolute", top: 10, right: 10, width: 13, height: 13, borderRadius: 999, background: draftColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border: "none", boxShadow: "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor: "pointer", display: "block", padding: 0 }}
-            />
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)} lang={lang}
-              style={{ flex: 1, borderRadius: 9, border: `1px solid ${borderColor}`, background: inputBg, color: "var(--text)", fontSize: 13, padding: "7px 10px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
-            />
-            <button
-              onClick={() => {
-                if (!draftText.trim()) return;
-                onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
-                setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false);
-              }}
-              disabled={!draftText.trim()}
-              style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: draftText.trim() ? "linear-gradient(135deg,#5ed47b 0%,#34c759 100%)" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), color: draftText.trim() ? "white" : "var(--text-tertiary)", fontWeight: 600, fontSize: 13, cursor: draftText.trim() ? "pointer" : "default", fontFamily: "inherit", whiteSpace: "nowrap" as const, transition: "background 150ms, color 150ms" }}>
-              {t("add")}
+              onClick={() => setShowAddForm(true)}
+              style={{ width: "100%", height: 34, borderRadius: 10, border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`, background: "transparent", color: "var(--text-secondary)", fontSize: 13, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> {t("addNote")}
             </button>
-          </div>
+          ) : (
+            <>
+              <div style={{ position: "relative", marginBottom: 8 }}>
+                <textarea
+                  ref={draftTextareaRef}
+                  value={draftText}
+                  onChange={e => setDraftText(e.target.value)}
+                  placeholder={t("notePlaceholder")}
+                  rows={2}
+                  style={{ width: "100%", borderRadius: 10, border: `1px solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`, background: draftColor ? getEventColors(resolveNoteHex(draftColor), dark).bg : inputBg, color: draftColor ? getEventColors(resolveNoteHex(draftColor), dark).textTitle : "var(--text)", fontSize: 13, padding: "8px 32px 8px 10px", fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box", display: "block", transition: "background 200ms ease" }}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && draftText.trim()) {
+                      e.preventDefault();
+                      onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
+                      setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false); setShowAddForm(false);
+                    }
+                    if (e.key === "Escape") { setShowAddForm(false); setDraftText(""); setDraftColor(null); setDraftColorPickerOpen(false); }
+                  }}
+                />
+                <button
+                  ref={draftColorBtnRef}
+                  onClick={e => { e.stopPropagation(); toggleDraftColorPicker(); }}
+                  title={t("chooseColor")}
+                  style={{ position: "absolute", top: 10, right: 10, width: 13, height: 13, borderRadius: 999, background: draftColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border: "none", boxShadow: "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor: "pointer", display: "block", padding: 0 }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)} lang={lang}
+                  style={{ flex: 1, borderRadius: 9, border: `1px solid ${borderColor}`, background: inputBg, color: "var(--text)", fontSize: 13, padding: "7px 10px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" as const }}
+                />
+                <button
+                  onClick={() => { setShowAddForm(false); setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false); }}
+                  style={{ height: 34, paddingInline: 12, borderRadius: 9, border: `1px solid ${borderColor}`, background: "transparent", color: "var(--text-secondary)", fontWeight: 500, fontSize: 13, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" as const }}>
+                  {t("cancel")}
+                </button>
+                <button
+                  onClick={() => {
+                    if (!draftText.trim()) return;
+                    onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
+                    setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false); setShowAddForm(false);
+                  }}
+                  disabled={!draftText.trim()}
+                  style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: draftText.trim() ? "linear-gradient(135deg,#5ed47b 0%,#34c759 100%)" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), color: draftText.trim() ? "white" : "var(--text-tertiary)", fontWeight: 600, fontSize: 13, cursor: draftText.trim() ? "pointer" : "default", fontFamily: "inherit", whiteSpace: "nowrap" as const, transition: "background 150ms, color 150ms" }}>
+                  {t("add")}
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Body */}
