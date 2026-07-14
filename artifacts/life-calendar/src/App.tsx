@@ -3654,7 +3654,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                                 background: eec ? eec.bg : "transparent",
                                 overflow: "hidden",
                               }}>
-                                <span style={{ fontSize: 13, color: eec ? eec.textTitle : "var(--text)", lineHeight: 1.55, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                                <span style={{ fontSize: 13, color: eec ? eec.textTitle : "var(--text)", lineHeight: 1.55, display: "block", wordBreak: "break-word" }}>
                                   <HighlightText text={e.text} query={q} />
                                 </span>
                               </div>
