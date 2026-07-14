@@ -4049,7 +4049,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 const rcSecTxt  = ec3.textDesc;
                 const rcBdrForm = ec3.formBorder;
                 const rcBgForm  = ec3.formBg;
-                const stacked = !!(msLabelMultiline[ms.id] || ms.description);
                 const hovering = hoveredId === ms.id;
                 return (
                   <div key={ms.id} className="flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl"
@@ -4124,25 +4123,27 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       </div>
                     ) : (
                       <>
-                        <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
-                          <div className="flex-1 min-w-0 flex items-start gap-1">
+                        <div style={{ display:"flex", alignItems:"flex-start", gap:6 }}>
+                          {/* Title — takes all available space, wraps naturally */}
+                          <div style={{ flex:1, minWidth:0 }}>
                             <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold" style={{ color:rcTxt, wordBreak:"break-word" }}><HighlightText text={ms.label} query={q} /></span>
                           </div>
-                          {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
-                          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, position: stacked ? "relative" : undefined, minHeight: stacked ? 22 : undefined }}>
-                            {ms.recurring && (
-                              stacked ? (
-                                <span title={t("repeatYearly")} style={{ fontSize:12, opacity:0.7, flexShrink:0, display:"flex", alignItems:"center", position:"absolute", right:0, top: hovering ? 52 : 0, transition:"top 150ms" }}>↻</span>
-                              ) : (
-                                <span title={t("repeatYearly")} style={{ fontSize:12, opacity:0.7, flexShrink:0, display:"flex", alignItems:"center" }}>↻</span>
-                              )
+                          {/* Right cluster — always top-aligned, no absolute positioning */}
+                          <div style={{ display:"flex", alignItems:"center", gap:3, flexShrink:0, marginTop:1 }}>
+                            {showDate && (
+                              <span className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)", marginRight:1 }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>
                             )}
-                            <div style={{ display:"flex", flexDirection: stacked ? "column-reverse" : "row", alignItems:"center", gap:4, flexShrink:0, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 150ms", position: stacked ? "absolute" : undefined, top: stacked ? 0 : undefined, right: stacked ? 0 : undefined }}>
-                              <button onClick={() => startEdit(ms)} title={t("edit")}
-                                style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"flex", alignItems:"center", transform:"scaleX(-1)", flexShrink:0 }}>✏️</button>
-                              <button onClick={() => setConfirmDeleteMsId(ms.id)}
-                                style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                            </div>
+                            {ms.recurring && (
+                              <span title={t("repeatYearly")} style={{ fontSize:11, lineHeight:1, color:rcSecTxt, opacity:0.6, display:"flex", alignItems:"center", flexShrink:0 }}>↻</span>
+                            )}
+                            <button onClick={() => startEdit(ms)} title={t("edit")}
+                              style={{ width:20, height:20, borderRadius:5, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color:rcTxt, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 150ms" }}>
+                              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
+                            </button>
+                            <button onClick={() => setConfirmDeleteMsId(ms.id)} title={t("delete")}
+                              style={{ width:20, height:20, borderRadius:5, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 150ms" }}>
+                              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
+                            </button>
                           </div>
                         </div>
                         {ms.description && (
