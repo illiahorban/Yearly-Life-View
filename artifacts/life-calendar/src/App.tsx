@@ -3879,13 +3879,15 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
               const submitColor = draftLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
                 <div style={{ background:cardBg, border:`1px solid ${cardBorder}`, boxShadow:ecDraft.boxShadow||undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
-                  {/* Row 1: label + color + recurring */}
                   <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
                     <input ref={draftLabelInputRef} value={draftLabel} onChange={e => setDraftLabel(e.target.value)}
                       onKeyDown={e => { if (e.key==="Enter") add(); if (e.key==="Escape") resetDraft(); }}
                       placeholder={t("labelPlaceholder")}
                       className={isWhite ? "placeholder-dark" : undefined}
                       style={{ ...draftInputStyle, flex:1, minWidth:0 }}
+                    />
+                    <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
+                      lang={lang} style={{ ...draftInputStyle, width:"auto" }}
                     />
                     <button
                       ref={draftColorBtnRef}
@@ -3901,10 +3903,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
                     </button>
                   </div>
-                  {/* Row 2: date */}
-                  <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-                    lang={lang} style={{ ...draftInputStyle, alignSelf:"flex-start" }}
-                  />
                   <div style={{ position:"relative" }}>
                     <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
                       placeholder={t("descPlaceholder")} rows={4}
