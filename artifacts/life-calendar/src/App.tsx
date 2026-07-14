@@ -2940,7 +2940,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           </motion.div>,
                           document.body
                         )}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-end gap-2">
                           <button onClick={() => setMsEditId(null)}
                             style={{ height:26, padding:"0 10px", borderRadius:7, border:`1px solid ${cardFormBdr}`, background:"transparent", color:cardFormSec, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
                           <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
@@ -3038,11 +3038,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 </motion.div>,
                 document.body
               )}
-              <div className="flex gap-1.5">
+              <div className="flex items-center justify-end gap-1.5">
                 <button onClick={() => setAddEventOpen(false)}
-                  style={{ flex:1, height:28, borderRadius:7, border: cancelBorder, background:"transparent", color: cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
+                  style={{ height:28, padding:"0 12px", borderRadius:7, border: cancelBorder, background:"transparent", color: cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
                 <button onClick={submitNewEvent} disabled={!newLabel.trim()}
-                  style={{ flex:2, height:28, borderRadius:7, border:"none", background: submitBg, color: submitColor, fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit" }}>{t("addEventBtn")}</button>
+                  style={{ height:28, padding:"0 14px", borderRadius:7, border:"none", background: submitBg, color: submitColor, fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("addEventBtn")}</button>
               </div>
             </div>
               );
