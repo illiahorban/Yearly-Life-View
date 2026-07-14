@@ -4012,7 +4012,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             ref={editColorBtnRef}
                             onClick={e => { e.stopPropagation(); if (editColorPickerOpen) { setEditColorPickerOpen(false); return; } const btn = editColorBtnRef.current; if (btn) { setEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setEditColorPickerOpen(true); }}
                             title={t("chooseColor")}
-                            style={{ width:18, height:18, borderRadius:999, flexShrink:0, background:editColor||"transparent", border:editColor?"none":"1.5px solid var(--border-soft)", boxShadow:editColor?"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)":undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                            style={{ width:14, height:14, borderRadius:999, flexShrink:0, background:editColor||"transparent", border:editColor?"none":"1.5px solid var(--border-soft)", boxShadow:editColor?"0 0 0 1px rgba(255,255,255,0.92), 0 0 0 2px rgba(0,0,0,0.28)":undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                             {!editColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                           </button>
                           <button type="button"
