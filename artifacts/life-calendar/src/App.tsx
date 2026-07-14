@@ -2459,8 +2459,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 {Array.from({length:goalsDraft.count},(_,i)=>{
                   const done = goalsDraft.done[i]??false;
                   return (
-                    <div key={i} className="flex items-start gap-2">
-                      <div onClick={()=>handleGoalToggle(i)} style={{ width:17,height:17,borderRadius:5,flexShrink:0,marginTop:2,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
+                    <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.03)", border:`1px solid ${dark?"rgba(255,255,255,0.09)":"rgba(0,0,0,0.07)"}`, borderRadius:10, padding:"8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
+                      <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,marginTop:2,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
                       <TextareaAutosize
