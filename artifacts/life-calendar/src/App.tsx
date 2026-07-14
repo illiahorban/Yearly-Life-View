@@ -124,6 +124,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     looksGood:"Looks good", unassigned:"unassigned", over:"over", total:"Total",
     q1:"Q1", q2:"Q2", q3:"Q3", q4:"Q4", todayCountdown:"Today!", daysShort:"d",
     chooseColor: "Choose color",
+    dragNote: "Drag to reorder",
     noColor: "No color",
     clickToRename: "Click to rename",
     edit: "Edit",
@@ -195,6 +196,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
     q1:"К1", q2:"К2", q3:"К3", q4:"К4", todayCountdown:"Сегодня!", daysShort:"д",
     chooseColor: "Выбрать цвет",
+    dragNote: "Потянуть, чтобы переставить",
     noColor: "Без цвета",
     clickToRename: "Нажмите для переименования",
     edit: "Изменить",
@@ -2195,41 +2197,54 @@ function NoteEntryItem({
       style={{ overflow:"visible", listStyle:"none" }}
       onMouseEnter={() => setHoveredEntryId(entry.id)}
       onMouseLeave={() => setHoveredEntryId(null)}
-      onPointerDown={startDragFromContainer}
-      onPointerMove={cancelHoldOnMove}
-      onPointerUp={clearHoldTimer}
-      onPointerCancel={clearHoldTimer}
-      onPointerLeave={clearHoldTimer}
     >
-      <div style={{ position:"relative", cursor:"grab" }}>
-        <TextareaAutosize
-          ref={el => { areaRefs.current[entry.id] = el; }}
-          value={entry.text}
-          onChange={e => updateEntry(entry.id, e.target.value)}
-          onHeightChange={h => handleNoteHeightChange(entry.id, h)}
-          onFocus={() => setActiveEntryId(entry.id)}
-          onBlur={() => setActiveEntryId(null)}
-          onKeyDown={handleKey}
-          onMouseDown={e=>e.stopPropagation()}
-          onPointerDown={e=>e.stopPropagation()}
-          placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
-          minRows={1}
-          className={notePlaceholderClass}
-          style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:tintedText, boxSizing:"border-box", display:"block", overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease", cursor:"text" }}
-        />
-        <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", isolation:"isolate" }}>
-          <button
-            ref={el => { colorBtnRefs.current[entry.id] = el; }}
-            onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
-            onPointerDown={e => e.stopPropagation()}
-            title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-            aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-            data-testid={`note-color-btn-${idx}`}
-            style={{ width:13, height:13, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0, mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+      <div style={{ position:"relative", display:"flex", alignItems:"stretch", gap:2 }}>
+        {/* Drag handle — the note text fills the rest of the card, so the
+            grab area lives in this dedicated strip instead of the textarea. */}
+        <div
+          onPointerDown={startDragFromContainer}
+          onPointerMove={cancelHoldOnMove}
+          onPointerUp={clearHoldTimer}
+          onPointerCancel={clearHoldTimer}
+          onPointerLeave={clearHoldTimer}
+          title={t("dragNote")}
+          aria-label={t("dragNote")}
+          style={{ width:16, flexShrink:0, borderRadius:8, cursor:"grab", display:"flex", alignItems:"center", justifyContent:"center", touchAction:"none", background: hoveredEntryId===entry.id ? (dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.045)") : "transparent", transition:"background 150ms" }}
+        >
+          <svg width="8" height="16" viewBox="0 0 8 16" fill={dark?"rgba(255,255,255,0.4)":"rgba(0,0,0,0.32)"}>
+            <circle cx="2" cy="2" r="1.3" /><circle cx="6" cy="2" r="1.3" />
+            <circle cx="2" cy="8" r="1.3" /><circle cx="6" cy="8" r="1.3" />
+            <circle cx="2" cy="14" r="1.3" /><circle cx="6" cy="14" r="1.3" />
+          </svg>
+        </div>
+        <div style={{ position:"relative", flex:1, minWidth:0 }}>
+          <TextareaAutosize
+            ref={el => { areaRefs.current[entry.id] = el; }}
+            value={entry.text}
+            onChange={e => updateEntry(entry.id, e.target.value)}
+            onHeightChange={h => handleNoteHeightChange(entry.id, h)}
+            onFocus={() => setActiveEntryId(entry.id)}
+            onBlur={() => setActiveEntryId(null)}
+            onKeyDown={handleKey}
+            placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
+            minRows={1}
+            className={notePlaceholderClass}
+            style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${tintedBorder}`, borderRadius:12, padding:"10px 60px 10px 16px", fontSize:14, lineHeight:1.55, fontFamily:"inherit", background:tintedBg, color:tintedText, boxSizing:"border-box", display:"block", overflow:"hidden", transition:"background 200ms ease, border-color 200ms ease", cursor:"text" }}
           />
-          <button onClick={() => setConfirmDeleteEntryId(entry.id)}
-            onPointerDown={e => e.stopPropagation()}
-            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+          <div style={{ position:"absolute", top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%", transform: (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?1:0, pointerEvents:(hoveredEntryId===entry.id||colorPickerEntryId===entry.id)?"auto":"none", isolation:"isolate" }}>
+            <button
+              ref={el => { colorBtnRefs.current[entry.id] = el; }}
+              onClick={e => { e.stopPropagation(); toggleColorPicker(entry.id); }}
+              onPointerDown={e => e.stopPropagation()}
+              title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+              aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+              data-testid={`note-color-btn-${idx}`}
+              style={{ width:13, height:13, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0, mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+            />
+            <button onClick={() => setConfirmDeleteEntryId(entry.id)}
+              onPointerDown={e => e.stopPropagation()}
+              style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+          </div>
         </div>
       </div>
     </Reorder.Item>

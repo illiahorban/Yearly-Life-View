@@ -2,3 +2,4 @@
 - [MilestoneModal ConfirmDialog placement](milestone-confirm-placement.md) — ConfirmDialog must live inside MilestoneModal (not GoalsModal), and delete onConfirm must call onChange to persist.
 - [Portal click bubbles via React tree, not DOM](portal-event-bubbling.md) — a react-portal dialog's own onClick(onClose) must stopPropagation, or it bubbles to an ancestor modal's backdrop onClick and closes it too.
 - [Shared ref inside .map() list](shared-ref-in-list.md) — a single useRef assigned inside a list .map() only ever points at the last-rendered item; use a Map keyed by id for per-item outside-click refs.
+- [Drag handle vs full-card text input](drag-handle-vs-textarea.md) — a card that's mostly a textarea/input can't double as a whole-card drag trigger; carve out a dedicated grip strip instead.
