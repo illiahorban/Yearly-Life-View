@@ -2309,12 +2309,27 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   );
   const [focusId, setFocusId] = useState<string|null>(initial.length === 0 ? (entries[0]?.id ?? null) : null);
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(() => initDayGoals ?? { count: 0, done: [] });
+  // Goals are stored as parallel arrays (no per-item id), but drag-reorder
+  // needs a stable identity per item that survives position changes. This
+  // local, non-persisted id list tracks 1:1 with goalsDraft's slots and is
+  // kept in sync everywhere the slot count changes.
+  const [goalIds, setGoalIds] = useState<string[]>(() => Array.from({ length: initDayGoals?.count ?? 0 }, () => makeId()));
   const handleGoalCountChange = (n: number) => {
     const newDone = Array.from({ length: n }, (_, i) => goalsDraft.done[i] ?? false);
     const newLabels = Array.from({ length: n }, (_, i) => goalsDraft.labels?.[i] ?? "");
     const newColors: (string|undefined)[] = Array.from({ length: n }, (_, i) => goalsDraft.colors?.[i]);
     const g: DayGoals = { count: n, done: newDone, labels: newLabels, colors: newColors };
     setGoalsDraft(g); onDayGoalsChange(g);
+    setGoalIds(prev => Array.from({ length: n }, (_, i) => prev[i] ?? makeId()));
+  };
+  const handleGoalReorder = (newIds: string[]) => {
+    const perm = newIds.map(id => goalIds.indexOf(id));
+    const reorder = <T,>(arr: T[]): T[] => perm.map(idx => arr[idx]);
+    const newDone = reorder(Array.from({ length: goalsDraft.count }, (_, i) => goalsDraft.done[i] ?? false));
+    const newLabels = reorder(Array.from({ length: goalsDraft.count }, (_, i) => goalsDraft.labels?.[i] ?? ""));
+    const newColors = reorder(Array.from({ length: goalsDraft.count }, (_, i) => goalsDraft.colors?.[i]));
+    const g: DayGoals = { count: goalsDraft.count, done: newDone, labels: newLabels, colors: newColors };
+    setGoalsDraft(g); onDayGoalsChange(g); setGoalIds(newIds);
   };
   const handleGoalToggle = (i: number) => {
     const newDone = Array.from({ length: goalsDraft.count }, (_, j) => j === i ? !(goalsDraft.done[j] ?? false) : (goalsDraft.done[j] ?? false));
@@ -2341,6 +2356,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const newColors = (goalsDraft.colors ?? []).filter((_, j) => j !== i);
     const g: DayGoals = { count: newCount, done: newDone, labels: newLabels, colors: newColors };
     setGoalsDraft(g); onDayGoalsChange(g);
+    setGoalIds(prev => prev.filter((_, j) => j !== i));
   };
   const [hoveredGoalIdx, setHoveredGoalIdx] = useState<number|null>(null);
   const [goalColorPickerIdx, setGoalColorPickerIdx] = useState<number|null>(null);
@@ -2350,6 +2366,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [] };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
+    setGoalIds([]);
   };
   const [templateMgrOpen, setTemplateMgrOpen] = useState(false);
   const [saveTplPrefill, setSaveTplPrefill] = useState<string[] | null>(null);
@@ -2358,6 +2375,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const n = Math.max(1, Math.min(10, items.length));
     const g: DayGoals = { count: n, done: Array(n).fill(false), labels: items.slice(0, n) };
     setGoalsDraft(g); onDayGoalsChange(g); setTemplateMgrOpen(false);
+    setGoalIds(Array.from({ length: n }, () => makeId()));
   };
   const [copiedTomorrow, setCopiedTomorrow] = useState(false);
   const [confirmCopyTomorrow, setConfirmCopyTomorrow] = useState(false);
@@ -2643,7 +2661,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               </div>
             )}
             {goalsDraft.count > 0 && (
-              <div className="flex flex-col gap-1.5">
+              <Reorder.Group
+                as="div"
+                axis="y"
+                values={goalIds}
+                onReorder={handleGoalReorder}
+                className="flex flex-col gap-1.5"
+                style={{ listStyle:"none", margin:0, padding:0 }}
+              >
+              <AnimatePresence initial={false}>
                 {Array.from({length:goalsDraft.count},(_,i)=>{
                   const done = goalsDraft.done[i]??false;
                   const goalColor = goalsDraft.colors?.[i];
@@ -2653,8 +2679,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   const textColor = done ? "var(--text-tertiary)" : (ec ? ec.textTitle : "var(--text)");
                   const isHovered = hoveredGoalIdx === i;
                   const isColorOpen = goalColorPickerIdx === i;
+                  const goalId = goalIds[i] ?? `goal-fallback-${i}`;
                   return (
-                    <div key={i}
+                    <DraggableCard key={goalId} id={goalId} dark={dark}>
+                    <div
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
                       style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1px solid ${containerBorder}`, borderRadius:10, padding:"8px 46px 8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
@@ -2684,12 +2712,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         ><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                       </div>
                     </div>
+                    </DraggableCard>
                   );
                 })}
-                {allGoalsDone && (
-                  <div className="mt-0.5 text-center text-[12px] font-semibold" style={{ color:"#34c759" }}>{t("allDone")}</div>
-                )}
-              </div>
+              </AnimatePresence>
+              </Reorder.Group>
+            )}
+            {goalsDraft.count > 0 && allGoalsDone && (
+              <div className="mt-0.5 text-center text-[12px] font-semibold" style={{ color:"#34c759" }}>{t("allDone")}</div>
             )}
             {goalColorPickerIdx !== null && goalColorPickerPos && ReactDOM.createPortal(
               <motion.div
