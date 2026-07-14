@@ -3750,9 +3750,9 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
         </div>
 
         <div className="px-5 pb-3">
-          <textarea value={description} onChange={e => setDescription(e.target.value.slice(0,200))}
-            placeholder={descPlaceholder ?? t("sprintDescPlaceholder")} rows={2}
-            style={{ width:"100%", resize:"none", outline:"none", border:`1px solid ${borderColor}`, borderRadius:10, padding:"8px 10px", fontSize:13, lineHeight:1.5, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box" }}
+          <TextareaAutosize value={description} onChange={e => setDescription(e.target.value)}
+            placeholder={descPlaceholder ?? t("sprintDescPlaceholder")} minRows={2}
+            style={{ width:"100%", resize:"none", overflow:"hidden", outline:"none", border:`1px solid ${borderColor}`, borderRadius:10, padding:"8px 10px", fontSize:13, lineHeight:1.5, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box", display:"block" }}
           />
         </div>
 
