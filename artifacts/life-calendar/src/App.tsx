@@ -3756,8 +3756,13 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState("");
   const [draftDesc, setDraftDesc] = useState("");
-
   const [draftRecurring, setDraftRecurring] = useState(false);
+  const [draftRecurSpinKey, setDraftRecurSpinKey] = useState(0);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
+  const [draftColorPickerPos, setDraftColorPickerPos] = useState<{ top: number; left: number } | null>(null);
+  const draftLabelInputRef = React.useRef<HTMLInputElement | null>(null);
+  const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const [editId, setEditId] = useState<string|null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -3784,12 +3789,21 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
     setEditId(null);
   };
 
+  React.useEffect(() => {
+    if (!showAddForm) return;
+    const timer = setTimeout(() => draftLabelInputRef.current?.focus(), 60);
+    return () => clearTimeout(timer);
+  }, [showAddForm]);
+
+  const resetDraft = () => {
+    setDraftLabel(""); setDraftDesc(""); setDraftColor(""); setDraftRecurring(false);
+    setDraftColorPickerOpen(false); setShowAddForm(false);
+  };
+
   const add = () => {
     if (!draftLabel.trim()) return;
     setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined, recurring: draftRecurring || undefined }].sort((a,b)=>a.date.localeCompare(b.date)));
-    setDraftLabel("");
-    setDraftDesc("");
-    setDraftRecurring(false);
+    resetDraft();
   };
 
   const [hoveredId, setHoveredId] = useState<string|null>(null);
@@ -3841,57 +3855,92 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
           </div>
         </div>
 
-        {/* Color picker + add form */}
+        {/* Add event — button or card form */}
         <div className="px-6 pt-3 pb-4" style={{ borderTop: `1px solid ${borderColor}` }}>
-          {(() => {
-            // Live-preview the chosen color on the draft inputs immediately, the same
-            // way the inline edit form's card recolors as soon as a swatch is clicked —
-            // otherwise the color only becomes visible after the event is saved.
-            const ecDraft = getEventColors(draftColor, dark);
-            const draftInputStyle: React.CSSProperties = { ...inputStyle, background: ecDraft.formBg, border:`1px solid ${ecDraft.formBorder}`, transition:"background 0.25s ease, border-color 0.25s ease" };
-            return (
-          <>
-          <div className="flex gap-1.5 mb-2.5 flex-wrap items-center">
-            {/* No-color swatch */}
-            <button onClick={() => setDraftColor("")}
-              title="No colour"
-              style={{ width:18, height:18, borderRadius:999, background:"transparent", border: draftColor==="" ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms ease", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden", flexShrink:0 }}>
-              <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
+          {!showAddForm ? (
+            <button onClick={() => setShowAddForm(true)}
+              style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+              <span style={{ fontSize:14, lineHeight:1 }}>+</span> {t("addEvent")}
             </button>
-            {MILESTONE_COLORS.map(c => (
-              <button key={c} onClick={() => setDraftColor(draftColor === c ? "" : c)}
-                style={{ width:18, height:18, borderRadius:999, background:c, border: draftColor===c ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
-              />
-            ))}
-          </div>
-          <div className="flex gap-2 mb-2">
-            <input value={draftLabel} onChange={e => setDraftLabel(e.target.value)} placeholder={t("labelPlaceholder")}
-              onKeyDown={e => { if (e.key==="Enter") add(); }}
-              style={{ ...draftInputStyle, flex:2, width:"auto" }}
-            />
-            <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-              lang={lang} style={{ ...draftInputStyle, flex:1, width:"auto" }}
-            />
-            <button onClick={add} disabled={!draftLabel.trim()}
-              style={{ height:36, paddingInline:14, borderRadius:9, background: draftLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: draftLabel.trim()?"white":"var(--text-tertiary)", fontSize:13, fontWeight:600, border:"none", cursor: draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, transition:"background 150ms" }}>
-              {t("add")}
-            </button>
-          </div>
-          <div style={{ position:"relative" }}>
-            <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
-              placeholder={t("descPlaceholder")} rows={4}
-              style={{ ...draftInputStyle, width:"100%", resize:"none", lineHeight:1.5, borderRadius:10, padding:"8px 10px" }}
-            />
-          </div>
-          <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none" style={{ width:"fit-content" }}>
-            <input type="checkbox" checked={draftRecurring} onChange={e => setDraftRecurring(e.target.checked)}
-              style={{ width:13, height:13, accentColor:"#007aff", cursor:"pointer" }}
-            />
-            <span className="text-[12px]" style={{ color:"var(--text-secondary)" }}>{t("repeatYearly")}</span>
-          </label>
-          </>
-            );
-          })()}
+          ) : (
+            (() => {
+              const ecDraft = getEventColors(draftColor, dark);
+              const isWhite = draftColor === "#ffffff";
+              const cardBg     = isWhite ? "#ffffff" : ecDraft.bg;
+              const cardBorder = isWhite ? "#d4d4d8" : (ecDraft.border || (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"));
+              const inputBg    = isWhite ? "transparent" : ecDraft.formBg;
+              const inputBorder = isWhite ? "1px solid #d4d4d8" : `1px solid ${ecDraft.formBorder}`;
+              const inputText  = isWhite ? "#18181b" : "var(--text)";
+              const draftInputStyle: React.CSSProperties = { background:inputBg, border:inputBorder, borderRadius:8, padding:"6px 9px", fontSize:12, color:inputText, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 0.25s ease, border-color 0.25s ease" };
+              const labelText  = isWhite ? "#18181b" : "var(--text-secondary)";
+              const cancelBorder = isWhite ? "1px solid #a1a1aa" : `1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"}`;
+              const cancelColor  = isWhite ? "#18181b" : "var(--text-secondary)";
+              const submitBg   = draftLabel.trim() ? "#007aff" : (isWhite ? "#e4e4e7" : "rgba(128,128,128,0.15)");
+              const submitColor = draftLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
+              return (
+                <div style={{ background:cardBg, border:`1px solid ${cardBorder}`, boxShadow:ecDraft.boxShadow||undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
+                  <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
+                    <input ref={draftLabelInputRef} value={draftLabel} onChange={e => setDraftLabel(e.target.value)}
+                      onKeyDown={e => { if (e.key==="Enter") add(); if (e.key==="Escape") resetDraft(); }}
+                      placeholder={t("labelPlaceholder")}
+                      className={isWhite ? "placeholder-dark" : undefined}
+                      style={{ ...draftInputStyle, flex:1, minWidth:0 }}
+                    />
+                    <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
+                      lang={lang} style={{ ...draftInputStyle, width:"auto" }}
+                    />
+                    <button
+                      ref={draftColorBtnRef}
+                      onClick={e => { e.stopPropagation(); if (draftColorPickerOpen) { setDraftColorPickerOpen(false); return; } const btn = draftColorBtnRef.current; if (btn) { setDraftColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setDraftColorPickerOpen(true); }}
+                      title={t("chooseColor")}
+                      style={{ width:18, height:18, borderRadius:999, flexShrink:0, background:draftColor||"transparent", border:draftColor?"none":`1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow:draftColor?"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)":undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                      {!draftColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background:isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
+                    </button>
+                    <button type="button"
+                      onClick={() => { const next = !draftRecurring; setDraftRecurring(next); if (next) setDraftRecurSpinKey(k => k + 1); }}
+                      title={t("repeatYearly")}
+                      style={{ flexShrink:0, width:22, height:22, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:15, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:draftRecurring?"var(--apple-green)":labelText, opacity:draftRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
+                      <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
+                    </button>
+                  </div>
+                  <div style={{ position:"relative" }}>
+                    <textarea value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
+                      placeholder={t("descPlaceholder")} rows={4}
+                      className={isWhite?"placeholder-dark":undefined}
+                      style={{ ...draftInputStyle, width:"100%", resize:"none", lineHeight:1.5, display:"block" }}
+                    />
+                  </div>
+                  {draftColorPickerOpen && draftColorPickerPos && ReactDOM.createPortal(
+                    <motion.div key="ms-draft-color-popover"
+                      initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
+                      transition={{ type:"spring", stiffness:420, damping:28 }}
+                      onClick={e => e.stopPropagation()}
+                      style={{ position:"fixed", top:draftColorPickerPos.top, left:draftColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                    >
+                      <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setDraftColorPickerOpen(false)} />
+                      <button onClick={() => { setDraftColor(""); setDraftColorPickerOpen(false); }} title={t("noColor")}
+                        style={{ width:20, height:20, borderRadius:999, background:isWhite?"rgba(0,0,0,0.06)":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"), border:draftColor===""?`1.5px solid ${isWhite?"#18181b":(dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)")}`:"1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
+                      </button>
+                      {MILESTONE_COLORS.map(c => (
+                        <button key={c} onClick={() => { setDraftColor(draftColor===c?"":c); setDraftColorPickerOpen(false); }} title={c}
+                          style={{ width:20, height:20, borderRadius:999, background:c, border:draftColor===c?`1.5px solid ${isWhite?"#18181b":"var(--text)"}`:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(c==="#ffffff"||c==="#8e8e93")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:draftColor===c?"scale(1.08)":"scale(1)" }}>
+                          {draftColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
+                        </button>
+                      ))}
+                    </motion.div>,
+                    document.body
+                  )}
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button onClick={resetDraft}
+                      style={{ height:28, padding:"0 12px", borderRadius:7, border:cancelBorder, background:"transparent", color:cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
+                    <button onClick={add} disabled={!draftLabel.trim()}
+                      style={{ height:28, padding:"0 14px", borderRadius:7, border:"none", background:submitBg, color:submitColor, fontSize:12, fontWeight:600, cursor:draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("addEventBtn")}</button>
+                  </div>
+                </div>
+              );
+            })()
+          )}
         </div>
 
         {/* List */}
