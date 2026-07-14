@@ -2593,7 +2593,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         {/* Daily Goals */}
         <div className="px-5 pt-1 shrink-0" style={{ borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}`, paddingBottom: 12 }}>
-          {/* Header row — always shows full functionality */}
+          {/* Header row — only appears once goals exist */}
+          {goalsDraft.count > 0 && (
           <div style={{ display:"flex", flexWrap:"nowrap", alignItems:"center", justifyContent:"flex-start", gap:6, marginBottom:8, userSelect:"none" }}>
             <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)", whiteSpace:"nowrap", flexShrink:0 }}>{t("dailyGoals")}</span>
             {!confirmReset && !confirmCopyTomorrow && (
@@ -2632,6 +2633,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               </span>
             )}
           </div>
+          )}
           {/* Body — always shown */}
           <div style={{ overflow:"visible" }}>
             {/* Count buttons / confirm dialogs */}
