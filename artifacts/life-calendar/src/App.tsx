@@ -3849,6 +3849,31 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
   const [hoveredId, setHoveredId] = useState<string|null>(null);
 
+  // Track whether an event's title wraps onto 2+ lines, so the edit/delete
+  // buttons can stack vertically (delete on top, edit below) instead of side by side.
+  const msLabelRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
+  const [msLabelMultiline, setMsLabelMultiline] = useState<Record<string, boolean>>({});
+  const measureMsLabels = useCallback(() => {
+    setMsLabelMultiline(prev => {
+      let changed = false;
+      const next = { ...prev };
+      msLabelRefs.current.forEach((el, id) => {
+        if (!el) return;
+        const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 18;
+        const isMulti = el.scrollHeight > lineHeight * 1.5;
+        if (next[id] !== isMulti) { next[id] = isMulti; changed = true; }
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+  useLayoutEffect(() => {
+    measureMsLabels();
+  }, [filteredItems, measureMsLabels]);
+  useEffect(() => {
+    window.addEventListener("resize", measureMsLabels);
+    return () => window.removeEventListener("resize", measureMsLabels);
+  }, [measureMsLabels]);
+
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputStyle: React.CSSProperties = { background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.03)", border:`1px solid ${borderColor}`, borderRadius:8, padding:"7px 10px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
 
@@ -4091,12 +4116,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <>
                         <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-start gap-1">
-                            <span className="text-[13px] font-semibold" style={{ color:rcTxt, wordBreak:"break-word" }}><HighlightText text={ms.label} query={q} /></span>
+                            <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold" style={{ color:rcTxt, wordBreak:"break-word" }}><HighlightText text={ms.label} query={q} /></span>
                           </div>
                           {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
-                          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredId === ms.id ? 1 : 0, pointerEvents: hoveredId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
+                          <div style={{ display:"flex", flexDirection: msLabelMultiline[ms.id] ? "column-reverse" : "row", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredId === ms.id ? 1 : 0, pointerEvents: hoveredId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
                             <button onClick={() => startEdit(ms)} title={t("edit")}
-                              style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"flex", alignItems:"center", transform:"scaleX(-1)" }}>✏️</button>
+                              style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"flex", alignItems:"center", transform:"scaleX(-1)", flexShrink:0 }}>✏️</button>
                             <button onClick={() => setConfirmDeleteMsId(ms.id)}
                               style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                           </div>
