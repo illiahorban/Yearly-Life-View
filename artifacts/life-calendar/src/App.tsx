@@ -2459,17 +2459,17 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 {Array.from({length:goalsDraft.count},(_,i)=>{
                   const done = goalsDraft.done[i]??false;
                   return (
-                    <div key={i} className="flex items-center gap-2">
-                      <div onClick={()=>handleGoalToggle(i)} style={{ width:17,height:17,borderRadius:5,flexShrink:0,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
+                    <div key={i} className="flex items-start gap-2">
+                      <div onClick={()=>handleGoalToggle(i)} style={{ width:17,height:17,borderRadius:5,flexShrink:0,marginTop:2,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
-                      <input
+                      <TextareaAutosize
                         value={goalsDraft.labels?.[i] ?? ""}
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
                         onMouseDown={e=>e.stopPropagation()}
                         placeholder={`${t("goal")} ${i+1}`}
-                        maxLength={60}
-                        style={{ flex:1,background:"transparent",border:"none",outline:"none",fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0 }}
+                        minRows={1}
+                        style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
                       />
                     </div>
                   );
