@@ -2589,7 +2589,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
 
         {/* Scrollable body */}
-        <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.2) transparent":"rgba(0,0,0,0.15) transparent" }}>
+        <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
 
         {/* Daily Goals */}
         <div className="px-5 pt-1 shrink-0" style={{ borderBottom:"1px solid var(--border-soft)", paddingBottom: 12 }}>
