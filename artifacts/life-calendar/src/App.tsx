@@ -3644,7 +3644,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                         >
                           <span style={{ fontSize: 11, fontWeight: 600, color: quarter.text, letterSpacing: "0.01em" }}>{formatDate(dk)}</span>
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                            {entries.slice(0, 3).map((e, i) => {
+                            {entries.map((e, i) => {
                               const eec = e.color ? getEventColors(resolveNoteHex(e.color), dark) : null;
                               return (
                               <div key={i} style={{
@@ -3660,9 +3660,6 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                               </div>
                               );
                             })}
-                            {entries.length > 3 && (
-                              <span style={{ fontSize: 11, color: "var(--text-tertiary)", paddingLeft: 2 }}>+{entries.length - 3}</span>
-                            )}
                           </div>
                         </button>
                         {hoveredDk === dk && (
