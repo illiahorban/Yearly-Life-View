@@ -4021,14 +4021,16 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             style={{ flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:14, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:editRecurring?"var(--apple-green)":rcSecTxt, opacity:editRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
                             <span key={editRecurSpinKey} className={editRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
                           </button>
-                          <button onClick={cancelEdit}
-                            style={{ height:28, padding:"0 9px", borderRadius:7, border:`1px solid ${rcBdrForm}`, background:"transparent", color:rcSecTxt, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>
-                            {t("cancel")}
-                          </button>
-                          <button onClick={saveEdit} disabled={!editLabel.trim()}
-                            style={{ height:28, padding:"0 10px", borderRadius:7, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"#ffffff":"var(--text-tertiary)", fontSize:11, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>
-                            {t("saveChanges")}
-                          </button>
+                          <div className="flex items-center" style={{ gap:8, flexShrink:0, marginLeft:"auto" }}>
+                            <button onClick={cancelEdit}
+                              style={{ height:28, padding:"0 9px", borderRadius:7, border:`1px solid ${rcBdrForm}`, background:"transparent", color:rcSecTxt, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>
+                              {t("cancel")}
+                            </button>
+                            <button onClick={saveEdit} disabled={!editLabel.trim()}
+                              style={{ height:28, padding:"0 10px", borderRadius:7, border:"none", background: editLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: editLabel.trim()?"#ffffff":"var(--text-tertiary)", fontSize:11, fontWeight:600, cursor: editLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>
+                              {t("saveChanges")}
+                            </button>
+                          </div>
                         </div>
                         {editColorPickerOpen && editColorPickerPos && ReactDOM.createPortal(
                           <motion.div key="ms-edit-color-popover"
