@@ -102,7 +102,7 @@ const WEEKDAYS_I18N: Record<Lang, string[]> = {
 const I18N: Record<Lang, Record<string, string>> = {
   en: {
     complete:"complete", daysOf:"days", of:"of", daysRemaining:"days remaining",
-    milestones:"Milestones", darkMode:"Dark mode", lightMode:"Light mode",
+    milestones:"All Events", darkMode:"Dark mode", lightMode:"Light mode",
     lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress", expandFullscreen:"Expand to fullscreen", collapseFullscreen:"Collapse",
     search:"Search", searchPlaceholder:"Search notes and events…", searchResults:"results", searchNoResults:"No matches found", jumpTo:"Jump to",
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
@@ -173,7 +173,7 @@ const I18N: Record<Lang, Record<string, string>> = {
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
-    milestones:"События", darkMode:"Тёмная тема", lightMode:"Светлая тема",
+    milestones:"Все события", darkMode:"Тёмная тема", lightMode:"Светлая тема",
     lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала", expandFullscreen:"Развернуть на весь экран", collapseFullscreen:"Свернуть",
     search:"Поиск", searchPlaceholder:"Поиск по заметкам и событиям…", searchResults:"совпадений", searchNoResults:"Ничего не найдено", jumpTo:"Перейти к",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
