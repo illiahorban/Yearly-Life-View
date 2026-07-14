@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { AnimatePresence, motion, LayoutGroup, Reorder, useDragControls } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -2449,6 +2449,31 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     setNoteHeights(prev => prev[id] === h ? prev : { ...prev, [id]: h });
   };
 
+  // Track whether a day-event's title wraps onto 2+ lines, so the edit/delete
+  // buttons can stack vertically (delete on top, edit below) instead of side by side.
+  const msLabelRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
+  const [msLabelMultiline, setMsLabelMultiline] = useState<Record<string, boolean>>({});
+  const measureMsLabels = useCallback(() => {
+    setMsLabelMultiline(prev => {
+      let changed = false;
+      const next = { ...prev };
+      msLabelRefs.current.forEach((el, id) => {
+        if (!el) return;
+        const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 18;
+        const isMulti = el.scrollHeight > lineHeight * 1.5;
+        if (next[id] !== isMulti) { next[id] = isMulti; changed = true; }
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+  useLayoutEffect(() => {
+    measureMsLabels();
+  }, [dayMilestones, measureMsLabels]);
+  useEffect(() => {
+    window.addEventListener("resize", measureMsLabels);
+    return () => window.removeEventListener("resize", measureMsLabels);
+  }, [measureMsLabels]);
+
   const { t, lang } = React.useContext(LangContext);
 
   // Milestone inline edit state
@@ -2875,15 +2900,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"flex-start", gap:6 }}>
                           <div className="flex-1 min-w-0 flex items-center" style={{ paddingTop:2 }}>
-                            <span className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.label}</span>
+                            <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.label}</span>
                           </div>
-                          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
+                          <div style={{ display:"flex", flexDirection: msLabelMultiline[ms.id] ? "column" : "row", alignItems:"center", gap:4, flexShrink:0 }}>
                             {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0, display:"flex", alignItems:"center" }}>↻</span>}
-                            <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: (hoveredMsId === ms.id && !isEditing) ? 1 : 0, pointerEvents: (hoveredMsId === ms.id && !isEditing) ? "auto" : "none", transition:"opacity 150ms" }}>
+                            <div style={{ display:"flex", flexDirection: msLabelMultiline[ms.id] ? "column-reverse" : "row", alignItems:"center", gap:4, flexShrink:0, opacity: (hoveredMsId === ms.id && !isEditing) ? 1 : 0, pointerEvents: (hoveredMsId === ms.id && !isEditing) ? "auto" : "none", transition:"opacity 150ms" }}>
                               <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                                style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)", cursor:"pointer", fontSize:12, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", transform:"scaleX(-1)" }}>✏️</button>
+                                style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)", cursor:"pointer", fontSize:12, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", transform:"scaleX(-1)", flexShrink:0 }}>✏️</button>
                               <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                                style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                                style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                             </div>
                           </div>
                         </div>
