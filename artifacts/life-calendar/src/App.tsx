@@ -3856,7 +3856,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
         </div>
 
         {/* Add event — button or card form */}
-        <div className="px-6 pt-3 pb-4" style={{ borderTop: `1px solid ${borderColor}` }}>
+        <div className="px-6 py-3" style={{ borderTop: `1px solid ${borderColor}` }}>
           {!showAddForm ? (
             <button onClick={() => setShowAddForm(true)}
               style={{ width:"100%", height:32, borderRadius:9, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:12, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
