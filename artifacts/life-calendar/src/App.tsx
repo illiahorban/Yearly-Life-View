@@ -2912,7 +2912,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             </div>
                           </div>
                         </div>
-                        {ms.description && <div className="text-[11px] leading-snug" style={{ color:cardFormSec, wordBreak:"break-word", overflowWrap:"anywhere", marginTop: (hoveredMsId === ms.id && !isEditing) ? 26 : 0, transition:"margin-top 150ms" }}>{ms.description}</div>}
+                        {ms.description && <div className="text-[11px] leading-snug" style={{ color:cardFormSec, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.description}</div>}
                       </div>
                     </div>
                     {/* Edit form — expands when editing */}
@@ -4130,7 +4130,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           </div>
                         </div>
                         {ms.description && (
-                          <div className="text-[11px] leading-snug" style={{ color:rcSecTxt, marginTop: hoveredId === ms.id ? 26 : 0, transition:"margin-top 150ms" }}><HighlightText text={ms.description} query={q} /></div>
+                          <div className="text-[11px] leading-snug" style={{ color:rcSecTxt }}><HighlightText text={ms.description} query={q} /></div>
                         )}
                       </>
                     )}
