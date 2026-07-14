@@ -3756,7 +3756,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           />
         </div>
 
-        <div className="px-5 pb-3" style={{ maxHeight:320, overflowY:"auto" }}>
+        <div className="px-5 pb-3">
           <div className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color:"var(--text-tertiary)" }}>
             {t("goalsLabel")} ({activeGoals.length})
           </div>
