@@ -3902,7 +3902,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
           {items.length > 0 && filteredItems.length === 0 && (
             <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("searchNoResults")}</div>
           )}
-          <div className="flex flex-col pb-3" style={{ gap: 16 }}>
+          <div className="flex flex-col gap-1.5 pb-3">
             {(() => {
               // Group consecutive events by date
               const dateGroups: { date: string; lbl: string; qi: number; items: Milestone[] }[] = [];
@@ -4004,37 +4004,33 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                 );
               };
 
-              const quarterGroups = ([0, 1, 2, 3] as const)
-                .map(qi => ({ qi, groups: dateGroups.filter(g => g.qi === qi) }))
-                .filter(qg => qg.groups.length > 0);
-
-              return quarterGroups.map(({ qi, groups }) => (
-                <div key={qi}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                    <span style={{ width:8, height:8, borderRadius:"50%", background:resolvedQuarters[qi]?.tint, border:`2px solid ${resolvedQuarters[qi]?.border}`, flexShrink:0, display:"inline-block" }} />
-                    <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--text-secondary)" }}>
-                      {resolvedQuarters[qi]?.label ?? t("q" + String(qi + 1))}
-                    </span>
-                    <span style={{ fontSize:11, color:"var(--text-tertiary)", fontWeight:500 }}>{quarterCounts[qi]}</span>
-                  </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                    {groups.map(group => {
-                      const isMulti = group.items.length > 1;
-                      return (
-                        <div key={group.date} style={{ borderRadius:14, border:`1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"}`, overflow:"hidden" }}>
-                          <div style={{ padding:"6px 10px 5px", background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderBottom:`1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"}`, display:"flex", alignItems:"center", gap:6 }}>
-                            <span style={{ fontSize:11, fontWeight:600, color:"var(--text-secondary)", letterSpacing:"0.01em" }}>{group.lbl}</span>
-                            {isMulti && <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>· {group.items.length}</span>}
-                          </div>
-                          <div style={{ display:"flex", flexDirection:"column", gap:4, padding:"6px 6px" }}>
-                            {group.items.map(ms => renderCard(ms, false))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ));
+              return dateGroups.map((group, gi) => {
+                const prevGroup = dateGroups[gi - 1];
+                const _showQHeader = !prevGroup || group.qi !== prevGroup.qi;
+                const isMulti = group.items.length > 1;
+                return (
+                  <React.Fragment key={group.date}>
+                    {_showQHeader && (
+                      <div className="flex items-center gap-1.5 pt-1.5 pb-0 px-0.5">
+                        <span style={{ width:8, height:8, borderRadius:"50%", background: resolvedQuarters[group.qi]?.tint, border:`2px solid ${resolvedQuarters[group.qi]?.border}`, flexShrink:0, display:"inline-block" }} />
+                        <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
+                          {resolvedQuarters[group.qi]?.label ?? t("q" + String(group.qi + 1))}
+                        </span>
+                        <span className="text-[10px]" style={{ color:"var(--text-tertiary)" }}>· {quarterCounts[group.qi]}</span>
+                      </div>
+                    )}
+                    <div style={{ borderRadius:14, border:`1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"}`, overflow:"hidden" }}>
+                      <div style={{ padding:"6px 10px 5px", background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderBottom:`1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"}`, display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ fontSize:11, fontWeight:600, color:"var(--text-secondary)", letterSpacing:"0.01em" }}>{group.lbl}</span>
+                        {isMulti && <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>· {group.items.length}</span>}
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:4, padding:"6px 6px" }}>
+                        {group.items.map(ms => renderCard(ms, false))}
+                      </div>
+                    </div>
+                  </React.Fragment>
+                );
+              });
             })()}
           </div>
         </div>
