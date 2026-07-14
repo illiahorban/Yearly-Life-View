@@ -3031,7 +3031,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 document.body
               )}
               <div className="flex items-center justify-between gap-1.5">
-                <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
+                <div className="flex items-center gap-1.5" style={{ isolation:"isolate", marginLeft:20 }}>
                   <button
                     ref={newColorBtnRef}
                     onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
