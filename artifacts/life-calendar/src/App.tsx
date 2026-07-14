@@ -3937,9 +3937,9 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
       <motion.div layout initial={{ opacity:0, scale:0.96, y:12 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerGoalId(null); }}
         className="w-full max-w-sm"
-        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow: accentColor ? `0 24px 70px rgba(0,0,0,0.22), 0 0 0 1.5px ${accentColor}` : "0 24px 70px rgba(0,0,0,0.22)", border:`1.5px solid ${accentColor ?? (dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)")}`, overflow:"hidden" }}
+        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow: accentColor ? `0 24px 70px rgba(0,0,0,0.22), 0 0 0 1.5px ${accentColor}` : "0 24px 70px rgba(0,0,0,0.22)", border:`1.5px solid ${accentColor ?? (dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)")}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"85vh" }}
       >
-        <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+        <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 shrink-0">
           {onBack && (
             <button onClick={onBack} title={t("back")} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", border:"none", cursor:"pointer", flexShrink:0, marginTop:1 }}>
               <ChevronLeftIcon />
@@ -3955,6 +3955,8 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           </div>
           <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
+
+        <div style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
 
         <div className="px-5 pb-3">
           <TextareaAutosize value={description} onChange={e => setDescription(e.target.value)}
@@ -4015,7 +4017,9 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           )}
         </div>
 
-        <div className="px-5 pb-5 flex gap-2.5">
+        </div>{/* end scrollable body */}
+
+        <div className="px-5 pb-5 flex gap-2.5 shrink-0">
           <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
           <button onClick={save} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>{t("saveGoals")}</button>
         </div>
