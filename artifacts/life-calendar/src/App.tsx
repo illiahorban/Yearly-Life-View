@@ -3887,7 +3887,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       style={{ ...draftInputStyle, flex:1, minWidth:0 }}
                     />
                     <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-                      lang={lang} style={{ ...draftInputStyle, width:"auto" }}
+                      lang={lang} style={{ ...draftInputStyle, width:128, flexShrink:0 }}
                     />
                     <button
                       ref={draftColorBtnRef}
