@@ -2896,7 +2896,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); saveMsEdit(); } if (e.key==="Escape") setMsEditId(null); }}
                             placeholder={t("labelPlaceholder")} minRows={1}
                             style={{ ...inputStyleMs, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` } as any} />
-                          <div className="flex items-center gap-1.5" style={{ flexShrink:0, marginTop:7 }}>
+                          <div className="flex items-center gap-1.5" style={{ flexShrink:0 }}>
                             <button
                               ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
                               onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
