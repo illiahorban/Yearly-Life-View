@@ -2898,22 +2898,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); saveMsEdit(); } if (e.key==="Escape") setMsEditId(null); }}
                             placeholder={t("labelPlaceholder")} minRows={1}
                             style={{ ...inputStyleMs, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` } as any} />
-                          <div className="flex items-center gap-1.5" style={{ flexShrink:0 }}>
-                            <button
-                              ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
-                              onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
-                              title={t("chooseColor")}
-                              style={{ width:16, height:16, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { const next = !msEditRecurring; setMsEditRecurring(next); if (next) setMsEditRecurSpinKey(k => k + 1); }}
-                              title={t("repeatYearly")}
-                              style={{ flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:13, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: msEditRecurring ? "var(--apple-green)" : cardFormSec, opacity: msEditRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
-                              <span key={msEditRecurSpinKey} className={msEditRecurring ? "recur-spin-once" : undefined} style={{ display:"inline-block" }}>↻</span>
-                            </button>
-                          </div>
                         </div>
                         <div style={{ position:"relative" }}>
                           <TextareaAutosize value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
@@ -2945,11 +2929,29 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           </motion.div>,
                           document.body
                         )}
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => setMsEditId(null)}
-                            style={{ height:26, padding:"0 10px", borderRadius:7, border:`1px solid ${cardFormBdr}`, background:"transparent", color:cardFormSec, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
-                          <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
-                            style={{ height:26, padding:"0 12px", borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:11, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("saveChanges")}</button>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5" style={{ isolation:"isolate", marginLeft:2 }}>
+                            <button
+                              ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
+                              onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
+                              title={t("chooseColor")}
+                              style={{ width:16, height:16, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { const next = !msEditRecurring; setMsEditRecurring(next); if (next) setMsEditRecurSpinKey(k => k + 1); }}
+                              title={t("repeatYearly")}
+                              style={{ flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:13, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: msEditRecurring ? "var(--apple-green)" : cardFormSec, opacity: msEditRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
+                              <span key={msEditRecurSpinKey} className={msEditRecurring ? "recur-spin-once" : undefined} style={{ display:"inline-block" }}>↻</span>
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setMsEditId(null)}
+                              style={{ height:26, padding:"0 10px", borderRadius:7, border:`1px solid ${cardFormBdr}`, background:"transparent", color:cardFormSec, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
+                            <button onClick={saveMsEdit} disabled={!msEditLabel.trim()}
+                              style={{ height:26, padding:"0 12px", borderRadius:7, border:"none", background: msEditLabel.trim()?"#007aff":"rgba(128,128,128,0.15)", color: msEditLabel.trim()?"white":"var(--text-tertiary)", fontSize:11, fontWeight:600, cursor: msEditLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("saveChanges")}</button>
+                          </div>
                         </div>
                       </div>
                     </div>
