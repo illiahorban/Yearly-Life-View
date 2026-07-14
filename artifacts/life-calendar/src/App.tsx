@@ -2449,6 +2449,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [msEditColor, setMsEditColor] = useState("");
   const [msEditDesc, setMsEditDesc] = useState("");
   const [msEditRecurring, setMsEditRecurring] = useState(false);
+  const [msEditRecurSpinKey, setMsEditRecurSpinKey] = useState(0);
   const msEditColorBtnRef = React.useRef<HTMLButtonElement|null>(null);
   const msEditColorPopoverRef = React.useRef<HTMLDivElement|null>(null);
   const [msEditColorPickerOpen, setMsEditColorPickerOpen] = useState(false);
@@ -2463,6 +2464,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [newColor, setNewColor] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newRecurring, setNewRecurring] = useState(false);
+  const [newRecurSpinKey, setNewRecurSpinKey] = useState(0);
   const newColorBtnRef = React.useRef<HTMLButtonElement|null>(null);
   const newColorPopoverRef = React.useRef<HTMLDivElement|null>(null);
   const [newColorPickerOpen, setNewColorPickerOpen] = useState(false);
@@ -2896,11 +2898,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           </button>
                           <button
                             type="button"
-                            onClick={() => setMsEditRecurring(!msEditRecurring)}
+                            onClick={() => { const next = !msEditRecurring; setMsEditRecurring(next); if (next) setMsEditRecurSpinKey(k => k + 1); }}
                             title={t("repeatYearly")}
-                            className={msEditRecurring ? "recur-spin" : undefined}
                             style={{ marginLeft:"auto", flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:13, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: msEditRecurring ? "var(--apple-green)" : cardFormSec, opacity: msEditRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
-                            ↻
+                            <span key={msEditRecurSpinKey} className={msEditRecurring ? "recur-spin-once" : undefined} style={{ display:"inline-block" }}>↻</span>
                           </button>
                         </div>
                         {msEditColorPickerOpen && msEditColorPickerPos && ReactDOM.createPortal(
@@ -2995,11 +2996,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 </button>
                 <button
                   type="button"
-                  onClick={() => setNewRecurring(!newRecurring)}
+                  onClick={() => { const next = !newRecurring; setNewRecurring(next); if (next) setNewRecurSpinKey(k => k + 1); }}
                   title={t("repeatYearly")}
-                  className={newRecurring ? "recur-spin" : undefined}
                   style={{ marginLeft:"auto", flexShrink:0, width:22, height:22, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:15, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: newRecurring ? "var(--apple-green)" : labelText, opacity: newRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
-                  ↻
+                  <span key={newRecurSpinKey} className={newRecurring ? "recur-spin-once" : undefined} style={{ display:"inline-block" }}>↻</span>
                 </button>
               </div>
               {newColorPickerOpen && newColorPickerPos && ReactDOM.createPortal(

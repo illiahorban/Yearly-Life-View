@@ -69,7 +69,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-.recur-spin { animation: spin-cw 2.2s linear infinite; }
+.recur-spin-once { animation: spin-cw 0.45s ease-out 1; }
 
 /* Scrollbar — thumb only, no track */
 ::-webkit-scrollbar { width: 4px; height: 4px; background: transparent; }
