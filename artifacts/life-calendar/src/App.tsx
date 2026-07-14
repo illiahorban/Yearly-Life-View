@@ -2461,7 +2461,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [msEditDesc, setMsEditDesc] = useState("");
   const [msEditRecurring, setMsEditRecurring] = useState(false);
   const [msEditRecurSpinKey, setMsEditRecurSpinKey] = useState(0);
-  const msEditColorBtnRef = React.useRef<HTMLButtonElement|null>(null);
+  const msEditColorBtnRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map());
   const msEditColorPopoverRef = React.useRef<HTMLDivElement|null>(null);
   const [msEditColorPickerOpen, setMsEditColorPickerOpen] = useState(false);
   const [msEditColorPickerPos, setMsEditColorPickerPos] = useState<{top:number;left:number}|null>(null);
@@ -2564,7 +2564,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (!msEditColorPickerOpen) return;
     const handler = (e: MouseEvent) => {
       const popover = msEditColorPopoverRef.current;
-      const btn = msEditColorBtnRef.current;
+      const btn = msEditId ? msEditColorBtnRefs.current.get(msEditId) ?? null : null;
       if (popover && popover.contains(e.target as Node)) return;
       if (btn && btn.contains(e.target as Node)) return;
       setMsEditColorPickerOpen(false);
@@ -2896,8 +2896,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
                             placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:1, minWidth:0, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                           <button
-                            ref={msEditColorBtnRef}
-                            onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRef.current; if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
+                            ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
+                            onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
                             title={t("chooseColor")}
                             style={{ width:16, height:16, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
