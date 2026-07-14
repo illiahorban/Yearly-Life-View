@@ -3898,27 +3898,31 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     className={isWhite?"placeholder-dark":undefined}
                     style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
                   />
-                  <div className="flex items-center gap-1.5" style={{ isolation:"isolate", flexWrap:"wrap" }}>
-                    <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-                      lang={lang} style={{ ...draftInputStyle, flex:"0 1 118px", minWidth:0, width:118 }}
-                    />
-                    <button
-                      ref={draftColorBtnRef}
-                      onClick={e => { e.stopPropagation(); if (draftColorPickerOpen) { setDraftColorPickerOpen(false); return; } const btn = draftColorBtnRef.current; if (btn) { setDraftColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setDraftColorPickerOpen(true); }}
-                      title={t("chooseColor")}
-                      style={{ width:18, height:18, borderRadius:999, flexShrink:0, background:draftColor||"transparent", border:draftColor?"none":`1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow:draftColor?"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)":undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
-                      {!draftColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background:isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
-                    </button>
-                    <button type="button"
-                      onClick={() => { const next = !draftRecurring; setDraftRecurring(next); if (next) setDraftRecurSpinKey(k => k + 1); }}
-                      title={t("repeatYearly")}
-                      style={{ flexShrink:0, width:22, height:22, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:15, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:draftRecurring?"var(--apple-green)":labelText, opacity:draftRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
-                      <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
-                    </button>
-                    <button onClick={resetDraft}
-                      style={{ height:28, padding:"0 12px", borderRadius:7, border:cancelBorder, background:"transparent", color:cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, marginLeft:"auto" }}>{t("cancel")}</button>
-                    <button onClick={add} disabled={!draftLabel.trim()}
-                      style={{ height:28, padding:"0 14px", borderRadius:7, border:"none", background:submitBg, color:submitColor, fontSize:12, fontWeight:600, cursor:draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("addEventBtn")}</button>
+                  <div className="flex items-center" style={{ isolation:"isolate", flexWrap:"nowrap", gap:6, justifyContent:"space-between" }}>
+                    <div className="flex items-center" style={{ gap:5, flexShrink:0 }}>
+                      <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
+                        lang={lang} style={{ ...draftInputStyle, flex:"0 0 104px", minWidth:0, width:104, padding:"0 6px" }}
+                      />
+                      <button
+                        ref={draftColorBtnRef}
+                        onClick={e => { e.stopPropagation(); if (draftColorPickerOpen) { setDraftColorPickerOpen(false); return; } const btn = draftColorBtnRef.current; if (btn) { setDraftColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setDraftColorPickerOpen(true); }}
+                        title={t("chooseColor")}
+                        style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:draftColor||"transparent", border:draftColor?"none":`1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow:draftColor?"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)":undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                        {!draftColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background:isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
+                      </button>
+                      <button type="button"
+                        onClick={() => { const next = !draftRecurring; setDraftRecurring(next); if (next) setDraftRecurSpinKey(k => k + 1); }}
+                        title={t("repeatYearly")}
+                        style={{ flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:14, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:draftRecurring?"var(--apple-green)":labelText, opacity:draftRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
+                        <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center" style={{ gap:5, flexShrink:0 }}>
+                      <button onClick={resetDraft}
+                        style={{ height:28, padding:"0 9px", borderRadius:7, border:cancelBorder, background:"transparent", color:cancelColor, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>{t("cancel")}</button>
+                      <button onClick={add} disabled={!draftLabel.trim()}
+                        style={{ height:28, padding:"0 10px", borderRadius:7, border:"none", background:submitBg, color:submitColor, fontSize:11, fontWeight:600, cursor:draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>{t("addEventBtn")}</button>
+                    </div>
                   </div>
                   {draftColorPickerOpen && draftColorPickerPos && ReactDOM.createPortal(
                     <motion.div key="ms-draft-color-popover"
