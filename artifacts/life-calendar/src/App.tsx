@@ -2786,10 +2786,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
                       <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <div className="flex-1 min-w-0 flex items-center gap-1">
+                          <div className="flex-1 min-w-0">
                             <span className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word" }}>{ms.label}</span>
-                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0 }}>↻</span>}
                           </div>
+                          {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0, alignSelf:"center" }}>↻</span>}
                           <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
                             <button onClick={() => startMsEdit(ms)} title={t("edit")}
                               style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"flex", alignItems:"center", transform:"scaleX(-1)" }}>✏️</button>
