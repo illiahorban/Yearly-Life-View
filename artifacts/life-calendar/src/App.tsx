@@ -412,7 +412,7 @@ function mutedTextColors(colorKey: AppleColorKey, dark: boolean) {
   };
 }
 
-const MILESTONE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#af52de","#ff2d55","#5ac8fa","#121212","#8e8e93","#ffffff"];
+const MILESTONE_COLORS = ["#007aff","#34c759","#5856d6","#ff9500","#ff2d55","#af52de","#ff3b30","#5ac8fa","#ffcc00","#00c7be","#a2845e","#121212","#8e8e93","#ffffff"];
 
 /** Perceived luminance (0–1) of a hex colour, used to decide whether light or dark
  *  content reads best against it. */
