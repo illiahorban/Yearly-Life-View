@@ -1159,7 +1159,7 @@ function App() {
                   const ec = getEventColors(ms.color, dark);
                   const msColBg  = ec.bg;
                   const msColBdr = ec.borderEditing;
-                  const msColTxt = dark && ec.border === "#ffffff" ? "#ffffff" : ec.textTitle;
+                  const msColTxt = dark && ec.border === "#ffffff" ? "#ffffff" : !dark && ec.border === "#000000" ? "#000000" : ec.textTitle;
                   const msColDot = ec.marker;
                   return (
                     <button key={ms.id}
