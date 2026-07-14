@@ -3571,7 +3571,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
               ref={draftColorBtnRef}
               onClick={e => { e.stopPropagation(); toggleDraftColorPicker(); }}
               title={t("chooseColor")}
-              style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", right: 10, width: 13, height: 13, borderRadius: 999, background: draftColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border: "none", boxShadow: "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor: "pointer", display: "block", padding: 0 }}
+              style={{ position: "absolute", top: 10, right: 10, width: 13, height: 13, borderRadius: 999, background: draftColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border: "none", boxShadow: "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor: "pointer", display: "block", padding: 0 }}
             />
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
