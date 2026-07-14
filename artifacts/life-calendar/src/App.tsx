@@ -2969,7 +2969,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         {/* Add note button */}
         <div className={`px-5 pb-3 ${entries.length === 0 ? "pt-3" : ""}`}>
           <button onClick={addEntry}
-            style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+            style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
             <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addNote")}
           </button>
         </div>
