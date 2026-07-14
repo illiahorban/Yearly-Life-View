@@ -2837,19 +2837,21 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     {/* Edit form — expands when editing */}
                     <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "380px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
                       <div className="flex flex-col gap-1.5" style={{ padding:"8px 10px" }}>
-                        <div className="flex gap-1.5 items-center">
+                        <div className="flex items-center">
                           <button
                             ref={msEditColorBtnRef}
                             onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRef.current; if (btn) { const r = btn.getBoundingClientRect(); setMsEditColorPickerPos({ top: r.bottom + 7, left: Math.min(r.left, window.innerWidth - 168) }); } setMsEditColorPickerOpen(true); }}
                             title={t("chooseColor")}
-                            style={{ width:22, height:22, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            style={{ width:16, height:16, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                           </button>
+                        </div>
+                        <div className="flex gap-1.5">
                           <input ref={msEditInputRef} value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
                             onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
-                            placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:2, width:"auto", minWidth:0, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
+                            placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:2, width:"auto", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                           <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
-                            lang={lang} style={{ ...inputStyleMs, flex:"0 1 90px", width:"auto", minWidth:0, padding:"6px 5px", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
+                            lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                         </div>
                         {msEditColorPickerOpen && msEditColorPickerPos && ReactDOM.createPortal(
                           <motion.div
@@ -2932,22 +2934,24 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               const submitColor   = newLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
             <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
-              <div className="flex gap-1.5 items-center" style={{ isolation:"isolate" }}>
+              <div className="flex items-center" style={{ isolation:"isolate" }}>
                 <button
                   ref={newColorBtnRef}
                   onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { const r = btn.getBoundingClientRect(); setNewColorPickerPos({ top: r.bottom + 7, left: Math.min(r.left, window.innerWidth - 168) }); } setNewColorPickerOpen(true); }}
                   title={t("chooseColor")}
-                  style={{ width:24, height:24, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                  style={{ width:18, height:18, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                   {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
                 </button>
+              </div>
+              <div className="flex gap-1.5">
                 <input ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
                   placeholder={t("labelPlaceholder")}
                   className={isWhite ? "placeholder-dark" : undefined}
-                  style={{ ...inputStyle, flex:2, width:"auto", minWidth:0 }} />
+                  style={{ ...inputStyle, flex:2, width:"auto" }} />
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                   lang={lang}
-                  style={{ ...inputStyle, flex:"0 1 90px", width:"auto", minWidth:0, padding:"6px 5px" }} />
+                  style={{ ...inputStyle, flex:1, width:"auto" }} />
               </div>
               {newColorPickerOpen && newColorPickerPos && ReactDOM.createPortal(
                 <motion.div
