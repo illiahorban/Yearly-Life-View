@@ -2316,6 +2316,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   // local, non-persisted id list tracks 1:1 with goalsDraft's slots and is
   // kept in sync everywhere the slot count changes.
   const [goalIds, setGoalIds] = useState<string[]>(() => Array.from({ length: initDayGoals?.count ?? 0 }, () => makeId()));
+  const [focusGoalIdx, setFocusGoalIdx] = useState<number|null>(null);
   const handleGoalAdd = () => {
     const n = goalsDraft.count + 1;
     const newDone = [...goalsDraft.done, false];
@@ -2324,6 +2325,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const g: DayGoals = { count: n, done: newDone, labels: newLabels, colors: newColors };
     setGoalsDraft(g); onDayGoalsChange(g);
     setGoalIds(prev => [...prev, makeId()]);
+    setFocusGoalIdx(n - 1);
   };
   const handleGoalReorder = (newIds: string[]) => {
     const perm = newIds.map(id => goalIds.indexOf(id));
@@ -2684,6 +2686,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       </div>
                       ); })()}
                       <TextareaAutosize
+                        ref={el => { if (el && focusGoalIdx === i) { el.focus(); setFocusGoalIdx(null); } }}
                         value={goalsDraft.labels?.[i] ?? ""}
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
                         onMouseDown={e=>e.stopPropagation()}
