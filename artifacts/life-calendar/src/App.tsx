@@ -2998,20 +2998,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   className={isWhite ? "placeholder-dark" : undefined}
                   minRows={1}
                   style={{ ...inputStyle, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5 } as any} />
-                <button
-                  ref={newColorBtnRef}
-                  onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
-                  title={t("chooseColor")}
-                  style={{ width:18, height:18, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
-                  {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { const next = !newRecurring; setNewRecurring(next); if (next) setNewRecurSpinKey(k => k + 1); }}
-                  title={t("repeatYearly")}
-                  style={{ flexShrink:0, width:22, height:22, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:15, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: newRecurring ? "var(--apple-green)" : labelText, opacity: newRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
-                  <span key={newRecurSpinKey} className={newRecurring ? "recur-spin-once" : undefined} style={{ display:"inline-block" }}>↻</span>
-                </button>
               </div>
               <div style={{ position:"relative" }}>
                 <TextareaAutosize value={newDesc} onChange={e => setNewDesc(e.target.value)}
@@ -3044,11 +3030,29 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 </motion.div>,
                 document.body
               )}
-              <div className="flex items-center justify-end gap-1.5">
-                <button onClick={() => setAddEventOpen(false)}
-                  style={{ height:28, padding:"0 12px", borderRadius:7, border: cancelBorder, background:"transparent", color: cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
-                <button onClick={submitNewEvent} disabled={!newLabel.trim()}
-                  style={{ height:28, padding:"0 14px", borderRadius:7, border:"none", background: submitBg, color: submitColor, fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("addEventBtn")}</button>
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
+                  <button
+                    ref={newColorBtnRef}
+                    onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
+                    title={t("chooseColor")}
+                    style={{ width:18, height:18, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                    {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { const next = !newRecurring; setNewRecurring(next); if (next) setNewRecurSpinKey(k => k + 1); }}
+                    title={t("repeatYearly")}
+                    style={{ flexShrink:0, width:22, height:22, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:15, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: newRecurring ? "var(--apple-green)" : labelText, opacity: newRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
+                    <span key={newRecurSpinKey} className={newRecurring ? "recur-spin-once" : undefined} style={{ display:"inline-block" }}>↻</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => setAddEventOpen(false)}
+                    style={{ height:28, padding:"0 12px", borderRadius:7, border: cancelBorder, background:"transparent", color: cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
+                  <button onClick={submitNewEvent} disabled={!newLabel.trim()}
+                    style={{ height:28, padding:"0 14px", borderRadius:7, border:"none", background: submitBg, color: submitColor, fontSize:12, fontWeight:600, cursor: newLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0 }}>{t("addEventBtn")}</button>
+                </div>
               </div>
             </div>
               );
