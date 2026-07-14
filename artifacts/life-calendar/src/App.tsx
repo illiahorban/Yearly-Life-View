@@ -1051,6 +1051,19 @@ function App() {
     quarterMeta.map(m => resolveQuarter(m, dark)),
   [quarterMeta, dark]);
 
+  // Accent colour for the goals modal border — block's own colour if set, else the quarter's fill
+  const editGoalsAccentColor = useMemo(() => {
+    if (!editGoalsBlockId) return undefined;
+    const qi = config.quarters.findIndex(q => q.blocks.some(b => b.id === editGoalsBlockId));
+    if (qi < 0) return undefined;
+    const block = config.quarters[qi]!.blocks.find(b => b.id === editGoalsBlockId);
+    if (block?.color) {
+      const ac = APPLE_COLORS.find(c => c.key === block.color);
+      if (ac) return dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR);
+    }
+    return resolvedQuarters[qi]?.fill;
+  }, [editGoalsBlockId, config, resolvedQuarters, dark]);
+
   const updateQuarterMeta = (qi: number, patch: Partial<QuarterMeta>) =>
     setQuarterMeta(prev => prev.map((m, i) => i===qi ? { ...m, ...patch } : m));
 
@@ -1457,7 +1470,7 @@ function App() {
           <GoalsModal key="goals"
             blockId={editGoalsBlockId} blockLabel={editGoalsBlock.label}
             initial={blockGoals[editGoalsBlockId] ?? { description:"", goals:[] }}
-            dark={dark} modalBg={modalBg}
+            dark={dark} modalBg={modalBg} accentColor={editGoalsAccentColor}
             onSave={(bg, lbl) => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); const qi = config.quarters.findIndex(q => q.blocks.some(b => b.id === editGoalsBlockId)); if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl); setEditGoalsBlockId(null); }}
             onClose={() => setEditGoalsBlockId(null)}
           />
@@ -1470,7 +1483,7 @@ function App() {
             blockId={String(editGoalsQi)}
             blockLabel={quarterMeta[editGoalsQi]?.name ?? resolvedQuarters[editGoalsQi]?.label ?? ""}
             initial={quarterGoals[editGoalsQi] ?? { description:"", goals:[] }}
-            dark={dark} modalBg={modalBg}
+            dark={dark} modalBg={modalBg} accentColor={resolvedQuarters[editGoalsQi]?.fill}
             titleLabel={t("quarterGoals")}
             descPlaceholder={t("quarterDescPlaceholder")}
             onSave={(bg, lbl) => { setQuarterGoals(prev => ({ ...prev, [editGoalsQi!]: bg })); updateQuarterMeta(editGoalsQi!, { name: lbl }); setEditGoalsQi(null); }}
@@ -3595,9 +3608,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
 // ─── GoalsModal ───────────────────────────────────────────────────────────────
 
-function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLabel, descPlaceholder, onSave, onClose, onBack }: {
+function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentColor, titleLabel, descPlaceholder, onSave, onClose, onBack }: {
   blockId: string; blockLabel: string; initial: BlockGoals; dark: boolean; modalBg: string;
-  titleLabel?: string; descPlaceholder?: string;
+  accentColor?: string; titleLabel?: string; descPlaceholder?: string;
   onSave: (bg: BlockGoals, label: string) => void; onClose: () => void; onBack?: () => void;
 }) {
   const { t } = React.useContext(LangContext);
@@ -3645,7 +3658,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, titleLab
       <motion.div layout initial={{ opacity:0, scale:0.96, y:12 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerGoalId(null); }}
         className="w-full max-w-sm"
-        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden" }}
+        style={{ background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow: accentColor ? `0 24px 70px rgba(0,0,0,0.22), 0 0 0 1.5px ${accentColor}` : "0 24px 70px rgba(0,0,0,0.22)", border:`1.5px solid ${accentColor ?? (dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)")}`, overflow:"hidden" }}
       >
         <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
           {onBack && (
