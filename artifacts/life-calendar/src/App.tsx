@@ -2867,26 +2867,26 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 return (
                   <DraggableCard key={ms.id} id={ms.id} dark={dark}>
                   <div
-                    style={{ borderRadius:12, overflow:"hidden", background:cardBg, border: `1.5px solid ${ec2.border || "transparent"}`, boxShadow: ec2.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
+                    style={{ position:"relative", borderRadius:12, overflow:"hidden", background:cardBg, border: `1.5px solid ${ec2.border || "transparent"}`, boxShadow: ec2.boxShadow || undefined, transition:"background 0.25s ease, border-color 0.25s ease" }}
                     onMouseEnter={() => setHoveredMsId(ms.id)}
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
-                      <div style={{ padding:"8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
+                      <div style={{ padding:"8px 32px 8px 10px", display:"flex", flexDirection:"column", gap:4 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                           <div className="flex-1 min-w-0 flex items-center">
                             <span className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word" }}>{ms.label}</span>
                           </div>
                           {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0, alignSelf:"center" }}>↻</span>}
-                          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredMsId === ms.id ? 1 : 0, pointerEvents: hoveredMsId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
-                            <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                              style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"flex", alignItems:"center", transform:"scaleX(-1)" }}>✏️</button>
-                            <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                              style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
-                          </div>
                         </div>
                         {ms.description && <div className="text-[11px] leading-snug" style={{ color:cardFormSec }}>{ms.description}</div>}
                       </div>
+                    </div>
+                    <div style={{ position:"absolute", top:6, right:6, display:"flex", alignItems:"center", gap:4, flexShrink:0, opacity: (hoveredMsId === ms.id && !isEditing) ? 1 : 0, pointerEvents: (hoveredMsId === ms.id && !isEditing) ? "auto" : "none", transition:"opacity 150ms" }}>
+                      <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                        style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,255,255,0.12)":"rgba(0,0,0,0.06)", cursor:"pointer", fontSize:12, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", transform:"scaleX(-1)" }}>✏️</button>
+                      <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                        style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
                     </div>
                     {/* Edit form — expands when editing */}
                     <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "2000px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
