@@ -4060,6 +4060,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               {blocks.map((b, idx) => {
                 const bAc = b.color ? APPLE_COLORS.find(c => c.key === b.color) : null;
                 const bHex = bAc ? (dark ? bAc.dark : bAc.light) : (dark ? quarter.darkSoft : quarter.soft);
+                // Dot always shows the vivid colour — the block's own if set, else the quarter's fill
+                const bDotHex = bAc ? (dark ? bAc.dark : hexSaturate(bAc.light, LIGHT_SAT_FACTOR)) : quarter.fill;
                 // Tint the sprint row itself using the same colour logic as note/event
                 // cards (getEventColors), so choosing a sprint colour visibly colours
                 // its row here, in the sprint distribution modal.
@@ -4076,7 +4078,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                         setColorPickerAnchor(prev => prev?.id === b.id ? null : { id: b.id, rect });
                       }}
                         title={t("sprintColor")}
-                        style={{ width:16, height:16, borderRadius:999, background: bHex, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block" }}
+                        style={{ width:16, height:16, borderRadius:999, background: bDotHex, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block" }}
                       />
                     </div>
                     {/* Number badge */}
