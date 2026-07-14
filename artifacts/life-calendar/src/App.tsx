@@ -4120,7 +4120,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           </div>
                           {showDate && <span className="text-[11px] tabular-nums shrink-0" style={{ color:"var(--text-tertiary)" }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</span>}
                           <div style={{ display:"flex", flexDirection: msLabelMultiline[ms.id] ? "column" : "row", alignItems:"center", gap:4, flexShrink:0 }}>
-                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:10, opacity:0.7, flexShrink:0, display:"flex", alignItems:"center" }}>↻</span>}
+                            {ms.recurring && <span title={t("repeatYearly")} style={{ fontSize:12, opacity:0.7, flexShrink:0, display:"flex", alignItems:"center" }}>↻</span>}
                             <div style={{ display:"flex", flexDirection: msLabelMultiline[ms.id] ? "column-reverse" : "row", alignItems:"center", gap:4, flexShrink:0, opacity: hoveredId === ms.id ? 1 : 0, pointerEvents: hoveredId === ms.id ? "auto" : "none", transition:"opacity 150ms" }}>
                               <button onClick={() => startEdit(ms)} title={t("edit")}
                                 style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, lineHeight:1, padding:"1px 2px", display:"flex", alignItems:"center", transform:"scaleX(-1)", flexShrink:0 }}>✏️</button>
