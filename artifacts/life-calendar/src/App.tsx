@@ -259,7 +259,7 @@ type BlockGoals = { description: string; goals: Goal[] };
 type NoteEntry = { id: string; text: string; createdAt: number; color?: string };
 type LifeSettings = { birthDate: string; lifespan: number };
 type LifeView = "years" | "months" | "weeks" | "days";
-type DayGoals = { count: number; done: boolean[]; labels?: string[] };
+type DayGoals = { count: number; done: boolean[]; labels?: string[]; colors?: (string|undefined)[] };
 type DayTemplate = { id: string; name: string; items: string[] };
 
 function fireConfettiCannons() {
@@ -2147,12 +2147,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const handleGoalCountChange = (n: number) => {
     const newDone = Array.from({ length: n }, (_, i) => goalsDraft.done[i] ?? false);
     const newLabels = Array.from({ length: n }, (_, i) => goalsDraft.labels?.[i] ?? "");
-    const g: DayGoals = { count: n, done: newDone, labels: newLabels };
+    const newColors: (string|undefined)[] = Array.from({ length: n }, (_, i) => goalsDraft.colors?.[i]);
+    const g: DayGoals = { count: n, done: newDone, labels: newLabels, colors: newColors };
     setGoalsDraft(g); onDayGoalsChange(g);
   };
   const handleGoalToggle = (i: number) => {
     const newDone = Array.from({ length: goalsDraft.count }, (_, j) => j === i ? !(goalsDraft.done[j] ?? false) : (goalsDraft.done[j] ?? false));
-    const g: DayGoals = { count: goalsDraft.count, done: newDone, labels: goalsDraft.labels };
+    const g: DayGoals = { ...goalsDraft, done: newDone };
     setGoalsDraft(g); onDayGoalsChange(g);
     if (newDone.every(Boolean) && newDone.length > 0) setTimeout(fireConfettiCannons, 80);
   };
@@ -2161,6 +2162,25 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const g: DayGoals = { ...goalsDraft, labels: newLabels };
     setGoalsDraft(g); onDayGoalsChange(g);
   };
+  const handleGoalColorChange = (i: number, color: string|undefined) => {
+    const newColors: (string|undefined)[] = Array.from({ length: goalsDraft.count }, (_, j) => j === i ? color : goalsDraft.colors?.[j]);
+    const g: DayGoals = { ...goalsDraft, colors: newColors };
+    setGoalsDraft(g); onDayGoalsChange(g);
+    setGoalColorPickerIdx(null);
+  };
+  const handleGoalDelete = (i: number) => {
+    const newCount = goalsDraft.count - 1;
+    if (newCount < 0) return;
+    const newDone = goalsDraft.done.filter((_, j) => j !== i);
+    const newLabels = (goalsDraft.labels ?? []).filter((_, j) => j !== i);
+    const newColors = (goalsDraft.colors ?? []).filter((_, j) => j !== i);
+    const g: DayGoals = { count: newCount, done: newDone, labels: newLabels, colors: newColors };
+    setGoalsDraft(g); onDayGoalsChange(g);
+  };
+  const [hoveredGoalIdx, setHoveredGoalIdx] = useState<number|null>(null);
+  const [goalColorPickerIdx, setGoalColorPickerIdx] = useState<number|null>(null);
+  const [goalColorPickerPos, setGoalColorPickerPos] = useState<{top:number;left:number}|null>(null);
+  const goalColorBtnRefs = useRef<(HTMLButtonElement|null)[]>([]);
   const [confirmReset, setConfirmReset] = useState(false);
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [] };
@@ -2458,8 +2478,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <div className="flex flex-col gap-1.5">
                 {Array.from({length:goalsDraft.count},(_,i)=>{
                   const done = goalsDraft.done[i]??false;
+                  const goalColor = goalsDraft.colors?.[i];
+                  const ec = goalColor ? getEventColors(goalColor, dark) : null;
+                  const containerBg = ec ? ec.bg : (dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.03)");
+                  const containerBorder = ec ? ec.border : (dark?"rgba(255,255,255,0.09)":"rgba(0,0,0,0.07)");
+                  const textColor = done ? "var(--text-tertiary)" : (ec ? ec.textTitle : "var(--text)");
+                  const isHovered = hoveredGoalIdx === i;
+                  const isColorOpen = goalColorPickerIdx === i;
                   return (
-                    <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, background: dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.03)", border:`1px solid ${dark?"rgba(255,255,255,0.09)":"rgba(0,0,0,0.07)"}`, borderRadius:10, padding:"8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
+                    <div key={i}
+                      onMouseEnter={() => setHoveredGoalIdx(i)}
+                      onMouseLeave={() => setHoveredGoalIdx(null)}
+                      style={{ position:"relative", display:"flex", alignItems:"flex-start", gap:8, background: containerBg, border:`1px solid ${containerBorder}`, borderRadius:10, padding:"8px 46px 8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
                       <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,marginTop:2,background:done?"#34c759":"transparent",border:`1.5px solid ${done?"#34c759":"var(--border-soft)"}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
@@ -2469,8 +2499,20 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         onMouseDown={e=>e.stopPropagation()}
                         placeholder={`${t("goal")} ${i+1}`}
                         minRows={1}
-                        style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",fontSize:13,color:done?"var(--text-tertiary)":"var(--text)",textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
+                        style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
                       />
+                      <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:5, opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
+                        <button
+                          ref={el => { goalColorBtnRefs.current[i] = el; }}
+                          onClick={e => { e.stopPropagation(); if (goalColorPickerIdx===i) { setGoalColorPickerIdx(null); return; } const btn=goalColorBtnRefs.current[i]; if(btn){const r=btn.getBoundingClientRect();setGoalColorPickerPos({top:r.bottom+7,left:Math.min(r.right-152,window.innerWidth-164)});} setGoalColorPickerIdx(i); }}
+                          title={t("chooseColor")}
+                          style={{ width:13,height:13,borderRadius:999,background:goalColor??(dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"),border:"none",boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",cursor:"pointer",display:"block",flexShrink:0,padding:0,mixBlendMode:"normal",isolation:"isolate" }}
+                        />
+                        <button
+                          onClick={e => { e.stopPropagation(); handleGoalDelete(i); }}
+                          style={{ width:22,height:22,borderRadius:6,border:"none",background:dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)",color:"#ff3b30",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}
+                        ><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                      </div>
                     </div>
                   );
                 })}
@@ -2478,6 +2520,34 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   <div className="mt-0.5 text-center text-[12px] font-semibold" style={{ color:"#34c759" }}>{t("allDone")}</div>
                 )}
               </div>
+            )}
+            {goalColorPickerIdx !== null && goalColorPickerPos && ReactDOM.createPortal(
+              <motion.div
+                key="goal-color-popover"
+                initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
+                transition={{ type:"spring", stiffness:420, damping:28 }}
+                onClick={e => e.stopPropagation()}
+                style={{ position:"fixed", top:goalColorPickerPos.top, left:goalColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate" }}
+              >
+                <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setGoalColorPickerIdx(null)} />
+                <button onClick={() => handleGoalColorChange(goalColorPickerIdx, undefined)}
+                  title={t("noColor")}
+                  style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:!goalsDraft.colors?.[goalColorPickerIdx]?`1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}`:"1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
+                </button>
+                {APPLE_COLORS.map(ac => {
+                  const hex = dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR);
+                  const selected = goalsDraft.colors?.[goalColorPickerIdx] === hex;
+                  return (
+                    <button key={ac.key} onClick={() => handleGoalColorChange(goalColorPickerIdx, hex)}
+                      title={ac.label}
+                      style={{ width:20, height:20, borderRadius:999, background:hex, border:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(ac.key==="white"||ac.key==="grey")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:selected?"scale(1.08)":"scale(1)" }}>
+                      {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(hex) }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </motion.div>,
+              document.body
             )}
           </div>
         </div>
