@@ -1986,15 +1986,16 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
   const msBar = dayMilestones.length > 0 ? (
     <div style={{ position:"absolute", top:0, left:0, right:0, height:6, borderRadius:"12px 12px 0 0", display:"flex", overflow:"hidden", zIndex:4, opacity: 1 }}>
-      {dayMilestones.map(ms => {
+      {dayMilestones.map((ms, msIdx) => {
         const ec = getEventColors(ms.color, dark);
         const noColor = !ms.color;
+        const isLast = msIdx === dayMilestones.length - 1;
         return <div key={ms.id} style={{
           flex: 1,
           background: noColor ? "transparent" : ec.marker,
           borderTop: "none",
           borderLeft: "none",
-          borderRight: "none",
+          borderRight: !isLast ? `1px solid ${dark ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.12)"}` : "none",
           borderBottom: noColor ? `1px solid ${dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.20)"}` : "none",
           boxSizing: "border-box",
           boxShadow: noColor ? (dark ? "inset 0 1px 3px rgba(0,0,0,0.45)" : "inset 0 1px 3px rgba(0,0,0,0.18)") : undefined,
