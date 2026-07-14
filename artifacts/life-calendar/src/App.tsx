@@ -111,7 +111,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     remove:"Remove", deleteConfirm:"Delete?", deleteEntryConfirm:"Remove this note?", deleteEventConfirm:"Delete this event?", deleteTplConfirm:"Delete this template?", deleteDayNotesConfirm:"Delete all notes for this day?", deleteGoalConfirm:"Delete this goal?", noMilestones:"No milestones yet. Add one above.",
     labelPlaceholder:"Label…", add:"Add",
     descPlaceholder:"Description (optional)…",
-    repeatYearly:"↻ Repeat yearly", cancel:"Cancel", saveChanges:"Save changes",
+    repeatYearly:"Repeat every year", cancel:"Cancel", saveChanges:"Save changes",
     editDescPlaceholder:"Description (optional)…", footerBase:"Life Calendar",
     today:"Today", week:"Week", week2:"weeks", week5:"weeks", done:"done", left:"left", goals:"goals",
     allGoals:"All Goals", noGoalsYet:"No goals set yet. Open a sprint to add goals.",
@@ -183,7 +183,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     remove:"Удалить", deleteConfirm:"Удалить?", deleteEntryConfirm:"Удалить эту заметку?", deleteEventConfirm:"Удалить это событие?", deleteTplConfirm:"Удалить этот шаблон?", deleteDayNotesConfirm:"Удалить все заметки этого дня?", deleteGoalConfirm:"Удалить эту цель?", noMilestones:"Нет событий. Добавьте выше.",
     labelPlaceholder:"Название…", add:"Добавить",
     descPlaceholder:"Описание (необязательно)…",
-    repeatYearly:"↻ Каждый год", cancel:"Отмена", saveChanges:"Сохранить",
+    repeatYearly:"Повторять каждый год", cancel:"Отмена", saveChanges:"Сохранить",
     editDescPlaceholder:"Описание (необязательно)…", footerBase:"Календарь жизни",
     today:"Сегодня", week:"неделя", week2:"недели", week5:"недель", done:"готово", left:"осталось", goals:"целей",
     allGoals:"Все цели", noGoalsYet:"Целей пока нет. Откройте спринт, чтобы добавить цели.",
@@ -2894,11 +2894,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             style={{ width:16, height:16, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                           </button>
-                          <label className="flex items-center gap-1 cursor-pointer select-none" style={{ flexShrink:0, marginLeft:"auto" }}>
-                            <input type="checkbox" checked={msEditRecurring} onChange={e => setMsEditRecurring(e.target.checked)}
-                              style={{ width:12, height:12, accentColor:"#007aff", cursor:"pointer" }} />
-                            <span style={{ fontSize:11, color:cardFormSec, whiteSpace:"nowrap" }}>{t("repeatYearly")}</span>
-                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setMsEditRecurring(!msEditRecurring)}
+                            title={t("repeatYearly")}
+                            className={msEditRecurring ? "recur-spin" : undefined}
+                            style={{ marginLeft:"auto", flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:13, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: msEditRecurring ? "var(--apple-green)" : cardFormSec, opacity: msEditRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
+                            ↻
+                          </button>
                         </div>
                         {msEditColorPickerOpen && msEditColorPickerPos && ReactDOM.createPortal(
                           <motion.div
@@ -2990,11 +2993,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   style={{ width:18, height:18, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                   {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
                 </button>
-                <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ flexShrink:0, marginLeft:"auto" }}>
-                  <input type="checkbox" checked={newRecurring} onChange={e => setNewRecurring(e.target.checked)}
-                    style={{ width:13, height:13, accentColor: isWhite ? "#18181b" : "#007aff", cursor:"pointer" }} />
-                  <span style={{ fontSize:12, color: labelText, whiteSpace:"nowrap" }}>{t("repeatYearly")}</span>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => setNewRecurring(!newRecurring)}
+                  title={t("repeatYearly")}
+                  className={newRecurring ? "recur-spin" : undefined}
+                  style={{ marginLeft:"auto", flexShrink:0, width:22, height:22, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:15, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color: newRecurring ? "var(--apple-green)" : labelText, opacity: newRecurring ? 1 : 0.55, transition:"color 150ms, opacity 150ms" }}>
+                  ↻
+                </button>
               </div>
               {newColorPickerOpen && newColorPickerPos && ReactDOM.createPortal(
                 <motion.div
