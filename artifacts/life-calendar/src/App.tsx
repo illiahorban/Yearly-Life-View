@@ -3899,7 +3899,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
                   />
                   <div className="flex items-center" style={{ isolation:"isolate", flexWrap:"nowrap", gap:6, justifyContent:"space-between" }}>
-                    <div className="flex items-center" style={{ gap:5, flexShrink:0 }}>
+                    <div className="flex items-center" style={{ gap:8, flexShrink:0 }}>
                       <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
                         lang={lang} style={{ ...draftInputStyle, flex:"0 0 104px", minWidth:0, width:104, padding:"0 6px" }}
                       />
