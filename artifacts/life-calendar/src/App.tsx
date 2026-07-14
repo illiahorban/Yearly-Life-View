@@ -3890,6 +3890,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     className={isWhite ? "placeholder-dark" : undefined}
                     style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
                   />
+                  <textarea value={draftDesc} rows={2}
+                    onChange={e => { setDraftDesc(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
+                    placeholder={t("descPlaceholder")}
+                    className={isWhite?"placeholder-dark":undefined}
+                    style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
+                  />
                   <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
                     <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
                       lang={lang} style={{ ...draftInputStyle, flex:1, minWidth:0 }}
@@ -3908,12 +3914,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
                     </button>
                   </div>
-                  <textarea value={draftDesc} rows={2}
-                    onChange={e => { setDraftDesc(e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"; }}
-                    placeholder={t("descPlaceholder")}
-                    className={isWhite?"placeholder-dark":undefined}
-                    style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
-                  />
                   {draftColorPickerOpen && draftColorPickerPos && ReactDOM.createPortal(
                     <motion.div key="ms-draft-color-popover"
                       initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
