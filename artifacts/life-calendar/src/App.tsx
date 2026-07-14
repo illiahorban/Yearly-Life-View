@@ -2637,6 +2637,17 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
             )}
           </div>
           )}
+          {/* Progress bar */}
+          {goalsDraft.count > 0 && (
+            <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)" }}>
+              <motion.div
+                initial={false}
+                animate={{ width: `${(goalsDraft.done.filter(Boolean).length / goalsDraft.count) * 100}%` }}
+                transition={{ type:"spring", stiffness:120, damping:24 }}
+                style={{ height:"100%", borderRadius:999, background: allGoalsDone ? "#34c759" : "#007aff", transition:"background 300ms ease" }}
+              />
+            </div>
+          )}
           {/* Body — always shown */}
           <div style={{ overflow:"visible" }}>
             {/* Confirm dialogs (copy-to-tomorrow / reset) */}
