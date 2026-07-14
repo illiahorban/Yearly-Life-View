@@ -1435,7 +1435,7 @@ function App() {
             onMilestoneReorder={ids => setMilestones(prev => reorderByIds(prev, ids))}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
             onCopyGoalsTo={(targetDk, g) => updateDayGoals(targetDk, g)}
-            onSave={entries => { upsertNotes(openNote, entries); setOpenNote(null); }}
+            onSave={entries => upsertNotes(openNote, entries)}
             onClose={() => setOpenNote(null)}
           />
         )}
@@ -2546,10 +2546,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const handleReorderEntryIds = (newIds: string[]) => {
     setEntries(prev => newIds.map(id => prev.find(e => e.id === id)!));
   };
-  const handleSave = () => { onSave(entries); onClose(); };
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    onSave(entries);
+  }, [entries]); // eslint-disable-line react-hooks/exhaustive-deps
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") onClose();
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleSave();
   };
 
   if (templateMgrOpen) {
@@ -2983,11 +2986,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
         </div>{/* end scrollable body */}
 
-        {/* Footer */}
-        <div className="px-5 pb-5 flex gap-2.5 shrink-0">
-          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
-          <button onClick={handleSave} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"#007aff", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,122,255,0.35)" }}>{t("save")} <span style={{ opacity:0.65, fontSize:11 }}>⌘↵</span></button>
-        </div>
       </motion.div>
       {colorPickerEntryId !== null && colorPickerPos && ReactDOM.createPortal(
         <motion.div
