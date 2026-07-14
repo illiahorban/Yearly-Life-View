@@ -4018,7 +4018,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           <button type="button"
                             onClick={() => { const next = !editRecurring; setEditRecurring(next); if (next) setEditRecurSpinKey(k => k + 1); }}
                             title={t("repeatYearly")}
-                            style={{ flexShrink:0, width:18, height:18, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:13, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:editRecurring?"var(--apple-green)":rcSecTxt, opacity:editRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
+                            style={{ flexShrink:0, width:23, height:23, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:17, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:editRecurring?"var(--apple-green)":rcSecTxt, opacity:editRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
                             <span key={editRecurSpinKey} className={editRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
                           </button>
                           <div className="flex items-center" style={{ gap:8, flexShrink:0, marginLeft:"auto" }}>
