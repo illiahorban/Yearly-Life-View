@@ -3558,7 +3558,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
               onChange={e => setDraftText(e.target.value)}
               placeholder={t("notePlaceholder")}
               rows={2}
-              style={{ width: "100%", borderRadius: 10, border: `1px solid ${borderColor}`, background: draftColor ? (dark ? `color-mix(in srgb, ${draftColor} 14%, ${inputBg})` : `color-mix(in srgb, ${draftColor} 10%, rgba(255,255,255,0.9))`) : inputBg, color: "var(--text)", fontSize: 13, padding: "8px 32px 8px 10px", fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box", display: "block", transition: "background 200ms ease" }}
+              style={{ width: "100%", borderRadius: 10, border: `1px solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`, background: draftColor ? getEventColors(resolveNoteHex(draftColor), dark).bg : inputBg, color: draftColor ? getEventColors(resolveNoteHex(draftColor), dark).textTitle : "var(--text)", fontSize: 13, padding: "8px 32px 8px 10px", fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box", display: "block", transition: "background 200ms ease" }}
               onKeyDown={e => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && draftText.trim()) {
                   e.preventDefault();
