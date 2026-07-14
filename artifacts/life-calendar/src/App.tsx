@@ -3842,7 +3842,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
         </div>
 
         {/* Color picker + add form */}
-        <div className="px-6 pb-4">
+        <div className="px-6 pt-3 pb-4" style={{ borderTop: `1px solid ${borderColor}` }}>
           {(() => {
             // Live-preview the chosen color on the draft inputs immediately, the same
             // way the inline edit form's card recolors as soon as a swatch is clicked —
@@ -3895,7 +3895,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
         </div>
 
         {/* List */}
-        <div className="px-6">
+        <div className="px-6 pt-3" style={{ borderTop: `1px solid ${borderColor}` }}>
           {items.length === 0 && (
             <div className="py-6 text-center text-[13px]" style={{ color:"var(--text-tertiary)" }}>{t("noMilestones")}</div>
           )}
