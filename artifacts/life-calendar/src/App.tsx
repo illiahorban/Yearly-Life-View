@@ -2644,7 +2644,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 initial={false}
                 animate={{ width: `${(goalsDraft.done.filter(Boolean).length / goalsDraft.count) * 100}%` }}
                 transition={{ type:"spring", stiffness:120, damping:24 }}
-                style={{ height:"100%", borderRadius:999, background: allGoalsDone ? "#34c759" : "#007aff", transition:"background 300ms ease" }}
+                style={{ height:"100%", borderRadius:999, background:"#34c759" }}
               />
             </div>
           )}
