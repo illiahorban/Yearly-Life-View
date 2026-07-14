@@ -3919,10 +3919,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       style={{ flexShrink:0, width:20, height:20, borderRadius:999, border:"none", background:"transparent", cursor:"pointer", fontSize:14, lineHeight:1, display:"flex", alignItems:"center", justifyContent:"center", color:draftRecurring?"var(--apple-green)":labelText, opacity:draftRecurring?1:0.55, transition:"color 150ms, opacity 150ms" }}>
                       <span key={draftRecurSpinKey} className={draftRecurring?"recur-spin-once":undefined} style={{ display:"inline-block" }}>↻</span>
                     </button>
-                    <button onClick={resetDraft}
-                      style={{ height:28, padding:"0 9px", borderRadius:7, border:cancelBorder, background:"transparent", color:cancelColor, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>{t("cancel")}</button>
-                    <button onClick={add} disabled={!draftLabel.trim()}
-                      style={{ height:28, padding:"0 10px", borderRadius:7, border:"none", background:submitBg, color:submitColor, fontSize:11, fontWeight:600, cursor:draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>{t("addEventBtn")}</button>
+                    <div className="flex items-center" style={{ gap:8, flexShrink:0, marginLeft:"auto" }}>
+                      <button onClick={resetDraft}
+                        style={{ height:28, padding:"0 9px", borderRadius:7, border:cancelBorder, background:"transparent", color:cancelColor, fontSize:11, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>{t("cancel")}</button>
+                      <button onClick={add} disabled={!draftLabel.trim()}
+                        style={{ height:28, padding:"0 10px", borderRadius:7, border:"none", background:submitBg, color:submitColor, fontSize:11, fontWeight:600, cursor:draftLabel.trim()?"pointer":"default", fontFamily:"inherit", flexShrink:0, whiteSpace:"nowrap" }}>{t("addEventBtn")}</button>
+                    </div>
                   </div>
                   {draftColorPickerOpen && draftColorPickerPos && ReactDOM.createPortal(
                     <motion.div key="ms-draft-color-popover"
