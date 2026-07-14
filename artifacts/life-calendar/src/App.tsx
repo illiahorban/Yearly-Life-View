@@ -2448,6 +2448,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [msEditColor, setMsEditColor] = useState("");
   const [msEditDesc, setMsEditDesc] = useState("");
   const [msEditRecurring, setMsEditRecurring] = useState(false);
+  const msEditColorBtnRef = React.useRef<HTMLButtonElement|null>(null);
+  const msEditColorPopoverRef = React.useRef<HTMLDivElement|null>(null);
+  const [msEditColorPickerOpen, setMsEditColorPickerOpen] = useState(false);
+  const [msEditColorPickerPos, setMsEditColorPickerPos] = useState<{top:number;left:number}|null>(null);
 
   // New event form state
   const newLabelInputRef = React.useRef<HTMLInputElement|null>(null);
@@ -2458,6 +2462,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const [newColor, setNewColor] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newRecurring, setNewRecurring] = useState(false);
+  const newColorBtnRef = React.useRef<HTMLButtonElement|null>(null);
+  const newColorPopoverRef = React.useRef<HTMLDivElement|null>(null);
+  const [newColorPickerOpen, setNewColorPickerOpen] = useState(false);
+  const [newColorPickerPos, setNewColorPickerPos] = useState<{top:number;left:number}|null>(null);
 
   const submitNewEvent = () => {
     if (!newLabel.trim()) return;
@@ -2482,12 +2490,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (!msEditId) return;
     const handler = (e: MouseEvent) => {
       const el = msEditRefs.current.get(msEditId);
+      const popover = msEditColorPopoverRef.current;
+      if (popover && popover.contains(e.target as Node)) return;
       if (el && !el.contains(e.target as Node)) {
         setMsEditId(null);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, [msEditId]);
+
+  React.useEffect(() => {
+    if (!msEditId) setMsEditColorPickerOpen(false);
   }, [msEditId]);
 
   React.useEffect(() => {
@@ -2505,12 +2519,18 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   React.useEffect(() => {
     if (!addEventOpen) return;
     const handler = (e: MouseEvent) => {
+      const popover = newColorPopoverRef.current;
+      if (popover && popover.contains(e.target as Node)) return;
       if (addEventFormRef.current && !addEventFormRef.current.contains(e.target as Node)) {
         setAddEventOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, [addEventOpen]);
+
+  React.useEffect(() => {
+    if (!addEventOpen) setNewColorPickerOpen(false);
   }, [addEventOpen]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number,number,number];
@@ -2817,25 +2837,45 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     {/* Edit form — expands when editing */}
                     <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "380px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
                       <div className="flex flex-col gap-1.5" style={{ padding:"8px 10px" }}>
-                        <div className="flex gap-1 flex-wrap items-center">
-                          {/* No-color swatch */}
-                          <button onClick={() => setMsEditColor("")}
-                            title="No colour"
-                            style={{ width:13, height:13, borderRadius:999, background:"transparent", border: msEditColor==="" ? "2px solid var(--text)" : "2px solid var(--border-soft)", cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
-                            <span style={{ position:"absolute", width:"150%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)", left:"-25%" }} />
+                        <div className="flex gap-1.5 items-center">
+                          <button
+                            ref={msEditColorBtnRef}
+                            onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRef.current; if (btn) { const r = btn.getBoundingClientRect(); setMsEditColorPickerPos({ top: r.bottom + 7, left: Math.min(r.left, window.innerWidth - 168) }); } setMsEditColorPickerOpen(true); }}
+                            title={t("chooseColor")}
+                            style={{ width:22, height:22, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "none" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                           </button>
-                          {MILESTONE_COLORS.map(c => (
-                            <button key={c} onClick={() => setMsEditColor(msEditColor === c ? "" : c)}
-                              style={{ width:13, height:13, borderRadius:999, background:c, border: msEditColor===c ? "2px solid var(--text)" : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }} />
-                          ))}
-                        </div>
-                        <div className="flex gap-1.5">
                           <input ref={msEditInputRef} value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
                             onKeyDown={e => { if (e.key==="Enter") saveMsEdit(); if (e.key==="Escape") setMsEditId(null); }}
-                            placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:2, width:"auto", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
+                            placeholder={t("labelPlaceholder")} style={{ ...inputStyleMs, flex:2, width:"auto", minWidth:0, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                           <input type="date" value={msEditDate} onChange={e => setMsEditDate(e.target.value)}
-                            lang={lang} style={{ ...inputStyleMs, flex:1, width:"auto", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
+                            lang={lang} style={{ ...inputStyleMs, flex:"0 1 90px", width:"auto", minWidth:0, padding:"6px 5px", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` }} />
                         </div>
+                        {msEditColorPickerOpen && msEditColorPickerPos && ReactDOM.createPortal(
+                          <motion.div
+                            key="ms-edit-color-popover"
+                            ref={msEditColorPopoverRef}
+                            initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
+                            transition={{ type:"spring", stiffness:420, damping:28 }}
+                            onClick={e => e.stopPropagation()}
+                            style={{ position:"fixed", top:msEditColorPickerPos.top, left:msEditColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                          >
+                            <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setMsEditColorPickerOpen(false)} />
+                            <button onClick={() => { setMsEditColor(""); setMsEditColorPickerOpen(false); }}
+                              title={t("noColor")}
+                              style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: msEditColor==="" ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
+                            </button>
+                            {MILESTONE_COLORS.map(c => (
+                              <button key={c} onClick={() => { setMsEditColor(msEditColor === c ? "" : c); setMsEditColorPickerOpen(false); }}
+                                title={c}
+                                style={{ width:20, height:20, borderRadius:999, background:c, border: msEditColor===c ? "1.5px solid var(--text)" : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: msEditColor===c ? "scale(1.08)" : "scale(1)" }}>
+                                {msEditColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
+                              </button>
+                            ))}
+                          </motion.div>,
+                          document.body
+                        )}
                         <div style={{ position:"relative" }}>
                           <textarea value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
                             placeholder={t("editDescPlaceholder")} rows={4}
@@ -2892,28 +2932,48 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               const submitColor   = newLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
             <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
-              <div className="flex gap-1 flex-wrap items-center" style={{ isolation:"isolate" }}>
-                {/* No-color swatch */}
-                <button onClick={() => setNewColor("")}
-                  title="No colour"
-                  style={{ width:14, height:14, borderRadius:999, background:"transparent", border: newColor==="" ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : `2px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, cursor:"pointer", transition:"border 120ms", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden", mixBlendMode:"normal", isolation:"isolate" }}>
-                  <span style={{ position:"absolute", width:"150%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)", left:"-25%" }} />
+              <div className="flex gap-1.5 items-center" style={{ isolation:"isolate" }}>
+                <button
+                  ref={newColorBtnRef}
+                  onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { const r = btn.getBoundingClientRect(); setNewColorPickerPos({ top: r.bottom + 7, left: Math.min(r.left, window.innerWidth - 168) }); } setNewColorPickerOpen(true); }}
+                  title={t("chooseColor")}
+                  style={{ width:24, height:24, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "none" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                  {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
                 </button>
-                {MILESTONE_COLORS.map(c => (
-                  <button key={c} onClick={() => setNewColor(newColor === c ? "" : c)}
-                    style={{ width:14, height:14, borderRadius:999, background:c, border: newColor===c ? `2px solid ${isWhite?"#18181b":"var(--text)"}` : "2px solid transparent", cursor:"pointer", transition:"border 120ms", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate" }} />
-                ))}
-              </div>
-              <div className="flex gap-1.5">
                 <input ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") submitNewEvent(); if (e.key==="Escape") setAddEventOpen(false); }}
                   placeholder={t("labelPlaceholder")}
                   className={isWhite ? "placeholder-dark" : undefined}
-                  style={{ ...inputStyle, flex:2, width:"auto" }} />
+                  style={{ ...inputStyle, flex:2, width:"auto", minWidth:0 }} />
                 <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                   lang={lang}
-                  style={{ ...inputStyle, flex:1, width:"auto" }} />
+                  style={{ ...inputStyle, flex:"0 1 90px", width:"auto", minWidth:0, padding:"6px 5px" }} />
               </div>
+              {newColorPickerOpen && newColorPickerPos && ReactDOM.createPortal(
+                <motion.div
+                  key="new-event-color-popover"
+                  ref={newColorPopoverRef}
+                  initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
+                  transition={{ type:"spring", stiffness:420, damping:28 }}
+                  onClick={e => e.stopPropagation()}
+                  style={{ position:"fixed", top:newColorPickerPos.top, left:newColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                >
+                  <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setNewColorPickerOpen(false)} />
+                  <button onClick={() => { setNewColor(""); setNewColorPickerOpen(false); }}
+                    title={t("noColor")}
+                    style={{ width:20, height:20, borderRadius:999, background:isWhite?"rgba(0,0,0,0.06)":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"), border: newColor==="" ? `1.5px solid ${isWhite?"#18181b":(dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)")}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
+                  </button>
+                  {MILESTONE_COLORS.map(c => (
+                    <button key={c} onClick={() => { setNewColor(newColor === c ? "" : c); setNewColorPickerOpen(false); }}
+                      title={c}
+                      style={{ width:20, height:20, borderRadius:999, background:c, border: newColor===c ? `1.5px solid ${isWhite?"#18181b":"var(--text)"}` : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: newColor===c ? "scale(1.08)" : "scale(1)" }}>
+                      {newColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
+                    </button>
+                  ))}
+                </motion.div>,
+                document.body
+              )}
               <div style={{ position:"relative" }}>
                 <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)}
                   placeholder={t("descPlaceholder")} rows={4}
