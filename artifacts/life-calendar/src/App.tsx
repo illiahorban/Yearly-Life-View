@@ -3900,7 +3900,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                   />
                   <div className="flex items-center gap-1.5" style={{ isolation:"isolate", flexWrap:"wrap" }}>
                     <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
-                      lang={lang} style={{ ...draftInputStyle, flex:1, minWidth:120 }}
+                      lang={lang} style={{ ...draftInputStyle, flex:"0 1 118px", minWidth:0, width:118 }}
                     />
                     <button
                       ref={draftColorBtnRef}
