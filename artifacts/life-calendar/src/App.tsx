@@ -3054,14 +3054,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <TextareaAutosize ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); submitNewEvent(); } if (e.key==="Escape") setAddEventOpen(false); }}
                   placeholder={t("labelPlaceholder")}
-                  className={isWhite ? "placeholder-dark" : undefined}
                   minRows={1}
                   style={{ ...inputStyle, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5 } as any} />
               </div>
               <div style={{ position:"relative" }}>
                 <TextareaAutosize value={newDesc} onChange={e => setNewDesc(e.target.value)}
                   placeholder={t("descPlaceholder")} minRows={2}
-                  className={isWhite ? "placeholder-dark" : undefined}
                   style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" } as any} />
               </div>
               {newColorPickerOpen && newColorPickerPos && ReactDOM.createPortal(
@@ -3076,13 +3074,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setNewColorPickerOpen(false)} />
                   <button onClick={() => { setNewColor(""); setNewColorPickerOpen(false); }}
                     title={t("noColor")}
-                    style={{ width:20, height:20, borderRadius:999, background:isWhite?"rgba(0,0,0,0.06)":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"), border: newColor==="" ? `1.5px solid ${isWhite?"#18181b":(dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)")}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: newColor==="" ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                   </button>
                   {MILESTONE_COLORS.map(c => (
                     <button key={c} onClick={() => { setNewColor(newColor === c ? "" : c); setNewColorPickerOpen(false); }}
                       title={c}
-                      style={{ width:20, height:20, borderRadius:999, background:c, border: newColor===c ? `1.5px solid ${isWhite?"#18181b":"var(--text)"}` : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: newColor===c ? "scale(1.08)" : "scale(1)" }}>
+                      style={{ width:20, height:20, borderRadius:999, background:c, border: newColor===c ? `1.5px solid var(--text)` : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: newColor===c ? "scale(1.08)" : "scale(1)" }}>
                       {newColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
                     </button>
                   ))}
@@ -3095,8 +3093,8 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     ref={newColorBtnRef}
                     onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
                     title={t("chooseColor")}
-                    style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "1.5px solid rgba(255,255,255,0.85)" : `1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow: newColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
-                    {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
+                    style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "1.5px solid rgba(255,255,255,0.85)" : `1.5px solid var(--border-soft)`, boxShadow: newColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                    {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                   </button>
                   <button
                     type="button"
