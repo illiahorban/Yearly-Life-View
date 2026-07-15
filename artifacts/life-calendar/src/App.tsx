@@ -602,7 +602,7 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   const ach = achromaticStyle(hex, dark);
   if (ach) {
     return {
-      bg:            ach.bg,
+      bg:            "transparent",
       textTitle:     ach.text,
       textDesc:      ach.text,
       icon:          ach.text,
@@ -638,7 +638,7 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   }
 
   return {
-    bg:            `${hex}20`,
+    bg:            "transparent",
     textTitle,
     textDesc:      textTitle,
     icon:          textTitle,
@@ -4717,6 +4717,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   className="flex items-center gap-2" style={{ position:"relative" }}
                 >
                   <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", alignItems:"center", gap:8, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
+                    {/* bEc.bg is transparent once a colour is picked; the neutral rgba
+                        fallback above only applies when no sprint colour is chosen. */}
                     {/* Color dot */}
                     <div style={{ position:"relative", flexShrink:0 }}>
                       <button type="button" onClick={(e) => {
