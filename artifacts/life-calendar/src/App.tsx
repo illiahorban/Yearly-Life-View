@@ -3052,7 +3052,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               const submitBg      = newLabel.trim() ? "#007aff" : (isWhite ? "#e4e4e7" : "rgba(128,128,128,0.15)");
               const submitColor   = newLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
-            <div style={{ background: cardBg, border:`1px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
+            <div style={{ background: cardBg, border:`1.5px solid ${cardBorder}`, boxShadow: ecNew.boxShadow || undefined, borderRadius:12, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, transition:"background 0.25s ease, border-color 0.25s ease" }}>
               <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
                 <TextareaAutosize ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); submitNewEvent(); } if (e.key==="Escape") setAddEventOpen(false); }}
