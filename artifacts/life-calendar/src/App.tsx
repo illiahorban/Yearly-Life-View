@@ -2782,12 +2782,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   const ec = getEventColors(goalColor ?? "", dark);
                   const containerBg = ec.bg;
                   const containerBorder = ec.border;
-                  // White/black are drawn in their literal colour everywhere for this goal
-                  // (border, checkbox) rather than the auto-inverted "readable ink" colour
-                  // getEventColors normally returns for achromatic hues — keep the goal's own
-                  // text in that same literal colour instead of flipping it for contrast.
-                  const isAchromaticExtreme = goalColor === "#ffffff" || goalColor === "#121212";
-                  const textColor = done ? "var(--text-tertiary)" : (isAchromaticExtreme ? goalColor! : ec.textTitle);
+                  // White/black/grey are drawn in their literal colour for this goal's text
+                  // rather than the auto-inverted "readable ink" colour getEventColors
+                  // normally returns for achromatic hues — keep the goal's own text in that
+                  // same literal swatch colour instead of flipping it for contrast.
+                  const greyHex = dark ? "#636366" : hexSaturate("#8e8e93", LIGHT_SAT_FACTOR);
+                  const isLiteralTextColor = goalColor === "#ffffff" || goalColor === "#121212" || goalColor === greyHex;
+                  const textColor = done ? "var(--text-tertiary)" : (isLiteralTextColor ? goalColor! : ec.textTitle);
                   const isHovered = hoveredGoalIdx === i;
                   const isColorOpen = goalColorPickerIdx === i;
                   const goalId = goalIds[i] ?? `goal-fallback-${i}`;
