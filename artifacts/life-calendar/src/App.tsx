@@ -2782,7 +2782,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   const ec = getEventColors(goalColor ?? "", dark);
                   const containerBg = ec.bg;
                   const containerBorder = ec.border;
-                  const textColor = done ? "var(--text-tertiary)" : ec.textTitle;
+                  // White/black are drawn in their literal colour everywhere for this goal
+                  // (border, checkbox) rather than the auto-inverted "readable ink" colour
+                  // getEventColors normally returns for achromatic hues — keep the goal's own
+                  // text in that same literal colour instead of flipping it for contrast.
+                  const isAchromaticExtreme = goalColor === "#ffffff" || goalColor === "#121212";
+                  const textColor = done ? "var(--text-tertiary)" : (isAchromaticExtreme ? goalColor! : ec.textTitle);
                   const isHovered = hoveredGoalIdx === i;
                   const isColorOpen = goalColorPickerIdx === i;
                   const goalId = goalIds[i] ?? `goal-fallback-${i}`;
@@ -2792,7 +2797,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
                       style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1.5px solid ${containerBorder}`, borderRadius:12, padding:"8px 59px 8px 10px", boxShadow: ec.boxShadow || undefined, transition:"background 150ms ease, border-color 150ms ease" }}>
-                      {(() => { const checkColor = goalColor ?? "#34c759"; const _gc = goalColor?.toLowerCase(); const uncheckedBorder = goalColor ? (_gc === "#ffffff" ? "#121212" : _gc === "#121212" ? "#ffffff" : `${checkColor}80`) : "var(--border-soft)"; return (
+                      {(() => { const checkColor = goalColor ?? "#34c759"; const _gc = goalColor?.toLowerCase(); const uncheckedBorder = goalColor ? ((_gc === "#ffffff" || _gc === "#121212") ? checkColor : `${checkColor}80`) : "var(--border-soft)"; return (
                       <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?checkColor:"transparent",border:`1.5px solid ${done?checkColor:uncheckedBorder}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke={swatchCheckColor(checkColor)} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
