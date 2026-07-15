@@ -4235,6 +4235,14 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
   const [confirmDeleteGoalId, setConfirmDeleteGoalId] = useState<string|null>(null);
   const [hoveredGoalId, setHoveredGoalId] = useState<string|null>(null);
 
+  // Tracks each goal-text field's rendered height so the row can grow as text
+  // wraps onto multiple lines, and so the color/delete overlay buttons can pin
+  // to the top-right corner instead of overlapping the wrapped text.
+  const [goalInputHeights, setGoalInputHeights] = useState<Record<string,number>>({});
+  const handleGoalInputHeightChange = (id: string, h: number) => {
+    setGoalInputHeights(prev => prev[id] === h ? prev : { ...prev, [id]: h });
+  };
+
   // Color picker state
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
   const [colorPickerGoalId, setColorPickerGoalId] = useState<string|null>(null);
@@ -4319,19 +4327,26 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
                 >
                   <span className="text-[11px] tabular-nums w-4 text-right shrink-0" style={{ color:"var(--text-tertiary)" }}>{idx+1}.</span>
                   <div style={{ flex:1, position:"relative" }}>
-                    <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
+                    <TextareaAutosize value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
+                      onHeightChange={h => handleGoalInputHeightChange(g.id, h)}
                       placeholder={`${t("goalPlaceholder")} ${idx+1}`}
                       className={placeholderClass}
-                      style={{ width:"100%", background:inputBackground, border:`1.5px solid ${inputBorderColor}`, borderRadius:12, padding:"8px 56px 8px 10px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", boxShadow: ec.boxShadow || undefined, transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
+                      minRows={1}
+                      style={{ width:"100%", resize:"none", overflow:"hidden", background:inputBackground, border:`1.5px solid ${inputBorderColor}`, borderRadius:12, padding:"8px 59px 8px 10px", fontSize:13, lineHeight:1.4, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", display:"block", boxShadow: ec.boxShadow || undefined, transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
-                    <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:6, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
+                    <div style={{ position:"absolute", top: (goalInputHeights[g.id] ?? 20) > 24 ? 8 : "50%", transform: (goalInputHeights[g.id] ?? 20) > 24 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", isolation:"isolate" }}>
                       <button
                         ref={el => { colorBtnRefs.current[g.id] = el; }}
                         onClick={e => { e.stopPropagation(); toggleColorPicker(g.id); }}
+                        onPointerDown={e => e.stopPropagation()}
                         title={t("chooseColor")}
-                        style={{ width:13, height:13, borderRadius:999, background: gc ?? (dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", padding:0, flexShrink:0, display:"block", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
-                      />
+                        aria-label={t("chooseColor")}
+                        style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: gc || "transparent", border: gc ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: gc ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+                      >
+                        {!gc && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
+                      </button>
                       <button onClick={() => setConfirmDeleteGoalId(g.id)}
+                        onPointerDown={e => e.stopPropagation()}
                         style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background 0.1s" }}
                         onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
                         onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
