@@ -2763,10 +2763,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 {Array.from({length:goalsDraft.count},(_,i)=>{
                   const done = goalsDraft.done[i]??false;
                   const goalColor = goalsDraft.colors?.[i];
-                  const ec = goalColor ? getEventColors(goalColor, dark) : null;
-                  const containerBg = ec ? ec.bg : (dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.03)");
-                  const containerBorder = ec ? ec.border : (dark?"rgba(255,255,255,0.09)":"rgba(0,0,0,0.07)");
-                  const textColor = done ? "var(--text-tertiary)" : (ec ? ec.textTitle : "var(--text)");
+                  const ec = getEventColors(goalColor ?? "", dark);
+                  const containerBg = ec.bg;
+                  const containerBorder = ec.border;
+                  const textColor = done ? "var(--text-tertiary)" : ec.textTitle;
                   const isHovered = hoveredGoalIdx === i;
                   const isColorOpen = goalColorPickerIdx === i;
                   const goalId = goalIds[i] ?? `goal-fallback-${i}`;
@@ -2775,7 +2775,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     <div
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
-                      style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1px solid ${containerBorder}`, borderRadius:10, padding:"8px 46px 8px 10px", transition:"background 150ms ease, border-color 150ms ease" }}>
+                      style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1.5px solid ${containerBorder}`, borderRadius:12, padding:"8px 46px 8px 10px", boxShadow: ec.boxShadow || undefined, transition:"background 150ms ease, border-color 150ms ease" }}>
                       {(() => { const checkColor = goalColor ?? "#34c759"; const _gc = goalColor?.toLowerCase(); const uncheckedBorder = goalColor ? (_gc === "#ffffff" ? "#121212" : _gc === "#121212" ? "#ffffff" : `${checkColor}80`) : "var(--border-soft)"; return (
                       <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?checkColor:"transparent",border:`1.5px solid ${done?checkColor:uncheckedBorder}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke={swatchCheckColor(checkColor)} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -4291,12 +4291,11 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           <div className="flex flex-col gap-1.5">
             {goals.map((g, idx) => {
               const gc = g.color;
+              const ec = getEventColors(gc ?? "", dark);
+              const inputBackground = ec.bg;
+              const inputBorderColor = ec.border;
+              const inputTextColor = ec.textTitle;
               const ach = gc ? achromaticStyle(resolveNoteHex(gc), dark) : null;
-              const tintedBorder = gc ? `color-mix(in srgb, ${gc} 55%, ${borderColor})` : borderColor;
-              const tintedBg = gc ? `color-mix(in srgb, ${gc} ${dark?18:12}%, ${inputBg})` : inputBg;
-              const inputBackground = ach ? ach.bg : tintedBg;
-              const inputBorderColor = ach ? ach.border : tintedBorder;
-              const inputTextColor = ach ? ach.text : "var(--text)";
               const placeholderClass = ach ? `placeholder-goal-${ach.tier}` : undefined;
               const dotBorder = ach?.tier === "white" ? "1.5px solid rgba(0,0,0,0.35)" : `1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`;
               return (
@@ -4309,7 +4308,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
                     <input value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
                       placeholder={`${t("goalPlaceholder")} ${idx+1}`}
                       className={placeholderClass}
-                      style={{ width:"100%", background:inputBackground, border:`1px solid ${inputBorderColor}`, borderRadius:8, padding:"6px 56px 6px 9px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
+                      style={{ width:"100%", background:inputBackground, border:`1.5px solid ${inputBorderColor}`, borderRadius:12, padding:"8px 56px 8px 10px", fontSize:13, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", boxShadow: ec.boxShadow || undefined, transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
                     <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:6, display:"flex", alignItems:"center", gap:6, opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
                       <button
