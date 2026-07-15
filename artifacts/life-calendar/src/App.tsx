@@ -2226,7 +2226,11 @@ function NoteEntryItem({
           </button>
           <button onClick={() => setConfirmDeleteEntryId(entry.id)}
             onPointerDown={e => e.stopPropagation()}
-            style={{ width:22, height:22, borderRadius:6, border:"none", background: dark?"rgba(255,59,48,0.18)":"rgba(255,59,48,0.12)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms" }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity: hoveredEntryId === entry.id ? 1 : 0, pointerEvents: hoveredEntryId === entry.id ? "auto" : "none", transition:"opacity 150ms, background 0.1s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
+          </button>
         </div>
       </div>
     </DraggableCard>
@@ -3706,7 +3710,11 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                           <button
                             onClick={e => { e.stopPropagation(); setConfirmDeleteDk(dk); }}
                             title={t("remove")}
-                            style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: 6, background: dark ? "rgba(255,59,48,0.18)" : "rgba(255,59,48,0.12)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#ff3b30", flexShrink: 0 }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg></button>
+                            style={{ position: "absolute", top: 8, right: 8, width: 26, height: 26, borderRadius: 999, background: dark ? "rgba(255,59,48,0.15)" : "rgba(255,59,48,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#ff3b30", flexShrink: 0, transition: "background 0.1s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
+                            <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
+                          </button>
                         )}
                       </div>
                     ))}
