@@ -2055,7 +2055,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
             const clipped = lines.length > MAX_LINES;
             const displayText = clipped ? lines.slice(0, MAX_LINES).join("\n") + "\n…" : n.text;
             return (
-              <div key={n.id} style={{ marginTop: i > 0 ? 5 : 0, padding:"6px 9px", borderRadius:8, background: "rgba(255,255,255,0.06)", border: n.color ? `1.5px solid color-mix(in srgb, ${n.color} 50%, rgba(255,255,255,0.12))` : "1px solid rgba(255,255,255,0.08)", whiteSpace:"pre-wrap", overflow:"hidden", maxHeight:`${MAX_LINES * LINE_H}px` }}>{displayText}</div>
+              <div key={n.id} style={{ marginTop: i > 0 ? 5 : 0, padding:"6px 9px", borderRadius:8, background: "rgba(255,255,255,0.06)", border: n.color ? `1.5px solid color-mix(in srgb, ${n.color} 55%, white)` : "1px solid rgba(255,255,255,0.08)", whiteSpace:"pre-wrap", overflow:"hidden", maxHeight:`${MAX_LINES * LINE_H}px` }}>{displayText}</div>
             );
           })}
           {!arrowOnTop && <div style={{ position:"absolute", top:"100%", left:arrowLeft, width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />}
