@@ -382,11 +382,10 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   const hex = (!dark) ? hexSaturate(rawHex, LIGHT_SAT_FACTOR) : rawHex;
   const [r,g,b] = hexToRgb(hex);
   const isAchromaticDark = meta.colorKey === "black" || meta.colorKey === "grey";
-  // Adjust text color for low-contrast hues in light mode — darkened to the *same* hue/
-  // saturation as the quarter's own border/fill (via HSL lightness only) so every yellow
-  // element in the UI reads as one consistent shade instead of an unrelated brownish tone.
-  const textHex = (!dark && meta.colorKey==="yellow") ? (() => { const { h, s } = rgbToHsl(r, g, b); const [tr, tg, tb] = hslToRgb(h, s, 0.38); const toH = (n: number) => n.toString(16).padStart(2, "0"); return `#${toH(tr)}${toH(tg)}${toH(tb)}`; })()
-                : (!dark && meta.colorKey==="mint")   ? "#008a82"
+  // Adjust text color for low-contrast hues in light mode. Yellow is exempt: text/icons use
+  // the exact same hex as the quarter's border/fill/day-tiles so every yellow element in the
+  // UI matches one single shade (no separate darkened variant for legibility).
+  const textHex = (!dark && meta.colorKey==="mint")   ? "#008a82"
                 : (!dark && meta.colorKey==="teal")   ? "#007ea5"
                 : meta.colorKey==="white"             ? (dark ? "#ebebf5" : "#3a3a3c")
                 : isAchromaticDark                    ? (dark ? "#ffffff" : "#1c1c1e")
