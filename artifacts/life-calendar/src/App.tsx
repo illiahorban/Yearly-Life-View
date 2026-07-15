@@ -558,23 +558,13 @@ function goalCheckboxColors(colorHex: string | undefined, dark: boolean, fallbac
     return { doneBg: ach.bg, doneBorder: ach.border, emptyBg: "transparent", emptyBorder: ach.border, icon: ach.icon };
   }
 
-  // When no goal colour, derive from the sprint/quarter color key using the real APPLE_COLORS
-  // hex (not fill, which is overridden to "#ffffff" for black/grey in dark mode).
-  if (!colorHex && fallbackColorKey) {
-    const ac = APPLE_COLORS.find(c => c.key === fallbackColorKey);
-    if (ac) {
-      const rawHex = dark ? ac.dark : ac.light;
-      const kAch = goalCheckboxAchromaticStyle(rawHex, dark);
-      if (kAch) {
-        return { doneBg: kAch.bg, doneBorder: kAch.border, emptyBg: "transparent", emptyBorder: kAch.border, icon: kAch.icon };
-      }
-    }
+  if (colorHex) {
+    return { doneBg: colorHex, doneBorder: colorHex, emptyBg: "transparent", emptyBorder: colorHex, icon: "#ffffff" };
   }
 
-  const hex = colorHex ?? fallbackHex;
-  const fallbackAch = !colorHex ? goalCheckboxAchromaticStyle(resolveNoteHex(fallbackHex), dark) : null;
-  const icon = fallbackAch ? fallbackAch.icon : "#ffffff";
-  return { doneBg: hex, doneBorder: hex, emptyBg: "transparent", emptyBorder: hex, icon };
+  // No colour chosen for this specific goal: keep the checkbox neutral instead of
+  // inheriting the sprint/quarter accent colour, matching the day-goal checkbox default.
+  return { doneBg: "#34c759", doneBorder: "#34c759", emptyBg: "transparent", emptyBorder: "var(--border-soft)", icon: "#ffffff" };
 }
 
 // ─── Centralized event/milestone color helper ─────────────────────────────────
