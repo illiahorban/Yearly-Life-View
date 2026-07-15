@@ -2786,8 +2786,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   // rather than the auto-inverted "readable ink" colour getEventColors
                   // normally returns for achromatic hues — keep the goal's own text in that
                   // same literal swatch colour instead of flipping it for contrast.
-                  const greyHex = dark ? "#636366" : hexSaturate("#8e8e93", LIGHT_SAT_FACTOR);
-                  const isLiteralTextColor = goalColor === "#ffffff" || goalColor === "#121212" || goalColor === greyHex;
+                  // Grey's stored hex depends on the theme active when it was picked (light
+                  // mode saturates it, dark mode doesn't), which may differ from the current
+                  // theme — so match against both variants rather than only the current one.
+                  const isLiteralTextColor = goalColor === "#ffffff" || goalColor === "#121212"
+                    || goalColor === "#636366" || goalColor === hexSaturate("#8e8e93", LIGHT_SAT_FACTOR);
                   const textColor = done ? "var(--text-tertiary)" : (isLiteralTextColor ? goalColor! : ec.textTitle);
                   const isHovered = hoveredGoalIdx === i;
                   const isColorOpen = goalColorPickerIdx === i;
