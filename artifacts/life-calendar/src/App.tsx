@@ -250,7 +250,7 @@ const LangContext = React.createContext<LangCtx>({ t: k => I18N.en[k] ?? k, mont
 const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
-type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; text: string; soft: string; darkSoft: string };
+type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; text: string; nameColor: string; soft: string; darkSoft: string };
 type Block = { id: string; weeks: number; label: string; color?: AppleColorKey };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
@@ -394,6 +394,12 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // stay legible — the card/day-tile surface itself keeps each colour's true hue (grey
   // stays grey, black stays black), only the content drawn on top gets the contrast boost.
   const fill = (isAchromaticDark && dark) ? "#ffffff" : hex;
+  // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
+  // colour surface the way percentages/progress bars are, so they don't need the
+  // white/black contrast boost applied to `text` for legibility. For grey specifically,
+  // keep them showing the actual grey swatch (a legible mid-tone in both themes) instead
+  // of being swapped to white/black like the rest of the achromatic UI.
+  const nameColor = meta.colorKey === "grey" ? (dark ? "#aeaeb2" : "#8e8e93") : textHex;
   return {
     key: meta.colorKey,
     label: meta.name,
@@ -402,6 +408,7 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
     border: hex,
     fill,
     text: textHex,
+    nameColor,
     soft:     `rgba(${r},${g},${b},0.22)`,
     darkSoft: `rgba(${r},${g},${b},0.36)`,
   };
@@ -1300,12 +1307,12 @@ function App() {
                   <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
                     <div className="flex items-center gap-2">
                       {/* Editable quarter name */}
-                      <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.text} />
+                      <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.nameColor} />
                       <span className="text-[11px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
-                        style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.text : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                        style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.nameColor : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                       ><GoalsIcon /></button>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
@@ -1666,7 +1673,7 @@ function BlocksRenderer({
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
-                  <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.text} />
+                  <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.nameColor} />
                   {blockStreak > 0 && (
                     <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", display:"flex", alignItems:"center", justifyContent:"center", gap:4, lineHeight:1 }}>
                       <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
@@ -1675,7 +1682,7 @@ function BlocksRenderer({
                   )}
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
-                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.text : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                      style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.nameColor : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                     ><GoalsIcon /></button>
                     <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{pluralWeeks(block.weeks, lang, t)}</span>
                   </div>
@@ -3400,7 +3407,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                   <div style={{ borderRadius:16, border:`1.5px solid ${qr.border}`, overflow:"hidden", background:"transparent" }}>
 
                     {/* Quarter card header */}
-                    {(() => { const qHeaderText = readableGoalTextColor(qr.text, dark, "var(--text)"); return (
+                    {(() => { const qHeaderText = readableGoalTextColor(qr.nameColor, dark, "var(--text)"); return (
                     <div style={{ padding:"10px 14px 8px", display:"flex", alignItems:"center", gap:6 }}>
                       <span style={{ fontSize:12, fontWeight:700, letterSpacing:"-0.01em", color: qHeaderText, flex:1 }}>{qr.label ?? t(`q${qi+1}` as keyof typeof t)}</span>
                       <span style={{ fontSize:11, color: qHeaderText, opacity:0.6, flexShrink:0 }}>{qTotal}/{qAllTotal}</span>
@@ -3441,7 +3448,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                       <div style={{ padding:"0 8px 8px", display:"flex", flexDirection:"column", gap:5 }}>
                         {blocksWithGoals.map(({ block, goals }) => {
                           const effectiveQ = block.color ? resolveQuarter({ name: block.label, colorKey: block.color }, dark) : qr;
-                          const sprintHeaderText = readableGoalTextColor(effectiveQ.text, dark, "var(--text)");
+                          const sprintHeaderText = readableGoalTextColor(effectiveQ.nameColor, dark, "var(--text)");
                           return (
                             <div key={block.id} style={{ borderRadius:11, border:`1.5px solid ${effectiveQ.border}`, overflow:"hidden", background:"transparent" }}>
                               <div style={{ padding:"6px 10px 5px", background:"transparent", borderBottom:`1px solid ${effectiveQ.border}55`, display:"flex", alignItems:"center", gap:6 }}>
