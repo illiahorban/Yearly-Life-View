@@ -4322,16 +4322,17 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           />
         </div>
 
+        <div style={{ height:1, background:borderColor }} />
+
         {goals.length === 0 ? (
-          <div className="px-5 pb-3">
-            <div style={{ height:1, background:borderColor, marginBottom:12 }} />
+          <div className="px-5 py-3">
             <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false }])}
               style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
               <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addGoal")}
             </button>
           </div>
         ) : (
-        <div className="px-5 pb-3">
+        <div className="px-5 pt-3 pb-3">
           <div className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color:"var(--text-tertiary)" }}>
             {t("goalsLabel")} ({activeGoals.length})
           </div>
