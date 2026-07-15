@@ -4747,6 +4747,11 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 // cards (getEventColors), so choosing a sprint colour visibly colours
                 // its row here, in the sprint distribution modal.
                 const bEc = bAc ? getEventColors(bHex, dark) : null;
+                // The row background stays transparent (bEc.bg), so its text sits directly on the
+                // modal's page background rather than a filled surface — use the literal colour for
+                // white/black/grey instead of getEventColors' contrast-flipped textTitle, consistent
+                // with the goal-text literal-colour fix.
+                const bTextColor = bAc ? readableGoalTextColor(bHex, dark, "var(--text)") : "var(--text)";
                 return (
                 <motion.div layout key={b.id} initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                   className="flex items-center gap-2" style={{ position:"relative" }}
@@ -4768,11 +4773,11 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                     <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
                       style={{ width:20, height:20, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>{idx+1}</div>
                     <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder={t("sprintLabelPlaceholder")}
-                      className="flex-1 bg-transparent outline-none text-[13px]" style={{ color: bEc ? bEc.textTitle : "var(--text)" }} />
+                      className="flex-1 bg-transparent outline-none text-[13px]" style={{ color: bTextColor }} />
                     <div className="flex items-center gap-1" style={{ background:"rgba(120,120,128,0.20)", border:"1px solid rgba(120,120,128,0.40)", borderRadius:8, padding:2 }}>
-                      <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bEc ? bEc.textTitle : "var(--text-secondary)" }}>−</button>
-                      <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bEc ? bEc.textTitle : "var(--text)" }}>{b.weeks}</span>
-                      <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bEc ? bEc.textTitle : "var(--text-secondary)" }}>+</button>
+                      <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>−</button>
+                      <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bTextColor }}>{b.weeks}</span>
+                      <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>+</button>
                     </div>
                     <button type="button" title={t("resetSprint")} onClick={() => setConfirmResetId(b.id)}
                       className="w-7 h-7 flex items-center justify-center rounded-md"
