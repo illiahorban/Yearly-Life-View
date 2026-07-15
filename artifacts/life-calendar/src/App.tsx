@@ -606,11 +606,14 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
   const ach = achromaticStyle(hex, dark);
   if (ach) {
+    // White has ach.text="#18181b" (designed for a white bg), but bg is transparent,
+    // so in dark mode the card sits on a dark surface — use white text instead.
+    const text = (ach.tier === "white" && dark) ? "#ffffff" : ach.text;
     return {
       bg:            "transparent",
-      textTitle:     ach.text,
-      textDesc:      ach.text,
-      icon:          ach.text,
+      textTitle:     text,
+      textDesc:      text,
+      icon:          text,
       border:        ach.border,
       borderEditing: ach.border,
       boxShadow:     ach.ring ?? "",
