@@ -451,6 +451,12 @@ function luminanceOf(hex: string): number {
  *  light mode). `fallback` is used when the goal has no colour at all. */
 function readableGoalTextColor(colorHex: string | undefined, dark: boolean, fallback: string): string {
   if (!colorHex) return fallback;
+  // White/black/grey are shown in their literal colour even where the lum heuristic below
+  // would otherwise swap them for the theme's standard text colour — mirrors the day-goal
+  // fix so sprint/quarter/year goals stay consistent with day goals.
+  const isLiteralAchromatic = colorHex === "#ffffff" || colorHex === "#121212"
+    || colorHex === "#636366" || colorHex === hexSaturate("#8e8e93", LIGHT_SAT_FACTOR);
+  if (isLiteralAchromatic) return colorHex;
   const lum = luminanceOf(colorHex);
   if (dark && lum < 0.25) return "var(--text)";
   if (!dark && lum > 0.75) return "var(--text)";
