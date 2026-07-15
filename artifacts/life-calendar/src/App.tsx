@@ -2783,12 +2783,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   const ec = getEventColors(goalColor ?? "", dark);
                   const containerBg = ec.bg;
                   const containerBorder = ec.border;
-                  // White/black/grey (any achromatic hue, regardless of which exact hex
-                  // variant is stored) are drawn in their literal colour for this goal's
-                  // text rather than the auto-inverted "readable ink" colour getEventColors
-                  // normally returns for achromatic hues.
-                  const isLiteralTextColor = !!goalColor && !!achromaticStyle(goalColor, dark);
-                  const textColor = done ? "var(--text-tertiary)" : (isLiteralTextColor ? goalColor! : ec.textTitle);
+                  const textColor = done ? "var(--text-tertiary)" : ec.textTitle;
                   const isHovered = hoveredGoalIdx === i;
                   const isColorOpen = goalColorPickerIdx === i;
                   const goalId = goalIds[i] ?? `goal-fallback-${i}`;
@@ -4354,7 +4349,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
               // White/black/grey show their literal colour as text instead of the
               // auto-inverted "readable ink" colour getEventColors returns for achromatic
               // hues — mirrors the day-goal fix.
-              const inputTextColor = ach ? gc! : ec.textTitle;
+              const inputTextColor = ec.textTitle;
               const placeholderClass = ach ? `placeholder-goal-${ach.tier}` : undefined;
               const dotBorder = ach?.tier === "white" ? "1.5px solid rgba(0,0,0,0.35)" : `1.5px solid ${dark?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.9)"}`;
               return (
