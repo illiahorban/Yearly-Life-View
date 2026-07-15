@@ -3037,18 +3037,15 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           <div ref={addEventFormRef} style={{ maxHeight: addEventOpen ? "2000px" : 0, opacity: addEventOpen ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: addEventOpen ? "auto" : "none" }}>
             {(() => {
               const ecNew = getEventColors(newColor, dark);
-              const isWhite = newColor === "#ffffff";
-              // White theme: fully light card regardless of dark mode
-              const cardBg     = isWhite ? "#ffffff" : ecNew.bg;
-              const cardBorder = isWhite ? "#d4d4d8" : (ecNew.border || (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"));
-              const inputBg     = isWhite ? "transparent" : ecNew.formBg;
-              const inputBorder = isWhite ? "1px solid #d4d4d8" : `1px solid ${ecNew.formBorder}`;
-              const inputText   = isWhite ? "#18181b" : "var(--text)";
+              const cardBg     = ecNew.bg;
+              const cardBorder = ecNew.border || (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)");
+              const inputBg     = ecNew.formBg;
+              const inputBorder = `1px solid ${ecNew.formBorder}`;
+              const inputText   = ecNew.textTitle || "var(--text)";
               const inputStyle: React.CSSProperties = { background: inputBg, border: inputBorder, borderRadius:8, padding:"6px 9px", fontSize:12, color: inputText, outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
-              const labelText   = isWhite ? "#18181b" : "var(--text-secondary)";
-              // Buttons: white theme gets dark zinc-900 primary, light-bordered cancel
-              const cancelBorder  = isWhite ? "1px solid #a1a1aa" : `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}`;
-              const cancelColor   = isWhite ? "#18181b" : "var(--text-secondary)";
+              const labelText   = ecNew.icon || "var(--text-secondary)";
+              const cancelBorder  = `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}`;
+              const cancelColor   = "var(--text-secondary)";
               const submitBg      = newLabel.trim() ? "#007aff" : (isWhite ? "#e4e4e7" : "rgba(128,128,128,0.15)");
               const submitColor   = newLabel.trim() ? "#ffffff" : (isWhite ? "#71717a" : "var(--text-tertiary)");
               return (
