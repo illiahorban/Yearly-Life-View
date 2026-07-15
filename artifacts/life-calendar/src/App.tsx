@@ -454,10 +454,10 @@ function luminanceOf(hex: string): number {
  *  light mode). `fallback` is used when the goal has no colour at all. */
 function readableGoalTextColor(colorHex: string | undefined, dark: boolean, fallback: string): string {
   if (!colorHex) return fallback;
-  // White/black/grey (any achromatic hue, regardless of which exact hex variant is stored)
-  // are shown in their canonical light-mode hex so that dark-mode grey (#636366) displays
-  // at the same shade (#8e8e93) as the swatch — matching getEventColors behaviour.
-  if (achromaticStyle(colorHex, dark)) return resolveNoteHex(colorHex);
+  // For grey: return the unified display shade #71717a matching getEventColors.
+  // For black/white: return the canonical light-mode hex unchanged.
+  const _ach = achromaticStyle(colorHex, dark);
+  if (_ach) return _ach.tier === "grey" ? "#71717a" : resolveNoteHex(colorHex);
   const lum = luminanceOf(colorHex);
   if (dark && lum < 0.25) return "var(--text)";
   if (!dark && lum > 0.75) return "var(--text)";
@@ -517,6 +517,17 @@ function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
 function resolveNoteHex(hex: string): string {
   const ac = APPLE_COLORS.find(c => c.light === hex || c.dark === hex);
   return ac ? ac.light : hex;
+}
+
+/** For the grey achromatic tier specifically, normalises any stored grey variant
+ *  (light #8e8e93 or dark #636366) to the display grey #71717a (zinc-500) — a
+ *  shade that renders equally vivid for both border lines and anti-aliased text
+ *  on any background.  Returns the original hex unchanged for all other colours
+ *  (including black and white). */
+function normaliseGrey(hex: string | undefined): string | undefined {
+  if (!hex) return undefined;
+  const tier = achromaticStyle(resolveNoteHex(hex), false)?.tier;
+  return tier === "grey" ? "#71717a" : hex;
 }
 
 /** Mirror of achromaticStyle, tuned for the tiny sprint/quarter goal checkboxes:
@@ -605,19 +616,17 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
   const ach = achromaticStyle(hex, dark);
   if (ach) {
-    // Normalise to the canonical light-mode hex so that the dark-mode grey
-    // variant (#636366) displays at the same shade (#8e8e93) as the swatch —
-    // black and white are identical in both modes, so resolveNoteHex is a no-op
-    // for them; only grey changes, ensuring text and border always match the
-    // colour the user sees in the colour picker.
-    const canonicalHex = resolveNoteHex(hex);
+    // Grey: use #71717a (zinc-500) — a shade that renders equally vivid for
+    // both anti-aliased text and crisp border lines in both themes.
+    // Black/white: use the canonical light-mode hex unchanged.
+    const displayHex = ach.tier === "grey" ? "#71717a" : resolveNoteHex(hex);
     return {
       bg:            "transparent",
-      textTitle:     canonicalHex,
-      textDesc:      canonicalHex,
-      icon:          canonicalHex,
-      border:        canonicalHex,
-      borderEditing: canonicalHex,
+      textTitle:     displayHex,
+      textDesc:      displayHex,
+      icon:          displayHex,
+      border:        displayHex,
+      borderEditing: displayHex,
       boxShadow:     ach.ring ?? "",
       marker:        ach.marker,
       formBg:        dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
@@ -2220,7 +2229,7 @@ function NoteEntryItem({
             title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
             aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
             data-testid={`note-color-btn-${idx}`}
-            style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: entryColor || "transparent", border: entryColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: entryColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+            style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(entryColor) || "transparent", border: entryColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: entryColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
           >
             {!entryColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
           </button>
@@ -2984,7 +2993,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                               ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
                               onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
                               title={t("chooseColor")}
-                              style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: msEditColor || "transparent", border: msEditColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(msEditColor) || "transparent", border: msEditColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                               {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                             </button>
                             <button
@@ -3082,7 +3091,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     ref={newColorBtnRef}
                     onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
                     title={t("chooseColor")}
-                    style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: newColor || "transparent", border: newColor ? "1.5px solid rgba(255,255,255,0.85)" : `1.5px solid var(--border-soft)`, boxShadow: newColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                    style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(newColor) || "transparent", border: newColor ? "1.5px solid rgba(255,255,255,0.85)" : `1.5px solid var(--border-soft)`, boxShadow: newColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                     {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                   </button>
                   <button
@@ -4364,7 +4373,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
                         onPointerDown={e => e.stopPropagation()}
                         title={t("chooseColor")}
                         aria-label={t("chooseColor")}
-                        style={{ width:20, height:20, borderRadius:999, flexShrink:0, background: gc || "transparent", border: gc ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: gc ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}
+                        style={{ width:20, height:20, borderRadius:999, flexShrink:0, background: normaliseGrey(gc) || "transparent", border: gc ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: gc ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}
                       >
                         {!gc && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                       </button>
