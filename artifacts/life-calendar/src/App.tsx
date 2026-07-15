@@ -1363,7 +1363,7 @@ function App() {
                                 <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : cb.emptyBg, border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
                                   {goal.done && <CheckIcon color={cb.icon} />}
                                 </div>
-                                <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
+                                <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1, minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}>
                                   {goal.text}
                                 </span>
                               </label>
@@ -1730,7 +1730,7 @@ function BlocksRenderer({
                             <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : cb.emptyBg, border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease", cursor:"pointer" }}>
                               {goal.done && <CheckIcon color={cb.icon} />}
                             </div>
-                            <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1 }}>
+                            <span className="text-[11px] leading-snug" style={{ textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.5 : 1, minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}>
                               {goal.text}
                             </span>
                           </label>
@@ -2798,7 +2798,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         onMouseDown={e => { if (goalColorPickerIdx !== null) setGoalColorPickerIdx(null); e.stopPropagation(); }}
                         placeholder={`${t("goal")} ${i+1}`}
                         minRows={1}
-                        style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
+                        style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",overflowWrap:"anywhere",wordBreak:"break-word",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
                       />
                       <div style={{ position:"absolute", top: (goalHeights[i] ?? 18) > 20 ? 8 : "50%", transform: (goalHeights[i] ?? 18) > 20 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", isolation:"isolate" }}>
                         <button
@@ -3369,7 +3369,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                           <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                             {goal.done && <CheckIcon />}
                           </div>
-                          <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                          <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}>{goal.text}</span>
                         </label>
                       );
                     })}
@@ -3429,7 +3429,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                               <div style={{ boxSizing:"border-box", width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : cb.emptyBg, border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                 {goal.done && <CheckIcon color={cb.icon} />}
                               </div>
-                              <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? `${qr.text}66` : readableGoalTextColor(goal.color, dark, qr.text), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.6 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                              <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? `${qr.text}66` : readableGoalTextColor(goal.color, dark, qr.text), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.6 : 1, transition:"all 150ms", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}>{goal.text}</span>
                             </label>
                           );
                         })}
@@ -3463,7 +3463,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                                       <div style={{ boxSizing:"border-box", width:13, height:13, borderRadius:3, flexShrink:0, marginTop:1, background: goal.done ? cb.doneBg : cb.emptyBg, border:`1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                                         {goal.done && <CheckIcon color={cb.icon} />}
                                       </div>
-                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text-secondary)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms" }}>{goal.text}</span>
+                                      <span style={{ fontSize:11, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text-secondary)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}>{goal.text}</span>
                                     </label>
                                   );
                                 })}
@@ -4332,7 +4332,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
                       placeholder={`${t("goalPlaceholder")} ${idx+1}`}
                       className={placeholderClass}
                       minRows={1}
-                      style={{ width:"100%", resize:"none", overflow:"hidden", background:inputBackground, border:`1.5px solid ${inputBorderColor}`, borderRadius:12, padding:"8px 59px 8px 10px", fontSize:13, lineHeight:1.4, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", display:"block", boxShadow: ec.boxShadow || undefined, transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
+                      style={{ width:"100%", resize:"none", overflow:"hidden", overflowWrap:"anywhere", wordBreak:"break-word", background:inputBackground, border:`1.5px solid ${inputBorderColor}`, borderRadius:12, padding:"8px 59px 8px 10px", fontSize:13, lineHeight:1.4, color:inputTextColor, outline:"none", fontFamily:"inherit", boxSizing:"border-box", display:"block", boxShadow: ec.boxShadow || undefined, transition:"background 200ms ease, border-color 200ms ease, color 200ms ease" }}
                     />
                     <div style={{ position:"absolute", top: (goalInputHeights[g.id] ?? 20) > 24 ? 8 : "50%", transform: (goalInputHeights[g.id] ?? 20) > 24 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?1:0, pointerEvents:(hoveredGoalId===g.id||colorPickerGoalId===g.id)?"auto":"none", isolation:"isolate" }}>
                       <button
