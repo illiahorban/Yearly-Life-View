@@ -2899,7 +2899,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
                       {/* position:relative anchors the absolute action buttons */}
-                      {(() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description); return (
+                      {(() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description || ms.recurring); return (
                       <div style={{ padding:"8px 10px", position:"relative" }}>
                         {/* Content block — paddingRight: 76px (thin, row) ↔ 44px (multiline, column) */}
                         <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
@@ -4131,7 +4131,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           document.body
                         )}
                       </div>
-                    ) : (() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description); return (
+                    ) : (() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description || ms.recurring); return (
                       <>
                         {/* Content block — paddingRight: 76px (thin, row) ↔ 44px (multiline, column) */}
                         <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
