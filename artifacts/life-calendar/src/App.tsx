@@ -606,16 +606,19 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
   const ach = achromaticStyle(hex, dark);
   if (ach) {
-    // For grey, ach.border is a pale neutral (#e4e4e7 in light) — invisible as text.
-    // Use the canonical swatch hex (e.g. #8e8e93) so it matches the palette colour.
-    const textColor = ach.tier === "grey" ? resolveNoteHex(hex) : ach.border;
+    // For grey, ach.border is a pale neutral (#e4e4e7 in light) — invisible as both
+    // border and text. Use the canonical swatch hex (#8e8e93) so it matches the palette.
+    const greyHex = ach.tier === "grey" ? resolveNoteHex(hex) : null;
+    const textColor = greyHex ?? ach.border;
+    const borderColor = greyHex ? `${greyHex}99` : ach.border;
+    const borderEditing = greyHex ? `${greyHex}cc` : ach.border;
     return {
       bg:            "transparent",
       textTitle:     textColor,
       textDesc:      textColor,
       icon:          textColor,
-      border:        ach.border,
-      borderEditing: ach.border,
+      border:        borderColor,
+      borderEditing: borderEditing,
       boxShadow:     ach.ring ?? "",
       marker:        ach.marker,
       formBg:        dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
