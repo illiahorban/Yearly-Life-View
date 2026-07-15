@@ -2452,16 +2452,28 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   // Track whether a day-event's title wraps onto 2+ lines, so the edit/delete
   // buttons can stack vertically (delete on top, edit below) instead of side by side.
   const msLabelRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
+  // msContentRefs tracks the full content div (title + desc + badge) for height-based layout switching
+  const msContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [msLabelMultiline, setMsLabelMultiline] = useState<Record<string, boolean>>({});
   const measureMsLabels = useCallback(() => {
     setMsLabelMultiline(prev => {
       let changed = false;
       const next = { ...prev };
-      msLabelRefs.current.forEach((el, id) => {
-        if (!el) return;
-        const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 18;
-        const isMulti = el.scrollHeight > lineHeight * 1.5;
-        if (next[id] !== isMulti) { next[id] = isMulti; changed = true; }
+      const ids = new Set([...msLabelRefs.current.keys(), ...msContentRefs.current.keys()]);
+      ids.forEach(id => {
+        const labelEl = msLabelRefs.current.get(id);
+        const contentEl = msContentRefs.current.get(id);
+        // Title wrap detection (existing logic)
+        const lineH = labelEl ? (parseFloat(getComputedStyle(labelEl).lineHeight) || 18) : 18;
+        const titleWraps = labelEl ? labelEl.scrollHeight > lineH * 1.5 : false;
+        // Content height detection with hysteresis:
+        //   SET=40px  → trigger vertical (1-line+1-line≈36px stays horizontal ✓)
+        //   REVERT=33 → prevents oscillation when paddingRight widens on switch
+        const wasTall = prev[id] ?? false;
+        const h = contentEl ? contentEl.scrollHeight : 0;
+        const contentTall = h > 40 ? true : (wasTall && h > 33);
+        const isTall = titleWraps || contentTall;
+        if (next[id] !== isTall) { next[id] = isTall; changed = true; }
       });
       return changed ? next : prev;
     });
@@ -2909,13 +2921,16 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                            minHeight:50 → button center = 12+13=25 = 50÷2 → perfect
                            centering on thin cards WITHOUT translateY tricks.        */}
                       {(() => {
-                        const isMl = !!(ms.description || ms.recurring || ms.label.length > 25 || msLabelMultiline[ms.id]);
+                        // isMl: DOM measurement only (titleWraps OR contentTall) + explicit recurring flag
+                        // Short description alone NO LONGER triggers vertical — 1-line+1-line stays horizontal
+                        const isMl = !!(ms.recurring || msLabelMultiline[ms.id]);
                         // minHeight for column stack: top(12) + ×(26) + gap(6) + ✎(26) + bottom(8) = 78px
                         // minHeight for row:          top(12) + btn(26) = 38 → 50px centres it nicely
                         return (
                         <div style={{ padding:"8px 10px", minHeight: isMl ? 78 : 50, position:"relative" }}>
-                          {/* Content — paddingRight covers the button cluster width */}
-                          <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                          {/* Content div — ref feeds msContentRefs for height measurement */}
+                          <div ref={el => { if (el) msContentRefs.current.set(ms.id, el); else msContentRefs.current.delete(ms.id); }}
+                            style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                             <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }}
                               className="text-[13px] font-semibold leading-snug"
                               style={{ color:cardTxt, wordBreak:"break-all", overflowWrap:"anywhere", display:"block" }}>
@@ -3890,19 +3905,30 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
   const [hoveredId, setHoveredId] = useState<string|null>(null);
 
-  // Track whether an event's title wraps onto 2+ lines, so the edit/delete
-  // buttons can stack vertically (delete on top, edit below) instead of side by side.
+  // Height-based layout: measure content div to decide horizontal vs vertical button stack.
   const msLabelRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
+  // msContentRefs tracks the full content div (title + desc + badge) for height-based layout switching
+  const msContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [msLabelMultiline, setMsLabelMultiline] = useState<Record<string, boolean>>({});
   const measureMsLabels = useCallback(() => {
     setMsLabelMultiline(prev => {
       let changed = false;
       const next = { ...prev };
-      msLabelRefs.current.forEach((el, id) => {
-        if (!el) return;
-        const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 18;
-        const isMulti = el.scrollHeight > lineHeight * 1.5;
-        if (next[id] !== isMulti) { next[id] = isMulti; changed = true; }
+      const ids = new Set([...msLabelRefs.current.keys(), ...msContentRefs.current.keys()]);
+      ids.forEach(id => {
+        const labelEl = msLabelRefs.current.get(id);
+        const contentEl = msContentRefs.current.get(id);
+        // Title wrap detection
+        const lineH = labelEl ? (parseFloat(getComputedStyle(labelEl).lineHeight) || 18) : 18;
+        const titleWraps = labelEl ? labelEl.scrollHeight > lineH * 1.5 : false;
+        // Content height detection with hysteresis:
+        //   SET=40px  → trigger vertical (1-line+1-line≈36px stays horizontal ✓)
+        //   REVERT=33 → prevents oscillation when paddingRight widens on switch
+        const wasTall = prev[id] ?? false;
+        const h = contentEl ? contentEl.scrollHeight : 0;
+        const contentTall = h > 40 ? true : (wasTall && h > 33);
+        const isTall = titleWraps || contentTall;
+        if (next[id] !== isTall) { next[id] = isTall; changed = true; }
       });
       return changed ? next : prev;
     });
@@ -4155,13 +4181,14 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                         )}
                       </div>
                     ) : (() => {
-                        const isMl = !!(ms.description || ms.recurring || ms.label.length > 25 || msLabelMultiline[ms.id]);
-                        // minHeight for column stack: top(12) + ×(26) + gap(6) + ✎(26) + bottom(8) = 78px
-                        // minHeight for row:          50px centres the row cluster nicely
+                        // isMl: DOM measurement only (titleWraps OR contentTall) + explicit recurring flag
+                        // Short description alone NO LONGER triggers vertical — 1-line+1-line stays horizontal
+                        const isMl = !!(ms.recurring || msLabelMultiline[ms.id]);
                         return (
                       <>
-                        {/* Content — paddingRight covers button cluster width */}
-                        <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                        {/* Content div — ref feeds msContentRefs for height measurement */}
+                        <div ref={el => { if (el) msContentRefs.current.set(ms.id, el); else msContentRefs.current.delete(ms.id); }}
+                          style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                           {showDate && (
                             <div className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)", marginBottom:2 }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</div>
                           )}
