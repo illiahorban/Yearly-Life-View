@@ -1501,7 +1501,7 @@ function App() {
             blockId={editGoalsBlockId} blockLabel={editGoalsBlock.label}
             initial={blockGoals[editGoalsBlockId] ?? { description:"", goals:[] }}
             dark={dark} modalBg={modalBg} accentColor={editGoalsAccentColor}
-            onSave={(bg, lbl) => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); const qi = config.quarters.findIndex(q => q.blocks.some(b => b.id === editGoalsBlockId)); if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl); setEditGoalsBlockId(null); }}
+            onSave={(bg, lbl) => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); const qi = config.quarters.findIndex(q => q.blocks.some(b => b.id === editGoalsBlockId)); if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl); }}
             onClose={() => setEditGoalsBlockId(null)}
           />
         )}
@@ -1516,7 +1516,7 @@ function App() {
             dark={dark} modalBg={modalBg} accentColor={resolvedQuarters[editGoalsQi]?.fill}
             titleLabel={t("quarterGoals")}
             descPlaceholder={t("quarterDescPlaceholder")}
-            onSave={(bg, lbl) => { setQuarterGoals(prev => ({ ...prev, [editGoalsQi!]: bg })); updateQuarterMeta(editGoalsQi!, { name: lbl }); setEditGoalsQi(null); }}
+            onSave={(bg, lbl) => { setQuarterGoals(prev => ({ ...prev, [editGoalsQi!]: bg })); updateQuarterMeta(editGoalsQi!, { name: lbl }); }}
             onClose={() => setEditGoalsQi(null)}
           />
         )}
@@ -1531,7 +1531,7 @@ function App() {
             dark={dark} modalBg={modalBg}
             titleLabel={t("yearGoals")}
             descPlaceholder={t("yearDescPlaceholder")}
-            onSave={(bg) => { setYearGoals(prev => ({ ...prev, [viewYear]: bg })); setEditYearGoals(false); }}
+            onSave={(bg) => { setYearGoals(prev => ({ ...prev, [viewYear]: bg })); }}
             onClose={() => setEditYearGoals(false)}
             onBack={() => { setEditYearGoals(false); setGoalsOpen(true); }}
           />
@@ -4261,7 +4261,23 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
     setColorPickerGoalId(null);
   };
 
-  const save = () => onSave({ description:description.trim(), goals: goals.map((g, i) => g.text.trim() ? g : { ...g, text: `${t("goal")} ${i + 1}` }) }, label.trim() || blockLabel);
+  // Auto-save: persist label/description/goals as soon as they change, so no
+  // explicit Save button (or Cancel) is needed. Skip the very first render so
+  // we don't immediately re-persist the untouched `initial` data. Blank goal
+  // rows are kept blank while live-typing (they're filtered out elsewhere as
+  // inactive); the "Goal N" fallback name is only stamped in on close, so an
+  // untouched row left blank by the user still gets a sensible label.
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (!didMountRef.current) { didMountRef.current = true; return; }
+    onSave({ description:description.trim(), goals }, label.trim() || blockLabel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [label, description, goals]);
+
+  const finalize = (after: () => void) => {
+    onSave({ description:description.trim(), goals: goals.map((g, i) => g.text.trim() ? g : { ...g, text: `${t("goal")} ${i + 1}` }) }, label.trim() || blockLabel);
+    after();
+  };
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)";
@@ -4270,7 +4286,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
     <>
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={() => { setColorPickerGoalId(null); onClose(); }}
+      onClick={() => { setColorPickerGoalId(null); finalize(onClose); }}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
         style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)", backdropFilter:"blur(5px)", WebkitBackdropFilter:"blur(5px)" }}
@@ -4282,7 +4298,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
       >
         <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 shrink-0">
           {onBack && (
-            <button onClick={onBack} title={t("back")} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", border:"none", cursor:"pointer", flexShrink:0, marginTop:1 }}>
+            <button onClick={() => finalize(onBack)} title={t("back")} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", border:"none", cursor:"pointer", flexShrink:0, marginTop:1 }}>
               <ChevronLeftIcon />
             </button>
           )}
@@ -4294,7 +4310,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
               style={{ width:"100%", background:"transparent", border:"none", outline:"none", fontSize:15, fontWeight:600, letterSpacing:"-0.01em", color:"var(--text)", fontFamily:"inherit", padding:0 }}
             />
           </div>
-          <button onClick={onClose} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
+          <button onClick={() => finalize(onClose)} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
 
         <div style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
@@ -4368,11 +4384,6 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
         </div>
 
         </div>{/* end scrollable body */}
-
-        <div className="px-5 pb-5 flex gap-2.5 shrink-0">
-          <button onClick={onClose} style={{ flex:1, height:36, borderRadius:10, border:`1px solid ${borderColor}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
-          <button onClick={save} style={{ flex:2, height:36, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>{t("saveGoals")}</button>
-        </div>
       </motion.div>
     </motion.div>
     {colorPickerGoalId !== null && colorPickerPos && ReactDOM.createPortal(
