@@ -610,8 +610,9 @@ function getEventColors(hex: string, dark: boolean): EventColors {
     // border and text. Use the canonical swatch hex (#8e8e93) so it matches the palette.
     const greyHex = ach.tier === "grey" ? resolveNoteHex(hex) : null;
     const textColor = greyHex ?? ach.border;
-    const borderColor = greyHex ? `${greyHex}99` : ach.border;
-    const borderEditing = greyHex ? `${greyHex}cc` : ach.border;
+    // Grey: use solid swatch colour for border (no opacity) — same as black/white.
+    const borderColor  = greyHex ?? ach.border;
+    const borderEditing = greyHex ?? ach.border;
     return {
       bg:            "transparent",
       textTitle:     textColor,
@@ -637,13 +638,16 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   const [r, g, b] = hexToRgb(hex);
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
+  // Use the same colour for text and border so both match the palette swatch.
+  // adaptColor only differs from hex in dark mode (lifts dark hues); in light mode it's identical.
+  const displayColor = dark ? adapted : hex;
   return {
     bg:            "transparent",
-    textTitle:     hex,
-    textDesc:      hex,
-    icon:          hex,
-    border:        `${adapted}99`,
-    borderEditing: `${adapted}cc`,
+    textTitle:     displayColor,
+    textDesc:      displayColor,
+    icon:          displayColor,
+    border:        `${displayColor}99`,
+    borderEditing: `${displayColor}cc`,
     boxShadow:     "",
     marker:        adapted,
     formBg:        dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.70)",
