@@ -2910,8 +2910,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                            centering on thin cards WITHOUT translateY tricks.        */}
                       {(() => {
                         const isMl = !!(ms.description || ms.recurring || ms.label.length > 25 || msLabelMultiline[ms.id]);
+                        // minHeight for column stack: top(12) + ×(26) + gap(6) + ✎(26) + bottom(8) = 78px
+                        // minHeight for row:          top(12) + btn(26) = 38 → 50px centres it nicely
                         return (
-                        <div style={{ padding:"8px 10px", minHeight:50, position:"relative" }}>
+                        <div style={{ padding:"8px 10px", minHeight: isMl ? 78 : 50, position:"relative" }}>
                           {/* Content — paddingRight covers the button cluster width */}
                           <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                             <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }}
@@ -4154,6 +4156,8 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       </div>
                     ) : (() => {
                         const isMl = !!(ms.description || ms.recurring || ms.label.length > 25 || msLabelMultiline[ms.id]);
+                        // minHeight for column stack: top(12) + ×(26) + gap(6) + ✎(26) + bottom(8) = 78px
+                        // minHeight for row:          50px centres the row cluster nicely
                         return (
                       <>
                         {/* Content — paddingRight covers button cluster width */}
