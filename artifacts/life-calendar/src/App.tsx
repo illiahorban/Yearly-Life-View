@@ -4376,9 +4376,9 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           </div>
           {canAdd && (
             <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false }])}
-              className="mt-2 text-[12px] font-medium"
-              style={{ padding:"5px 10px", borderRadius:8, background:"rgba(0,122,255,0.09)", color:"#007aff", border:"1px solid rgba(0,122,255,0.18)", cursor:"pointer", fontFamily:"inherit" }}>
-              + {t("addGoal")}
+              className="mt-2"
+              style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+              <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addGoal")}
             </button>
           )}
         </div>
