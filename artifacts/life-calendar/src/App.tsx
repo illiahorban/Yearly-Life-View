@@ -2220,9 +2220,9 @@ function NoteEntryItem({
             title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
             aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
             data-testid={`note-color-btn-${idx}`}
-            style={{ width:13, height:13, borderRadius:999, background: entryColor ?? (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"), border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, padding:0, mixBlendMode:"normal", isolation:"isolate", marginRight:1, position:"relative" }}
+            style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: entryColor || "transparent", border: entryColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: entryColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
           >
-            {!entryColor && <span style={{ position:"absolute", width:"55%", height:"1.2px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
+            {!entryColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
           </button>
           <button onClick={() => setConfirmDeleteEntryId(entry.id)}
             onPointerDown={e => e.stopPropagation()}
