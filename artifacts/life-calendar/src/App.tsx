@@ -3838,10 +3838,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   const cancelEdit = () => setEditId(null);
   const saveEdit = () => {
     if (!editLabel.trim()) return;
-    setItems(prev => prev.map(ms => ms.id === editId
+    const newItems = items.map(ms => ms.id === editId
       ? { ...ms, label: editLabel.trim(), date: editDate, color: editColor, description: editDesc.trim() || undefined, recurring: editRecurring || undefined }
       : ms
-    ).sort((a,b) => a.date.localeCompare(b.date)));
+    ).sort((a,b) => a.date.localeCompare(b.date));
+    setItems(newItems);
+    onChange(newItems);
     setEditId(null);
   };
 
@@ -3858,7 +3860,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
   const add = () => {
     if (!draftLabel.trim()) return;
-    setItems(prev => [...prev, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined, recurring: draftRecurring || undefined }].sort((a,b)=>a.date.localeCompare(b.date)));
+    const newItems = [...items, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined, recurring: draftRecurring || undefined }].sort((a,b)=>a.date.localeCompare(b.date));
+    setItems(newItems);
+    onChange(newItems);
     resetDraft();
   };
 
@@ -4180,11 +4184,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
           </div>
         </div>
 
-        <div className="px-6 py-4 flex gap-2.5 justify-end" style={{ borderTop:`1px solid ${borderColor}` }}>
-          <button onClick={onClose} style={{ height:36, paddingInline:16, borderRadius:10, border:"1px solid var(--border-soft)", background:"transparent", color:"var(--text-secondary)", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}>{t("cancel")}</button>
-          <button onClick={() => { onChange(items); onClose(); }}
-            style={{ height:36, paddingInline:20, borderRadius:10, border:"none", background:"linear-gradient(135deg,#5ed47b 0%,#34c759 100%)", color:"white", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(52,199,89,0.35)" }}>{t("save")}</button>
-        </div>
       </motion.div>
       <ConfirmDialog
         open={confirmDeleteMsId !== null}
