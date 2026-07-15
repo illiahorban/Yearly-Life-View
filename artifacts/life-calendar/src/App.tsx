@@ -2451,40 +2451,6 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   // Track whether a day-event's title wraps onto 2+ lines, so the edit/delete
   // buttons can stack vertically (delete on top, edit below) instead of side by side.
-  const msLabelRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
-  // msContentRefs tracks the full content div (title + desc + badge) for height-based layout switching
-  const msContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [msLabelMultiline, setMsLabelMultiline] = useState<Record<string, boolean>>({});
-  const measureMsLabels = useCallback(() => {
-    setMsLabelMultiline(prev => {
-      let changed = false;
-      const next = { ...prev };
-      const ids = new Set([...msLabelRefs.current.keys(), ...msContentRefs.current.keys()]);
-      ids.forEach(id => {
-        const labelEl = msLabelRefs.current.get(id);
-        const contentEl = msContentRefs.current.get(id);
-        // Title wrap detection (existing logic)
-        const lineH = labelEl ? (parseFloat(getComputedStyle(labelEl).lineHeight) || 18) : 18;
-        const titleWraps = labelEl ? labelEl.scrollHeight > lineH * 1.5 : false;
-        // Content height detection with hysteresis:
-        //   SET=40px  → trigger vertical (1-line+1-line≈36px stays horizontal ✓)
-        //   REVERT=33 → prevents oscillation when paddingRight widens on switch
-        const wasTall = prev[id] ?? false;
-        const h = contentEl ? contentEl.scrollHeight : 0;
-        const contentTall = h > 40 ? true : (wasTall && h > 33);
-        const isTall = titleWraps || contentTall;
-        if (next[id] !== isTall) { next[id] = isTall; changed = true; }
-      });
-      return changed ? next : prev;
-    });
-  }, []);
-  useLayoutEffect(() => {
-    measureMsLabels();
-  }, [dayMilestones, measureMsLabels]);
-  useEffect(() => {
-    window.addEventListener("resize", measureMsLabels);
-    return () => window.removeEventListener("resize", measureMsLabels);
-  }, [measureMsLabels]);
 
   const { t, lang } = React.useContext(LangContext);
 
@@ -2910,66 +2876,45 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
-                      {/* ── Card view (fresh rewrite) ─────────────────────────────────────
-                           isMl triggers vertical stack if ANY of:
-                             • description present (any length)
-                             • recurring indicator
-                             • label > 25 chars (instant, no DOM lag)
-                             • DOM measurement confirms actual wrap
-                           × is a fixed anchor — always top:12 right:10, NEVER moves.
-                           Container switches flex-direction only; × stays put.
-                           minHeight:50 → button center = 12+13=25 = 50÷2 → perfect
-                           centering on thin cards WITHOUT translateY tricks.        */}
-                      {(() => {
-                        // isMl: DOM measurement only (titleWraps OR contentTall) + explicit recurring flag
-                        // Short description alone NO LONGER triggers vertical — 1-line+1-line stays horizontal
-                        const isMl = !!(ms.recurring || msLabelMultiline[ms.id]);
-                        // minHeight for column stack: top(12) + ×(26) + gap(6) + ✎(26) + bottom(8) = 78px
-                        // minHeight for row:          top(12) + btn(26) = 38 → 50px centres it nicely
-                        return (
-                        <div style={{ padding:"8px 10px", minHeight: isMl ? 78 : 50, position:"relative" }}>
-                          {/* Content div — ref feeds msContentRefs for height measurement */}
-                          <div ref={el => { if (el) msContentRefs.current.set(ms.id, el); else msContentRefs.current.delete(ms.id); }}
-                            style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
-                            <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }}
-                              className="text-[13px] font-semibold leading-snug"
-                              style={{ color:cardTxt, wordBreak:"break-all", overflowWrap:"anywhere", display:"block" }}>
-                              {ms.label}
-                            </span>
-                            {ms.description && (
-                              <div className="text-[11px] leading-snug"
-                                style={{ marginTop:3, color:cardFormSec, wordBreak:"break-all", overflowWrap:"anywhere" }}>
-                                {ms.description}
-                              </div>
-                            )}
-                            {ms.recurring && (
-                              <div style={{ display:"inline-flex", alignItems:"center", gap:3, marginTop:5, padding:"2px 6px 2px 4px", borderRadius:5, background: dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)" }}>
-                                <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.7 }}>↻</span>
-                                <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.65 }}>{t("repeatYearly")}</span>
-                              </div>
-                            )}
-                          </div>
-                          {/* Button cluster — container pinned to top:12 right:10, never moves.
-                              DOM order [×][✎]:
-                                flex-col      → × on top, ✎ below        (isMl)
-                                flex-row-rev  → × on right, ✎ to left    (!isMl) */}
-                          <div style={{ position:"absolute", top:12, right:10, display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
-                            <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                              style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
-                              onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
-                              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
-                            </button>
-                            <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                              style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
-                              onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
-                              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
-                            </button>
-                          </div>
+                      {/* Card view — pure CSS Flexbox, no JS measurement, no absolute positioning.
+                           Card height = content height only (no min-height).
+                           align-items:center → buttons auto-centre on short cards.
+                           flex-wrap on buttons → × stays right, ✎ wraps below on tall cards. */}
+                      <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 10px" }}>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <span className="text-[13px] font-semibold leading-snug"
+                            style={{ color:cardTxt, wordBreak:"break-all", overflowWrap:"anywhere", display:"block" }}>
+                            {ms.label}
+                          </span>
+                          {ms.description && (
+                            <div className="text-[11px] leading-snug"
+                              style={{ marginTop:3, color:cardFormSec, wordBreak:"break-all", overflowWrap:"anywhere" }}>
+                              {ms.description}
+                            </div>
+                          )}
+                          {ms.recurring && (
+                            <div style={{ display:"inline-flex", alignItems:"center", gap:3, marginTop:5, padding:"2px 6px 2px 4px", borderRadius:5, background: dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)" }}>
+                              <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.7 }}>↻</span>
+                              <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.65 }}>{t("repeatYearly")}</span>
+                            </div>
+                          )}
                         </div>
-                        );
-                      })()}
+                        {/* Buttons in document flow — flex-wrap + row-reverse: × first in DOM = always top-right */}
+                        <div style={{ display:"flex", flexDirection:"row-reverse", flexWrap:"wrap", gap:6, maxWidth:70, flexShrink:0, alignSelf:"flex-start", opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out" }}>
+                          <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
+                            <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
+                          </button>
+                          <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
+                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     {/* Edit form — expands when editing */}
                     <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "2000px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
@@ -3905,41 +3850,6 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
   const [hoveredId, setHoveredId] = useState<string|null>(null);
 
-  // Height-based layout: measure content div to decide horizontal vs vertical button stack.
-  const msLabelRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
-  // msContentRefs tracks the full content div (title + desc + badge) for height-based layout switching
-  const msContentRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [msLabelMultiline, setMsLabelMultiline] = useState<Record<string, boolean>>({});
-  const measureMsLabels = useCallback(() => {
-    setMsLabelMultiline(prev => {
-      let changed = false;
-      const next = { ...prev };
-      const ids = new Set([...msLabelRefs.current.keys(), ...msContentRefs.current.keys()]);
-      ids.forEach(id => {
-        const labelEl = msLabelRefs.current.get(id);
-        const contentEl = msContentRefs.current.get(id);
-        // Title wrap detection
-        const lineH = labelEl ? (parseFloat(getComputedStyle(labelEl).lineHeight) || 18) : 18;
-        const titleWraps = labelEl ? labelEl.scrollHeight > lineH * 1.5 : false;
-        // Content height detection with hysteresis:
-        //   SET=40px  → trigger vertical (1-line+1-line≈36px stays horizontal ✓)
-        //   REVERT=33 → prevents oscillation when paddingRight widens on switch
-        const wasTall = prev[id] ?? false;
-        const h = contentEl ? contentEl.scrollHeight : 0;
-        const contentTall = h > 40 ? true : (wasTall && h > 33);
-        const isTall = titleWraps || contentTall;
-        if (next[id] !== isTall) { next[id] = isTall; changed = true; }
-      });
-      return changed ? next : prev;
-    });
-  }, []);
-  useLayoutEffect(() => {
-    measureMsLabels();
-  }, [filteredItems, measureMsLabels]);
-  useEffect(() => {
-    window.addEventListener("resize", measureMsLabels);
-    return () => window.removeEventListener("resize", measureMsLabels);
-  }, [measureMsLabels]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputStyle: React.CSSProperties = { background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.03)", border:`1px solid ${borderColor}`, borderRadius:8, padding:"7px 10px", fontSize:13, color:"var(--text)", outline:"none", fontFamily:"inherit", boxSizing:"border-box" };
@@ -4180,20 +4090,14 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           document.body
                         )}
                       </div>
-                    ) : (() => {
-                        // isMl: DOM measurement only (titleWraps OR contentTall) + explicit recurring flag
-                        // Short description alone NO LONGER triggers vertical — 1-line+1-line stays horizontal
-                        const isMl = !!(ms.recurring || msLabelMultiline[ms.id]);
-                        return (
-                      <>
-                        {/* Content div — ref feeds msContentRefs for height measurement */}
-                        <div ref={el => { if (el) msContentRefs.current.set(ms.id, el); else msContentRefs.current.delete(ms.id); }}
-                          style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                    ) : (
+                      /* Card view — pure CSS Flexbox, no JS measurement, no absolute positioning */
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ flex:1, minWidth:0 }}>
                           {showDate && (
                             <div className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)", marginBottom:2 }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</div>
                           )}
-                          <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }}
-                            className="text-[13px] font-semibold"
+                          <span className="text-[13px] font-semibold"
                             style={{ color:rcTxt, wordBreak:"break-all", overflowWrap:"anywhere", display:"block" }}>
                             <HighlightText text={ms.label} query={q} />
                           </span>
@@ -4210,9 +4114,8 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             </div>
                           )}
                         </div>
-                        {/* Button cluster — pinned to top:12 right:10, NEVER moves.
-                            DOM [×][✎]:  flex-col → × top ✎ below  |  flex-row-rev → × right ✎ left */}
-                        <div style={{ position:"absolute", top:12, right:10, display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                        {/* Buttons in document flow — flex-wrap + row-reverse: × first in DOM = always top-right */}
+                        <div style={{ display:"flex", flexDirection:"row-reverse", flexWrap:"wrap", gap:6, maxWidth:70, flexShrink:0, alignSelf:"flex-start", opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out" }}>
                           <button onClick={() => setConfirmDeleteMsId(ms.id)} title={t("delete")}
                             style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
                             onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
@@ -4226,9 +4129,8 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
                           </button>
                         </div>
-                      </>
-                      );
-                    })()}
+                      </div>
+                    )}
                   </div>
                 );
               };
