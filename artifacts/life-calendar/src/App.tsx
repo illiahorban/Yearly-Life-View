@@ -2456,6 +2456,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     setNoteHeights(prev => prev[id] === h ? prev : { ...prev, [id]: h });
   };
 
+  // Same idea as noteHeights above, but for day-goal rows: lets the hover
+  // overlay (color/delete buttons) pin to the top-right corner once the goal
+  // label wraps onto 2+ lines, instead of overlapping the wrapped text.
+  const [goalHeights, setGoalHeights] = useState<Record<number,number>>({});
+  const handleGoalHeightChange = (i: number, h: number) => {
+    setGoalHeights(prev => prev[i] === h ? prev : { ...prev, [i]: h });
+  };
+
   // Track whether a day-event's title wraps onto 2+ lines, so the edit/delete
   // buttons can stack vertically (delete on top, edit below) instead of side by side.
 
@@ -2776,7 +2784,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     <div
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
-                      style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1.5px solid ${containerBorder}`, borderRadius:12, padding:"8px 46px 8px 10px", boxShadow: ec.boxShadow || undefined, transition:"background 150ms ease, border-color 150ms ease" }}>
+                      style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1.5px solid ${containerBorder}`, borderRadius:12, padding:"8px 59px 8px 10px", boxShadow: ec.boxShadow || undefined, transition:"background 150ms ease, border-color 150ms ease" }}>
                       {(() => { const checkColor = goalColor ?? "#34c759"; const _gc = goalColor?.toLowerCase(); const uncheckedBorder = goalColor ? (_gc === "#ffffff" ? "#121212" : _gc === "#121212" ? "#ffffff" : `${checkColor}80`) : "var(--border-soft)"; return (
                       <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?checkColor:"transparent",border:`1.5px solid ${done?checkColor:uncheckedBorder}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke={swatchCheckColor(checkColor)} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -2786,20 +2794,26 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         ref={el => { if (el && focusGoalIdx === i) { el.focus(); setFocusGoalIdx(null); } }}
                         value={goalsDraft.labels?.[i] ?? ""}
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
+                        onHeightChange={h => handleGoalHeightChange(i, h)}
                         onMouseDown={e => { if (goalColorPickerIdx !== null) setGoalColorPickerIdx(null); e.stopPropagation(); }}
                         placeholder={`${t("goal")} ${i+1}`}
                         minRows={1}
                         style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
                       />
-                      <div style={{ position:"absolute", top:"50%", transform:"translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", transition:"opacity 150ms", isolation:"isolate" }}>
+                      <div style={{ position:"absolute", top: (goalHeights[i] ?? 18) > 20 ? 8 : "50%", transform: (goalHeights[i] ?? 18) > 20 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", isolation:"isolate" }}>
                         <button
                           ref={el => { goalColorBtnRefs.current[i] = el; }}
                           onClick={e => { e.stopPropagation(); if (goalColorPickerIdx===i) { setGoalColorPickerIdx(null); return; } const btn=goalColorBtnRefs.current[i]; if(btn){setGoalColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 152, 100));} setGoalColorPickerIdx(i); }}
+                          onPointerDown={e => e.stopPropagation()}
                           title={t("chooseColor")}
-                          style={{ width:13,height:13,borderRadius:999,background:goalColor??(dark?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.12)"),border:"none",boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",cursor:"pointer",display:"block",flexShrink:0,padding:0,mixBlendMode:"normal",isolation:"isolate" }}
-                        />
+                          aria-label={t("chooseColor")}
+                          style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: goalColor || "transparent", border: goalColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: goalColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+                        >
+                          {!goalColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
+                        </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteGoalIdx(i); }}
+                          onPointerDown={e => e.stopPropagation()}
                           style={{ width:26,height:26,borderRadius:999,border:"none",background:dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)",color:"#ff3b30",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"background 0.1s" }}
                           onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
                           onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
