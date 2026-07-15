@@ -1,0 +1,73 @@
+import React, { useState } from 'react';
+import { Trash2, Edit2, RotateCw, GripVertical } from 'lucide-react'; // Любые твои иконки
+
+interface EventCardProps {
+  title: string;
+  description?: string;
+  isRecurring?: boolean;
+}
+
+export const EventCard: React.FC<EventCardProps> = ({ 
+  title, 
+  description, 
+  isRecurring = false 
+}) => {
+  // Условие перевода кнопок в вертикальный столбик:
+  // Есть описание ИЛИ есть повтор ИЛИ заголовок длиннее 25 символов (примерный порог для 1 строки)
+  const isMultiLine = !!description || isRecurring || title.length > 25;
+
+  return (
+    <div className="group relative flex items-start p-3 bg-[#1e1e1e] hover:bg-[#252525] rounded-xl border border-white/5 transition-colors duration-200 min-h-[48px]">
+      
+      {/* 1. Левая часть: Драг-ручка (всегда сверху, выровнена по первой строке) */}
+      <div className="text-white/20 mr-2 mt-1 cursor-grab active:cursor-grabbing">
+        <GripVertical size={16} />
+      </div>
+
+      {/* 2. Контентная часть (динамический правый отступ) */}
+      <div 
+        className={`flex-1 flex flex-col transition-all duration-200 ${
+          isMultiLine ? 'pr-[44px]' : 'pr-[76px]'
+        }`}
+      >
+        {/* Название события с защитой от длинных слов без пробелов */}
+        <h4 className="text-white font-semibold text-sm leading-tight break-all overflow-wrap-anywhere">
+          {title}
+        </h4>
+
+        {/* Описание события (если есть) */}
+        {description && (
+          <p className="text-white/50 text-xs mt-1 break-all overflow-wrap-anywhere">
+            {description}
+          </p>
+        )}
+
+        {/* Индикатор повтора (всегда в самом низу текстового потока) */}
+        {isRecurring && (
+          <div className="flex items-center gap-1 mt-2 text-[10px] text-white/40 bg-white/5 w-fit px-2 py-0.5 rounded-md">
+            <RotateCw size={10} />
+            <span>Повторять каждый год</span>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Кнопки действий (абсолютное позиционирование) */}
+      <div 
+        className={`absolute right-3 top-3 flex transition-all duration-200 opacity-0 pointer-events-none group-hover:opacity-1 group-hover:pointer-events-auto ${
+          isMultiLine ? 'flex-col gap-1.5' : 'flex-row gap-2'
+        }`}
+      >
+        {/* Крестик ВСЕГДА на месте (сверху в столбике или справа в ряду) */}
+        <button className="order-last w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-500 text-white/80 transition-all duration-150">
+          <Trash2 size={14} />
+        </button>
+
+        {/* Карандаш встает ПЕРЕД крестиком (в ряду) или НАД ним (в столбике) благодаря order-first */}
+        <button className="order-first w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-white/80 transition-all duration-150">
+          <Edit2 size={14} />
+        </button>
+      </div>
+
+    </div>
+  );
+};
