@@ -455,10 +455,9 @@ function luminanceOf(hex: string): number {
 function readableGoalTextColor(colorHex: string | undefined, dark: boolean, fallback: string): string {
   if (!colorHex) return fallback;
   // White/black/grey (any achromatic hue, regardless of which exact hex variant is stored)
-  // are shown in their literal colour even where the lum heuristic below would otherwise
-  // swap them for the theme's standard text colour — mirrors the day-goal fix so
-  // sprint/quarter/year goals stay consistent with day goals.
-  if (achromaticStyle(colorHex, dark)) return colorHex;
+  // are shown in their canonical light-mode hex so that dark-mode grey (#636366) displays
+  // at the same shade (#8e8e93) as the swatch — matching getEventColors behaviour.
+  if (achromaticStyle(colorHex, dark)) return resolveNoteHex(colorHex);
   const lum = luminanceOf(colorHex);
   if (dark && lum < 0.25) return "var(--text)";
   if (!dark && lum > 0.75) return "var(--text)";
@@ -606,15 +605,19 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
   const ach = achromaticStyle(hex, dark);
   if (ach) {
-    // Use the stored hex directly — it is the exact colour shown in the swatch,
-    // so text and border both match it precisely in every theme/mode.
+    // Normalise to the canonical light-mode hex so that the dark-mode grey
+    // variant (#636366) displays at the same shade (#8e8e93) as the swatch —
+    // black and white are identical in both modes, so resolveNoteHex is a no-op
+    // for them; only grey changes, ensuring text and border always match the
+    // colour the user sees in the colour picker.
+    const canonicalHex = resolveNoteHex(hex);
     return {
       bg:            "transparent",
-      textTitle:     hex,
-      textDesc:      hex,
-      icon:          hex,
-      border:        hex,
-      borderEditing: hex,
+      textTitle:     canonicalHex,
+      textDesc:      canonicalHex,
+      icon:          canonicalHex,
+      border:        canonicalHex,
+      borderEditing: canonicalHex,
       boxShadow:     ach.ring ?? "",
       marker:        ach.marker,
       formBg:        dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
