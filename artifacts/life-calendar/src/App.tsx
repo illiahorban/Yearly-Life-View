@@ -2793,7 +2793,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       onMouseEnter={() => setHoveredGoalIdx(i)}
                       onMouseLeave={() => setHoveredGoalIdx(null)}
                       style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background: containerBg, border:`1.5px solid ${containerBorder}`, borderRadius:12, padding:"8px 59px 8px 10px", boxShadow: ec.boxShadow || undefined, transition:"background 150ms ease, border-color 150ms ease" }}>
-                      {(() => { const checkColor = goalColor ?? "#34c759"; const _gc = goalColor?.toLowerCase(); const uncheckedBorder = goalColor ? ((_gc === "#ffffff" || _gc === "#121212") ? checkColor : `${checkColor}80`) : "var(--border-soft)"; return (
+                      {(() => { const _cbAch = goalColor ? goalCheckboxAchromaticStyle(resolveNoteHex(goalColor), dark) : null; const checkColor = _cbAch ? _cbAch.bg : (goalColor ?? "#34c759"); const uncheckedBorder = goalColor ? (_cbAch ? _cbAch.border : `${goalColor}80`) : "var(--border-soft)"; return (
                       <div onClick={()=>handleGoalToggle(i)} style={{ width:16,height:16,borderRadius:5,flexShrink:0,background:done?checkColor:"transparent",border:`1.5px solid ${done?checkColor:uncheckedBorder}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"background 150ms ease, border-color 150ms ease",cursor:"pointer" }}>
                         {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke={swatchCheckColor(checkColor)} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
@@ -2815,7 +2815,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           onPointerDown={e => e.stopPropagation()}
                           title={t("chooseColor")}
                           aria-label={t("chooseColor")}
-                          style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: goalColor || "transparent", border: goalColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: goalColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+                          style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(goalColor) || "transparent", border: goalColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: goalColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
                         >
                           {!goalColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                         </button>
@@ -3364,12 +3364,12 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                 ) : (
                   <div style={{ padding:"4px 14px 10px", display:"flex", flexDirection:"column", gap:3 }}>
                     {activeYearGoals.map(goal => {
-                      const gc = goal.color ?? "#34c759";
+                      const gc = normaliseGrey(goal.color) ?? goal.color ?? "#34c759";
                       return (
                         <label key={goal.id} style={{ display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", padding:"3px 0" }}
                           onClick={() => onToggleYearGoal(goal.id)}
                         >
-                          <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ?? "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
+                          <div style={{ width:14, height:14, borderRadius:4, flexShrink:0, marginTop:1, background: goal.done ? gc : "transparent", border:`1.5px solid ${goal.done ? gc : goal.color ? gc : "var(--border-soft)"}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 150ms ease" }}>
                             {goal.done && <CheckIcon />}
                           </div>
                           <span style={{ fontSize:12, lineHeight:"1.45", color: goal.done ? "var(--text-tertiary)" : readableGoalTextColor(goal.color, dark, "var(--text)"), textDecoration: goal.done ? "line-through" : "none", opacity: goal.done ? 0.55 : 1, transition:"all 150ms", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}>{goal.text}</span>
