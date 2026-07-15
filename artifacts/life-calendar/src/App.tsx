@@ -606,14 +606,11 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
   const ach = achromaticStyle(hex, dark);
   if (ach) {
-    // White has ach.text="#18181b" (designed for a white bg), but bg is transparent,
-    // so in dark mode the card sits on a dark surface — use white text instead.
-    const text = (ach.tier === "white" && dark) ? "#ffffff" : ach.text;
     return {
       bg:            "transparent",
-      textTitle:     text,
-      textDesc:      text,
-      icon:          text,
+      textTitle:     ach.border,
+      textDesc:      ach.border,
+      icon:          ach.border,
       border:        ach.border,
       borderEditing: ach.border,
       boxShadow:     ach.ring ?? "",
@@ -634,22 +631,11 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   const [r, g, b] = hexToRgb(hex);
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
-  let textTitle: string;
-  if (!dark && lum > 0.55) {
-    // Shift lightness down to ~0.33 to guarantee contrast on near-white surfaces.
-    const { h, s } = rgbToHsl(r, g, b);
-    const [nr, ng, nb] = hslToRgb(h, Math.min(1, s * 1.05), 0.33);
-    const toH = (n: number) => n.toString(16).padStart(2, "0");
-    textTitle = `#${toH(nr)}${toH(ng)}${toH(nb)}`;
-  } else {
-    textTitle = adapted;
-  }
-
   return {
     bg:            "transparent",
-    textTitle,
-    textDesc:      textTitle,
-    icon:          textTitle,
+    textTitle:     hex,
+    textDesc:      hex,
+    icon:          hex,
     border:        `${adapted}99`,
     borderEditing: `${adapted}cc`,
     boxShadow:     "",
