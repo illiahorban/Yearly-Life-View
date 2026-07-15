@@ -2898,40 +2898,61 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     onMouseLeave={() => setHoveredMsId(null)}>
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
-                      {/* position:relative anchors the absolute action buttons */}
-                      {(() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description || ms.recurring); return (
-                      <div style={{ padding:"8px 10px", position:"relative" }}>
-                        {/* Content block — paddingRight: 76px (thin, row) ↔ 44px (multiline, column) */}
-                        <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
-                          <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word", overflowWrap:"anywhere", display:"block" }}>{ms.label}</span>
-                          {ms.description && <div className="text-[11px] leading-snug" style={{ marginTop:3, color:cardFormSec, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.description}</div>}
-                          {/* Repeat badge — static in flow, always at bottom of content */}
-                          {ms.recurring && (
-                            <div style={{ display:"inline-flex", alignItems:"center", gap:3, marginTop:5, padding:"2px 6px 2px 4px", borderRadius:5, background: dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)" }}>
-                              <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.7 }}>↻</span>
-                              <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.65 }}>{t("repeatYearly")}</span>
-                            </div>
-                          )}
+                      {/* ── Card view (fresh rewrite) ─────────────────────────────────────
+                           isMl triggers vertical stack if ANY of:
+                             • description present (any length)
+                             • recurring indicator
+                             • label > 25 chars (instant, no DOM lag)
+                             • DOM measurement confirms actual wrap
+                           × is a fixed anchor — always top:12 right:10, NEVER moves.
+                           Container switches flex-direction only; × stays put.
+                           minHeight:50 → button center = 12+13=25 = 50÷2 → perfect
+                           centering on thin cards WITHOUT translateY tricks.        */}
+                      {(() => {
+                        const isMl = !!(ms.description || ms.recurring || ms.label.length > 25 || msLabelMultiline[ms.id]);
+                        return (
+                        <div style={{ padding:"8px 10px", minHeight:50, position:"relative" }}>
+                          {/* Content — paddingRight covers the button cluster width */}
+                          <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                            <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }}
+                              className="text-[13px] font-semibold leading-snug"
+                              style={{ color:cardTxt, wordBreak:"break-all", overflowWrap:"anywhere", display:"block" }}>
+                              {ms.label}
+                            </span>
+                            {ms.description && (
+                              <div className="text-[11px] leading-snug"
+                                style={{ marginTop:3, color:cardFormSec, wordBreak:"break-all", overflowWrap:"anywhere" }}>
+                                {ms.description}
+                              </div>
+                            )}
+                            {ms.recurring && (
+                              <div style={{ display:"inline-flex", alignItems:"center", gap:3, marginTop:5, padding:"2px 6px 2px 4px", borderRadius:5, background: dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)" }}>
+                                <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.7 }}>↻</span>
+                                <span style={{ fontSize:10, lineHeight:1, color:cardFormSec, opacity:0.65 }}>{t("repeatYearly")}</span>
+                              </div>
+                            )}
+                          </div>
+                          {/* Button cluster — container pinned to top:12 right:10, never moves.
+                              DOM order [×][✎]:
+                                flex-col      → × on top, ✎ below        (isMl)
+                                flex-row-rev  → × on right, ✎ to left    (!isMl) */}
+                          <div style={{ position:"absolute", top:12, right:10, display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                            <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
+                              style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
+                              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
+                            </button>
+                            <button onClick={() => startMsEdit(ms)} title={t("edit")}
+                              style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
+                              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
+                            </button>
+                          </div>
                         </div>
-                        {/* Buttons: DOM order [×][✎] always.
-                            Thin (row-reverse): × anchored right, ✎ to its left; container centered on text line.
-                            Multiline (column): × top-right anchor, ✎ below. */}
-                        <div style={{ position:"absolute", top: isMl ? 10 : "50%", right:10, transform: isMl ? "none" : "translateY(-50%)", display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, top 0.2s cubic-bezier(0.16,1,0.3,1), transform 0.2s cubic-bezier(0.16,1,0.3,1), gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
-                          <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
-                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)"; }}>
-                            <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5"/></svg>
-                          </button>
-                          <button onClick={() => startMsEdit(ms)} title={t("edit")}
-                            style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)", color: dark?"rgba(255,255,255,0.8)":"rgba(0,0,0,0.65)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.07)"; }}>
-                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"/></svg>
-                          </button>
-                        </div>
-                      </div>
-                      ); })()}
+                        );
+                      })()}
                     </div>
                     {/* Edit form — expands when editing */}
                     <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "2000px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
@@ -4131,18 +4152,26 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           document.body
                         )}
                       </div>
-                    ) : (() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description || ms.recurring); return (
+                    ) : (() => {
+                        const isMl = !!(ms.description || ms.recurring || ms.label.length > 25 || msLabelMultiline[ms.id]);
+                        return (
                       <>
-                        {/* Content block — paddingRight: 76px (thin, row) ↔ 44px (multiline, column) */}
+                        {/* Content — paddingRight covers button cluster width */}
                         <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                           {showDate && (
                             <div className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)", marginBottom:2 }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</div>
                           )}
-                          <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold" style={{ color:rcTxt, wordBreak:"break-word", overflowWrap:"anywhere", display:"block" }}><HighlightText text={ms.label} query={q} /></span>
+                          <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }}
+                            className="text-[13px] font-semibold"
+                            style={{ color:rcTxt, wordBreak:"break-all", overflowWrap:"anywhere", display:"block" }}>
+                            <HighlightText text={ms.label} query={q} />
+                          </span>
                           {ms.description && (
-                            <div className="text-[11px] leading-snug" style={{ marginTop:3, color:rcSecTxt, wordBreak:"break-word", overflowWrap:"anywhere" }}><HighlightText text={ms.description} query={q} /></div>
+                            <div className="text-[11px] leading-snug"
+                              style={{ marginTop:3, color:rcSecTxt, wordBreak:"break-all", overflowWrap:"anywhere" }}>
+                              <HighlightText text={ms.description} query={q} />
+                            </div>
                           )}
-                          {/* Repeat badge — static in flow, always at bottom of content */}
                           {ms.recurring && (
                             <div style={{ display:"inline-flex", alignItems:"center", gap:3, marginTop:5, padding:"2px 6px 2px 4px", borderRadius:5, background: dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)" }}>
                               <span style={{ fontSize:10, lineHeight:1, color:rcSecTxt, opacity:0.7 }}>↻</span>
@@ -4150,10 +4179,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             </div>
                           )}
                         </div>
-                        {/* Buttons: DOM order [×][✎] always.
-                            Thin (row-reverse): × anchored right, ✎ to its left; container centered on text line.
-                            Multiline (column): × top-right anchor, ✎ below. */}
-                        <div style={{ position:"absolute", top: isMl ? 10 : "50%", right:10, transform: isMl ? "none" : "translateY(-50%)", display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, top 0.2s cubic-bezier(0.16,1,0.3,1), transform 0.2s cubic-bezier(0.16,1,0.3,1), gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                        {/* Button cluster — pinned to top:12 right:10, NEVER moves.
+                            DOM [×][✎]:  flex-col → × top ✎ below  |  flex-row-rev → × right ✎ left */}
+                        <div style={{ position:"absolute", top:12, right:10, display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                           <button onClick={() => setConfirmDeleteMsId(ms.id)} title={t("delete")}
                             style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
                             onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
@@ -4168,7 +4196,8 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           </button>
                         </div>
                       </>
-                    ); })()}
+                      );
+                    })()}
                   </div>
                 );
               };
