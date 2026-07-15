@@ -454,10 +454,13 @@ function luminanceOf(hex: string): number {
  *  light mode). `fallback` is used when the goal has no colour at all. */
 function readableGoalTextColor(colorHex: string | undefined, dark: boolean, fallback: string): string {
   if (!colorHex) return fallback;
-  // For grey: return the unified display shade #71717a matching getEventColors.
-  // For black/white: return the canonical light-mode hex unchanged.
+  // Mirror the inversion logic from getEventColors so summary labels stay legible.
   const _ach = achromaticStyle(colorHex, dark);
-  if (_ach) return _ach.tier === "grey" ? "#71717a" : resolveNoteHex(colorHex);
+  if (_ach) {
+    if (_ach.tier === "grey")  return "#71717a";
+    if (_ach.tier === "black") return dark ? "#e5e5e7" : "#000000";
+    /* white */                return dark ? "#ffffff" : "#18181b";
+  }
   const lum = luminanceOf(colorHex);
   if (dark && lum < 0.25) return "var(--text)";
   if (!dark && lum > 0.75) return "var(--text)";
@@ -548,10 +551,16 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
   const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
   if (sat > 0.18) return null;
   if (lum > 0.70) {
-    return { bg:"#ffffff", border:"#ffffff", icon:"#18181b" };
+    // white — invert in light mode (white checkbox on white bg is invisible)
+    return dark
+      ? { bg:"#ffffff", border:"#ffffff", icon:"#18181b" }
+      : { bg:"#27272a", border:"#27272a", icon:"#ffffff" };
   }
   if (lum < 0.12) {
-    return dark ? { bg:"#09090b", border:"#000000", icon:"#ffffff" } : { bg:"#000000", border:"#000000", icon:"#ffffff" };
+    // black — invert in dark mode (black checkbox on dark bg is invisible)
+    return dark
+      ? { bg:"#e5e5e7", border:"#e5e5e7", icon:"#18181b" }
+      : { bg:"#000000", border:"#000000", icon:"#ffffff" };
   }
   return { bg:"#71717a", border:"#71717a", icon:"#ffffff" };
 }
@@ -616,10 +625,20 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
   const ach = achromaticStyle(hex, dark);
   if (ach) {
-    // Grey: use #71717a (zinc-500) — a shade that renders equally vivid for
-    // both anti-aliased text and crisp border lines in both themes.
-    // Black/white: use the canonical light-mode hex unchanged.
-    const displayHex = ach.tier === "grey" ? "#71717a" : resolveNoteHex(hex);
+    // Grey  → unified #71717a (zinc-500) in both themes.
+    // Black → invert in dark mode: nearly invisible black on dark bg becomes
+    //         near-white (#e5e5e7) so text and border stay legible.
+    // White → invert in light mode: invisible white on light bg becomes
+    //         near-black (#18181b) so text and border stay legible.
+    let displayHex: string;
+    if (ach.tier === "grey") {
+      displayHex = "#71717a";
+    } else if (ach.tier === "black") {
+      displayHex = dark ? "#e5e5e7" : "#000000";
+    } else {
+      // white
+      displayHex = dark ? "#ffffff" : "#18181b";
+    }
     return {
       bg:            "transparent",
       textTitle:     displayHex,

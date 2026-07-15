@@ -47,15 +47,22 @@ body {
 
 .placeholder-dark::placeholder { color: rgba(0,0,0,0.40); }
 
-/* Goal-input placeholder tones — matched to the achromatic note styling (black/grey/white). */
-.placeholder-goal-black::placeholder { color: #a1a1aa; }
-.placeholder-goal-grey::placeholder { color: #71717a; }
-.placeholder-goal-white::placeholder { color: #71717a; }
+/* Goal-input placeholder tones — follow the inverted text colour direction. */
+.placeholder-goal-black::placeholder { color: #71717a; }  /* light mode: dark text → medium hint */
+.placeholder-goal-grey::placeholder  { color: #71717a; }
+.placeholder-goal-white::placeholder { color: #71717a; }  /* light mode: dark text → medium hint */
 
-/* Note-textarea placeholder tones for achromatic colours (white bg → dark hint, black bg → light hint). */
+/* Dark-mode overrides: black/white text inverts to light, so hints go lighter. */
+:root.dark .placeholder-goal-black::placeholder { color: #d4d4d8; }
+:root.dark .placeholder-goal-white::placeholder { color: #d4d4d8; }
+
+/* Note-textarea placeholder tones. */
 .placeholder-note-white::placeholder { color: #71717a; }
-.placeholder-note-black::placeholder { color: #a1a1aa; }
+.placeholder-note-black::placeholder { color: #71717a; }  /* light mode: dark text → medium hint */
 .placeholder-note-grey::placeholder  { color: #71717a; }
+
+:root.dark .placeholder-note-black::placeholder { color: #d4d4d8; }
+:root.dark .placeholder-note-white::placeholder { color: #d4d4d8; }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
