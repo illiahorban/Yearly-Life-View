@@ -1348,7 +1348,7 @@ function App() {
                     return (
                       <div className="px-4 sm:px-5 pb-3">
                         {qg?.description ? (
-                          <p className="text-[11px] leading-snug mb-2" style={{ color:mt.tertiary, borderLeft:`2px solid ${quarter.fill}`, paddingLeft:8, opacity:0.8 }}>
+                          <p className="text-[11px] leading-snug mb-2" style={{ color:mt.tertiary, borderLeft:`2px solid ${quarter.fill}`, paddingLeft:8, opacity:0.8, whiteSpace:"pre-wrap" }}>
                             {qg.description}
                           </p>
                         ) : null}
@@ -1710,7 +1710,7 @@ function BlocksRenderer({
                 {/* Sprint description */}
                 {bg?.description && (
                   <div className="px-3 sm:px-3.5 pb-2">
-                    <p className="text-[11px] leading-snug" style={{ color:mt.tertiary, borderLeft:`2px solid ${softColor}`, paddingLeft:8 }}>
+                    <p className="text-[11px] leading-snug" style={{ color:mt.tertiary, borderLeft:`2px solid ${softColor}`, paddingLeft:8, whiteSpace:"pre-wrap" }}>
                       {bg.description}
                     </p>
                   </div>
@@ -3352,7 +3352,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                   ><GoalsIcon /></button>
                 </div>
                 {yearGoals.description.trim() && (
-                  <p style={{ margin:"0 14px 8px", fontSize:11, color:"var(--text-tertiary)", borderLeft:`2px solid rgba(128,128,128,0.3)`, paddingLeft:8, lineHeight:"1.5" }}>{yearGoals.description}</p>
+                  <p style={{ margin:"0 14px 8px", fontSize:11, color:"var(--text-tertiary)", borderLeft:`2px solid rgba(128,128,128,0.3)`, paddingLeft:8, lineHeight:"1.5", whiteSpace:"pre-wrap" }}>{yearGoals.description}</p>
                 )}
                 {activeYearGoals.length === 0 ? (
                   <div onClick={onEditYearGoals} role="button"
