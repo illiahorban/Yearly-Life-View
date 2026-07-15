@@ -2899,9 +2899,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     {/* View row — collapses when editing */}
                     <div style={{ maxHeight: isEditing ? 0 : "none", opacity: isEditing ? 0 : 1, overflow:"hidden", transition:"max-height 0.3s ease-in-out, opacity 0.18s ease-in-out", pointerEvents: isEditing ? "none" : "auto" }}>
                       {/* position:relative anchors the absolute action buttons */}
-                      <div style={{ padding:"8px 10px", minHeight:48, position:"relative" }}>
-                        {/* Content block — paddingRight animates: 76px (thin/row) ↔ 44px (large/column) */}
-                        <div style={{ paddingRight: ms.description ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                      {(() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description); return (
+                      <div style={{ padding:"8px 10px", position:"relative" }}>
+                        {/* Content block — paddingRight: 76px (thin, row) ↔ 44px (multiline, column) */}
+                        <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                           <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold leading-snug" style={{ color:cardTxt, wordBreak:"break-word", overflowWrap:"anywhere", display:"block" }}>{ms.label}</span>
                           {ms.description && <div className="text-[11px] leading-snug" style={{ marginTop:3, color:cardFormSec, wordBreak:"break-word", overflowWrap:"anywhere" }}>{ms.description}</div>}
                           {/* Repeat badge — static in flow, always at bottom of content */}
@@ -2912,8 +2913,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             </div>
                           )}
                         </div>
-                        {/* Action buttons — always top:12 right:10; row (thin) ↔ column ×↑✎↓ (large); animated */}
-                        <div style={{ position:"absolute", top:10, right:10, display:"flex", flexDirection: ms.description ? "column" : "row", alignItems:"center", gap: ms.description ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, flex-direction 0s, gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                        {/* Buttons: DOM order [×][✎] always.
+                            Thin (row-reverse): × anchored right, ✎ to its left; container centered on text line.
+                            Multiline (column): × top-right anchor, ✎ below. */}
+                        <div style={{ position:"absolute", top: isMl ? 10 : "50%", right:10, transform: isMl ? "none" : "translateY(-50%)", display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, top 0.2s cubic-bezier(0.16,1,0.3,1), transform 0.2s cubic-bezier(0.16,1,0.3,1), gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                           <button onClick={() => setConfirmDeleteMsIdDay(ms.id)} title={t("remove")}
                             style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
                             onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
@@ -2928,6 +2931,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           </button>
                         </div>
                       </div>
+                      ); })()}
                     </div>
                     {/* Edit form — expands when editing */}
                     <div ref={el => { if (el) msEditRefs.current.set(ms.id, el); else msEditRefs.current.delete(ms.id); }} style={{ maxHeight: isEditing ? "2000px" : 0, opacity: isEditing ? 1 : 0, overflow:"hidden", transition:"max-height 0.35s ease-in-out, opacity 0.22s ease-in-out", pointerEvents: isEditing ? "auto" : "none" }}>
@@ -4127,10 +4131,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           document.body
                         )}
                       </div>
-                    ) : (
+                    ) : (() => { const isMl = !!(msLabelMultiline[ms.id] || ms.description); return (
                       <>
-                        {/* Content block — paddingRight animates: 76px (thin/row) ↔ 44px (large/column) */}
-                        <div style={{ paddingRight: ms.description ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                        {/* Content block — paddingRight: 76px (thin, row) ↔ 44px (multiline, column) */}
+                        <div style={{ paddingRight: isMl ? 44 : 76, transition:"padding-right 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                           {showDate && (
                             <div className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)", marginBottom:2 }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</div>
                           )}
@@ -4146,8 +4150,10 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             </div>
                           )}
                         </div>
-                        {/* Action buttons — always top:10 right:10; row (thin) ↔ column ×↑✎↓ (large); animated */}
-                        <div style={{ position:"absolute", top:10, right:10, display:"flex", flexDirection: ms.description ? "column" : "row", alignItems:"center", gap: ms.description ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
+                        {/* Buttons: DOM order [×][✎] always.
+                            Thin (row-reverse): × anchored right, ✎ to its left; container centered on text line.
+                            Multiline (column): × top-right anchor, ✎ below. */}
+                        <div style={{ position:"absolute", top: isMl ? 10 : "50%", right:10, transform: isMl ? "none" : "translateY(-50%)", display:"flex", flexDirection: isMl ? "column" : "row-reverse", alignItems:"center", gap: isMl ? 6 : 8, opacity: hovering ? 1 : 0, pointerEvents: hovering ? "auto" : "none", transition:"opacity 0.15s ease-in-out, top 0.2s cubic-bezier(0.16,1,0.3,1), transform 0.2s cubic-bezier(0.16,1,0.3,1), gap 0.2s cubic-bezier(0.16,1,0.3,1)" }}>
                           <button onClick={() => setConfirmDeleteMsId(ms.id)} title={t("delete")}
                             style={{ width:26, height:26, borderRadius:999, border:"none", background: dark?"rgba(255,59,48,0.15)":"rgba(255,59,48,0.1)", color:"#ff3b30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.1s" }}
                             onMouseEnter={e => { e.currentTarget.style.background = dark?"rgba(255,59,48,0.28)":"rgba(255,59,48,0.22)"; }}
@@ -4162,7 +4168,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           </button>
                         </div>
                       </>
-                    )}
+                    ); })()}
                   </div>
                 );
               };
