@@ -4138,9 +4138,9 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           {showDate && (
                             <div className="text-[11px] tabular-nums" style={{ color:"var(--text-tertiary)", marginBottom:2 }}>{dateGroups.find(g => g.items.some(x => x.id === ms.id))?.lbl}</div>
                           )}
-                          <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold" style={{ color:rcTxt, wordBreak:"break-word", display:"block" }}><HighlightText text={ms.label} query={q} /></span>
+                          <span ref={el => { if (el) msLabelRefs.current.set(ms.id, el); else msLabelRefs.current.delete(ms.id); }} className="text-[13px] font-semibold" style={{ color:rcTxt, wordBreak:"break-word", overflowWrap:"anywhere", display:"block" }}><HighlightText text={ms.label} query={q} /></span>
                           {ms.description && (
-                            <div className="text-[11px] leading-snug" style={{ marginTop:3, color:rcSecTxt }}><HighlightText text={ms.description} query={q} /></div>
+                            <div className="text-[11px] leading-snug" style={{ marginTop:3, color:rcSecTxt, wordBreak:"break-word", overflowWrap:"anywhere" }}><HighlightText text={ms.description} query={q} /></div>
                           )}
                           {/* Repeat badge — static in flow, always at bottom of content */}
                           {ms.recurring && (
