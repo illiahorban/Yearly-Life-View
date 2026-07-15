@@ -551,16 +551,10 @@ function goalCheckboxAchromaticStyle(hex: string, dark: boolean): GoalCheckboxSt
   const sat = maxC === 0 ? 0 : (maxC - Math.min(r,g,b)) / maxC;
   if (sat > 0.18) return null;
   if (lum > 0.70) {
-    // white — invert in light mode (white checkbox on white bg is invisible)
-    return dark
-      ? { bg:"#ffffff", border:"#ffffff", icon:"#18181b" }
-      : { bg:"#27272a", border:"#27272a", icon:"#ffffff" };
+    return { bg:"#ffffff", border:"#ffffff", icon:"#18181b" };
   }
   if (lum < 0.12) {
-    // black — invert in dark mode (black checkbox on dark bg is invisible)
-    return dark
-      ? { bg:"#e5e5e7", border:"#e5e5e7", icon:"#18181b" }
-      : { bg:"#000000", border:"#000000", icon:"#ffffff" };
+    return dark ? { bg:"#09090b", border:"#000000", icon:"#ffffff" } : { bg:"#000000", border:"#000000", icon:"#ffffff" };
   }
   return { bg:"#71717a", border:"#71717a", icon:"#ffffff" };
 }
@@ -626,26 +620,27 @@ function getEventColors(hex: string, dark: boolean): EventColors {
   const ach = achromaticStyle(hex, dark);
   if (ach) {
     // Grey  → unified #71717a (zinc-500) in both themes.
-    // Black → invert in dark mode: nearly invisible black on dark bg becomes
-    //         near-white (#e5e5e7) so text and border stay legible.
-    // White → invert in light mode: invisible white on light bg becomes
-    //         near-black (#18181b) so text and border stay legible.
-    let displayHex: string;
+    // Black → text inverts in dark mode (#e5e5e7) so it stays legible; border
+    //         keeps the literal black the user chose.
+    // White → text inverts in light mode (#18181b); border keeps literal white.
+    let textHex: string;
     if (ach.tier === "grey") {
-      displayHex = "#71717a";
+      textHex = "#71717a";
     } else if (ach.tier === "black") {
-      displayHex = dark ? "#e5e5e7" : "#000000";
+      textHex = dark ? "#e5e5e7" : "#000000";
     } else {
       // white
-      displayHex = dark ? "#ffffff" : "#18181b";
+      textHex = dark ? "#ffffff" : "#18181b";
     }
+    // Border and editing border keep the literal selected colour unchanged.
+    const borderHex = ach.tier === "grey" ? "#71717a" : resolveNoteHex(hex);
     return {
       bg:            "transparent",
-      textTitle:     displayHex,
-      textDesc:      displayHex,
-      icon:          displayHex,
-      border:        displayHex,
-      borderEditing: displayHex,
+      textTitle:     textHex,
+      textDesc:      textHex,
+      icon:          textHex,
+      border:        borderHex,
+      borderEditing: borderHex,
       boxShadow:     ach.ring ?? "",
       marker:        ach.marker,
       formBg:        dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
