@@ -1320,7 +1320,7 @@ function App() {
                   <div style={{ borderRadius:16 }}>
                   {/* Quarter header row */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col items-start gap-0.5">
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.nameColor} />
                       <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
