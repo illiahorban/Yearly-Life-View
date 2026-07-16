@@ -2,70 +2,94 @@
 
 ## Project Overview
 
-This repository is a pnpm workspace monorepo with a small production footprint. The active production deployment is composed of the `artifacts/life-calendar` React/Vite frontend and the `artifacts/api-server` Express 5 API server. Artifact manifests confirm the deployed route split: `artifacts/life-calendar` serves the public `/` static application, and `artifacts/api-server` serves the public `/api` service.
+A monorepo containing three artifacts:
 
-The API currently exposes only `/api/healthz`, and the shared database package (`lib/db`) provides a PostgreSQL/Drizzle connection but no defined tables or production query logic yet.
+- **life-calendar** — a React/Vite single-page application (no backend calls) that lets users
+  plan and track life weeks, sprints, quarters, goals, and notes. All data is persisted in
+  `localStorage`; there is no account system and no server-side data storage.
+- **api-server** — a Node.js/Express 5/TypeScript API server with Drizzle ORM and PostgreSQL.
+  Currently exposes only `GET /api/healthz`. Intended to grow into the backend for future
+  authenticated features.
+- **mockup-sandbox** — a Vite-based component preview server used exclusively during
+  development. Not exposed in production.
 
-The current deployment is publicly reachable, so the static frontend and `/api/healthz` should be treated as internet-accessible production surface rather than private infrastructure.
-
-Production assumptions for future scans:
-- `NODE_ENV=production` in deployed environments.
-- Replit-managed TLS protects browser-to-server traffic.
-- `artifacts/mockup-sandbox` is a development-only mockup environment and should be ignored unless future evidence shows it is reachable in production.
+Users are individuals managing their own calendar in the browser. There is currently no
+multi-user model, no authentication, and no personally identifiable information stored
+server-side.
 
 ## Assets
 
-- **Application availability** — the primary backend asset today is service availability for the health endpoint and any future API routes.
-- **Environment secrets** — `DATABASE_URL` and any future API keys or session secrets loaded from environment variables.
-- **User-authored local data** — the life-calendar frontend stores milestones, notes, goals, and life settings in browser localStorage. This data is local to the user’s browser rather than stored server-side, but still represents private user information on the client.
-- **Server logs** — request metadata is logged by the API server. Auth and cookie headers are redacted and must remain redacted as the API grows.
+- **Future user data** — as the api-server gains endpoints it will likely handle user-owned
+  data (goals, notes, calendar state). This must be protected before any such endpoint ships.
+- **Application secrets** — `DATABASE_URL`, `SESSION_SECRET`, and any future API keys stored
+  in Replit Secrets. Leakage would give an attacker direct database access.
+- **Client-side localStorage** — the life-calendar stores all calendar data locally. Data is
+  scoped to the user's own browser; there is no cross-user exposure risk today.
 
 ## Trust Boundaries
 
-- **Browser to API** — all requests from the frontend to `/api/*` cross from an untrusted client into the Express server. Any future sensitive route will require explicit authentication, authorization, input validation, and rate limiting.
-- **API to PostgreSQL** — the API server can connect directly to PostgreSQL through `lib/db`. Any future raw SQL or unsafe query construction would become high risk.
-- **Client local storage boundary** — the frontend persists user state in browser localStorage. This data is readable by any script executing in the origin, so future XSS would expose that local data.
-- **Production vs dev-only boundary** — `artifacts/mockup-sandbox` contains dynamic preview functionality and looser assumptions intended for development. It is out of scope for production unless deployed reachability is demonstrated.
+- **Browser → api-server** — all HTTP requests cross this boundary. Until authentication is
+  implemented the API must treat every caller as untrusted. No sensitive data may be returned
+  without an auth check once user accounts exist.
+- **api-server → PostgreSQL** — the application has direct database access via `DATABASE_URL`.
+  Compromise of the application process would give an attacker full database access.
+- **Public internet → mockup-sandbox** — the preview server is dev-only and must not be
+  reachable in any production deployment.
 
 ## Scan Anchors
 
-- **Production entry points**
-  - `artifacts/api-server/src/index.ts`
-  - `artifacts/api-server/src/app.ts`
-  - `artifacts/api-server/src/routes/`
-  - `artifacts/life-calendar/src/main.tsx`
-  - `artifacts/life-calendar/src/App.tsx`
-- **Deployment routing manifests**
-  - `artifacts/life-calendar/.replit-artifact/artifact.toml`
-  - `artifacts/api-server/.replit-artifact/artifact.toml`
-- **Highest-risk shared areas if the app grows**
-  - `lib/db/src/index.ts`
-  - `lib/api-client-react/src/custom-fetch.ts`
-  - `lib/api-spec/openapi.yaml`
-- **Public surface today**
-  - Static life-calendar frontend at `/`
-  - `GET /api/healthz`
-- **Dev-only area to usually ignore**
-  - `artifacts/mockup-sandbox/**`
+- **Production entry point**: `artifacts/api-server/src/index.ts` → `app.ts` → `routes/`
+- **Highest-risk area when endpoints are added**: `artifacts/api-server/src/routes/` (auth
+  checks, input validation, authorization guards)
+- **Public surface today**: `GET /api/healthz` only — no auth required, no sensitive data
+- **Dev-only surface**: `artifacts/mockup-sandbox/` — should be excluded from production scans
+- **Client-side data store**: `artifacts/life-calendar/src/App.tsx` (localStorage reads/writes)
 
 ## Threat Categories
 
 ### Spoofing
 
-The production API currently has no authenticated routes. If authentication is introduced later, all non-public API routes must require server-side verification of the caller’s identity. Client-only auth state or bearer-token attachment helpers in shared client code are not sufficient by themselves.
+No authentication exists today. When user accounts are introduced, every API route that
+accesses user-owned data MUST validate a session token server-side before returning or
+modifying any data. The `SESSION_SECRET` env var is already provisioned; use it to sign
+session cookies with `express-session` or equivalent. Tokens MUST NOT be stored in
+`localStorage` on the client (XSS exposure); use `HttpOnly` cookies.
 
 ### Tampering
 
-All future client input reaching Express or PostgreSQL must be treated as untrusted. Database operations must continue to use safe Drizzle/query-parameter mechanisms rather than string-built SQL. Any business rules introduced in the frontend must also be enforced server-side.
+The api-server uses `express.json()` and `express.urlencoded()`. All incoming request bodies
+MUST be validated with Zod (already a project dependency in the frontend; add it to the
+backend) before use. Client-supplied values MUST NOT influence query structure. All database
+queries MUST use Drizzle's parameterized query builder — never raw string interpolation.
 
 ### Information Disclosure
 
-The current API surface is low sensitivity, but future expansion must preserve secret handling and avoid exposing internal errors, tokens, cookies, or database details in logs and responses. The frontend stores personal planning data in localStorage, so any future XSS in the `life-calendar` origin would expose that local data.
+**CORS**: `app.use(cors())` with no configuration allowed all origins (`*`). Fixed: CORS now
+reads allowed origins from `CORS_ORIGIN` env var (comma-separated), falling back to the
+Replit dev domain in development. In production, only the deployed domain is permitted.
+
+**Security headers**: Helmet is now applied to set `X-Frame-Options`, `X-Content-Type-Options`,
+`Content-Security-Policy`, and other protective headers.
+
+**Error responses**: Express MUST NOT return stack traces in production. Error middleware
+should return generic messages in `NODE_ENV=production`.
+
+**Logs**: The Pino request serializer already strips query strings from logged URLs (good).
+Ensure no future middleware logs request bodies (which may contain credentials).
 
 ### Denial of Service
 
-The current service is small, but future public endpoints must not allow unbounded request bodies, expensive unauthenticated work, or unlimited brute-force traffic. As the API expands beyond `/healthz`, rate limiting and request-size controls may become mandatory for public routes.
+The healthz endpoint has no rate limiting. For any future endpoint that performs database
+queries or computation, add `express-rate-limit` before the route. Authentication endpoints
+(login, registration) are the highest-risk targets and MUST be rate-limited to ≤10 req/min
+per IP. Body size is bounded by Express defaults (100kb JSON); verify this remains appropriate
+as endpoints are added.
 
 ### Elevation of Privilege
 
-There is currently no role boundary or privileged functionality in production. If the API adds user-specific or admin behavior later, authorization must be enforced in server-side route handlers and data access layers rather than assumed from the frontend or generated client code.
+No role separation exists today. When admin functionality is introduced, admin checks MUST be
+enforced server-side on every admin route — never rely on client-supplied role claims.
+The mockup-sandbox uses dynamic Vite glob imports to load preview components by URL path
+(flagged MEDIUM by SAST). The path is constructed by the Vite module graph, not from raw
+user input, so arbitrary file access outside the component tree is not possible. This is
+acceptable as a dev-only tool; it MUST remain unreachable in production.
