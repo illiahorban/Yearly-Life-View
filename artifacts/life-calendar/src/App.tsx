@@ -1887,7 +1887,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   useEffect(() => { if (editing) { ref.current?.focus(); ref.current?.select(); } }, [editing]);
   const commit = () => { onChange(draft.trim() || value); setEditing(false); };
   if (editing) {
-    return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value.slice(0,20))} onBlur={commit}
+    return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
       onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
       style={{ color, borderBottom:`1px solid ${color}`, minWidth:24, maxWidth:120, padding:"1px 2px" }}
