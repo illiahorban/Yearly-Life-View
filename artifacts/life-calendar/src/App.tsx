@@ -1884,15 +1884,29 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   const { t } = React.useContext(LangContext);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const ref = useRef<HTMLInputElement|null>(null);
+  const ref = useRef<HTMLTextAreaElement|null>(null);
   useEffect(() => { setDraft(value); }, [value]);
-  useEffect(() => { if (editing) { ref.current?.focus(); ref.current?.select(); } }, [editing]);
+  useEffect(() => {
+    if (editing && ref.current) {
+      ref.current.focus();
+      ref.current.select();
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  }, [editing]);
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
   const commit = () => { onChange(draft.trim() || value); setEditing(false); };
   if (editing) {
-    return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
-      onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
+    return <textarea ref={ref} value={draft}
+      rows={1}
+      onChange={e => { setDraft(e.target.value); autoResize(e.target); }}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); commit(); } if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
-      style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%" }}
+      style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%", resize:"none", overflow:"hidden", lineHeight:1.35, fontFamily:"inherit", display:"block" }}
     />;
   }
   return (
@@ -1909,18 +1923,32 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
   const { t } = React.useContext(LangContext);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const ref = useRef<HTMLInputElement|null>(null);
+  const ref = useRef<HTMLTextAreaElement|null>(null);
   useEffect(() => { setDraft(value); }, [value]);
-  useEffect(() => { if (editing) { ref.current?.focus(); ref.current?.select(); } }, [editing]);
+  useEffect(() => {
+    if (editing && ref.current) {
+      ref.current.focus();
+      ref.current.select();
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  }, [editing]);
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
   const commit = () => { onChange(draft.trim() || "Untitled sprint"); setEditing(false); };
   if (editing) {
-    return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
-      onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
+    return <textarea ref={ref} value={draft}
+      rows={1}
+      onChange={e => { setDraft(e.target.value); autoResize(e.target); }}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); commit(); } if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[12px] font-semibold bg-transparent outline-none"
-      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%" }}
+      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%", resize:"none", overflow:"hidden", lineHeight:1.35, fontFamily:"inherit", display:"block" }}
     />;
   }
-  return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color, letterSpacing:"-0.01em" }} title={t("clickToRename")}>{value}</button>;
+  return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left break-words" style={{ color, letterSpacing:"-0.01em", maxWidth:"100%" }} title={t("clickToRename")}>{value}</button>;
 }
 
 // ─── Fire animation ───────────────────────────────────────────────────────────
