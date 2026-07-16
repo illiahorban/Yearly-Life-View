@@ -1890,7 +1890,8 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
     return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
       onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
-      style={{ color, borderBottom:`1px solid ${color}`, minWidth:24, maxWidth:120, padding:"1px 2px" }}
+      size={Math.max(4, draft.length + 1)}
+      style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 2px" }}
     />;
   }
   return (
@@ -1915,7 +1916,8 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
     return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
       onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[12px] font-semibold bg-transparent outline-none"
-      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, minWidth:100, padding:"1px 2px" }}
+      size={Math.max(8, draft.length + 1)}
+      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, padding:"1px 2px" }}
     />;
   }
   return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color, letterSpacing:"-0.01em" }} title={t("clickToRename")}>{value}</button>;
