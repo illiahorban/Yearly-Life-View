@@ -1889,13 +1889,13 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   if (editing) {
     return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value.slice(0,20))} onBlur={commit}
       onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
-      className="text-[11px] font-semibold tracking-widest uppercase bg-transparent outline-none"
+      className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
       style={{ color, borderBottom:`1px solid ${color}`, minWidth:24, maxWidth:120, padding:"1px 2px" }}
     />;
   }
   return (
     <button type="button" onClick={() => setEditing(true)}
-      className="text-[11px] font-semibold tracking-widest uppercase"
+      className="text-[11px] font-semibold tracking-wide"
       style={{ color }} title={t("clickToRename")}
     >{value}</button>
   );
@@ -3714,7 +3714,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                 <div key={qi}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: quarter.tint, border: `2px solid ${quarter.border}`, flexShrink: 0, display: "inline-block" }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-secondary)" }}>{quarter.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>{quarter.label}</span>
                     <span style={{ fontSize: 11, color: "var(--text-tertiary)", fontWeight: 500 }}>{group.length}</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
