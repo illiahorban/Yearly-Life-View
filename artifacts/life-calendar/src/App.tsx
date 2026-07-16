@@ -1320,12 +1320,12 @@ function App() {
                   <div style={{ borderRadius:16 }}>
                   {/* Quarter header row */}
                   <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
-                    <div className="flex flex-col items-start gap-0.5">
+                    <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0 mr-2">
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.nameColor} />
                       <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
                         style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.nameColor : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                       ><GoalsIcon /></button>
@@ -1688,14 +1688,16 @@ function BlocksRenderer({
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
-                  <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.nameColor} />
+                  <div className="flex-1 min-w-0 mr-2">
+                    <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.nameColor} />
+                  </div>
                   {blockStreak > 0 && (
                     <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", display:"flex", alignItems:"center", justifyContent:"center", gap:4, lineHeight:1 }}>
                       <span style={{ fontSize:11, filter:"drop-shadow(0 0 3px rgba(255,149,0,0.5))" }}>🔥</span>
                       <span style={{ fontSize:10, fontWeight:700, color:"#ff9500" }}>{pluralDayStreak(blockStreak, lang)}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button type="button" onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
                       style={{ width:22, height:22, borderRadius:6, background:"transparent", border:"none", color: activeGoals.length>0 ? effectiveQ.nameColor : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                     ><GoalsIcon /></button>
@@ -1890,14 +1892,13 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
     return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
       onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
-      size={Math.max(4, draft.length + 1)}
-      style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 2px" }}
+      style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%" }}
     />;
   }
   return (
     <button type="button" onClick={() => setEditing(true)}
-      className="text-[11px] font-semibold tracking-wide"
-      style={{ color }} title={t("clickToRename")}
+      className="text-[11px] font-semibold tracking-wide text-left break-words"
+      style={{ color, maxWidth:"100%" }} title={t("clickToRename")}
     >{value}</button>
   );
 }
@@ -1916,8 +1917,7 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
     return <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit}
       onKeyDown={e => { if (e.key==="Enter") commit(); if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[12px] font-semibold bg-transparent outline-none"
-      size={Math.max(8, draft.length + 1)}
-      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, padding:"1px 2px" }}
+      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%" }}
     />;
   }
   return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left" style={{ color, letterSpacing:"-0.01em" }} title={t("clickToRename")}>{value}</button>;
