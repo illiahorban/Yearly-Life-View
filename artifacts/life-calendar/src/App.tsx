@@ -399,9 +399,9 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // white/black contrast boost applied to `text` for legibility. For grey specifically,
   // keep them showing the actual grey swatch (a legible mid-tone in both themes) instead
   // of being swapped to white/black like the rest of the achromatic UI.
-  const nameColor = meta.colorKey === "grey" ? (dark ? "#aeaeb2" : "#8e8e93")
-                   : meta.colorKey === "white" ? "#ffffff"
-                   : meta.colorKey === "black" ? "#121212"
+  const nameColor = meta.colorKey === "grey"  ? (dark ? "#aeaeb2" : "#8e8e93")
+                   : meta.colorKey === "white" ? (dark ? "#ffffff" : "#18181b")
+                   : meta.colorKey === "black" ? (dark ? "#e5e5e7" : "#121212")
                    : textHex;
   return {
     key: meta.colorKey,
