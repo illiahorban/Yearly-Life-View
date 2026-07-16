@@ -1955,6 +1955,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isPaleAccent = luminanceOf(accentColor) > 0.80;    // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
   const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
+  // For the today ring: black accent on dark bg and white accent on light bg are both
+  // invisible. Swap to the opposite pole so the border and glow stay visible.
+  const ringAccent = (dark  && luminanceOf(accentColor) < 0.12) ? "#e5e5e7"
+                   : (!dark && luminanceOf(accentColor) > 0.90) ? "#27272a"
+                   : accentColor;
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
@@ -2101,7 +2106,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:"var(--surface)", border:`1.5px solid ${accentColor}`, boxShadow: hovered ? `0 0 0 4px ${accentColor}2e,0 4px 18px ${accentColor}47` : `0 0 0 4px ${accentColor}1e,0 4px 14px ${accentColor}2e`, color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:"var(--surface)", border:`1.5px solid ${ringAccent}`, boxShadow: hovered ? `0 0 0 4px ${ringAccent}2e,0 4px 18px ${ringAccent}47` : `0 0 0 4px ${ringAccent}1e,0 4px 14px ${ringAccent}2e`, color:"var(--text)" }}>
             {msBar}
             {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
                 the SAME stacking context as the text below — `isolation: isolate` on the
