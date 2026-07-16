@@ -1945,7 +1945,7 @@ function BlockLabel({ value, onChange, color }: { value: string; onChange: (v: s
       onBlur={commit}
       onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); commit(); } if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
       className="text-[12px] font-semibold bg-transparent outline-none"
-      style={{ color:"var(--text)", borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%", resize:"none", overflow:"hidden", lineHeight:1.35, fontFamily:"inherit", display:"block" }}
+      style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%", resize:"none", overflow:"hidden", lineHeight:1.35, fontFamily:"inherit", display:"block" }}
     />;
   }
   return <button type="button" onClick={() => setEditing(true)} className="text-[12px] font-semibold tracking-tight text-left break-words" style={{ color, letterSpacing:"-0.01em", maxWidth:"100%" }} title={t("clickToRename")}>{value}</button>;
