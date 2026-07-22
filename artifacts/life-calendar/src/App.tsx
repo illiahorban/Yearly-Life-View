@@ -4813,7 +4813,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       placeholder={t("sprintLabelPlaceholder")}
                       minRows={1}
                       className="bg-transparent outline-none w-full resize-none"
-                      style={{ color: bAc ? bDotHex : "var(--text)", fontSize:13, fontWeight:500, lineHeight:1.45, fontFamily:"inherit", padding:0, border:"none", display:"block", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}
+                      style={{ color: bDotHex, fontSize:13, fontWeight:500, lineHeight:1.45, fontFamily:"inherit", padding:0, border:"none", display:"block", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}
                     />
                     {/* Bottom row: color dot + number badge on left, stepper + reset + delete on right */}
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
