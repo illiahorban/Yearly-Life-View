@@ -1131,7 +1131,7 @@ function App() {
 
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
-        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-5 pb-4">
+        <div className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <button onClick={() => setViewYear(y => Math.max(MIN_YEAR, y-1))} disabled={viewYear <= MIN_YEAR}
@@ -1140,14 +1140,14 @@ function App() {
               <button onClick={() => setViewYear(y => Math.min(MAX_YEAR, y+1))} disabled={viewYear >= MAX_YEAR}
                 style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear>=MAX_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear>=MAX_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><ChevronRightIcon /></button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <div ref={searchBtnRef}><IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton></div>
-              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
+              <div className="hidden sm:block" style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
               <IconButton title={t("allGoals")} onClick={() => setGoalsOpen(o => !o)} bg={goalsOpen ? "rgba(52,199,89,0.15)" : overlayBg}><GoalsIcon /></IconButton>
               <IconButton title={t("notesPanel")} onClick={() => setNotesPanelOpen(true)} bg={overlayBg}><NotesIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
-              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
-              <IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton>
+              <div className="hidden sm:block" style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
+              <div className="hidden sm:flex"><IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton></div>
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
               {/* Settings gear */}
               <div ref={settingsRef} style={{ position:"relative" }}>
@@ -1281,20 +1281,20 @@ function App() {
           </div>
 
           {/* Sticky weekday labels */}
-          <div className="mt-3 px-[17px] sm:px-[21px] flex flex-row items-center">
-            <div style={{ width:60, flexShrink:0 }} />
-            <div className="grid grid-cols-7 gap-2 sm:gap-3" style={{ flex:1, minWidth:0 }}>
-              {weekdays.map((w,i) => <div key={i} className="text-center text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
+          <div className="mt-3 px-[13px] sm:px-[21px] flex flex-row items-center">
+            <div className="lc-side-col" />
+            <div className="grid grid-cols-7 gap-1 sm:gap-3" style={{ flex:1, minWidth:0 }}>
+              {weekdays.map((w,i) => <div key={i} className="text-center text-[10px] sm:text-[15px] font-medium tracking-widest uppercase" style={{ color: "var(--text-tertiary)" }}>{w}</div>)}
             </div>
-            <div style={{ width:60, flexShrink:0 }} />
+            <div className="lc-side-col" />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 sm:px-8 py-8">
+      <main className="mx-auto max-w-3xl px-3 sm:px-8 py-4 sm:py-8">
 
         <LayoutGroup>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3 sm:gap-6">
             {[0,1,2,3].map(qi => {
               const quarter = resolvedQuarters[qi]!;
               const meta = quarterMeta[qi]!;
@@ -1319,7 +1319,7 @@ function App() {
                   {/* Sticky quarter header — sticks just below main app header */}
                   <div style={{ borderRadius:16 }}>
                   {/* Quarter header row */}
-                  <div className="flex items-center justify-between px-4 sm:px-5 pb-0" style={{ paddingTop:18 }}>
+                  <div className="flex items-center justify-between px-3 sm:px-5 pb-0" style={{ paddingTop:18 }}>
                     <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0 mr-2">
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.nameColor} />
@@ -1333,7 +1333,7 @@ function App() {
                     </div>
                   </div>
                   {/* Quarter progress */}
-                  <div className="px-4 sm:px-5" style={{ paddingTop:0, paddingBottom:18 }}>
+                  <div className="px-3 sm:px-5" style={{ paddingTop:0, paddingBottom:18 }}>
                     <div className="text-center tabular-nums" style={{ fontSize:11, fontWeight:700, marginBottom:4, color: !dark && quarter.key === "green" ? "var(--apple-green-deep)" : quarter.text }}>
                       {qPct.toFixed(0)}%
                     </div>
@@ -1368,7 +1368,7 @@ function App() {
                     const activeQGoals = qg?.goals.filter(g => g.text.trim()) ?? [];
                     if (activeQGoals.length === 0) return null;
                     return (
-                      <div className="px-4 sm:px-5 pb-3">
+                      <div className="px-3 sm:px-5 pb-3">
                         {qg?.description ? (
                           <p className="text-[11px] leading-snug mb-2" style={{ color:mt.tertiary, borderLeft:`2px solid ${quarter.fill}`, paddingLeft:8, opacity:0.8, whiteSpace:"pre-wrap" }}>
                             {qg.description}
@@ -1397,7 +1397,7 @@ function App() {
                   })()}
                   </div>{/* end quarter header wrapper */}
 
-                  <div className="pb-3 sm:pb-4 px-3 sm:px-4 pt-0 flex flex-col gap-2">
+                  <div className="pb-3 sm:pb-4 px-2 sm:px-4 pt-0 flex flex-col gap-2">
                     <BlocksRenderer
                       qi={qi} quarter={quarter} qConfig={qConfig} startIndex={startIndex}
                       weeks={weeks} currentWeekIndex={currentWeekIndex} todayProgress={todayProgress}
@@ -1687,7 +1687,7 @@ function BlocksRenderer({
                 style={{ background:cardBg, borderRadius:14, border:`2px solid ${effectiveQ.border}`, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", overflow:"visible" }}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between px-3 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
+                <div className="flex items-center justify-between px-2 sm:px-3.5 pt-2.5 pb-1.5" style={{ position:"relative" }}>
                   <div className="flex-1 min-w-0 mr-2">
                     <BlockLabel value={block.label} onChange={v => onLabelChange(block.id, v)} color={effectiveQ.nameColor} />
                   </div>
@@ -1706,7 +1706,7 @@ function BlocksRenderer({
                 </div>
 
                 {/* Progress strip */}
-                <div className="px-3 sm:px-3.5 pb-2">
+                <div className="px-2 sm:px-3.5 pb-2">
                   <div className="relative flex items-center justify-between text-[10px] tabular-nums mb-1">
                     <span style={{ color:mt.tertiary }}>{pastDays} {t("of")} {totalDays} {t("daysOf")}</span>
                     <span style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", color: isFuture ? mt.tertiary : effectiveQ.text, fontWeight:700 }}>{pct.toFixed(0)}%</span>
@@ -1733,7 +1733,7 @@ function BlocksRenderer({
 
                 {/* Sprint description */}
                 {bg?.description && (
-                  <div className="px-3 sm:px-3.5 pb-2">
+                  <div className="px-2 sm:px-3.5 pb-2">
                     <p className="text-[11px] leading-snug" style={{ color:mt.tertiary, borderLeft:`2px solid ${softColor}`, paddingLeft:8, whiteSpace:"pre-wrap" }}>
                       {bg.description}
                     </p>
@@ -1742,7 +1742,7 @@ function BlocksRenderer({
 
                 {/* Checklist */}
                 {activeGoals.length > 0 && (
-                  <div className="px-3 sm:px-3.5 pb-2">
+                  <div className="px-2 sm:px-3.5 pb-2">
                     <div className="flex flex-col gap-1">
                       {activeGoals.map(goal => {
                         const cb = goalCheckboxColors(goal.color, dark, effectiveQ.fill, effectiveQ.key);
@@ -1779,8 +1779,8 @@ function BlocksRenderer({
                       <div key={wi} style={{ display:"flex", flexDirection:"column" }}>
                         {/* Three-column week row: [left 60px] [tiles flex-1] [right 60px] */}
                         <div ref={el => { weekRefs.current[wi] = el; }} style={{ display:"flex", flexDirection:"row", alignItems:"center" }}>
-                          {/* LEFT COLUMN — week number, 60px, perfectly centered */}
-                          <div style={{ width:60, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          {/* LEFT COLUMN — week number, responsive width */}
+                          <div className="lc-side-col" style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
                             <button type="button"
                               onClick={() => onWeekLabelClick(_qi, qOffset)}
                               title={hasSelection ? (isSel ? t("clickMoveEndSelection") : t("extendSelectionHere")) : t("clickStartSprintSelection")}
@@ -1802,7 +1802,7 @@ function BlocksRenderer({
                             </button>
                           </div>
                           {/* MIDDLE COLUMN — day tiles, fills remaining space */}
-                          <div className="grid grid-cols-7 gap-2 sm:gap-3" style={{ flex:1, minWidth:0, justifyContent:"center" }}>
+                          <div className="grid grid-cols-7 gap-1 sm:gap-3" style={{ flex:1, minWidth:0, justifyContent:"center" }}>
                             {days.map((d, di) => (
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
@@ -1815,8 +1815,8 @@ function BlocksRenderer({
                               />
                             ))}
                           </div>
-                          {/* RIGHT COLUMN — goals counter, 60px, perfectly centered */}
-                          <div style={{ width:60, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          {/* RIGHT COLUMN — goals counter, responsive width */}
+                          <div className="lc-side-col" style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {weekTotal > 0 && (
                               <div style={{ display:"flex", flexDirection:"row", alignItems:"center", gap:3 }}>
                                 <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1 }}>
@@ -2208,8 +2208,8 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
   const monStyle: React.CSSProperties = { color: monColor, ...(isInvertPale ? { mixBlendMode: "difference", opacity: 0.85 } : null) };
   return (
     <div className="flex flex-col items-center justify-center leading-none select-none">
-      <div className="text-[21px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
-      <div className="mt-1 text-[12px] sm:text-[13px] font-medium tracking-widest" style={monStyle}>{month}</div>
+      <div className="text-[15px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
+      <div className="mt-0.5 sm:mt-1 text-[9px] sm:text-[13px] font-medium tracking-widest" style={monStyle}>{month}</div>
     </div>
   );
 }
