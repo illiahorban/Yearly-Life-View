@@ -5194,7 +5194,6 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 const rows = Math.ceil(totalUnits / cols);
                 const lblFontSize = Math.min(8, Math.max(6, cellPx));
                 const yearInterval = Math.max(1, Math.ceil(9 / (cellPx + gapPx)));
-                const birthYear = birthDate ? birthDate.getFullYear() : null;
                 const showColAt = (ci: number) =>
                   view === "months" ? true : (ci === 0 || ci === 12 || ci === 25 || ci === 38 || ci === 51);
                 return (
@@ -5213,7 +5212,10 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                     </div>
                     {/* Rows with year labels */}
                     {Array.from({ length: rows }, (_, ri) => {
-                      const yearNum = birthYear !== null ? birthYear + ri : ri + 1;
+                       // Month/week rows represent years of life, not calendar years.
+                       // This keeps the active row labelled "26" for someone currently
+                       // in their 26th year, even when their birthday is later in the year.
+                       const yearNum = birthDate ? ri : ri + 1;
                       const showYear = ri % yearInterval === 0;
                       return (
                         <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx, height: cellPx }}>
