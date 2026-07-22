@@ -4815,7 +4815,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       {/* Badge wrapped in a container matching first-line height so it centres on the text baseline */}
                       <div style={{ display:"flex", alignItems:"center", height:19, flexShrink:0 }}>
                         <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
-                          style={{ width:13, height:13, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0, boxShadow:`0 0 0 2px ${modalBg}, 0 1px 3px rgba(0,0,0,0.18)` }}>
+                          style={{ width:13, height:13, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0, boxShadow:`0 0 0 2px ${bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint)}, 0 1px 3px rgba(0,0,0,0.18)` }}>
                           {idx+1}
                         </div>
                       </div>
