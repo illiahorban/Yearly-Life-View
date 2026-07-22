@@ -5217,7 +5217,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                        // Month/week rows represent years of life, not calendar years.
                        // This keeps the active row labelled "26" for someone currently
                        // in their 26th year, even when their birthday is later in the year.
-                       const yearNum = ri + 1;
+                       const yearNum = birthDate ? birthDate.getFullYear() + ri : ri;
                        const showYear = ri % yearInterval === 0 || ri >= rows - 2;
                       return (
                         <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx, height: cellPx }}>
