@@ -4810,24 +4810,23 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   className="flex items-center gap-2" style={{ position:"relative" }}
                 >
                   <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", flexDirection:"row", gap:8, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
-                    {/* Left column: number badge top, color dot bottom */}
+                    {/* Left column: number badge top (aligned with first text line), color dot bottom */}
                     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"space-between", flexShrink:0, alignSelf:"stretch" }}>
-                      {/* Number badge */}
-                      <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
-                        style={{ width:16, height:16, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>
-                        {idx+1}
+                      {/* Badge wrapped in a container matching first-line height so it centres on the text baseline */}
+                      <div style={{ display:"flex", alignItems:"center", height:19, flexShrink:0 }}>
+                        <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
+                          style={{ width:13, height:13, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>
+                          {idx+1}
+                        </div>
                       </div>
-                      {/* Color dot — same 16×16 hit area, dot visually centred */}
+                      {/* Color dot — same 13×13 as the quarter colour dot */}
                       <button type="button" onClick={(e) => {
                         const rect = e.currentTarget.getBoundingClientRect();
                         setColorPickerAnchor(prev => prev?.id === b.id ? null : { id: b.id, rect });
                       }}
                         title={t("sprintColor")}
-                        className="flex items-center justify-center"
-                        style={{ width:16, height:16, borderRadius:999, background:"transparent", border:"none", cursor:"pointer", flexShrink:0, padding:0 }}
-                      >
-                        <span style={{ width:10, height:10, borderRadius:999, background: bDotHex, display:"block", boxShadow:"0 0 0 1.5px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)" }} />
-                      </button>
+                        style={{ width:13, height:13, borderRadius:999, background: bDotHex, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0 }}
+                      />
                     </div>
                     {/* Right column: textarea on top, stepper + actions on bottom */}
                     <div style={{ display:"flex", flexDirection:"column", gap:4, flex:1, minWidth:0 }}>
