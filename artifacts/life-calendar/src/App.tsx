@@ -5019,12 +5019,14 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
         break;
       case "months":
         c = 12; gap = 1; total = (ls + 1) * 12;
-        curr = ageMonthsTotal;
+        // Count months from Jan 1 of birth year so row ri always = calendar year birthYear+ri.
+        curr = birthDate ? (today.getFullYear() - birthDate.getFullYear()) * 12 + today.getMonth() : 0;
         activeCell = curr;
         break;
       case "weeks":
         c = 52; gap = 1; total = (ls + 1) * 52;
-        curr = Math.floor(ageDays / 7);
+        // Count weeks from Jan 1 of birth year for the same reason.
+        curr = birthDate ? Math.floor(daysBetween(startOfYear(birthDate.getFullYear()), today) / 7) : 0;
         activeCell = curr;
         break;
       default:
@@ -5217,7 +5219,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                        // Row ri = calendar year birthYear+ri (same logic as years-view cells).
                        // total = (ls+1)*12 so rows span birthYear … birthYear+ls inclusive.
                        const yearNum = birthDate ? birthDate.getFullYear() + ri : ri;
-                       const showYear = ri % 2 === 0 || ri >= rows - 2;
+                       const showYear = ri % 2 === 0;
                       return (
                         <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx, height: cellPx }}>
                           {/* Year label */}
