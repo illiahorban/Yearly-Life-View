@@ -3134,7 +3134,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 </motion.div>,
                 document.body
               )}
-              <div className="flex items-center justify-between gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <div className="flex items-center gap-1.5" style={{ isolation:"isolate", marginLeft:2 }}>
                   <button
                     ref={newColorBtnRef}
@@ -3151,7 +3151,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     <span key={newRecurSpinKey} className={newRecurring ? "recur-spin-once" : undefined} style={{ display:"inline-block" }}>↻</span>
                   </button>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5" style={{ marginLeft:"auto" }}>
                   <button onClick={() => setAddEventOpen(false)}
                     style={{ height:28, padding:"0 12px", borderRadius:7, border: cancelBorder, background:"transparent", color: cancelColor, fontSize:12, fontWeight:500, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>{t("cancel")}</button>
                   <button onClick={submitNewEvent} disabled={!newLabel.trim()}
@@ -4019,7 +4019,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     className={isWhite?"placeholder-dark":undefined}
                     style={{ ...draftInputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" }}
                   />
-                  <div className="flex items-center" style={{ isolation:"isolate", flexWrap:"nowrap", gap:8 }}>
+                  <div className="flex items-center" style={{ isolation:"isolate", flexWrap:"wrap", gap:8 }}>
                     <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
                       lang={lang} style={{ ...draftInputStyle, flex:"0 0 104px", minWidth:0, width:104, padding:"0 6px" }}
                     />
