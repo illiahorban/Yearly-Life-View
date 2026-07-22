@@ -4810,8 +4810,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   className="flex items-center gap-2" style={{ position:"relative" }}
                 >
                   <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", flexDirection:"row", gap:8, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
-                    {/* Left column: number badge + color dot, same size, same axis */}
-                    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, flexShrink:0, paddingTop:2 }}>
+                    {/* Left column: number badge top, color dot bottom */}
+                    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"space-between", flexShrink:0, alignSelf:"stretch" }}>
                       {/* Number badge */}
                       <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
                         style={{ width:16, height:16, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>
