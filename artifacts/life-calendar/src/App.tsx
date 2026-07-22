@@ -1435,6 +1435,8 @@ function App() {
             onColorChange={key => updateQuarterMeta(settingsQuarter, { colorKey: key })}
             onClose={() => setSettingsQuarter(null)}
             onAutoSave={next => updateQuarter(settingsQuarter, next)}
+            quarterName={quarterMeta[settingsQuarter]!.name}
+            onQuarterNameChange={name => updateQuarterMeta(settingsQuarter, { name })}
             onSave={next => { updateQuarter(settingsQuarter, next); setSettingsQuarter(null); }}
             onResetBlock={(blockId) => {
               const qi = settingsQuarter;
@@ -4691,10 +4693,11 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
 
 // ─── SprintSettingsModal ──────────────────────────────────────────────────────
 
-function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, colorKey, onColorChange, onClose, onSave, onAutoSave, onResetBlock }: {
+function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, colorKey, onColorChange, onClose, onSave, onAutoSave, onResetBlock, quarterName, onQuarterNameChange }: {
   quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
   colorKey: AppleColorKey; onColorChange: (key: AppleColorKey) => void;
   onClose: () => void; onSave: (next: QuarterConfig) => void; onAutoSave: (next: QuarterConfig) => void; onResetBlock: (blockId: string) => void;
+  quarterName: string; onQuarterNameChange: (name: string) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
   const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map(b => ({ ...b })));
@@ -4759,8 +4762,10 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 )}
               </AnimatePresence>
             </div>
-            <span className="inline-flex items-center justify-center text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
-              style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>{quarter.label}</span>
+            <div className="inline-flex items-center text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full"
+              style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>
+              <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
+            </div>
             <h2 className="text-base font-semibold tracking-tight" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("sprintConfig")}</h2>
           </div>
           <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)" }}>{t("sprintConfigDescription").replace("{quarter}", quarter.label)}</p>
