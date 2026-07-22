@@ -4763,7 +4763,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 )}
               </AnimatePresence>
             </div>
-            <div className="inline-flex items-center text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full"
+            <div className="flex flex-1 min-w-0 items-center text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full"
               style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>
               <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
             </div>
