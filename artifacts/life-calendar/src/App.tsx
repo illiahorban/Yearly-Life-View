@@ -1893,18 +1893,20 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
     if (editing && ref.current) { ref.current.focus(); ref.current.select(); }
   }, [editing]);
   const commit = () => { onChange(draft.trim() || value); setEditing(false); };
-  // CSS grid trick: sizer span drives grid cell height; textarea fills it — no layout shift on mode switch
-  const sharedTextStyle: React.CSSProperties = {
+  const textStyle: React.CSSProperties = {
     fontSize:"12px", fontWeight:600, letterSpacing:"-0.01em", lineHeight:1.35,
     fontFamily:"inherit", padding:"1px 0", wordBreak:"break-word", overflowWrap:"break-word",
-    whiteSpace:"pre-wrap", gridArea:"1/1",
+    color, resize:"none", overflow:"hidden", width:"100%", display:"block",
+    borderBottom: editing ? `1px solid ${color}` : "1px solid transparent",
+    cursor: editing ? "text" : "pointer",
+    userSelect: editing ? "auto" : "none",
   };
   return (
-    <div style={{ display:"inline-grid", maxWidth:"100%", cursor: editing ? "text" : "pointer" }}
+    <div style={{ width:"100%", cursor: editing ? "text" : "pointer" }}
       onClick={() => { if (!editing) setEditing(true); }}
       title={editing ? undefined : t("clickToRename")}
     >
-      <textarea ref={ref} value={draft} rows={1} cols={1} readOnly={!editing}
+      <TextareaAutosize ref={ref} value={draft} readOnly={!editing}
         onChange={e => { if (editing) setDraft(e.target.value); }}
         onBlur={() => { if (editing) commit(); }}
         onKeyDown={e => {
@@ -1913,14 +1915,8 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
           if (e.key==="Escape") { setDraft(value); setEditing(false); }
         }}
         className="bg-transparent outline-none"
-        style={{ ...sharedTextStyle, color, resize:"none", overflow:"hidden", width:"100%",
-          borderBottom: editing ? `1px solid ${color}` : "1px solid transparent",
-          cursor:"inherit", userSelect: editing ? "auto" : "none" }}
+        style={textStyle}
       />
-      {/* invisible sizer that mirrors the text — drives the grid row height */}
-      <span aria-hidden style={{ ...sharedTextStyle, visibility:"hidden", pointerEvents:"none" }}>
-        {draft + "\u200b"}
-      </span>
     </div>
   );
 }
