@@ -1887,30 +1887,41 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   const { t } = React.useContext(LangContext);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const ref = useRef<HTMLTextAreaElement|null>(null);
+  const inputRef = useRef<HTMLInputElement|null>(null);
+  const sizerRef = useRef<HTMLSpanElement|null>(null);
   useEffect(() => { setDraft(value); }, [value]);
   useEffect(() => {
-    if (editing && ref.current) {
-      ref.current.focus();
-      ref.current.select();
-      ref.current.style.height = "auto";
-      ref.current.style.height = ref.current.scrollHeight + "px";
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
     }
   }, [editing]);
-  const autoResize = (el: HTMLTextAreaElement) => {
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
+  // keep input width in sync with text
+  const syncWidth = (text: string) => {
+    if (inputRef.current && sizerRef.current) {
+      sizerRef.current.textContent = text || " ";
+      inputRef.current.style.width = sizerRef.current.offsetWidth + "px";
+    }
   };
+  useEffect(() => { if (editing) syncWidth(draft); });
   const commit = () => { onChange(draft.trim() || value); setEditing(false); };
   if (editing) {
-    return <textarea ref={ref} value={draft}
-      rows={1}
-      onChange={e => { setDraft(e.target.value); autoResize(e.target); }}
-      onBlur={commit}
-      onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); commit(); } if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
-      className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
-      style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 2px", width:"100%", resize:"none", overflow:"hidden", lineHeight:1.35, fontFamily:"inherit", display:"block" }}
-    />;
+    return (
+      <span style={{ position:"relative", display:"inline-flex", alignItems:"center" }}>
+        {/* hidden sizer — same font as input */}
+        <span ref={sizerRef} aria-hidden style={{
+          position:"absolute", visibility:"hidden", whiteSpace:"pre",
+          fontSize:"11px", fontWeight:600, letterSpacing:"0.05em", fontFamily:"inherit", padding:"1px 0"
+        }} />
+        <input ref={inputRef} value={draft}
+          onChange={e => { setDraft(e.target.value); syncWidth(e.target.value); }}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); commit(); } if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
+          className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
+          style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 0", minWidth:20, resize:"none", lineHeight:1.35, fontFamily:"inherit" }}
+        />
+      </span>
+    );
   }
   return (
     <button type="button" onClick={() => setEditing(true)}
@@ -4763,8 +4774,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 )}
               </AnimatePresence>
             </div>
-            <div className="flex flex-1 min-w-0 items-center text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full"
-              style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>
+            <div className="inline-flex items-center text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full"
+              style={{ color:quarter.text, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>
               <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
             </div>
           </div>
