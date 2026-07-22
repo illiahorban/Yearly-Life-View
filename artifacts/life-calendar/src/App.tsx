@@ -5012,8 +5012,10 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     switch (view) {
       case "years":
         c = 10; gap = 3; total = ls;
+        // curr = полных прожитых лет (возраст). Ячейка i — год жизни от i-го до (i+1)-го
+        // дня рождения. Подсвечиваем ту ячейку, в которой сейчас находимся.
         curr = Math.floor(ageMonthsTotal / 12);
-        activeCell = birthDate ? today.getFullYear() - birthDate.getFullYear() : 0;
+        activeCell = curr;
         break;
       case "months":
         c = 12; gap = 1; total = ls * 12;
@@ -5258,7 +5260,9 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                     const radius = Math.max(0, Math.floor(cellPx / 5));
                     const showBorder = cellPx >= 3;
                     const showYearLabel = view === "years" && cellPx >= 18 && birthDate !== null;
-                    const yearLabel = showYearLabel ? birthDate!.getFullYear() + i : null;
+                    // Ячейка i — год жизни с i-го по (i+1)-й день рождения.
+                    // Подписываем годом ОКОНЧАНИЯ этого периода: 1999+0+1=2000, 1999+59+1=2059.
+                    const yearLabel = showYearLabel ? birthDate!.getFullYear() + i + 1 : null;
                     const yearFontSize = Math.max(7, Math.min(11, Math.floor(cellPx * 0.22)));
                     return (
                       <div key={i} style={{
