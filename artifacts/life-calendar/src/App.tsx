@@ -1900,7 +1900,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
     whiteSpace:"pre-wrap", gridArea:"1/1",
   };
   return (
-    <div style={{ display:"grid", width:"100%", cursor: editing ? "text" : "pointer" }}
+    <div style={{ display:"grid", cursor: editing ? "text" : "pointer" }}
       onClick={() => { if (!editing) setEditing(true); }}
       title={editing ? undefined : t("clickToRename")}
     >
@@ -4768,8 +4768,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 )}
               </AnimatePresence>
             </div>
-            <div className="min-w-0 text-[10px] font-semibold tracking-wide px-2 py-1 rounded-xl"
-              style={{ color:quarter.text, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}`, maxWidth:"calc(100% - 1.5rem)" }}>
+            <div className="text-[10px] font-semibold tracking-wide px-2 py-1 rounded-xl"
+              style={{ color:quarter.text, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}`, width:"fit-content", maxWidth:"calc(100% - 1.5rem)" }}>
               <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
             </div>
           </div>
