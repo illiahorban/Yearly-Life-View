@@ -1895,7 +1895,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   const commit = () => { onChange(draft.trim() || value); setEditing(false); };
   // CSS grid trick: sizer span drives grid cell height; textarea fills it — no layout shift on mode switch
   const sharedTextStyle: React.CSSProperties = {
-    fontSize:"11px", fontWeight:600, letterSpacing:"0.05em", lineHeight:1.4,
+    fontSize:"12px", fontWeight:600, letterSpacing:"-0.01em", lineHeight:1.35,
     fontFamily:"inherit", padding:"1px 0", wordBreak:"break-word", overflowWrap:"break-word",
     whiteSpace:"pre-wrap", gridArea:"1/1",
   };
