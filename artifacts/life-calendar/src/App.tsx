@@ -5006,16 +5006,33 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingYears = Math.floor(remainingMonthsTotal / 12);
   const remainingMonths = remainingMonthsTotal % 12;
 
-  const { cols, cellPx, gapPx, totalUnits, currentUnit, labelW, headerH } = useMemo(() => {
+  const { cols, cellPx, gapPx, totalUnits, currentUnit, currentCell, labelW, headerH } = useMemo(() => {
     const ls = settings.lifespan;
-    let c: number, gap: number, total: number, curr: number;
+    let c: number, gap: number, total: number, curr: number, activeCell: number;
     switch (view) {
-      case "years":  c = 10;  gap = 3; total = ls;        curr = Math.floor(ageMonthsTotal / 12); break;
-      case "months": c = 12;  gap = 1; total = ls * 12;  curr = ageMonthsTotal;                  break;
-      case "weeks":  c = 52;  gap = 1; total = lifespanEnd && birthDate ? Math.ceil(lifespanDays / 7) : ls * 52; curr = Math.floor(ageDays / 7); break;
-      default:       c = 0;   gap = 1; total = lifespanDays; curr = ageDays;                     break;
+      case "years":
+        c = 10; gap = 3; total = ls;
+        curr = Math.floor(ageMonthsTotal / 12);
+        activeCell = birthDate ? today.getFullYear() - birthDate.getFullYear() : 0;
+        break;
+      case "months":
+        c = 12; gap = 1; total = ls * 12;
+        curr = ageMonthsTotal;
+        activeCell = curr;
+        break;
+      case "weeks":
+        c = 52; gap = 1; total = lifespanEnd && birthDate ? Math.ceil(lifespanDays / 7) : ls * 52;
+        curr = Math.floor(ageDays / 7);
+        activeCell = curr;
+        break;
+      default:
+        c = 0; gap = 1; total = lifespanDays;
+        curr = ageDays;
+        activeCell = curr;
+        break;
     }
     curr = Math.max(0, Math.min(curr, total));
+    activeCell = Math.max(0, Math.min(activeCell, total - 1));
     const showLbl = view === "months" || view === "weeks";
     const lw = showLbl ? 26 : 0;
     const lh = showLbl ? 12 : 0;
@@ -5034,7 +5051,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       const minCell = view === "months" ? 5 : view === "weeks" ? 4 : 1;
       cell = Math.max(minCell, natural);
     }
-    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, labelW: lw, headerH: lh };
+    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, currentCell: activeCell, labelW: lw, headerH: lh };
   }, [view, settings.lifespan, ageDays, birthDate, today]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
@@ -5214,8 +5231,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                           {/* Cells */}
                           {Array.from({ length: Math.min(cols, totalUnits - ri * cols) }, (_, ci) => {
                             const i = ri * cols + ci;
-                            const isPast = i < currentUnit;
-                            const isCurrent = i === currentUnit;
+                            const isPast = i < currentCell;
+                            const isCurrent = i === currentCell;
                             const radius = Math.max(0, Math.floor(cellPx / 5));
                             return (
                               <div key={ci} style={{
@@ -5234,8 +5251,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
               })() : (
                 <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
                   {Array.from({ length: totalUnits }, (_, i) => {
-                    const isPast = i < currentUnit;
-                    const isCurrent = i === currentUnit;
+                    const isPast = i < currentCell;
+                    const isCurrent = i === currentCell;
                     const radius = Math.max(0, Math.floor(cellPx / 5));
                     const showBorder = cellPx >= 3;
                     const showYearLabel = view === "years" && cellPx >= 18 && birthDate !== null;
