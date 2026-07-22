@@ -1890,35 +1890,38 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   const ref = useRef<HTMLTextAreaElement|null>(null);
   useEffect(() => { setDraft(value); }, [value]);
   useEffect(() => {
-    if (editing && ref.current) {
-      ref.current.focus();
-      ref.current.select();
-      ref.current.style.height = "auto";
-      ref.current.style.height = ref.current.scrollHeight + "px";
-    }
+    if (editing && ref.current) { ref.current.focus(); ref.current.select(); }
   }, [editing]);
-  const autoResize = (el: HTMLTextAreaElement) => {
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
-  };
   const commit = () => { onChange(draft.trim() || value); setEditing(false); };
-  if (editing) {
-    return (
-      <textarea ref={ref} value={draft} rows={1}
-        onChange={e => { setDraft(e.target.value); autoResize(e.target); }}
-        onBlur={commit}
-        onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); commit(); } if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
-        className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
-        style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 0", width:"100%", resize:"none", overflow:"hidden", lineHeight:1.4, fontFamily:"inherit", display:"block", wordBreak:"break-word" }}
-      />
-    );
-  }
+  // CSS grid trick: sizer span drives grid cell height; textarea fills it — no layout shift on mode switch
+  const sharedTextStyle: React.CSSProperties = {
+    fontSize:"11px", fontWeight:600, letterSpacing:"0.05em", lineHeight:1.4,
+    fontFamily:"inherit", padding:"1px 0", wordBreak:"break-word", overflowWrap:"break-word",
+    whiteSpace:"pre-wrap", gridArea:"1/1",
+  };
   return (
-    <button type="button" onClick={() => setEditing(true)}
-      className="text-[11px] font-semibold tracking-wide text-left"
-      style={{ color, width:"100%", display:"block", wordBreak:"break-word", overflowWrap:"break-word", whiteSpace:"normal" }}
-      title={t("clickToRename")}
-    >{value}</button>
+    <div style={{ display:"grid", width:"100%", cursor: editing ? "text" : "pointer" }}
+      onClick={() => { if (!editing) setEditing(true); }}
+      title={editing ? undefined : t("clickToRename")}
+    >
+      <textarea ref={ref} value={draft} rows={1} readOnly={!editing}
+        onChange={e => { if (editing) setDraft(e.target.value); }}
+        onBlur={() => { if (editing) commit(); }}
+        onKeyDown={e => {
+          if (!editing) return;
+          if (e.key==="Enter") { e.preventDefault(); commit(); }
+          if (e.key==="Escape") { setDraft(value); setEditing(false); }
+        }}
+        className="bg-transparent outline-none"
+        style={{ ...sharedTextStyle, color, resize:"none", overflow:"hidden",
+          borderBottom: editing ? `1px solid ${color}` : "1px solid transparent",
+          cursor:"inherit", userSelect: editing ? "auto" : "none" }}
+      />
+      {/* invisible sizer that mirrors the text — drives the grid row height */}
+      <span aria-hidden style={{ ...sharedTextStyle, visibility:"hidden", pointerEvents:"none" }}>
+        {draft + "\u200b"}
+      </span>
+    </div>
   );
 }
 
@@ -4770,7 +4773,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
             </div>
           </div>
-          <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)" }}>{t("sprintConfigDescription").replace("{quarter}", quarter.label)}</p>
+          <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)", wordBreak:"break-word", overflowWrap:"break-word" }}>{t("sprintConfigDescription").replace("{quarter}", quarter.label)}</p>
         </div>
 
         <div className="px-6">
