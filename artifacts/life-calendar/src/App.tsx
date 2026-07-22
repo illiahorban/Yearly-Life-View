@@ -5018,12 +5018,12 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
         activeCell = curr;
         break;
       case "months":
-        c = 12; gap = 1; total = ls * 12;
+        c = 12; gap = 1; total = (ls + 1) * 12;
         curr = ageMonthsTotal;
         activeCell = curr;
         break;
       case "weeks":
-        c = 52; gap = 1; total = ls * 52;
+        c = 52; gap = 1; total = (ls + 1) * 52;
         curr = Math.floor(ageDays / 7);
         activeCell = curr;
         break;
@@ -5214,13 +5214,10 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                     </div>
                     {/* Rows with year labels */}
                     {Array.from({ length: rows }, (_, ri) => {
-                       // Month/week rows represent years of life, not calendar years.
-                       // This keeps the active row labelled "26" for someone currently
-                       // in their 26th year, even when their birthday is later in the year.
-                       const yearNum = birthDate
-                         ? new Date(birthDate.getFullYear(), birthDate.getMonth() + ri * 12 + 6, 1).getFullYear()
-                         : ri;
-                       const showYear = ri % yearInterval === 0 || ri >= rows - 2;
+                       // Row ri = calendar year birthYear+ri (same logic as years-view cells).
+                       // total = (ls+1)*12 so rows span birthYear … birthYear+ls inclusive.
+                       const yearNum = birthDate ? birthDate.getFullYear() + ri : ri;
+                       const showYear = ri % 2 === 0 || ri >= rows - 2;
                       return (
                         <div key={ri} style={{ display:"flex", alignItems:"center", gap: gapPx, height: cellPx }}>
                           {/* Year label */}
