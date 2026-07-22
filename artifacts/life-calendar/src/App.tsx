@@ -1904,7 +1904,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
       onClick={() => { if (!editing) setEditing(true); }}
       title={editing ? undefined : t("clickToRename")}
     >
-      <textarea ref={ref} value={draft} rows={1} readOnly={!editing}
+      <textarea ref={ref} value={draft} rows={1} cols={1} readOnly={!editing}
         onChange={e => { if (editing) setDraft(e.target.value); }}
         onBlur={() => { if (editing) commit(); }}
         onKeyDown={e => {
@@ -1913,7 +1913,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
           if (e.key==="Escape") { setDraft(value); setEditing(false); }
         }}
         className="bg-transparent outline-none"
-        style={{ ...sharedTextStyle, color, resize:"none", overflow:"hidden",
+        style={{ ...sharedTextStyle, color, resize:"none", overflow:"hidden", width:"100%",
           borderBottom: editing ? `1px solid ${color}` : "1px solid transparent",
           cursor:"inherit", userSelect: editing ? "auto" : "none" }}
       />
