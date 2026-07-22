@@ -4728,6 +4728,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
         style={{ background:modalBg, backdropFilter:"blur(30px) saturate(180%)", WebkitBackdropFilter:"blur(30px) saturate(180%)", borderRadius:22, boxShadow:"0 30px 80px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.6)"}` }}
       >
         <div className="px-6 pt-6 pb-3">
+          <h2 className="text-base font-semibold tracking-tight mb-2" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("sprintConfig")}</h2>
           <div className="flex items-center gap-2">
             <div style={{ position:"relative" }}>
               <button type="button" onClick={() => setQuarterColorOpen(v => !v)} title={t("chooseColor")}
@@ -4766,7 +4767,6 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               style={{ color:quarter.text, background: dark?quarter.darkTint:quarter.tint, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>
               <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
             </div>
-            <h2 className="text-base font-semibold tracking-tight" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("sprintConfig")}</h2>
           </div>
           <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)" }}>{t("sprintConfigDescription").replace("{quarter}", quarter.label)}</p>
         </div>
