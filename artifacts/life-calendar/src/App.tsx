@@ -84,6 +84,14 @@ function monthsBetween(a: Date, b: Date) {
   if (b.getDate() < a.getDate()) months -= 1;
   return Math.max(0, months);
 }
+function addYears(d: Date, years: number) {
+  const x = new Date(d);
+  const month = x.getMonth();
+  x.setFullYear(x.getFullYear() + years);
+  // Keep leap-day birthdays on the last valid day of February.
+  if (x.getMonth() !== month) x.setDate(0);
+  return x;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -4975,14 +4983,19 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     setView(v);
   };
 
-  const today = useMemo(() => startOfDay(new Date()), []);
+  const [today, setToday] = useState<Date>(() => startOfDay(new Date()));
+  useEffect(() => {
+    const timer = window.setInterval(() => setToday(startOfDay(new Date())), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const birthDate = useMemo(() => {
     if (!settings.birthDate) return null;
     return startOfDay(new Date(settings.birthDate + "T00:00:00"));
   }, [settings.birthDate]);
 
   const ageDays = useMemo(() => birthDate ? Math.max(0, daysBetween(birthDate, today)) : 0, [birthDate, today]);
-  const lifespanDays = settings.lifespan * 365.25;
+  const lifespanEnd = useMemo(() => birthDate ? addYears(birthDate, settings.lifespan) : null, [birthDate, settings.lifespan]);
+  const lifespanDays = lifespanEnd && birthDate ? Math.max(1, daysBetween(birthDate, lifespanEnd)) : settings.lifespan * 365.25;
   const pct = Math.min(100, (ageDays / lifespanDays) * 100);
   // Age/remaining are derived from exact calendar months so they always sum to exactly `lifespan` years.
   const ageMonthsTotal = useMemo(() => birthDate ? monthsBetween(birthDate, today) : 0, [birthDate, today]);
@@ -4997,11 +5010,12 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const ls = settings.lifespan;
     let c: number, gap: number, total: number, curr: number;
     switch (view) {
-      case "years":  c = 10;  gap = 3; total = ls + 1;   curr = birthDate ? today.getFullYear() - birthDate.getFullYear() : 0; break;
-      case "months": c = 12;  gap = 1; total = ls * 12;  curr = Math.floor(ageDays / 30.44);  break;
-      case "weeks":  c = 52;  gap = 1; total = ls * 52;  curr = Math.floor(ageDays / 7);      break;
-      default:       c = 0;   gap = 1; total = ls * 365; curr = ageDays;                      break;
+      case "years":  c = 10;  gap = 3; total = ls;        curr = Math.floor(ageMonthsTotal / 12); break;
+      case "months": c = 12;  gap = 1; total = ls * 12;  curr = ageMonthsTotal;                  break;
+      case "weeks":  c = 52;  gap = 1; total = lifespanEnd && birthDate ? Math.ceil(lifespanDays / 7) : ls * 52; curr = Math.floor(ageDays / 7); break;
+      default:       c = 0;   gap = 1; total = lifespanDays; curr = ageDays;                     break;
     }
+    curr = Math.max(0, Math.min(curr, total));
     const showLbl = view === "months" || view === "weeks";
     const lw = showLbl ? 26 : 0;
     const lh = showLbl ? 12 : 0;
