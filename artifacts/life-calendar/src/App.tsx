@@ -1900,7 +1900,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
     whiteSpace:"pre-wrap", gridArea:"1/1",
   };
   return (
-    <div style={{ display:"grid", cursor: editing ? "text" : "pointer" }}
+    <div style={{ display:"inline-grid", maxWidth:"100%", cursor: editing ? "text" : "pointer" }}
       onClick={() => { if (!editing) setEditing(true); }}
       title={editing ? undefined : t("clickToRename")}
     >
