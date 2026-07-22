@@ -1434,6 +1434,7 @@ function App() {
             colorKey={quarterMeta[settingsQuarter]!.colorKey}
             onColorChange={key => updateQuarterMeta(settingsQuarter, { colorKey: key })}
             onClose={() => setSettingsQuarter(null)}
+            onAutoSave={next => updateQuarter(settingsQuarter, next)}
             onSave={next => { updateQuarter(settingsQuarter, next); setSettingsQuarter(null); }}
             onResetBlock={(blockId) => {
               const qi = settingsQuarter;
@@ -4690,10 +4691,10 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
 
 // ─── SprintSettingsModal ──────────────────────────────────────────────────────
 
-function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, colorKey, onColorChange, onClose, onSave, onResetBlock }: {
+function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, colorKey, onColorChange, onClose, onSave, onAutoSave, onResetBlock }: {
   quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
   colorKey: AppleColorKey; onColorChange: (key: AppleColorKey) => void;
-  onClose: () => void; onSave: (next: QuarterConfig) => void; onResetBlock: (blockId: string) => void;
+  onClose: () => void; onSave: (next: QuarterConfig) => void; onAutoSave: (next: QuarterConfig) => void; onResetBlock: (blockId: string) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
   const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map(b => ({ ...b })));
@@ -4804,11 +4805,15 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                     {/* Top row: label textarea (auto-growing, saves on every keystroke) */}
                     <TextareaAutosize
                       value={b.label}
-                      onChange={e => update(b.id, { label: e.target.value })}
+                      onChange={e => {
+                        const newBlocks = blocks.map(x => x.id === b.id ? { ...x, label: e.target.value } : x);
+                        setBlocks(newBlocks);
+                        onAutoSave({ blocks: newBlocks });
+                      }}
                       placeholder={t("sprintLabelPlaceholder")}
                       minRows={1}
                       className="bg-transparent outline-none w-full resize-none"
-                      style={{ color: bTextColor, fontSize:13, fontWeight:500, lineHeight:1.45, fontFamily:"inherit", padding:0, border:"none", display:"block", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}
+                      style={{ color: bAc ? bDotHex : "var(--text)", fontSize:13, fontWeight:500, lineHeight:1.45, fontFamily:"inherit", padding:0, border:"none", display:"block", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}
                     />
                     {/* Bottom row: color dot + number badge on left, stepper + reset + delete on right */}
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
