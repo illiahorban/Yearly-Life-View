@@ -4810,12 +4810,12 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   className="flex items-center gap-2" style={{ position:"relative" }}
                 >
                   <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", flexDirection:"column", gap:4, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
-                    {/* Row 1: index number + label textarea on full width */}
-                    <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-                      <span className="text-[10px] font-semibold tabular-nums shrink-0"
-                        style={{ color: bAc ? `${bDotHex}99` : "var(--text-tertiary)", lineHeight:1.45 }}>
-                        #{idx+1}
-                      </span>
+                    {/* Row 1: number badge + label textarea on full width */}
+                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                      <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center shrink-0"
+                        style={{ width:20, height:20, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text }}>
+                        {idx+1}
+                      </div>
                       <TextareaAutosize
                         value={b.label}
                         onChange={e => {
