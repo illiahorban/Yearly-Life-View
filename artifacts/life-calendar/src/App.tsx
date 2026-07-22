@@ -4798,11 +4798,20 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 <motion.div layout key={b.id} initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                   className="flex items-center gap-2" style={{ position:"relative" }}
                 >
-                  <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", alignItems:"center", flexWrap:"wrap", gap:8, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
+                  <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", flexDirection:"column", gap:6, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
                     {/* bEc.bg is transparent once a colour is picked; the neutral rgba
                         fallback above only applies when no sprint colour is chosen. */}
-                    {/* Left group: color dot + number badge + label input */}
-                    <div style={{ display:"flex", alignItems:"center", gap:8, flex:1, minWidth:0 }}>
+                    {/* Top row: label textarea (auto-growing, saves on every keystroke) */}
+                    <TextareaAutosize
+                      value={b.label}
+                      onChange={e => update(b.id, { label: e.target.value })}
+                      placeholder={t("sprintLabelPlaceholder")}
+                      minRows={1}
+                      className="bg-transparent outline-none w-full resize-none"
+                      style={{ color: bTextColor, fontSize:13, fontWeight:500, lineHeight:1.45, fontFamily:"inherit", padding:0, border:"none", display:"block", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word" }}
+                    />
+                    {/* Bottom row: color dot + number badge on left, stepper + reset + delete on right */}
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                       {/* Color dot */}
                       <div style={{ position:"relative", flexShrink:0 }}>
                         <button type="button" onClick={(e) => {
@@ -4816,26 +4825,24 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       {/* Number badge */}
                       <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
                         style={{ width:20, height:20, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>{idx+1}</div>
-                      <input type="text" value={b.label} onChange={e => update(b.id, { label:e.target.value })} placeholder={t("sprintLabelPlaceholder")}
-                        className="flex-1 bg-transparent outline-none text-[13px]" style={{ color: bTextColor, minWidth:0 }} />
-                    </div>
-                    {/* Right group: week stepper + reset + delete — wraps to next line on mobile */}
-                    <div style={{ display:"flex", alignItems:"center", gap:4, marginLeft:"auto", flexShrink:0 }}>
-                      <div className="flex items-center gap-1" style={{ background:"rgba(120,120,128,0.20)", border:"1px solid rgba(120,120,128,0.40)", borderRadius:8, padding:2 }}>
-                        <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>−</button>
-                        <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bTextColor }}>{b.weeks}</span>
-                        <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>+</button>
+                      {/* Controls pushed to the right */}
+                      <div style={{ display:"flex", alignItems:"center", gap:4, marginLeft:"auto", flexShrink:0 }}>
+                        <div className="flex items-center gap-1" style={{ background:"rgba(120,120,128,0.20)", border:"1px solid rgba(120,120,128,0.40)", borderRadius:8, padding:2 }}>
+                          <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>−</button>
+                          <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bTextColor }}>{b.weeks}</span>
+                          <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>+</button>
+                        </div>
+                        <button type="button" title={t("resetSprint")} onClick={() => setConfirmResetId(b.id)}
+                          className="w-7 h-7 flex items-center justify-center rounded-md"
+                          style={{ color:"#ff3b30", flexShrink:0 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        </button>
+                        <button type="button" onClick={() => setConfirmDeleteId(b.id)} disabled={blocks.length===1}
+                          className="w-7 h-7 flex items-center justify-center rounded-md"
+                          style={{ color: blocks.length===1?"var(--text-tertiary)":"#ff3b30", opacity: blocks.length===1?0.4:1 }}>
+                          <TrashIcon />
+                        </button>
                       </div>
-                      <button type="button" title={t("resetSprint")} onClick={() => setConfirmResetId(b.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-md"
-                        style={{ color:"#ff3b30", flexShrink:0 }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                      </button>
-                      <button type="button" onClick={() => setConfirmDeleteId(b.id)} disabled={blocks.length===1}
-                        className="w-7 h-7 flex items-center justify-center rounded-md"
-                        style={{ color: blocks.length===1?"var(--text-tertiary)":"#ff3b30", opacity: blocks.length===1?0.4:1 }}>
-                        <TrashIcon />
-                      </button>
                     </div>
                   </div>
                 </motion.div>
