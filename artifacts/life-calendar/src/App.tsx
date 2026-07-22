@@ -120,7 +120,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     yr:"yr", mo:"mo", remaining:"remaining", born:"Born", age:"Age",
-    sprintConfig:"Sprint configuration", sprintConfigDescription:"Group the 13 weeks of {quarter} into sprints.", saveSprints:"Save sprints", addSprint:"Add sprint",
+    sprintConfig:"Sprint configuration", sprintConfigDescription:"Group the 13 weeks of the quarter into sprints.", saveSprints:"Save sprints", addSprint:"Add sprint",
     looksGood:"Looks good", unassigned:"unassigned", over:"over", total:"Total",
     q1:"Q1", q2:"Q2", q3:"Q3", q4:"Q4", todayCountdown:"Today!", daysShort:"d",
     chooseColor: "Choose color",
@@ -192,7 +192,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     yr:"лет", mo:"мес", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
-    sprintConfig:"Настройка спринтов", sprintConfigDescription:"Сгруппируйте 13 недель {quarter} в спринты.", saveSprints:"Сохранить", addSprint:"Спринт",
+    sprintConfig:"Настройка спринтов", sprintConfigDescription:"Сгруппируйте 13 недель квартала в спринты.", saveSprints:"Сохранить", addSprint:"Спринт",
     looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
     q1:"К1", q2:"К2", q3:"К3", q4:"К4", todayCountdown:"Сегодня!", daysShort:"д",
     chooseColor: "Выбрать цвет",
@@ -4773,7 +4773,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
             </div>
           </div>
-          <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)", wordBreak:"break-word", overflowWrap:"break-word" }}>{t("sprintConfigDescription").replace("{quarter}", quarter.label)}</p>
+          <p className="mt-1.5 text-[13px]" style={{ color:"var(--text-secondary)", wordBreak:"break-word", overflowWrap:"break-word" }}>{t("sprintConfigDescription")}</p>
         </div>
 
         <div className="px-6">
