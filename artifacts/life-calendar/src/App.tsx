@@ -1147,7 +1147,7 @@ function App() {
               <IconButton title={t("notesPanel")} onClick={() => setNotesPanelOpen(true)} bg={overlayBg}><NotesIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <div className="hidden sm:block" style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
-              <div className="hidden sm:flex"><IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton></div>
+              <div className="flex"><IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton></div>
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
               {/* Settings gear */}
               <div ref={settingsRef} style={{ position:"relative" }}>
