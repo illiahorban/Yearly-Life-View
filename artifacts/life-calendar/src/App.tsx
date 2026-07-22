@@ -4809,24 +4809,28 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 <motion.div layout key={b.id} initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-6 }}
                   className="flex items-center gap-2" style={{ position:"relative" }}
                 >
-                  <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", flexDirection:"column", gap:6, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
-                    {/* bEc.bg is transparent once a colour is picked; the neutral rgba
-                        fallback above only applies when no sprint colour is chosen. */}
-                    {/* Top row: label textarea (auto-growing, saves on every keystroke) */}
-                    <TextareaAutosize
-                      value={b.label}
-                      onChange={e => {
-                        const newBlocks = blocks.map(x => x.id === b.id ? { ...x, label: e.target.value } : x);
-                        setBlocks(newBlocks);
-                        onAutoSave({ blocks: newBlocks });
-                      }}
-                      placeholder={t("sprintLabelPlaceholder")}
-                      minRows={1}
-                      className="bg-transparent outline-none w-full resize-none"
-                      style={{ color: bDotHex, fontSize:13, fontWeight:500, lineHeight:1.45, fontFamily:"inherit", padding:0, border:"none", display:"block", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word", overflow:"hidden" }}
-                    />
-                    {/* Bottom row: color dot + number badge on left, stepper + reset + delete on right */}
-                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <div style={{ background: bEc ? bEc.bg : (dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.025)"), border:`1px solid ${bEc ? bEc.border : borderColor}`, borderRadius:12, padding:"8px 10px", display:"flex", flexDirection:"column", gap:4, flex:1, transition:"background 200ms ease, border-color 200ms ease" }}>
+                    {/* Row 1: index number + label textarea on full width */}
+                    <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
+                      <span className="text-[10px] font-semibold tabular-nums shrink-0"
+                        style={{ color: bAc ? `${bDotHex}99` : "var(--text-tertiary)", lineHeight:1.45 }}>
+                        #{idx+1}
+                      </span>
+                      <TextareaAutosize
+                        value={b.label}
+                        onChange={e => {
+                          const newBlocks = blocks.map(x => x.id === b.id ? { ...x, label: e.target.value } : x);
+                          setBlocks(newBlocks);
+                          onAutoSave({ blocks: newBlocks });
+                        }}
+                        placeholder={t("sprintLabelPlaceholder")}
+                        minRows={1}
+                        className="bg-transparent outline-none w-full resize-none"
+                        style={{ color: bDotHex, fontSize:13, fontWeight:500, lineHeight:1.45, fontFamily:"inherit", padding:0, border:"none", display:"block", minWidth:0, overflowWrap:"anywhere", wordBreak:"break-word", overflow:"hidden" }}
+                      />
+                    </div>
+                    {/* Row 2: color dot + stepper, actions pushed right */}
+                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                       {/* Color dot */}
                       <div style={{ position:"relative", flexShrink:0 }}>
                         <button type="button" onClick={(e) => {
@@ -4834,23 +4838,21 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                           setColorPickerAnchor(prev => prev?.id === b.id ? null : { id: b.id, rect });
                         }}
                           title={t("sprintColor")}
-                          style={{ width:16, height:16, borderRadius:999, background: bDotHex, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block" }}
+                          style={{ width:12, height:12, borderRadius:999, background: bDotHex, border:"none", boxShadow:"0 0 0 1.5px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.28)", cursor:"pointer", display:"block" }}
                         />
                       </div>
-                      {/* Number badge */}
-                      <div className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
-                        style={{ width:20, height:20, borderRadius:999, background: bAc ? `${bHex}22` : (dark?quarter.darkTint:quarter.tint), color: bAc ? bHex : quarter.text, flexShrink:0 }}>{idx+1}</div>
-                      {/* Controls pushed to the right */}
-                      <div style={{ display:"flex", alignItems:"center", gap:4, marginLeft:"auto", flexShrink:0 }}>
-                        <div className="flex items-center gap-1" style={{ background:"rgba(120,120,128,0.20)", border:"1px solid rgba(120,120,128,0.40)", borderRadius:8, padding:2 }}>
-                          <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>−</button>
-                          <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bTextColor }}>{b.weeks}</span>
-                          <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>+</button>
-                        </div>
+                      {/* Weeks stepper */}
+                      <div className="flex items-center gap-1" style={{ background:"rgba(120,120,128,0.20)", border:"1px solid rgba(120,120,128,0.40)", borderRadius:8, padding:2 }}>
+                        <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>−</button>
+                        <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bTextColor }}>{b.weeks}</span>
+                        <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>+</button>
+                      </div>
+                      {/* Reset + Delete pushed to the right */}
+                      <div style={{ display:"flex", alignItems:"center", gap:2, marginLeft:"auto", flexShrink:0 }}>
                         <button type="button" title={t("resetSprint")} onClick={() => setConfirmResetId(b.id)}
                           className="w-7 h-7 flex items-center justify-center rounded-md"
                           style={{ color:"#ff3b30", flexShrink:0 }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                         </button>
                         <button type="button" onClick={() => setConfirmDeleteId(b.id)} disabled={blocks.length===1}
                           className="w-7 h-7 flex items-center justify-center rounded-md"
