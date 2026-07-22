@@ -1907,7 +1907,7 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
   const commit = () => { onChange(draft.trim() || value); setEditing(false); };
   if (editing) {
     return (
-      <span style={{ position:"relative", display:"inline-flex", alignItems:"center" }}>
+      <span style={{ position:"relative", display:"inline-flex", alignItems:"center", maxWidth:"100%", overflow:"hidden" }}>
         {/* hidden sizer — same font as input */}
         <span ref={sizerRef} aria-hidden style={{
           position:"absolute", visibility:"hidden", whiteSpace:"pre",
@@ -1918,15 +1918,15 @@ function QuarterNameEditor({ value, onChange, color }: { value: string; onChange
           onBlur={commit}
           onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); commit(); } if (e.key==="Escape") { setDraft(value); setEditing(false); } }}
           className="text-[11px] font-semibold tracking-wide bg-transparent outline-none"
-          style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 0", minWidth:20, resize:"none", lineHeight:1.35, fontFamily:"inherit" }}
+          style={{ color, borderBottom:`1px solid ${color}`, padding:"1px 0", minWidth:20, maxWidth:"100%", resize:"none", lineHeight:1.35, fontFamily:"inherit" }}
         />
       </span>
     );
   }
   return (
     <button type="button" onClick={() => setEditing(true)}
-      className="text-[11px] font-semibold tracking-wide text-left break-words"
-      style={{ color, maxWidth:"100%" }} title={t("clickToRename")}
+      className="text-[11px] font-semibold tracking-wide text-left"
+      style={{ color, maxWidth:"100%", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", display:"block" }} title={t("clickToRename")}
     >{value}</button>
   );
 }
@@ -4774,8 +4774,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 )}
               </AnimatePresence>
             </div>
-            <div className="inline-flex items-center text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full"
-              style={{ color:quarter.text, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}` }}>
+            <div className="inline-flex min-w-0 items-center text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full"
+              style={{ color:quarter.text, border:`1px solid ${dark?quarter.darkSoft:quarter.soft}`, maxWidth:"calc(100% - 1.5rem)", overflow:"hidden" }}>
               <QuarterNameEditor value={quarterName} onChange={onQuarterNameChange} color={quarter.text} />
             </div>
           </div>
