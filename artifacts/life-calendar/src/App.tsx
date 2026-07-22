@@ -5060,7 +5060,6 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
           <div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>{t("overview")}</div>
             <h2 className="text-[17px] font-semibold mt-0.5" style={{ color:"var(--text)", letterSpacing:"-0.02em" }}>{t("lifeCalendarBtn")}</h2>
           </div>
           <button onClick={onClose} style={{ width:28, height:28, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer" }}>✕</button>
