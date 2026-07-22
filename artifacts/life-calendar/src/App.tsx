@@ -4819,14 +4819,16 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                           {idx+1}
                         </div>
                       </div>
-                      {/* Color dot — same 13×13 as the quarter colour dot */}
-                      <button type="button" onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setColorPickerAnchor(prev => prev?.id === b.id ? null : { id: b.id, rect });
-                      }}
-                        title={t("sprintColor")}
-                        style={{ width:13, height:13, borderRadius:999, background: bDotHex, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0 }}
-                      />
+                      {/* Color dot — wrapped to match stepper-row height (28px) so they sit on the same axis */}
+                      <div style={{ display:"flex", alignItems:"center", height:28, flexShrink:0 }}>
+                        <button type="button" onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setColorPickerAnchor(prev => prev?.id === b.id ? null : { id: b.id, rect });
+                        }}
+                          title={t("sprintColor")}
+                          style={{ width:13, height:13, borderRadius:999, background: bDotHex, border:"none", boxShadow:"0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)", cursor:"pointer", display:"block", flexShrink:0, padding:0 }}
+                        />
+                      </div>
                     </div>
                     {/* Right column: textarea on top, stepper + actions on bottom */}
                     <div style={{ display:"flex", flexDirection:"column", gap:4, flex:1, minWidth:0 }}>
