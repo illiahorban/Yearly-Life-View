@@ -1156,7 +1156,7 @@ function App() {
                 onClick={() => setYearPickerOpen(o => !o)}
                 style={{ background:"none", border:"none", padding:"0 2px", cursor:"pointer", lineHeight:1 }}
               >
-                <h1 className="text-2xl sm:text-3xl font-semibold tabular-nums" style={{ color: "var(--text)", letterSpacing: "-0.02em", minWidth:"3.2ch", textAlign:"center", textDecoration: yearPickerOpen ? "underline" : "none", textDecorationColor:"var(--text-tertiary)", textUnderlineOffset:4 }}>{viewYear}</h1>
+                <h1 className="text-2xl sm:text-3xl font-semibold tabular-nums" style={{ color: "var(--text)", letterSpacing: "-0.02em", minWidth:"3.2ch", textAlign:"center", textDecoration: yearPickerOpen ? "underline var(--text-tertiary)" : "none", textUnderlineOffset:4 }}>{viewYear}</h1>
               </button>
               {yearPickerOpen && (
                 <div style={{ position:"absolute", top:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", background: dark ? "rgba(30,30,32,0.97)" : "rgba(255,255,255,0.97)", border:"1px solid var(--border-soft)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.18)", padding:"6px 4px", zIndex:200, minWidth:80, maxHeight:260, overflowY:"auto", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
@@ -5185,7 +5185,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: "auto", maxHeight: isFullscreen ? undefined : view === "days" ? 260 : undefined, minHeight: 0 }}>
+            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: view === "days" ? "auto" : "visible", maxHeight: isFullscreen ? undefined : view === "days" ? 260 : undefined, minHeight: 0 }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                   {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {viewLabels[view]} {t("elapsed")}
@@ -5219,7 +5219,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 const showColAt = (ci: number) =>
                   view === "months" ? true : (ci === 0 || ci === 12 || ci === 25 || ci === 38 || ci === 51);
                 return (
-                  <div style={{ display:"inline-flex", flexDirection:"column", gap: gapPx }}>
+                  <div style={{ display:"flex", flexDirection:"column", gap: gapPx, width:"100%" }}>
                     {/* Column header row */}
                     <div style={{ display:"flex", alignItems:"flex-end", gap: gapPx, height: headerH, paddingLeft: labelW + gapPx }}>
                       {Array.from({ length: cols }, (_, ci) => (
@@ -5248,7 +5248,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                             fontSize: lblFontSize, lineHeight: 1,
                             fontVariantNumeric: "tabular-nums",
                             color: "var(--text-tertiary)",
-                            overflow: "hidden", whiteSpace: "nowrap",
+                            overflow: "visible", whiteSpace: "nowrap",
                             opacity: showYear ? 1 : 0,
                           }}>{yearNum}</div>
                           {/* Cells */}
