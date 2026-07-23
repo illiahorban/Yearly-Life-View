@@ -5032,6 +5032,18 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const timer = window.setInterval(() => setToday(startOfDay(new Date())), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+  const [viewportSize, setViewportSize] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
+  useEffect(() => {
+    const handleResize = () => setViewportSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const birthDate = useMemo(() => {
     if (!settings.birthDate) return null;
     return startOfDay(new Date(settings.birthDate + "T00:00:00"));
@@ -5097,7 +5109,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const lw = showLbl ? 26 : 0;
     const lh = showLbl ? 12 : 0;
     // Modal width matches its own CSS: min(96vw, 560px). Use 0.96 here to stay in sync.
-    const gridW = Math.max(100, Math.min(window.innerWidth * 0.96, 560) - 48 - lw - 4);
+    const gridW = Math.max(100, Math.min(viewportSize.width * 0.96, 560) - 48 - lw - 4);
     let cell: number;
     if (view === "days") {
       cell = 3;
@@ -5106,7 +5118,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     } else if (view === "weeks") {
       cell = 6;
     } else {
-      const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320 - lh);
+      const gridH = Math.max(160, Math.round(viewportSize.height * 0.95) - 320 - lh);
       const rows = Math.ceil(total / c);
       const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
       const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
@@ -5135,13 +5147,45 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     }
     displayCurr = Math.max(0, Math.min(displayCurr, displayTotal));
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, currentCell: activeCell, labelW: lw, headerH: lh, displayCurr, displayTotal };
-  }, [view, settings.lifespan, ageDays, ageYears, ageMonthsTotal, birthDate, today, lifespanDays, isFullscreen]);
+  }, [view, settings.lifespan, ageDays, ageYears, ageMonthsTotal, birthDate, today, lifespanDays, isFullscreen, viewportSize.width, viewportSize.height]);
 
-  // Expanded days view uses a lifespan-aware number of columns instead of
-  // filling the entire viewport. This keeps the modal proportional to the
-  // selected life span while still allowing overflow on short screens.
-  const expandedDayCols = Math.max(80, Math.min(280, Math.ceil(Math.sqrt(Math.max(1, lifespanDays) * 1.4))));
-  const expandedDayGridWidth = expandedDayCols * (cellPx + gapPx) - gapPx;
+  const expandedDayLayout = useMemo(() => {
+    const totalDays = Math.max(1, Math.ceil(lifespanDays));
+    const modalWidth = Math.max(240, viewportSize.width - 32);
+    const availableWidth = Math.max(160, modalWidth - 48);
+    const availableHeight = Math.max(160, viewportSize.height - 320);
+
+    // Prefer the existing 3px cells, then shrink only when the selected
+    // lifespan cannot fit in the available viewport area.
+    let expandedCellPx = 1;
+    let expandedGapPx = 1;
+    for (const candidateCellPx of [3, 2, 1]) {
+      const pitch = candidateCellPx + 1;
+      const capacity = Math.floor(availableWidth / pitch) * Math.floor(availableHeight / pitch);
+      if (capacity >= totalDays) {
+        expandedCellPx = candidateCellPx;
+        break;
+      }
+    }
+
+    const pitch = expandedCellPx + expandedGapPx;
+    const maxCols = Math.max(1, Math.floor(availableWidth / pitch));
+    const maxRows = Math.max(1, Math.floor(availableHeight / pitch));
+    const idealCols = Math.ceil(Math.sqrt(totalDays * availableWidth / availableHeight));
+    const minColsForHeight = Math.ceil(totalDays / maxRows);
+    const expandedCols = Math.max(1, Math.min(maxCols, Math.max(idealCols, minColsForHeight)));
+    const expandedRows = Math.ceil(totalDays / expandedCols);
+
+    return {
+      cellPx: expandedCellPx,
+      gapPx: expandedGapPx,
+      cols: expandedCols,
+      width: expandedCols * pitch - expandedGapPx,
+      height: expandedRows * pitch - expandedGapPx,
+    };
+  }, [lifespanDays, viewportSize.width, viewportSize.height]);
+  const renderedDayCellPx = view === "days" && isFullscreen ? expandedDayLayout.cellPx : cellPx;
+  const renderedDayGapPx = view === "days" && isFullscreen ? expandedDayLayout.gapPx : gapPx;
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
   const inputStyle: React.CSSProperties = {
@@ -5165,7 +5209,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       <motion.div layout initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         style={{
-           width: isFullscreen && view === "days" ? `min(calc(100vw - 32px), ${expandedDayGridWidth + 48}px)` : "min(96vw,560px)",
+           width: isFullscreen && view === "days" ? `min(calc(100vw - 32px), ${expandedDayLayout.width + 48}px)` : "min(96vw,560px)",
            height: undefined,
            maxWidth: "100%",
            maxHeight: (view === "months" || view === "weeks") ? undefined : "96vh",
@@ -5263,7 +5307,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-             <div className="px-6 pb-5" style={{ flex: "0 0 auto", overflow: view === "days" ? "auto" : "visible", maxHeight: view === "days" ? (isFullscreen ? "calc(96vh - 300px)" : 260) : undefined, minHeight: 0 }}>
+             <div className="px-6 pb-5" style={{ flex: "0 0 auto", overflow: view === "days" && !isFullscreen ? "auto" : "visible", maxHeight: view === "days" && !isFullscreen ? 260 : undefined, minHeight: 0 }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                   {displayCurr.toLocaleString()} {t("of")} {displayTotal.toLocaleString()} {pluralUnits(displayTotal, view, lang, t)} {t("elapsed")}
@@ -5365,29 +5409,30 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 <div style={{
                   display:"grid",
                   gridTemplateColumns: view === "days"
-                    ? `repeat(${isFullscreen ? expandedDayCols : "auto-fill"}, ${cellPx}px)`
+                    ? `repeat(${isFullscreen ? expandedDayLayout.cols : "auto-fill"}, ${renderedDayCellPx}px)`
                     : `repeat(${cols}, ${cellPx}px)`,
-                  gap:`${gapPx}px`,
-                  width: view === "days" && isFullscreen ? expandedDayGridWidth : "100%",
+                  gap:`${renderedDayGapPx}px`,
+                  width: view === "days" && isFullscreen ? expandedDayLayout.width : "100%",
                   justifyContent:"center",
                 }}>
                   {Array.from({ length: totalUnits }, (_, i) => {
                     const isPast = i < currentCell;
                     const isCurrent = i === currentCell;
-                    const radius = Math.max(0, Math.floor(cellPx / 5));
-                    const showBorder = cellPx >= 3;
+                    const renderedCellPx = view === "days" ? renderedDayCellPx : cellPx;
+                    const radius = Math.max(0, Math.floor(renderedCellPx / 5));
+                    const showBorder = renderedCellPx >= 3;
                     const showYearLabel = view === "years" && cellPx >= 18 && birthDate !== null;
                     // Ячейка i подписана годом birthYear+i: ячейка 0=1999, ячейка 60=2059.
                     const yearLabel = showYearLabel ? birthDate!.getFullYear() + i : null;
-                    const yearFontSize = Math.max(7, Math.min(11, Math.floor(cellPx * 0.22)));
+                    const yearFontSize = Math.max(7, Math.min(11, Math.floor(renderedCellPx * 0.22)));
                     return (
                       <div key={i} style={{
-                        width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
+                        width: renderedCellPx, height: renderedCellPx, borderRadius: radius, flexShrink: 0,
                         background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
                         border: showBorder
-                          ? (isCurrent ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
+                          ? (isCurrent ? `${Math.max(1, Math.round(renderedCellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
                           : "none",
-                        boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
+                        boxShadow: (renderedCellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
                         display: showYearLabel ? "flex" : undefined,
                         alignItems: showYearLabel ? "center" : undefined,
                         justifyContent: showYearLabel ? "center" : undefined,
