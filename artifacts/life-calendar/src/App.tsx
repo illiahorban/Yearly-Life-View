@@ -5102,7 +5102,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     if (view === "days") {
       cell = 3;
     } else if (view === "months") {
-      cell = 5;
+      cell = 6;
     } else {
       const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320 - lh);
       const rows = Math.ceil(total / c);
