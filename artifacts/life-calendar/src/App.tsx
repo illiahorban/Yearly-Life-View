@@ -1392,7 +1392,7 @@ function App() {
                     </div>
                     <div className="mt-1.5 flex items-center justify-between text-[10px] tabular-nums">
                       <span style={{ color:mt.tertiary }}>{qPastDays} {t("of")} {qTotalDays} {t("daysOf")}</span>
-                      <span style={{ color:mt.tertiary }}>{qIsComplete ? t("done") : `${qRemainingDays} ${t("daysRemaining")}`}</span>
+                      <span style={{ color:mt.tertiary }}>{qIsComplete ? t("elapsed") : `${qRemainingDays} ${t("daysRemaining")}`}</span>
                     </div>
                     {/* Quarter goal progress bar */}
                     {(() => {
