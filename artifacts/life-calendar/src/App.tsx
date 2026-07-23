@@ -5058,7 +5058,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const showLbl = view === "months" || view === "weeks";
     const lw = showLbl ? 26 : 0;
     const lh = showLbl ? 12 : 0;
-    const gridW = Math.max(100, Math.min(window.innerWidth * 0.94, 560) - 48 - lw - 4);
+    // Modal width matches its own CSS: min(96vw, 560px). Use 0.96 here to stay in sync.
+    const gridW = Math.max(100, Math.min(window.innerWidth * 0.96, 560) - 48 - lw - 4);
     let cell: number;
     if (view === "days") {
       cell = 5;
@@ -5068,9 +5069,9 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
       const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
       const natural = Math.max(1, Math.floor(Math.min(fromH, fromW)));
-      // For months/weeks: enforce a minimum so cells never become illegible;
-      // if natural size is already above the minimum (small lifespan), use it as-is.
-      const minCell = view === "months" ? 5 : view === "weeks" ? 4 : 1;
+      // minCell for weeks is 3 (not 4) so narrow phones can fit all 52 columns;
+      // on desktop the cell size is driven by height and is always well above this.
+      const minCell = view === "months" ? 5 : view === "weeks" ? 3 : 1;
       cell = Math.max(minCell, natural);
     }
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, currentCell: activeCell, labelW: lw, headerH: lh };
