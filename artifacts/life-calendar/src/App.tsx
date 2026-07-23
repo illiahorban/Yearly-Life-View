@@ -5102,6 +5102,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     if (view === "days") {
       cell = 3;
     } else if (view === "months") {
+      cell = 7;
+    } else if (view === "weeks") {
       cell = 6;
     } else {
       const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320 - lh);
@@ -5109,10 +5111,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       const fromH = (gridH - gap * Math.max(0, rows - 1)) / rows;
       const fromW = (gridW - gap * Math.max(0, c - 1)) / c;
       const natural = Math.max(1, Math.floor(Math.min(fromH, fromW)));
-      // minCell for weeks is 3 (not 4) so narrow phones can fit all 52 columns;
-      // on desktop the cell size is driven by height and is always well above this.
-      const minCell = view === "months" ? 5 : view === "weeks" ? 3 : 1;
-      cell = Math.max(minCell, natural);
+      cell = Math.max(1, natural);
     }
     // Display values: actual units lived from birth date (not calendar-grid-based).
     let displayCurr: number, displayTotal: number;
