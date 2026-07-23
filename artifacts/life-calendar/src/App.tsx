@@ -5102,7 +5102,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     if (view === "days") {
       cell = 3;
     } else if (view === "months") {
-      cell = 7;
+      cell = 6;
     } else if (view === "weeks") {
       cell = 6;
     } else {
