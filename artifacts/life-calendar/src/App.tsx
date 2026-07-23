@@ -5275,7 +5275,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   </div>
                 );
               })() : (
-                <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%" }}>
+                <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%", justifyContent:"center" }}>
                   {Array.from({ length: totalUnits }, (_, i) => {
                     const isPast = i < currentCell;
                     const isCurrent = i === currentCell;
