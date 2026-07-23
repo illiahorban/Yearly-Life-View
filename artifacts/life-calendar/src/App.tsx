@@ -5247,6 +5247,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                             paddingRight: 3,
                             fontSize: lblFontSize, lineHeight: 1,
                             fontVariantNumeric: "tabular-nums",
+                            fontFamily: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
+                            letterSpacing: 0,
                             color: "var(--text-tertiary)",
                             overflow: "visible", whiteSpace: "nowrap",
                             opacity: showYear ? 1 : 0,
