@@ -726,13 +726,13 @@ function pluralUnits(n: number, view: LifeView, lang: string, t: (k: string) => 
     if (view === "weeks")  return n === 1 ? t("week")   : t("week2");
     return n === 1 ? t("day1") : t("dayN");
   }
-  const m10 = n % 10, m100 = n % 100;
-  const one  = m10 === 1 && m100 !== 11;
-  const few  = m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20);
-  if (view === "years")  return one ? t("year1")  : few ? t("year2")  : t("year5");
-  if (view === "months") return one ? t("month1") : few ? t("month2") : t("month5");
-  if (view === "weeks")  return one ? t("week")   : few ? t("week2")  : t("week5");
-  return one ? t("day1") : few ? t("day2") : t("day5");
+  // In Russian the phrase is «X из N [noun] прожито».
+  // After the preposition «из», the noun is always in the genitive plural,
+  // regardless of the last digit of N («из 61 лет», «из 732 месяцев», etc.).
+  if (view === "years")  return t("year5");   // лет
+  if (view === "months") return t("month5");  // месяцев
+  if (view === "weeks")  return t("week5");   // недель
+  return t("day5");                           // дней
 }
 
 function pluralDayStreak(n: number, lang: string): string {
