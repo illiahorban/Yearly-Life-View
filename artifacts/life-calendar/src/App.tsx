@@ -128,7 +128,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     year1:"year", yearN:"years", month1:"month", monthN:"months", day1:"day", dayN:"days",
-    yr:"yr", mo:"mo", remaining:"remaining", born:"Born", age:"Age",
+    yr:"yr", mo:"mo", wk:"wk", remaining:"remaining", born:"Born", age:"Age",
     sprintConfig:"Sprint configuration", sprintConfigDescription:"Group the 13 weeks of the quarter into sprints.", saveSprints:"Save sprints", addSprint:"Add sprint",
     looksGood:"Looks good", unassigned:"unassigned", over:"over", total:"Total",
     q1:"Q1", q2:"Q2", q3:"Q3", q4:"Q4", todayCountdown:"Today!", daysShort:"d",
@@ -201,7 +201,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     year1:"год", year2:"года", year5:"лет", month1:"месяц", month2:"месяца", month5:"месяцев", day1:"день", day2:"дня", day5:"дней",
-    yr:"лет", mo:"мес", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
+    yr:"лет", mo:"мес", wk:"нед", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
     sprintConfig:"Настройка спринтов", sprintConfigDescription:"Сгруппируйте 13 недель квартала в спринты.", saveSprints:"Сохранить", addSprint:"Спринт",
     looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
     q1:"К1", q2:"К2", q3:"К3", q4:"К4", todayCountdown:"Сегодня!", daysShort:"д",
@@ -5049,6 +5049,20 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingMonthsTotal = Math.max(0, lifespanMonths - ageMonthsTotal);
   const remainingYears = Math.floor(remainingMonthsTotal / 12);
   const remainingMonths = remainingMonthsTotal % 12;
+  // Weeks + days left after stripping full calendar months
+  const remainingWeeks = useMemo(() => {
+    if (!lifespanEnd || remainingMonthsTotal === 0) return 0;
+    const after = new Date(today.getTime());
+    after.setMonth(after.getMonth() + remainingMonthsTotal);
+    return Math.max(0, Math.floor((lifespanEnd.getTime() - after.getTime()) / (7 * 86_400_000)));
+  }, [lifespanEnd, remainingMonthsTotal, today]);
+  const remainingExtraDays = useMemo(() => {
+    if (!lifespanEnd || remainingMonthsTotal === 0) return 0;
+    const after = new Date(today.getTime());
+    after.setMonth(after.getMonth() + remainingMonthsTotal);
+    const leftover = Math.max(0, Math.round((lifespanEnd.getTime() - after.getTime()) / 86_400_000));
+    return leftover % 7;
+  }, [lifespanEnd, remainingMonthsTotal, today]);
 
   const { cols, cellPx, gapPx, totalUnits, currentUnit, currentCell, labelW, headerH, displayCurr, displayTotal } = useMemo(() => {
     const ls = settings.lifespan;
@@ -5209,8 +5223,19 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   <div style={{ height:"100%", width:`${pct}%`, background:LIFE_ACCENT, borderRadius:999, transition:"width 700ms ease" }} />
                 </div>
                 <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
-                  {t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}{remainingYears > 0 ? ` · ${remainingYears} ${t("yr")} ${remainingMonths} ${t("mo")} ${t("remaining")}` : ""}
+                  {t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
                 </div>
+                {(remainingYears > 0 || remainingMonths > 0 || remainingWeeks > 0 || remainingExtraDays > 0) && (
+                  <div className="mt-1 text-[11px] tabular-nums leading-snug flex flex-wrap gap-x-2" style={{ color:"var(--text-tertiary)" }}>
+                    <span style={{ color: LIFE_ACCENT, fontWeight: 600 }}>
+                      {remainingYears > 0 && <>{remainingYears} {t("yr")} </>}
+                      {remainingMonths > 0 && <>{remainingMonths} {t("mo")} </>}
+                      {remainingWeeks > 0 && <>{remainingWeeks} {t("wk")} </>}
+                      {remainingExtraDays > 0 && <>{remainingExtraDays} {t("daysShort")} </>}
+                    </span>
+                    <span>{t("remaining")}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -5238,6 +5263,15 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                   {displayCurr.toLocaleString()} {t("of")} {displayTotal.toLocaleString()} {pluralUnits(displayTotal, view, lang, t)} {t("elapsed")}
                 </div>
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const rem = Math.max(0, displayTotal - displayCurr);
+                    return rem > 0 ? (
+                      <span className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
+                        {rem.toLocaleString()} {pluralUnits(rem, view, lang, t)} {t("remaining")}
+                      </span>
+                    ) : null;
+                  })()}
                 {view === "days" && (
                   <button
                     type="button"
@@ -5259,6 +5293,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                     )}
                   </button>
                 )}
+                </div>
               </div>
               {(view === "months" || view === "weeks") ? (() => {
                 const rows = Math.ceil(totalUnits / cols);
