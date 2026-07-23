@@ -5049,20 +5049,18 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingMonthsTotal = Math.max(0, lifespanMonths - ageMonthsTotal);
   const remainingYears = Math.floor(remainingMonthsTotal / 12);
   const remainingMonths = remainingMonthsTotal % 12;
-  // Weeks + days left after stripping full calendar months
-  const remainingWeeks = useMemo(() => {
-    if (!lifespanEnd || remainingMonthsTotal === 0) return 0;
-    const after = new Date(today.getTime());
-    after.setMonth(after.getMonth() + remainingMonthsTotal);
-    return Math.max(0, Math.floor((lifespanEnd.getTime() - after.getTime()) / (7 * 86_400_000)));
-  }, [lifespanEnd, remainingMonthsTotal, today]);
-  const remainingExtraDays = useMemo(() => {
-    if (!lifespanEnd || remainingMonthsTotal === 0) return 0;
-    const after = new Date(today.getTime());
-    after.setMonth(after.getMonth() + remainingMonthsTotal);
-    const leftover = Math.max(0, Math.round((lifespanEnd.getTime() - after.getTime()) / 86_400_000));
-    return leftover % 7;
-  }, [lifespanEnd, remainingMonthsTotal, today]);
+  // Correct remaining breakdown using monthsBetween(today→lifespanEnd) as the base,
+  // which already applies the day-of-month correction so the anchor never overshoots.
+  const { remYears, remMonths, remWeeks, remDays } = useMemo(() => {
+    if (!lifespanEnd || lifespanEnd <= today) return { remYears: 0, remMonths: 0, remWeeks: 0, remDays: 0 };
+    const totalMonths = monthsBetween(today, lifespanEnd);
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    const anchor = new Date(today.getTime());
+    anchor.setMonth(anchor.getMonth() + totalMonths);
+    const leftover = Math.max(0, Math.round((lifespanEnd.getTime() - anchor.getTime()) / 86_400_000));
+    return { remYears: years, remMonths: months, remWeeks: Math.floor(leftover / 7), remDays: leftover % 7 };
+  }, [lifespanEnd, today]);
 
   const { cols, cellPx, gapPx, totalUnits, currentUnit, currentCell, labelW, headerH, displayCurr, displayTotal } = useMemo(() => {
     const ls = settings.lifespan;
@@ -5225,13 +5223,13 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
                   {t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
                 </div>
-                {(remainingYears > 0 || remainingMonths > 0 || remainingWeeks > 0 || remainingExtraDays > 0) && (
+                {(remYears > 0 || remMonths > 0 || remWeeks > 0 || remDays > 0) && (
                   <div className="mt-1 text-[11px] tabular-nums leading-snug flex flex-wrap gap-x-2" style={{ color:"var(--text-tertiary)" }}>
                     <span style={{ color: LIFE_ACCENT, fontWeight: 600 }}>
-                      {remainingYears > 0 && <>{remainingYears} {t("yr")} </>}
-                      {remainingMonths > 0 && <>{remainingMonths} {t("mo")} </>}
-                      {remainingWeeks > 0 && <>{remainingWeeks} {t("wk")} </>}
-                      {remainingExtraDays > 0 && <>{remainingExtraDays} {t("daysShort")} </>}
+                      {remYears > 0 && <>{remYears} {t("yr")} </>}
+                      {remMonths > 0 && <>{remMonths} {t("mo")} </>}
+                      {remWeeks > 0 && <>{remWeeks} {t("wk")} </>}
+                      {remDays > 0 && <>{remDays} {t("daysShort")} </>}
                     </span>
                     <span>{t("remaining")}</span>
                   </div>
