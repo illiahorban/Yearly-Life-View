@@ -5044,7 +5044,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   const remainingYears = Math.floor(remainingMonthsTotal / 12);
   const remainingMonths = remainingMonthsTotal % 12;
 
-  const { cols, cellPx, gapPx, totalUnits, currentUnit, currentCell, labelW, headerH } = useMemo(() => {
+  const { cols, cellPx, gapPx, totalUnits, currentUnit, currentCell, labelW, headerH, displayCurr, displayTotal } = useMemo(() => {
     const ls = settings.lifespan;
     let c: number, gap: number, total: number, curr: number, activeCell: number;
     switch (view) {
@@ -5094,8 +5094,29 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       const minCell = view === "months" ? 5 : view === "weeks" ? 3 : 1;
       cell = Math.max(minCell, natural);
     }
-    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, currentCell: activeCell, labelW: lw, headerH: lh };
-  }, [view, settings.lifespan, ageDays, birthDate, today]);
+    // Display values: actual units lived from birth date (not calendar-grid-based).
+    let displayCurr: number, displayTotal: number;
+    switch (view) {
+      case "years":
+        displayCurr  = ageYears;
+        displayTotal = ls;
+        break;
+      case "months":
+        displayCurr  = ageMonthsTotal;
+        displayTotal = ls * 12;
+        break;
+      case "weeks":
+        displayCurr  = Math.floor(ageDays / 7);
+        displayTotal = Math.floor(lifespanDays / 7);
+        break;
+      default: // days
+        displayCurr  = ageDays;
+        displayTotal = Math.floor(lifespanDays);
+        break;
+    }
+    displayCurr = Math.max(0, Math.min(displayCurr, displayTotal));
+    return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, currentCell: activeCell, labelW: lw, headerH: lh, displayCurr, displayTotal };
+  }, [view, settings.lifespan, ageDays, ageYears, ageMonthsTotal, birthDate, today, lifespanDays]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
   const inputStyle: React.CSSProperties = {
@@ -5209,7 +5230,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: view === "days" ? "auto" : "visible", maxHeight: isFullscreen ? undefined : view === "days" ? 260 : undefined, minHeight: 0 }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
-                  {Math.min(currentUnit, totalUnits).toLocaleString()} {t("of")} {totalUnits.toLocaleString()} {pluralUnits(totalUnits, view, lang, t)} {t("elapsed")}
+                  {displayCurr.toLocaleString()} {t("of")} {displayTotal.toLocaleString()} {pluralUnits(displayTotal, view, lang, t)} {t("elapsed")}
                 </div>
                 {view === "days" && (
                   <button
