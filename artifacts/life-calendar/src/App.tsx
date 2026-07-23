@@ -1355,6 +1355,8 @@ function App() {
               const qTotalDays = WEEKS_PER_QUARTER * 7;
               const qCompleted = qPastDays + (qHasToday ? todayProgress / 100 : 0);
               const qPct = Math.max(0, Math.min(100, (qCompleted / qTotalDays) * 100));
+              const qRemainingDays = Math.max(0, qTotalDays - qPastDays - (qHasToday ? 1 : 0));
+              const qIsComplete = qPct >= 99.5;
               const qStreak = computeQuarterStreak(qAllDays);
               const mt = mutedTextColors(meta.colorKey, dark);
 
@@ -1387,6 +1389,10 @@ function App() {
                       <motion.div initial={false} animate={{ width:`${qPct}%` }} transition={{ type:"spring", stiffness:120, damping:24 }}
                         style={{ height:"100%", background: quarter.fill, borderRadius:999, opacity:0.88 }}
                       />
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between text-[10px] tabular-nums">
+                      <span style={{ color:mt.tertiary }}>{qPastDays} {t("of")} {qTotalDays} {t("daysOf")}</span>
+                      <span style={{ color:mt.tertiary }}>{qIsComplete ? t("done") : `${qRemainingDays} ${t("daysRemaining")}`}</span>
                     </div>
                     {/* Quarter goal progress bar */}
                     {(() => {
