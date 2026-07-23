@@ -111,7 +111,7 @@ const I18N: Record<Lang, Record<string, string>> = {
   en: {
     complete:"complete", daysOf:"days", of:"of", daysRemaining:"days remaining",
     milestones:"All Events", darkMode:"Dark mode", lightMode:"Light mode",
-    lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress", expandFullscreen:"Expand to fullscreen", collapseFullscreen:"Collapse",
+    lifeCalendarBtn:"Life Calendar", quarterProgress:"Quarter progress", expandFullscreen:"Expand calendar", collapseFullscreen:"Collapse calendar",
     search:"Search", searchPlaceholder:"Search notes and events…", searchResults:"results", searchNoResults:"No matches found", jumpTo:"Jump to",
     dayNotes:"Day Notes", eventsAndNotes:"Events & Notes", events:"Events",
     note:"Note", notes:"Notes", addNote:"Add note", addEvent:"Add event", addEventBtn:"Add event", save:"Save",
@@ -184,7 +184,7 @@ const I18N: Record<Lang, Record<string, string>> = {
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
     milestones:"Все события", darkMode:"Тёмная тема", lightMode:"Светлая тема",
-    lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала", expandFullscreen:"Развернуть на весь экран", collapseFullscreen:"Свернуть",
+    lifeCalendarBtn:"Календарь жизни", quarterProgress:"Прогресс квартала", expandFullscreen:"Развернуть календарь", collapseFullscreen:"Свернуть календарь",
     search:"Поиск", searchPlaceholder:"Поиск по заметкам и событиям…", searchResults:"совпадений", searchNoResults:"Ничего не найдено", jumpTo:"Перейти к",
     dayNotes:"Заметки", eventsAndNotes:"События и заметки", events:"События",
     note:"Заметка", notes:"Заметки", addNote:"Добавить заметку", addEvent:"Добавить событие", addEventBtn:"Добавить событие", save:"Сохранить",
@@ -5137,6 +5137,12 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, currentCell: activeCell, labelW: lw, headerH: lh, displayCurr, displayTotal };
   }, [view, settings.lifespan, ageDays, ageYears, ageMonthsTotal, birthDate, today, lifespanDays, isFullscreen]);
 
+  // Expanded days view uses a lifespan-aware number of columns instead of
+  // filling the entire viewport. This keeps the modal proportional to the
+  // selected life span while still allowing overflow on short screens.
+  const expandedDayCols = Math.max(80, Math.min(280, Math.ceil(Math.sqrt(Math.max(1, lifespanDays) * 1.4))));
+  const expandedDayGridWidth = expandedDayCols * (cellPx + gapPx) - gapPx;
+
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
   const inputStyle: React.CSSProperties = {
     background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)",
@@ -5159,11 +5165,11 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
       <motion.div layout initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:12 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         style={{
-          width: isFullscreen ? "100vw" : "min(96vw,560px)",
-          height: isFullscreen ? "100vh" : undefined,
-          maxWidth: isFullscreen ? "100%" : undefined,
-          maxHeight: isFullscreen ? "100%" : (view === "months" || view === "weeks") ? undefined : "96vh",
-          borderRadius: isFullscreen ? 0 : 24,
+           width: isFullscreen && view === "days" ? `min(calc(100vw - 32px), ${expandedDayGridWidth + 48}px)` : "min(96vw,560px)",
+           height: undefined,
+           maxWidth: "100%",
+           maxHeight: (view === "months" || view === "weeks") ? undefined : "96vh",
+           borderRadius: 24,
           background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)",
           boxShadow:"0 24px 80px rgba(0,0,0,0.28)",
           border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`,
@@ -5257,7 +5263,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
             </div>
 
             {/* Grid */}
-            <div className="px-6 pb-5" style={{ flex: isFullscreen ? "1 1 0" : "0 0 auto", overflow: view === "days" ? "auto" : "visible", maxHeight: isFullscreen ? undefined : view === "days" ? 260 : undefined, minHeight: 0 }}>
+             <div className="px-6 pb-5" style={{ flex: "0 0 auto", overflow: view === "days" ? "auto" : "visible", maxHeight: view === "days" ? (isFullscreen ? "calc(96vh - 300px)" : 260) : undefined, minHeight: 0 }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tabular-nums" style={{ color:"var(--text-tertiary)" }}>
                   {displayCurr.toLocaleString()} {t("of")} {displayTotal.toLocaleString()} {pluralUnits(displayTotal, view, lang, t)} {t("elapsed")}
@@ -5356,7 +5362,15 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   </div>
                 );
               })() : (
-                <div style={{ display:"grid", gridTemplateColumns: view === "days" ? `repeat(auto-fill, ${cellPx}px)` : `repeat(${cols}, ${cellPx}px)`, gap:`${gapPx}px`, width:"100%", justifyContent:"center" }}>
+                <div style={{
+                  display:"grid",
+                  gridTemplateColumns: view === "days"
+                    ? `repeat(${isFullscreen ? expandedDayCols : "auto-fill"}, ${cellPx}px)`
+                    : `repeat(${cols}, ${cellPx}px)`,
+                  gap:`${gapPx}px`,
+                  width: view === "days" && isFullscreen ? expandedDayGridWidth : "100%",
+                  justifyContent:"center",
+                }}>
                   {Array.from({ length: totalUnits }, (_, i) => {
                     const isPast = i < currentCell;
                     const isCurrent = i === currentCell;
