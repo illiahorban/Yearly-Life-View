@@ -5100,7 +5100,9 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const gridW = Math.max(100, Math.min(window.innerWidth * 0.96, 560) - 48 - lw - 4);
     let cell: number;
     if (view === "days") {
-      cell = window.innerWidth < 560 ? 3 : 5;
+      cell = isFullscreen ? 3 : (window.innerWidth < 560 ? 3 : 5);
+    } else if (isFullscreen && view === "months") {
+      cell = 5;
     } else {
       const gridH = Math.max(160, Math.round(window.innerHeight * 0.95) - 320 - lh);
       const rows = Math.ceil(total / c);
@@ -5134,7 +5136,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     }
     displayCurr = Math.max(0, Math.min(displayCurr, displayTotal));
     return { cols: c, cellPx: cell, gapPx: gap, totalUnits: total, currentUnit: curr, currentCell: activeCell, labelW: lw, headerH: lh, displayCurr, displayTotal };
-  }, [view, settings.lifespan, ageDays, ageYears, ageMonthsTotal, birthDate, today, lifespanDays]);
+  }, [view, settings.lifespan, ageDays, ageYears, ageMonthsTotal, birthDate, today, lifespanDays, isFullscreen]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
   const inputStyle: React.CSSProperties = {
