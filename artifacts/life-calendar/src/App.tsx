@@ -774,6 +774,16 @@ function App() {
 
   const MIN_YEAR = 2020, MAX_YEAR = 2040;
   const [viewYear, setViewYear] = useState(() => now.getFullYear());
+  const [yearPickerOpen, setYearPickerOpen] = useState(false);
+  const yearPickerRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!yearPickerOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (yearPickerRef.current && !yearPickerRef.current.contains(e.target as Node)) setYearPickerOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [yearPickerOpen]);
 
   // Dark mode
   const [dark, setDark] = useState<boolean>(() => ls<boolean>("lifeCalendar:darkMode", false));
@@ -1141,12 +1151,20 @@ function App() {
       <header className="sticky top-0 z-20" style={{ background: headerBg, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid var(--border-soft)" }}>
         <div className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <button onClick={() => setViewYear(y => Math.max(MIN_YEAR, y-1))} disabled={viewYear <= MIN_YEAR}
-                style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear<=MIN_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear<=MIN_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><ChevronLeftIcon /></button>
-              <h1 className="text-2xl sm:text-3xl font-semibold tabular-nums" style={{ color: "var(--text)", letterSpacing: "-0.02em", minWidth:"3.2ch", textAlign:"center" }}>{viewYear}</h1>
-              <button onClick={() => setViewYear(y => Math.min(MAX_YEAR, y+1))} disabled={viewYear >= MAX_YEAR}
-                style={{ width:28, height:28, borderRadius:8, background:overlayBg, border:"1px solid var(--border-soft)", color: viewYear>=MAX_YEAR ? "var(--text-tertiary)" : "var(--text-secondary)", cursor: viewYear>=MAX_YEAR ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><ChevronRightIcon /></button>
+            <div className="flex items-center gap-1.5" ref={yearPickerRef} style={{ position:"relative" }}>
+              <button
+                onClick={() => setYearPickerOpen(o => !o)}
+                style={{ background:"none", border:"none", padding:"0 2px", cursor:"pointer", lineHeight:1 }}
+              >
+                <h1 className="text-2xl sm:text-3xl font-semibold tabular-nums" style={{ color: "var(--text)", letterSpacing: "-0.02em", minWidth:"3.2ch", textAlign:"center", textDecoration: yearPickerOpen ? "underline" : "none", textDecorationColor:"var(--text-tertiary)", textUnderlineOffset:4 }}>{viewYear}</h1>
+              </button>
+              {yearPickerOpen && (
+                <div style={{ position:"absolute", top:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", background: dark ? "rgba(30,30,32,0.97)" : "rgba(255,255,255,0.97)", border:"1px solid var(--border-soft)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.18)", padding:"6px 4px", zIndex:200, minWidth:80, maxHeight:260, overflowY:"auto", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
+                  {Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i).map(y => (
+                    <button key={y} onClick={() => { setViewYear(y); setYearPickerOpen(false); }} style={{ display:"block", width:"100%", padding:"6px 16px", borderRadius:8, border:"none", background: y === viewYear ? "rgba(0,122,255,0.15)" : "none", color: y === viewYear ? "#007aff" : y === now.getFullYear() ? "var(--text)" : "var(--text-secondary)", fontWeight: y === viewYear ? 600 : y === now.getFullYear() ? 500 : 400, fontSize:15, cursor:"pointer", textAlign:"center", fontVariantNumeric:"tabular-nums" }}>{y}</button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <div ref={searchBtnRef}><IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton></div>
