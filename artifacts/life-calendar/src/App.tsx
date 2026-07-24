@@ -5009,6 +5009,104 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   );
 }
 
+// ─── DaysCanvas ───────────────────────────────────────────────────────────────
+// Draws the days grid on a <canvas> instead of thousands of <div>s.
+// Identical visual output, zero DOM-node overhead.
+
+function _drawRR(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const minR = Math.min(r, w / 2, h / 2);
+  ctx.moveTo(x + minR, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, minR);
+  ctx.arcTo(x + w, y + h, x,     y + h, minR);
+  ctx.arcTo(x,     y + h, x,     y,     minR);
+  ctx.arcTo(x,     y,     x + w, y,     minR);
+  ctx.closePath();
+}
+
+const DaysCanvas = React.memo(function DaysCanvas({
+  totalUnits, currentCell, cellPx, gapPx, numCols, dark,
+}: {
+  totalUnits: number; currentCell: number;
+  cellPx: number; gapPx: number; numCols: number; dark: boolean;
+}) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rows   = Math.ceil(totalUnits / numCols);
+  const pitch  = cellPx + gapPx;
+  const cw     = numCols * pitch - gapPx;
+  const ch     = rows   * pitch - gapPx;
+  const radius = Math.max(0, Math.floor(cellPx / 5));
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.ceil(cw * dpr);
+    canvas.height = Math.ceil(ch * dpr);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+
+    const pastFill   = "#007aff";
+    const currFill   = "rgba(0,122,255,0.4)";
+    const futureFill = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.07)";
+
+    // ── future cells (single batched path fill) ────────────────────────────
+    ctx.fillStyle = futureFill;
+    ctx.beginPath();
+    for (let i = currentCell + 1; i < totalUnits; i++) {
+      const x = (i % numCols) * pitch;
+      const y = Math.floor(i / numCols) * pitch;
+      if (radius > 0) _drawRR(ctx, x, y, cellPx, cellPx, radius);
+      else ctx.rect(x, y, cellPx, cellPx);
+    }
+    ctx.fill();
+
+    // ── past cells (single batched path fill) ─────────────────────────────
+    ctx.fillStyle = pastFill;
+    ctx.beginPath();
+    for (let i = 0; i < currentCell && i < totalUnits; i++) {
+      const x = (i % numCols) * pitch;
+      const y = Math.floor(i / numCols) * pitch;
+      if (radius > 0) _drawRR(ctx, x, y, cellPx, cellPx, radius);
+      else ctx.rect(x, y, cellPx, cellPx);
+    }
+    ctx.fill();
+
+    // ── current cell ──────────────────────────────────────────────────────
+    if (currentCell >= 0 && currentCell < totalUnits) {
+      const cx = (currentCell % numCols) * pitch;
+      const cy = Math.floor(currentCell / numCols) * pitch;
+
+      ctx.fillStyle = currFill;
+      ctx.beginPath();
+      if (radius > 0) _drawRR(ctx, cx, cy, cellPx, cellPx, radius);
+      else ctx.rect(cx, cy, cellPx, cellPx);
+      ctx.fill();
+
+      if (cellPx >= 3) {
+        const bw = Math.max(1, Math.round(cellPx / 6));
+        ctx.strokeStyle = "#007aff";
+        ctx.lineWidth   = bw;
+        ctx.beginPath();
+        if (radius > 0) _drawRR(ctx, cx + bw / 2, cy + bw / 2, cellPx - bw, cellPx - bw, radius);
+        else ctx.rect(cx + bw / 2, cy + bw / 2, cellPx - bw, cellPx - bw);
+        ctx.stroke();
+
+        if (cellPx >= 5) {
+          ctx.strokeStyle = "rgba(0,122,255,0.27)";
+          ctx.lineWidth   = 2;
+          ctx.beginPath();
+          if (radius > 0) _drawRR(ctx, cx - 1, cy - 1, cellPx + 2, cellPx + 2, radius + 1);
+          else ctx.rect(cx - 1, cy - 1, cellPx + 2, cellPx + 2);
+          ctx.stroke();
+        }
+      }
+    }
+  }, [totalUnits, currentCell, cellPx, gapPx, numCols, dark, cw, ch, radius, pitch]);
+
+  return <canvas ref={canvasRef} style={{ width: cw, height: ch, display: "block" }} />;
+});
+
 // ─── LifeCalendarModal ────────────────────────────────────────────────────────
 
 function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose }: {
@@ -5186,6 +5284,12 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   }, [lifespanDays, viewportSize.width, viewportSize.height]);
   const renderedDayCellPx = view === "days" && isFullscreen ? expandedDayLayout.cellPx : cellPx;
   const renderedDayGapPx = view === "days" && isFullscreen ? expandedDayLayout.gapPx : gapPx;
+
+  // Columns for compact (non-fullscreen) days canvas: matches the old auto-fill behaviour.
+  const compactDayCols = useMemo(() => {
+    const availW = Math.max(100, Math.min(viewportSize.width * 0.96, 560) - 48);
+    return Math.max(1, Math.floor(availW / (3 + 1))); // cellPx=3, gapPx=1
+  }, [viewportSize.width]);
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
   const inputStyle: React.CSSProperties = {
@@ -5405,34 +5509,39 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                     })}
                   </div>
                 );
-              })() : (
+              })() : view === "days" ? (
+                <DaysCanvas
+                  totalUnits={totalUnits}
+                  currentCell={currentCell}
+                  cellPx={renderedDayCellPx}
+                  gapPx={renderedDayGapPx}
+                  numCols={isFullscreen ? expandedDayLayout.cols : compactDayCols}
+                  dark={dark}
+                />
+              ) : (
                 <div style={{
                   display:"grid",
-                  gridTemplateColumns: view === "days"
-                    ? `repeat(${isFullscreen ? expandedDayLayout.cols : "auto-fill"}, ${renderedDayCellPx}px)`
-                    : `repeat(${cols}, ${cellPx}px)`,
-                  gap:`${renderedDayGapPx}px`,
-                  width: view === "days" && isFullscreen ? expandedDayLayout.width : "100%",
+                  gridTemplateColumns:`repeat(${cols}, ${cellPx}px)`,
+                  gap:`${gapPx}px`,
+                  width:"100%",
                   justifyContent:"center",
                 }}>
                   {Array.from({ length: totalUnits }, (_, i) => {
                     const isPast = i < currentCell;
                     const isCurrent = i === currentCell;
-                    const renderedCellPx = view === "days" ? renderedDayCellPx : cellPx;
-                    const radius = Math.max(0, Math.floor(renderedCellPx / 5));
-                    const showBorder = renderedCellPx >= 3;
+                    const radius = Math.max(0, Math.floor(cellPx / 5));
+                    const showBorder = cellPx >= 3;
                     const showYearLabel = view === "years" && cellPx >= 18 && birthDate !== null;
-                    // Ячейка i подписана годом birthYear+i: ячейка 0=1999, ячейка 60=2059.
                     const yearLabel = showYearLabel ? birthDate!.getFullYear() + i : null;
-                    const yearFontSize = Math.max(7, Math.min(11, Math.floor(renderedCellPx * 0.22)));
+                    const yearFontSize = Math.max(7, Math.min(11, Math.floor(cellPx * 0.22)));
                     return (
                       <div key={i} style={{
-                        width: renderedCellPx, height: renderedCellPx, borderRadius: radius, flexShrink: 0,
+                        width: cellPx, height: cellPx, borderRadius: radius, flexShrink: 0,
                         background: isPast ? LIFE_ACCENT : isCurrent ? `${LIFE_ACCENT}66` : (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"),
                         border: showBorder
-                          ? (isCurrent ? `${Math.max(1, Math.round(renderedCellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
+                          ? (isCurrent ? `${Math.max(1, Math.round(cellPx / 6))}px solid ${LIFE_ACCENT}` : "none")
                           : "none",
-                        boxShadow: (renderedCellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
+                        boxShadow: (cellPx >= 5 && isCurrent) ? `0 0 0 2px ${LIFE_ACCENT}44` : "none",
                         display: showYearLabel ? "flex" : undefined,
                         alignItems: showYearLabel ? "center" : undefined,
                         justifyContent: showYearLabel ? "center" : undefined,
