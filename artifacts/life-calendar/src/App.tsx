@@ -5525,7 +5525,6 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   gap:`${gapPx}px`,
                   width:"100%",
                   justifyContent:"center",
-                  paddingBottom: 20,
                 }}>
                   {Array.from({ length: totalUnits }, (_, i) => {
                     const isPast = i < currentCell;
