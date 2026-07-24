@@ -5231,8 +5231,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
         {/* Settings row */}
         <div className="px-6 pb-4 shrink-0">
-          <div className="flex gap-2">
-            <div className="flex-1 flex flex-col gap-1">
+          <div className="flex gap-2 items-end">
+            <div className="flex flex-col gap-1" style={{ width: 148 }}>
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
               <input type="date" value={settings.birthDate}
                 onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
