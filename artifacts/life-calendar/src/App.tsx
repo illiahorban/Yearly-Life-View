@@ -5336,30 +5336,59 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
         {/* Settings row */}
         <div className="px-6 pb-4 shrink-0">
-          <div className="flex gap-2 items-end" style={{ flexWrap:"wrap" }}>
-            <div className="flex flex-col gap-1" style={{ flex:"1 1 140px", minWidth:0 }}>
-              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
-              <input type="date" value={settings.birthDate}
-                onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
-                lang={lang} style={{ ...inputStyle, width:"100%" }}
-              />
-            </div>
-            <div className="flex flex-col gap-1" style={{ flex:"1 1 120px", minWidth:0 }}>
-              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("lifeExpectancy")}</label>
-              <div className="flex items-center gap-1.5">
-                <input type="number" value={lifespanDraft} min={20} max={120}
-                  onChange={e => setLifespanDraft(e.target.value)}
-                  onBlur={() => {
-                    const v = Math.max(20, Math.min(120, Number(lifespanDraft) || 80));
-                    setLifespanDraft(String(v));
-                    onSettingsChange({ ...settings, lifespan: v });
-                  }}
-                  style={{ ...inputStyle, flex:1, textAlign:"center" }}
+          {viewportSize.width < 500 ? (
+            /* Mobile: stack vertically */
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
+                <input type="date" value={settings.birthDate}
+                  onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
+                  lang={lang} style={{ ...inputStyle, width:"100%" }}
                 />
-                <span className="text-[12px] shrink-0" style={{ color:"var(--text-tertiary)" }}>{t("yr")}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("lifeExpectancy")}</label>
+                <div className="flex items-center gap-1.5">
+                  <input type="number" value={lifespanDraft} min={20} max={120}
+                    onChange={e => setLifespanDraft(e.target.value)}
+                    onBlur={() => {
+                      const v = Math.max(20, Math.min(120, Number(lifespanDraft) || 80));
+                      setLifespanDraft(String(v));
+                      onSettingsChange({ ...settings, lifespan: v });
+                    }}
+                    style={{ ...inputStyle, width:80, textAlign:"center" }}
+                  />
+                  <span className="text-[12px] shrink-0" style={{ color:"var(--text-tertiary)" }}>{t("yr")}</span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Desktop: side by side */
+            <div className="flex gap-2 items-end">
+              <div className="flex flex-col gap-1" style={{ width:148 }}>
+                <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
+                <input type="date" value={settings.birthDate}
+                  onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
+                  lang={lang} style={{ ...inputStyle, width:"100%" }}
+                />
+              </div>
+              <div className="flex flex-col gap-1" style={{ width:130 }}>
+                <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("lifeExpectancy")}</label>
+                <div className="flex items-center gap-1.5">
+                  <input type="number" value={lifespanDraft} min={20} max={120}
+                    onChange={e => setLifespanDraft(e.target.value)}
+                    onBlur={() => {
+                      const v = Math.max(20, Math.min(120, Number(lifespanDraft) || 80));
+                      setLifespanDraft(String(v));
+                      onSettingsChange({ ...settings, lifespan: v });
+                    }}
+                    style={{ ...inputStyle, flex:1, textAlign:"center" }}
+                  />
+                  <span className="text-[12px] shrink-0" style={{ color:"var(--text-tertiary)" }}>{t("yr")}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {birthDate ? (
