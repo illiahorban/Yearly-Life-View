@@ -5337,27 +5337,26 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
         {/* Settings row */}
         <div className="px-6 pb-4 shrink-0">
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, alignItems:"end" }}>
-            <div className="flex flex-col gap-1" style={{ overflow:"hidden" }}>
+            <div className="flex flex-col gap-1" style={{ minWidth:0 }}>
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
               <input type="date" value={settings.birthDate}
                 onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
-                lang={lang} style={{ ...inputStyle, width:"100%", maxWidth:"100%", boxSizing:"border-box" }}
+                lang={lang} style={{ ...inputStyle, width:"100%", boxSizing:"border-box" }}
               />
             </div>
-            <div className="flex flex-col gap-1" style={{ overflow:"hidden" }}>
-              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("lifeExpectancy")}</label>
-              <div className="flex items-center gap-1.5">
-                <input type="number" value={lifespanDraft} min={20} max={120}
-                  onChange={e => setLifespanDraft(e.target.value)}
-                  onBlur={() => {
-                    const v = Math.max(20, Math.min(120, Number(lifespanDraft) || 80));
-                    setLifespanDraft(String(v));
-                    onSettingsChange({ ...settings, lifespan: v });
-                  }}
-                  style={{ ...inputStyle, flex:1, minWidth:0, textAlign:"center" }}
-                />
-                <span className="text-[12px] shrink-0" style={{ color:"var(--text-tertiary)" }}>{t("yr")}</span>
-              </div>
+            <div className="flex flex-col gap-1" style={{ minWidth:0 }}>
+              <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>
+                {t("lifeExpectancy")}, {t("yr")}
+              </label>
+              <input type="number" value={lifespanDraft} min={20} max={120}
+                onChange={e => setLifespanDraft(e.target.value)}
+                onBlur={() => {
+                  const v = Math.max(20, Math.min(120, Number(lifespanDraft) || 80));
+                  setLifespanDraft(String(v));
+                  onSettingsChange({ ...settings, lifespan: v });
+                }}
+                style={{ ...inputStyle, width:"100%", boxSizing:"border-box", textAlign:"center" }}
+              />
             </div>
           </div>
         </div>
