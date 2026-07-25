@@ -5336,17 +5336,17 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
         {/* Settings row */}
         <div className="px-6 pb-4 shrink-0">
-          <div className="flex gap-2 items-end">
-            <div className="flex flex-col gap-1" style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, alignItems:"end" }}>
+            <div className="flex flex-col gap-1" style={{ overflow:"hidden" }}>
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
               <input type="date" value={settings.birthDate}
                 onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
-                lang={lang} style={{ ...inputStyle, width:"100%", minWidth:0 }}
+                lang={lang} style={{ ...inputStyle, width:"100%", maxWidth:"100%", boxSizing:"border-box" }}
               />
             </div>
-            <div className="flex flex-col gap-1" style={{ flex:1, minWidth:0 }}>
+            <div className="flex flex-col gap-1" style={{ overflow:"hidden" }}>
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("lifeExpectancy")}</label>
-              <div className="flex items-center gap-1.5" style={{ minWidth:0 }}>
+              <div className="flex items-center gap-1.5">
                 <input type="number" value={lifespanDraft} min={20} max={120}
                   onChange={e => setLifespanDraft(e.target.value)}
                   onBlur={() => {
