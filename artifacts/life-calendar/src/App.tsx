@@ -5341,7 +5341,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
               <input type="date" value={settings.birthDate}
                 onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
-                lang={lang} style={{ ...inputStyle, width:"100%", boxSizing:"border-box" }}
+                lang={lang} style={{ ...inputStyle, width:"100%", boxSizing:"border-box", WebkitAppearance:"none", appearance:"none" }}
               />
             </div>
             <div className="flex flex-col gap-1" style={{ minWidth:0 }}>
