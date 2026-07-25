@@ -5214,7 +5214,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     } else if (view === "months") {
       cell = 7;
     } else if (view === "weeks") {
-      cell = 6;
+      // Cap at 6 px but shrink to fit available width on narrow screens.
+      cell = Math.min(6, Math.max(1, Math.floor((gridW - gap * (c - 1)) / c)));
     } else {
       const gridH = Math.max(160, Math.round(viewportSize.height * 0.95) - 320 - lh);
       const rows = Math.ceil(total / c);
@@ -5335,15 +5336,15 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
         {/* Settings row */}
         <div className="px-6 pb-4 shrink-0">
-          <div className="flex gap-2 items-end">
-            <div className="flex flex-col gap-1" style={{ width: 148 }}>
+          <div className="flex gap-2 items-end" style={{ flexWrap:"wrap" }}>
+            <div className="flex flex-col gap-1" style={{ flex:"1 1 140px", minWidth:0 }}>
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("dateOfBirth")}</label>
               <input type="date" value={settings.birthDate}
                 onChange={e => onSettingsChange({ ...settings, birthDate: e.target.value })}
                 lang={lang} style={{ ...inputStyle, width:"100%" }}
               />
             </div>
-            <div className="flex flex-col gap-1" style={{ width:130 }}>
+            <div className="flex flex-col gap-1" style={{ flex:"1 1 120px", minWidth:0 }}>
               <label className="text-[10px] font-medium tracking-wide uppercase" style={{ color:"var(--text-tertiary)" }}>{t("lifeExpectancy")}</label>
               <div className="flex items-center gap-1.5">
                 <input type="number" value={lifespanDraft} min={20} max={120}
