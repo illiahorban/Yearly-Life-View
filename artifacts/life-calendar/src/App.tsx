@@ -1403,7 +1403,7 @@ function App() {
                     <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0 mr-2">
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.nameColor} />
-                      <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+qWeeksCount} · {t("days")} {qDayStart}–{qDayEnd}</span>
+                      <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+qWeeksCount}<span style={{ display:"inline-block", width:2, height:2, borderRadius:"50%", background:mt.tertiary, margin:"0 4px 1px" }} />{t("days")} {qDayStart}–{qDayEnd}</span>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
