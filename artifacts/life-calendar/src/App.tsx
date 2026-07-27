@@ -1350,13 +1350,15 @@ function App() {
               // Quarter time progress
               const qWeeks = weeks.slice(startIndex, startIndex + WEEKS_PER_QUARTER);
               const qAllDays = qWeeks.flatMap(w => w.days);
-              const qPastDays = qAllDays.filter(d => dayState(d) === "past").length;
-              const qHasToday = qAllDays.some(d => dayState(d) === "today");
               const qTotalDays = WEEKS_PER_QUARTER * 7;
+              const qStartDate = qAllDays[0]!;
+              const qDFromStart = daysBetween(qStartDate, today);
+              const qHasToday = qDFromStart >= 0 && qDFromStart < qTotalDays;
+              const qPastDays = Math.min(qTotalDays, Math.max(0, qDFromStart));
               const qCompleted = qPastDays + (qHasToday ? todayProgress / 100 : 0);
               const qPct = Math.max(0, Math.min(100, (qCompleted / qTotalDays) * 100));
               const qRemainingDays = Math.max(0, qTotalDays - qPastDays - (qHasToday ? 1 : 0));
-              const qIsComplete = qPct >= 99.5;
+              const qIsComplete = qDFromStart >= qTotalDays;
               const qStreak = computeQuarterStreak(qAllDays);
               const mt = mutedTextColors(meta.colorKey, dark);
 
@@ -1707,9 +1709,11 @@ function BlocksRenderer({
           {blocks.map(block => {
             const blockRows = weeks.slice(startIndex+block.start, startIndex+block.end);
             const allDays = blockRows.flatMap(r => r.days);
-            const pastDays = allDays.filter(d => dayState(d)==="past").length;
-            const hasToday = allDays.some(d => dayState(d)==="today");
             const totalDays = block.weeks * 7;
+            const sprintStart = allDays[0]!;
+            const sDFromStart = daysBetween(sprintStart, today);
+            const hasToday = sDFromStart >= 0 && sDFromStart < totalDays;
+            const pastDays = Math.min(totalDays, Math.max(0, sDFromStart));
             const completedPortion = pastDays + (hasToday ? todayProgress/100 : 0);
             const timePct = Math.max(0, Math.min(100, (completedPortion/totalDays)*100));
 
@@ -1718,8 +1722,8 @@ function BlocksRenderer({
             const goalPct = activeGoals.length > 0 ? (activeGoals.filter(g => g.done).length/activeGoals.length)*100 : null;
             const pct = timePct;
             const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
-            const isFuture = pastDays===0 && !hasToday;
-            const isComplete = pct >= 99.5;
+            const isFuture = sDFromStart < 0;
+            const isComplete = sDFromStart >= totalDays;
             const blockStreak = (() => {
               const isDone = (dk: string) => { const g = dayGoalsMap[dk]; return g != null && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean); };
               const t0 = startOfDay(new Date());
