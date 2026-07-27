@@ -92,6 +92,17 @@ function addYears(d: Date, years: number) {
   if (x.getMonth() !== month) x.setDate(0);
   return x;
 }
+/** Number of grid weeks needed to cover the full calendar year.
+ *  The grid starts on the Monday of the week containing Jan 1 and must
+ *  reach at least the Sunday of the week containing Dec 31 — mirroring
+ *  how Q1's first week already shows a few days from the previous year.
+ *  Result is 52 for most years, 53 for years whose Dec 31 falls after
+ *  week 52 ends (e.g. 2015, 2020, 2026, 2032). */
+function gridWeeksForYear(year: number): number {
+  const gridStart = startOfWeekMonday(startOfYear(year));
+  const dec31 = new Date(year, 11, 31);
+  return Math.ceil((daysBetween(gridStart, dec31) + 1) / 7);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -768,19 +779,23 @@ function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, sel
   }
   return { blocks: newBlocks };
 }
-function defaultConfig(): CalendarConfig { return { quarters: [0,1,2,3].map(() => ({ blocks: [defaultBlock()] })) }; }
+function defaultConfig(q4Cap = WEEKS_PER_QUARTER): CalendarConfig {
+  return { quarters: [0,1,2,3].map(qi => ({ blocks: [{ id: makeId(), weeks: qi === 3 ? q4Cap : WEEKS_PER_QUARTER, label: "All weeks" }] })) };
+}
 function loadConfig(year: number): CalendarConfig {
-  if (typeof window === "undefined") return defaultConfig();
+  const q4Cap = gridWeeksForYear(year) - 3 * WEEKS_PER_QUARTER;
+  if (typeof window === "undefined") return defaultConfig(q4Cap);
   try {
     const raw = localStorage.getItem(`lifeCalendar:v1:${year}`);
-    if (!raw) return defaultConfig();
+    if (!raw) return defaultConfig(q4Cap);
     const p = JSON.parse(raw) as CalendarConfig;
-    if (!p?.quarters || p.quarters.length !== 4) return defaultConfig();
-    for (const q of p.quarters) {
-      if (q.blocks.reduce((a,b) => a+(b.weeks||0), 0) !== WEEKS_PER_QUARTER) return defaultConfig();
+    if (!p?.quarters || p.quarters.length !== 4) return defaultConfig(q4Cap);
+    for (let qi = 0; qi < 4; qi++) {
+      const cap = qi === 3 ? q4Cap : WEEKS_PER_QUARTER;
+      if (p.quarters[qi]!.blocks.reduce((a,b) => a+(b.weeks||0), 0) !== cap) return defaultConfig(q4Cap);
     }
     return p;
-  } catch { return defaultConfig(); }
+  } catch { return defaultConfig(q4Cap); }
 }
 function saveConfig(year: number, cfg: CalendarConfig) {
   try { localStorage.setItem(`lifeCalendar:v1:${year}`, JSON.stringify(cfg)); } catch {}
@@ -949,10 +964,15 @@ function App() {
   const [quarterMeta, setQuarterMeta] = useState<QuarterMeta[]>(() => ls<QuarterMeta[]>("lifeCalendar:quarterMeta", DEFAULT_QUARTER_META));
   useEffect(() => { lsSet("lifeCalendar:quarterMeta", quarterMeta); }, [quarterMeta]);
 
-  // Calendar data
+  // Q4 may need 14 weeks when the year's Dec 31 falls after week 52 ends.
+  const q4Weeks = useMemo(() => gridWeeksForYear(viewYear) - 3 * WEEKS_PER_QUARTER, [viewYear]);
+
+  // Calendar data — extend to cover the Sunday of the week containing Dec 31,
+  // mirroring how Q1 already shows cross-year days from the previous year.
   const weeks = useMemo(() => {
     const first = startOfWeekMonday(startOfYear(viewYear));
-    return Array.from({ length: TOTAL_WEEKS }, (_, i) => {
+    const numWeeks = gridWeeksForYear(viewYear);
+    return Array.from({ length: numWeeks }, (_, i) => {
       const weekStart = addDays(first, i*7);
       return { weekStart, days: Array.from({ length: 7 }, (_, j) => addDays(weekStart, j)) };
     });
@@ -1344,25 +1364,25 @@ function App() {
             {[0,1,2,3].map(qi => {
               const quarter = resolvedQuarters[qi]!;
               const meta = quarterMeta[qi]!;
+              const qWeeksCount = qi === 3 ? q4Weeks : WEEKS_PER_QUARTER;
               const startIndex = qi * WEEKS_PER_QUARTER;
               const qConfig = config.quarters[qi]!;
 
-              // Quarter time progress — use actual calendar quarter boundaries, not grid-week count.
-              // Grid starts on Monday of Jan 1's week, so Q1 can include days from the previous year,
-              // and Q4 may end before Dec 31. Calendar boundaries give the correct day counts.
-              const qWeeks = weeks.slice(startIndex, startIndex + WEEKS_PER_QUARTER);
+              // Quarter day counters: count grid cells that belong to the current year.
+              // Q1 may start with a few days from the previous year (grid begins on the
+              // Monday before Jan 1), and Q4 may end with a few days from the next year
+              // (the 53rd week completes the last partial week of Dec). Filtering to
+              // viewYear gives the actual cells the user sees for this year.
+              const qWeeks = weeks.slice(startIndex, startIndex + qWeeksCount);
               const qAllDays = qWeeks.flatMap(w => w.days);
-              // qi=0 → Jan 1–Apr 1, qi=1 → Apr 1–Jul 1, qi=2 → Jul 1–Oct 1, qi=3 → Oct 1–Jan 1 next yr
-              const qCalStart = new Date(viewYear, qi * 3, 1);
-              const qCalEnd   = new Date(viewYear, qi * 3 + 3, 1); // JS Date rolls month 12 → next Jan
-              const qTotalDays = daysBetween(qCalStart, qCalEnd);   // 90/91, 91, 92, 92
-              const qDFromStart = daysBetween(qCalStart, today);
-              const qHasToday = qDFromStart >= 0 && qDFromStart < qTotalDays;
-              const qPastDays = Math.min(qTotalDays, Math.max(0, qDFromStart));
+              const qYearDays = qAllDays.filter(d => d.getFullYear() === viewYear);
+              const qTotalDays = qYearDays.length;
+              const qPastDays = qYearDays.filter(d => d < today).length;
+              const qHasToday = qYearDays.some(d => sameDay(d, today));
               const qCompleted = qPastDays + (qHasToday ? todayProgress / 100 : 0);
-              const qPct = Math.max(0, Math.min(100, (qCompleted / qTotalDays) * 100));
+              const qPct = qTotalDays > 0 ? Math.max(0, Math.min(100, (qCompleted / qTotalDays) * 100)) : 0;
               const qRemainingDays = Math.max(0, qTotalDays - qPastDays - (qHasToday ? 1 : 0));
-              const qIsComplete = qDFromStart >= qTotalDays;
+              const qIsComplete = qYearDays.length > 0 && qYearDays[qYearDays.length - 1]! < today;
               const qStreak = computeQuarterStreak(qAllDays);
               const mt = mutedTextColors(meta.colorKey, dark);
 
@@ -1377,7 +1397,7 @@ function App() {
                     <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0 mr-2">
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.nameColor} />
-                      <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+WEEKS_PER_QUARTER}</span>
+                      <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+qWeeksCount}</span>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
@@ -1496,6 +1516,7 @@ function App() {
             onAutoSave={next => updateQuarter(settingsQuarter, next)}
             quarterName={quarterMeta[settingsQuarter]!.name}
             onQuarterNameChange={name => updateQuarterMeta(settingsQuarter, { name })}
+            weeksCapacity={settingsQuarter === 3 ? q4Weeks : WEEKS_PER_QUARTER}
             onSave={next => { updateQuarter(settingsQuarter, next); setSettingsQuarter(null); }}
             onResetBlock={(blockId) => {
               const qi = settingsQuarter;
@@ -1644,7 +1665,7 @@ function App() {
           setMilestones([]);
           setDayGoals({});
           setDayTemplates([]);
-          setConfig(defaultConfig());
+          setConfig(defaultConfig(q4Weeks));
           setQuarterMeta(DEFAULT_QUARTER_META);
           setLifeSettings({ birthDate: "", lifespan: 80 });
         }}
@@ -4765,17 +4786,17 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
 
 // ─── SprintSettingsModal ──────────────────────────────────────────────────────
 
-function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, colorKey, onColorChange, onClose, onSave, onAutoSave, onResetBlock, quarterName, onQuarterNameChange }: {
+function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg, colorKey, onColorChange, onClose, onSave, onAutoSave, onResetBlock, quarterName, onQuarterNameChange, weeksCapacity }: {
   quarterIndex: number; quarter: Quarter; initial: QuarterConfig; dark: boolean; modalBg: string;
   colorKey: AppleColorKey; onColorChange: (key: AppleColorKey) => void;
   onClose: () => void; onSave: (next: QuarterConfig) => void; onAutoSave: (next: QuarterConfig) => void; onResetBlock: (blockId: string) => void;
-  quarterName: string; onQuarterNameChange: (name: string) => void;
+  quarterName: string; onQuarterNameChange: (name: string) => void; weeksCapacity: number;
 }) {
   const { t, lang } = React.useContext(LangContext);
   const [blocks, setBlocks] = useState<Block[]>(() => initial.blocks.map(b => ({ ...b })));
   const total = blocks.reduce((a,b) => a+(Number(b.weeks)||0), 0);
-  const remaining = WEEKS_PER_QUARTER - total;
-  const valid = total===WEEKS_PER_QUARTER && blocks.every(b => b.weeks>=1);
+  const remaining = weeksCapacity - total;
+  const valid = total===weeksCapacity && blocks.every(b => b.weeks>=1);
   const update = (id: string, patch: Partial<Block>) => setBlocks(prev => prev.map(b => b.id===id ? { ...b, ...patch } : b));
   const applyPreset = (parts: number[]) => setBlocks(parts.map((w,i) => ({ id:makeId(), weeks:w, label:`${t("sprintLabel")} ${i+1}` })));
   const [colorPickerAnchor, setColorPickerAnchor] = useState<{ id:string; rect: DOMRect } | null>(null);
@@ -4845,7 +4866,10 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
 
         <div className="px-6">
           <div className="flex flex-wrap gap-1.5">
-            {[{n:"1 × 13",p:[13]},{n:"2+2+2+2+2+2+1",p:[2,2,2,2,2,2,1]},{n:"3+3+3+4",p:[3,3,3,4]},{n:"4+4+5",p:[4,4,5]},{n:"6+7",p:[6,7]}].map(x => (
+            {(weeksCapacity === 13
+              ? [{n:"1 × 13",p:[13]},{n:"2+2+2+2+2+2+1",p:[2,2,2,2,2,2,1]},{n:"3+3+3+4",p:[3,3,3,4]},{n:"4+4+5",p:[4,4,5]},{n:"6+7",p:[6,7]}]
+              : [{n:`1 × ${weeksCapacity}`,p:[weeksCapacity]},{n:"4+4+6",p:[4,4,6]},{n:"5+4+5",p:[5,4,5]},{n:"7+7",p:[7,7]},{n:"5+5+4",p:[5,5,4]}]
+            ).map(x => (
               <button key={x.n} onClick={() => applyPreset(x.p)} type="button" className="text-[11px] tabular-nums"
                 style={{ padding:"5px 10px", borderRadius:999, background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.04)", color:"var(--text-secondary)", border:`1px solid ${borderColor}` }}>
                 {x.n}
@@ -4916,7 +4940,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                         <div className="flex items-center gap-1" style={{ background:"rgba(120,120,128,0.20)", border:"1px solid rgba(120,120,128,0.40)", borderRadius:8, padding:2 }}>
                           <button type="button" onClick={() => update(b.id, { weeks:Math.max(1,b.weeks-1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>−</button>
                           <span className="text-[12px] font-semibold tabular-nums w-6 text-center" style={{ color: bTextColor }}>{b.weeks}</span>
-                          <button type="button" onClick={() => update(b.id, { weeks:Math.min(WEEKS_PER_QUARTER,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>+</button>
+                          <button type="button" onClick={() => update(b.id, { weeks:Math.min(weeksCapacity,b.weeks+1) })} className="w-6 h-6 rounded-md text-[14px]" style={{ color: bAc ? bTextColor : "var(--text-secondary)" }}>+</button>
                         </div>
                         <div style={{ display:"flex", alignItems:"center", gap:2, marginLeft:"auto", flexShrink:0 }}>
                           <button type="button" title={t("resetSprint")} onClick={() => setConfirmResetId(b.id)}
@@ -4988,7 +5012,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
         <div className="px-6 mt-4">
           <div className="flex items-center justify-between text-[12px] tabular-nums px-3 py-2.5 rounded-xl"
             style={{ background: valid?"rgba(52,199,89,0.08)":"rgba(255,59,48,0.07)", color: valid?"#28a745":"#c00", border:`1px solid ${valid?"rgba(52,199,89,0.2)":"rgba(255,59,48,0.2)"}` }}>
-            <span>{t("total")}: {total} / {WEEKS_PER_QUARTER} {t("week5")}</span>
+            <span>{t("total")}: {total} / {weeksCapacity} {t("week5")}</span>
             <span>{valid ? t("looksGood") : remaining>0 ? `${pluralWeeks(remaining, lang, t)} ${t("unassigned")}` : `${pluralWeeks(-remaining, lang, t)} ${t("over")}`}</span>
           </div>
         </div>
