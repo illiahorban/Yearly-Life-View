@@ -1711,7 +1711,8 @@ function BlocksRenderer({
             const allDays = blockRows.flatMap(r => r.days);
             const totalDays = block.weeks * 7;
             const sprintStart = allDays[0]!;
-            const sDFromStart = daysBetween(sprintStart, today);
+            const _now = startOfDay(new Date());
+            const sDFromStart = daysBetween(sprintStart, _now);
             const hasToday = sDFromStart >= 0 && sDFromStart < totalDays;
             const pastDays = Math.min(totalDays, Math.max(0, sDFromStart));
             const completedPortion = pastDays + (hasToday ? todayProgress/100 : 0);
