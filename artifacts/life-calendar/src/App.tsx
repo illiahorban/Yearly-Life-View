@@ -1347,12 +1347,16 @@ function App() {
               const startIndex = qi * WEEKS_PER_QUARTER;
               const qConfig = config.quarters[qi]!;
 
-              // Quarter time progress
+              // Quarter time progress — use actual calendar quarter boundaries, not grid-week count.
+              // Grid starts on Monday of Jan 1's week, so Q1 can include days from the previous year,
+              // and Q4 may end before Dec 31. Calendar boundaries give the correct day counts.
               const qWeeks = weeks.slice(startIndex, startIndex + WEEKS_PER_QUARTER);
               const qAllDays = qWeeks.flatMap(w => w.days);
-              const qTotalDays = WEEKS_PER_QUARTER * 7;
-              const qStartDate = qAllDays[0]!;
-              const qDFromStart = daysBetween(qStartDate, today);
+              // qi=0 → Jan 1–Apr 1, qi=1 → Apr 1–Jul 1, qi=2 → Jul 1–Oct 1, qi=3 → Oct 1–Jan 1 next yr
+              const qCalStart = new Date(viewYear, qi * 3, 1);
+              const qCalEnd   = new Date(viewYear, qi * 3 + 3, 1); // JS Date rolls month 12 → next Jan
+              const qTotalDays = daysBetween(qCalStart, qCalEnd);   // 90/91, 91, 92, 92
+              const qDFromStart = daysBetween(qCalStart, today);
               const qHasToday = qDFromStart >= 0 && qDFromStart < qTotalDays;
               const qPastDays = Math.min(qTotalDays, Math.max(0, qDFromStart));
               const qCompleted = qPastDays + (qHasToday ? todayProgress / 100 : 0);
@@ -1465,6 +1469,7 @@ function App() {
                       onWeekLabelClick={handleWeekLabelClick}
                       onCreateSprint={(selStart, selEnd) => { updateQuarter(qi, createSprintFromSelection(config.quarters[qi]!, selStart, selEnd, t("sprintLabel"))); setWeekSel(null); }}
                       onCancelSel={() => setWeekSel(null)}
+                      viewYear={viewYear}
                     />
                   </div>
                 </motion.section>
@@ -1680,10 +1685,10 @@ function BlocksRenderer({
   qi:_qi, quarter, qConfig, startIndex, weeks, currentWeekIndex, todayProgress,
   dayState, weekRefs, notes, milestonesMap, blockGoals, dayGoalsMap, dark, cardBg, overlayBg,
   weekSel, matchedDates, activeMatchKey, onNoteOpen, onLabelChange, onGoalToggle, onEditGoals, onWeekLabelClick,
-  onCreateSprint, onCancelSel,
+  onCreateSprint, onCancelSel, viewYear,
 }: {
   qi: number; quarter: Quarter; qConfig: QuarterConfig; startIndex: number;
-  weeks: Array<{ weekStart: Date; days: Date[] }>; currentWeekIndex: number; todayProgress: number;
+  weeks: Array<{ weekStart: Date; days: Date[] }>; currentWeekIndex: number; todayProgress: number; viewYear: number;
   dayState: (d: Date) => DayState; weekRefs: React.MutableRefObject<Array<HTMLDivElement|null>>;
   notes: Record<string,NoteEntry[]>; milestonesMap: Record<string,Milestone[]>;
   blockGoals: Record<string,BlockGoals>; dayGoalsMap: Record<string,DayGoals>; dark: boolean; cardBg: string; overlayBg: string;
@@ -1709,22 +1714,24 @@ function BlocksRenderer({
           {blocks.map(block => {
             const blockRows = weeks.slice(startIndex+block.start, startIndex+block.end);
             const allDays = blockRows.flatMap(r => r.days);
-            const totalDays = block.weeks * 7;
-            const sprintStart = allDays[0]!;
+            // Count only days that belong to the viewed year so that cross-year
+            // grid weeks (e.g. Dec 29-31 from the prior year in Q1's first week)
+            // are excluded from the sprint's day counter.
+            const yearDays = allDays.filter(d => d.getFullYear() === viewYear);
+            const totalDays = yearDays.length;
             const _now = startOfDay(new Date());
-            const sDFromStart = daysBetween(sprintStart, _now);
-            const hasToday = sDFromStart >= 0 && sDFromStart < totalDays;
-            const pastDays = Math.min(totalDays, Math.max(0, sDFromStart));
+            const pastDays = yearDays.filter(d => d < _now).length;
+            const hasToday = yearDays.some(d => sameDay(d, _now));
             const completedPortion = pastDays + (hasToday ? todayProgress/100 : 0);
-            const timePct = Math.max(0, Math.min(100, (completedPortion/totalDays)*100));
+            const timePct = totalDays > 0 ? Math.max(0, Math.min(100, (completedPortion/totalDays)*100)) : 0;
 
             const bg = blockGoals[block.id];
             const activeGoals = bg?.goals.filter(g => g.text.trim()) ?? [];
             const goalPct = activeGoals.length > 0 ? (activeGoals.filter(g => g.done).length/activeGoals.length)*100 : null;
             const pct = timePct;
             const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
-            const isFuture = sDFromStart < 0;
-            const isComplete = sDFromStart >= totalDays;
+            const isFuture = yearDays.length > 0 && yearDays[0]! > _now;
+            const isComplete = yearDays.length > 0 && yearDays[yearDays.length-1]! < _now;
             const blockStreak = (() => {
               const isDone = (dk: string) => { const g = dayGoalsMap[dk]; return g != null && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean); };
               const t0 = startOfDay(new Date());
