@@ -98,6 +98,10 @@ function addYears(d: Date, years: number) {
  *  how Q1's first week already shows a few days from the previous year.
  *  Result is 52 for most years, 53 for years whose Dec 31 falls after
  *  week 52 ends (e.g. 2015, 2020, 2026, 2032). */
+function dayOfYear(d: Date): number {
+  return Math.round((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86_400_000);
+}
+
 function gridWeeksForYear(year: number): number {
   const gridStart = startOfWeekMonday(startOfYear(year));
   const dec31 = new Date(year, 11, 31);
@@ -1384,6 +1388,8 @@ function App() {
               const qRemainingDays = Math.max(0, qTotalDays - qPastDays - (qHasToday ? 1 : 0));
               const qIsComplete = qYearDays.length > 0 && qYearDays[qYearDays.length - 1]! < today;
               const qStreak = computeQuarterStreak(qAllDays);
+              const qDayStart = qYearDays.length > 0 ? dayOfYear(qYearDays[0]!) : 0;
+              const qDayEnd   = qYearDays.length > 0 ? dayOfYear(qYearDays[qYearDays.length - 1]!) : 0;
               const mt = mutedTextColors(meta.colorKey, dark);
 
               return (
@@ -1397,7 +1403,7 @@ function App() {
                     <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0 mr-2">
                       {/* Editable quarter name */}
                       <QuarterNameEditor value={meta.name} onChange={name => updateQuarterMeta(qi, { name })} color={quarter.nameColor} />
-                      <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+qWeeksCount}</span>
+                      <span className="text-[10px] tabular-nums" style={{ color:mt.tertiary }}>{t("weeks")} {startIndex+1}–{startIndex+qWeeksCount} · {t("days")} {qDayStart}–{qDayEnd}</span>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
