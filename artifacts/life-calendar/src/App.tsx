@@ -3559,6 +3559,9 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
                               <div style={{ padding:"6px 10px 5px", background:"transparent", borderBottom:`1px solid ${effectiveQ.border}55`, display:"flex", alignItems:"center", gap:6 }}>
                                 <span style={{ fontSize:11, fontWeight:600, color: sprintHeaderText, flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{block.label}</span>
                                 <span style={{ fontSize:10, color: sprintHeaderText, opacity:0.6, flexShrink:0 }}>{goals.filter(g=>g.done).length}/{goals.length}</span>
+                                <div style={{ width:36, height:3, borderRadius:999, overflow:"hidden", background: dark?"rgba(255,255,255,0.15)":"rgba(0,0,0,0.1)", flexShrink:0 }}>
+                                  <div style={{ height:"100%", borderRadius:999, background: effectiveQ.fill, width:`${goals.length > 0 ? (goals.filter(g=>g.done).length/goals.length)*100 : 0}%`, transition:"width 0.4s ease" }} />
+                                </div>
                                 <button onClick={() => onEditGoals(block.id)} title={t("sprintGoals")}
                                   style={{ width:20, height:20, borderRadius:5, background:"transparent", border:"none", color: sprintHeaderText, opacity:0.6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
