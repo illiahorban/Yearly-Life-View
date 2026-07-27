@@ -2208,7 +2208,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       holdStartPos.current = null;
       longPressActiveRef.current = true;
       if (hasNote && tileRef.current) setTooltipRect(tileRef.current.getBoundingClientRect());
-    }, 500);
+    }, 400);
   };
   const handlePointerMove = (e: React.PointerEvent) => {
     if (e.pointerType === "mouse" || holdTimerRef.current === null || !holdStartPos.current) return;
@@ -2219,6 +2219,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const handlePointerUp = (e: React.PointerEvent) => {
     if (e.pointerType === "mouse") return;
     cancelHold();
+    // Hide preview as soon as the finger lifts
+    setTooltipRect(null);
   };
   const handleClick = (e: React.MouseEvent) => {
     // If a long-press just revealed the preview, swallow the click
