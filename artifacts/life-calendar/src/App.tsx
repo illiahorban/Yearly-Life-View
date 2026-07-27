@@ -321,6 +321,13 @@ function swatchCheckColor(hex: string): string {
   return luminanceOf(hex) > 0.6 ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.95)";
 }
 
+/** After the virtual keyboard opens (~320 ms) scroll the element into view so it
+ *  isn't hidden behind the keyboard or outside the visible area of a modal. */
+function scrollIntoViewAfterKeyboard(el: HTMLElement | null) {
+  if (!el) return;
+  setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "nearest" }), 320);
+}
+
 /** Position a fixed-position popover relative to an anchor rect, flipping above
  *  the anchor and clamping to both viewport edges so it never renders off-screen. */
 function clampedPopoverPos(rect: DOMRect, popoverWidth: number, popoverHeight: number, gap = 7) {
@@ -2418,7 +2425,7 @@ function NoteEntryItem({
           value={entry.text}
           onChange={e => updateEntry(entry.id, e.target.value)}
           onHeightChange={h => handleNoteHeightChange(entry.id, h)}
-          onFocus={() => setActiveEntryId(entry.id)}
+          onFocus={e => { setActiveEntryId(entry.id); scrollIntoViewAfterKeyboard(e.target); }}
           onBlur={() => setActiveEntryId(null)}
           onKeyDown={handleKey}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
@@ -3021,6 +3028,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
                         onHeightChange={h => handleGoalHeightChange(i, h)}
                         onMouseDown={e => { if (goalColorPickerIdx !== null) setGoalColorPickerIdx(null); e.stopPropagation(); }}
+                        onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
                         placeholder={`${t("goal")} ${i+1}`}
                         minRows={1}
                         style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",overflowWrap:"anywhere",wordBreak:"break-word",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
@@ -3171,11 +3179,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         <div className="flex gap-1.5" style={{ isolation:"isolate", alignItems:"flex-start" }}>
                           <TextareaAutosize ref={msEditInputRef} value={msEditLabel} onChange={e => setMsEditLabel(e.target.value)}
                             onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); saveMsEdit(); } if (e.key==="Escape") setMsEditId(null); }}
+                            onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
                             placeholder={t("labelPlaceholder")} minRows={1}
                             style={{ ...inputStyleMs, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5, color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` } as any} />
                         </div>
                         <div style={{ position:"relative" }}>
                           <TextareaAutosize value={msEditDesc} onChange={e => setMsEditDesc(e.target.value)}
+                            onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
                             placeholder={t("editDescPlaceholder")} minRows={2}
                             style={{ ...inputStyleMs, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, borderRadius:8, padding:"5px 9px", display:"block", color:cardFormTxt, background:cardFormBg, border:`1px solid ${cardFormBdr}` } as any} />
                         </div>
@@ -3268,12 +3278,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               <div className="flex items-center gap-1.5" style={{ isolation:"isolate" }}>
                 <TextareaAutosize ref={newLabelInputRef} value={newLabel} onChange={e => setNewLabel(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter") { e.preventDefault(); submitNewEvent(); } if (e.key==="Escape") setAddEventOpen(false); }}
+                  onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
                   placeholder={t("labelPlaceholder")}
                   minRows={1}
                   style={{ ...inputStyle, flex:1, minWidth:0, resize:"none", overflow:"hidden", lineHeight:1.5 } as any} />
               </div>
               <div style={{ position:"relative" }}>
                 <TextareaAutosize value={newDesc} onChange={e => setNewDesc(e.target.value)}
+                  onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
                   placeholder={t("descPlaceholder")} minRows={2}
                   style={{ ...inputStyle, width:"100%", resize:"none", overflow:"hidden", lineHeight:1.5, display:"block" } as any} />
               </div>
@@ -4544,6 +4556,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
 
         <div className="px-5 pb-3">
           <TextareaAutosize value={description} onChange={e => setDescription(e.target.value)}
+            onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
             placeholder={descPlaceholder ?? t("sprintDescPlaceholder")} minRows={2}
             style={{ width:"100%", resize:"none", overflow:"hidden", outline:"none", border:`1px solid ${borderColor}`, borderRadius:10, padding:"8px 10px", fontSize:13, lineHeight:1.5, fontFamily:"inherit", background:inputBg, color:"var(--text)", boxSizing:"border-box", display:"block" }}
           />
@@ -4585,6 +4598,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
                   <div style={{ flex:1, position:"relative" }}>
                     <TextareaAutosize value={g.text} onChange={e => setGoals(prev => prev.map(x => x.id===g.id ? { ...x, text:e.target.value } : x))}
                       onHeightChange={h => handleGoalInputHeightChange(g.id, h)}
+                      onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
                       placeholder={`${t("goalPlaceholder")} ${idx+1}`}
                       className={placeholderClass}
                       minRows={1}
