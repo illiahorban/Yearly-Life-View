@@ -5367,7 +5367,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex justify-center p-4"
-      style={{ overflowY:"auto", alignItems:(view === "months" || view === "weeks") ? "flex-start" : "center" }}
+      style={{ overflowY:"auto", alignItems:"flex-start" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
