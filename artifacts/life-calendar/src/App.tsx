@@ -2406,12 +2406,23 @@ function DraggableCard({ id, dark, children }: { id: string; dark: boolean; chil
   const holdStartPos = useRef<{ x: number; y: number } | null>(null);
   const [handleHover, setHandleHover] = useState(false);
   const clearHoldTimer = () => {
+    const wasHolding = holdTimer.current !== null;
     if (holdTimer.current !== null) { window.clearTimeout(holdTimer.current); holdTimer.current = null; }
     holdStartPos.current = null;
+    // If the hold was cancelled before drag started, restore selection.
+    // If drag already started (timer fired, holdTimer = null), onDragEnd handles cleanup.
+    if (wasHolding) {
+      document.body.style.userSelect = "";
+      (document.body.style as any).webkitUserSelect = "";
+    }
   };
   const startDragFromHandle = (e: React.PointerEvent) => {
     if (e.pointerType === "touch" || e.pointerType === "pen") {
       holdStartPos.current = { x: e.clientX, y: e.clientY };
+      // Suppress text selection immediately so moving the finger during the
+      // hold period doesn't select text on sibling nodes.
+      document.body.style.userSelect = "none";
+      (document.body.style as any).webkitUserSelect = "none";
       holdTimer.current = window.setTimeout(() => { dragControls.start(e); }, NOTE_LONG_PRESS_MS);
     } else {
       dragControls.start(e);
