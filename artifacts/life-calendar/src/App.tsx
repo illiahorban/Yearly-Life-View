@@ -5138,10 +5138,16 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     height: window.innerHeight,
   }));
   useEffect(() => {
-    const handleResize = () => setViewportSize({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
+    const handleResize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setViewportSize(prev => {
+        // If only height changed — it's the on-screen keyboard appearing/disappearing.
+        // Ignore it so the modal doesn't jitter while the user types.
+        if (prev.width === w) return prev;
+        return { width: w, height: h };
+      });
+    };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
