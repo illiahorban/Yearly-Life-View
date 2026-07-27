@@ -325,7 +325,7 @@ function swatchCheckColor(hex: string): string {
  *  isn't hidden behind the keyboard or outside the visible area of a modal. */
 function scrollIntoViewAfterKeyboard(el: HTMLElement | null) {
   if (!el) return;
-  setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "nearest" }), 320);
+  setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "center" }), 320);
 }
 
 /** Position a fixed-position popover relative to an anchor rect, flipping above
