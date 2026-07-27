@@ -5352,7 +5352,11 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 {t("lifeExpectancy")}, {t("yr")}
               </label>
               <input type="number" value={lifespanDraft} min={20} max={120}
-                onChange={e => setLifespanDraft(e.target.value)}
+                onChange={e => {
+                  setLifespanDraft(e.target.value);
+                  const n = Number(e.target.value);
+                  if (n >= 20 && n <= 120) onSettingsChange({ ...settings, lifespan: n });
+                }}
                 onBlur={() => {
                   const v = Math.max(20, Math.min(120, Number(lifespanDraft) || 80));
                   setLifespanDraft(String(v));
