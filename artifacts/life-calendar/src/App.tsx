@@ -2072,6 +2072,10 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const tileRef = useRef<HTMLDivElement>(null);
   const hovered = tooltipRect !== null;
+  // Long-press state (touch/pen only)
+  const holdTimerRef = useRef<number | null>(null);
+  const holdStartPos = useRef<{ x: number; y: number } | null>(null);
+  const longPressActiveRef = useRef(false);
   const isPast = state==="past", isToday = state==="today";
   const isAllDone = dayGoals != null && dayGoals.count > 0 && dayGoals.done.length >= dayGoals.count && dayGoals.done.every(Boolean);
   // Pale accents (e.g. "White") are too light for a single flat text colour to read
@@ -2133,11 +2137,16 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   useEffect(() => {
     if (!hovered) return;
     const hide = () => setTooltipRect(null);
+    const hideOnOutsidePointer = (e: PointerEvent) => {
+      if (tileRef.current && !tileRef.current.contains(e.target as Node)) hide();
+    };
     window.addEventListener("wheel", hide, { passive: true });
     window.addEventListener("scroll", hide, { passive: true, capture: true });
+    window.addEventListener("pointerdown", hideOnOutsidePointer, { passive: true });
     return () => {
       window.removeEventListener("wheel", hide);
       window.removeEventListener("scroll", hide, { capture: true });
+      window.removeEventListener("pointerdown", hideOnOutsidePointer);
     };
   }, [hovered]);
 
@@ -2175,11 +2184,57 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     </div>
   ) : null;
 
-  const handleMouseEnter = () => {
+  // ── Desktop: show tooltip on hover ──────────────────────────────────────────
+  const handlePointerEnter = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
     if (hasNote && tileRef.current) setTooltipRect(tileRef.current.getBoundingClientRect());
   };
-  const handleMouseLeave = () => setTooltipRect(null);
-  const hov = { onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave, onClick: onOpen };
+  const handlePointerLeave = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    setTooltipRect(null);
+  };
+
+  // ── Touch/pen: long-press shows tooltip, short tap opens modal ───────────────
+  const cancelHold = () => {
+    if (holdTimerRef.current !== null) { window.clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
+    holdStartPos.current = null;
+  };
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") return;
+    longPressActiveRef.current = false;
+    holdStartPos.current = { x: e.clientX, y: e.clientY };
+    holdTimerRef.current = window.setTimeout(() => {
+      holdTimerRef.current = null;
+      holdStartPos.current = null;
+      longPressActiveRef.current = true;
+      if (hasNote && tileRef.current) setTooltipRect(tileRef.current.getBoundingClientRect());
+    }, 500);
+  };
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse" || holdTimerRef.current === null || !holdStartPos.current) return;
+    const dx = Math.abs(e.clientX - holdStartPos.current.x);
+    const dy = Math.abs(e.clientY - holdStartPos.current.y);
+    if (dx > 8 || dy > 8) cancelHold();
+  };
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") return;
+    cancelHold();
+  };
+  const handleClick = (e: React.MouseEvent) => {
+    // If a long-press just revealed the preview, swallow the click
+    if (longPressActiveRef.current) { longPressActiveRef.current = false; return; }
+    onOpen();
+  };
+
+  const hov = {
+    onPointerEnter: handlePointerEnter,
+    onPointerLeave: handlePointerLeave,
+    onPointerDown: handlePointerDown,
+    onPointerMove: handlePointerMove,
+    onPointerUp: handlePointerUp,
+    onPointerCancel: cancelHold,
+    onClick: handleClick,
+  };
 
   // Compute portal tooltip position so it never clips outside viewport
   const tooltipPortal = hovered && tooltipRect && hasNote ? ReactDOM.createPortal(
