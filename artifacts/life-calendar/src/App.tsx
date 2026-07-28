@@ -963,18 +963,24 @@ function App() {
   const [settingsQuarter, setSettingsQuarter] = useState<number|null>(null);
 
   // Lock scroll whenever any modal is open — overflow:hidden on <html> preserves
-  // scroll position without any layout shift (no position:fixed needed).
+  // Блокируем скролл фона при открытом модальном окне.
+  // Вешаем overflow:hidden на <body>, а не на <html>, чтобы scrollTop
+  // документа не сбрасывался в 0. Компенсируем ширину скроллбара, чтобы
+  // не было прыжка контента.
   useEffect(() => {
     const anyOpen = !!(openNote || goalsOpen || milestonePanelOpen || notesPanelOpen ||
       lifeCalendarOpen || editGoalsBlockId || editGoalsQi !== null || editYearGoals ||
       factoryResetStep > 0 || settingsQuarter !== null);
-    const root = document.documentElement;
+    const body = document.body;
     if (anyOpen) {
-      root.style.overflow = "hidden";
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) body.style.paddingRight = `${scrollBarWidth}px`;
     } else {
-      root.style.overflow = "";
+      body.style.overflow = "";
+      body.style.paddingRight = "";
     }
-    return () => { root.style.overflow = ""; };
+    return () => { body.style.overflow = ""; body.style.paddingRight = ""; };
   }, [openNote, goalsOpen, milestonePanelOpen, notesPanelOpen, lifeCalendarOpen,
       editGoalsBlockId, editGoalsQi, editYearGoals, factoryResetStep, settingsQuarter]);
 
@@ -2910,7 +2916,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={() => { setColorPickerEntryId(null); onClose(); }}
     >
