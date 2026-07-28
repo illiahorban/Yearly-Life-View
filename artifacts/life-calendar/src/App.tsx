@@ -2389,7 +2389,7 @@ const NOTE_LONG_PRESS_MOVE_TOLERANCE = 8;
 function NoteEntryItem({
   entry, idx, entriesCount, dark, inputBg, borderColor,
   hoveredEntryId, setHoveredEntryId,
-  areaRefs, updateEntry, handleNoteHeightChange, setActiveEntryId, handleKey,
+  areaRefs, updateEntry, handleNoteHeightChange, setActiveEntryId, handleFocusEntry, handleKey,
   noteHeights, colorBtnRefs, toggleColorPicker, colorPickerEntryId, setConfirmDeleteEntryId,
 }: {
   entry: NoteEntry; idx: number; entriesCount: number; dark: boolean; inputBg: string; borderColor: string;
@@ -2398,6 +2398,7 @@ function NoteEntryItem({
   updateEntry: (id: string, text: string) => void;
   handleNoteHeightChange: (id: string, h: number) => void;
   setActiveEntryId: (id: string | null) => void;
+  handleFocusEntry: (input: HTMLTextAreaElement) => void;
   handleKey: (e: React.KeyboardEvent) => void;
   noteHeights: Record<string, number>;
   colorBtnRefs: React.MutableRefObject<Record<string, HTMLButtonElement | null>>;
@@ -2426,7 +2427,7 @@ function NoteEntryItem({
           value={entry.text}
           onChange={e => updateEntry(entry.id, e.target.value)}
           onHeightChange={h => handleNoteHeightChange(entry.id, h)}
-          onFocus={e => { setActiveEntryId(entry.id); scrollIntoViewAfterKeyboard(e.target); }}
+          onFocus={e => { setActiveEntryId(entry.id); handleFocusEntry(e.target); }}
           onBlur={() => setActiveEntryId(null)}
           onKeyDown={handleKey}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
@@ -2736,14 +2737,25 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
   const allGoalsDone = goalsDraft.count > 0 && _doneSlice.length === goalsDraft.count && _doneSlice.every(Boolean);
   const scrollBodyRef = useRef<HTMLDivElement|null>(null);
-  const scrollGoalIntoModalView = useCallback((input: HTMLTextAreaElement | null) => {
+  const scrollFieldIntoModalView = useCallback((input: HTMLTextAreaElement | null) => {
     const body = scrollBodyRef.current;
     if (!input || !body) return;
     const bodyRect = body.getBoundingClientRect();
     const inputRect = input.getBoundingClientRect();
     const inputCenter = inputRect.top + inputRect.height / 2;
     const bodyCenter = bodyRect.top + bodyRect.height / 2;
-    body.scrollBy({ top: inputCenter - bodyCenter, behavior:"smooth" });
+    body.scrollBy({ top: inputCenter - bodyCenter, behavior:"auto" });
+  }, []);
+  const focusScrollTimer = useRef<number|null>(null);
+  const scheduleFieldIntoModalView = useCallback((input: HTMLTextAreaElement | null) => {
+    if (focusScrollTimer.current !== null) window.clearTimeout(focusScrollTimer.current);
+    focusScrollTimer.current = window.setTimeout(() => {
+      focusScrollTimer.current = null;
+      scrollFieldIntoModalView(input);
+    }, 320);
+  }, [scrollFieldIntoModalView]);
+  useEffect(() => () => {
+    if (focusScrollTimer.current !== null) window.clearTimeout(focusScrollTimer.current);
   }, []);
   useLayoutEffect(() => {
     if (focusGoalIdx === null) return;
@@ -2752,11 +2764,10 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     const frame = requestAnimationFrame(() => {
       input.focus({ preventScroll:true });
       setFocusGoalIdx(null);
-      // Let the keyboard settle first, then scroll only this dialog's body.
-      window.setTimeout(() => scrollGoalIntoModalView(input), 320);
+      scheduleFieldIntoModalView(input);
     });
     return () => cancelAnimationFrame(frame);
-  }, [focusGoalIdx, goalIds, scrollGoalIntoModalView]);
+  }, [focusGoalIdx, goalIds, scheduleFieldIntoModalView]);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(null);
@@ -2775,10 +2786,14 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (focusId) {
       requestAnimationFrame(() => {
         const el = areaRefs.current[focusId];
-        if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(el.value.length, el.value.length); }
+        if (el) {
+          el.focus({ preventScroll: true });
+          el.setSelectionRange(el.value.length, el.value.length);
+          scheduleFieldIntoModalView(el);
+        }
       });
     }
-  }, [focusId]);
+  }, [focusId, scheduleFieldIntoModalView]);
 
   // Note height tracking is now delegated entirely to <TextareaAutosize>
   // (react-textarea-autosize), which measures scrollHeight itself and keeps
@@ -2947,13 +2962,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const addEntry = () => {
     const id = makeId();
     setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
-    // TextareaAutosize handles its own sizing on mount, so we only need to
-    // focus the new (empty) note and scroll it into view once it's painted.
-    requestAnimationFrame(() => {
-      const body = scrollBodyRef.current;
-      if (body) body.scrollTop = body.scrollHeight;
-      areaRefs.current[id]?.focus();
-    });
+    setFocusId(id);
   };
   const updateEntry = (id: string, text: string) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, text } : e));
@@ -3131,7 +3140,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
                         onHeightChange={h => handleGoalHeightChange(i, h)}
                         onMouseDown={e => { if (goalColorPickerIdx !== null) setGoalColorPickerIdx(null); e.stopPropagation(); }}
-                        onFocus={e => window.setTimeout(() => scrollGoalIntoModalView(e.target), 320)}
+                        onFocus={e => scheduleFieldIntoModalView(e.target)}
                         placeholder={`${t("goal")} ${i+1}`}
                         minRows={1}
                         style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",overflowWrap:"anywhere",wordBreak:"break-word",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
@@ -3484,6 +3493,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     updateEntry={updateEntry}
                     handleNoteHeightChange={handleNoteHeightChange}
                     setActiveEntryId={setActiveEntryId}
+                    handleFocusEntry={scheduleFieldIntoModalView}
                     handleKey={handleKey}
                     noteHeights={noteHeights}
                     colorBtnRefs={colorBtnRefs}
