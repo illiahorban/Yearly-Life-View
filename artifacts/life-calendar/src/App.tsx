@@ -2572,6 +2572,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   // kept in sync everywhere the slot count changes.
   const [goalIds, setGoalIds] = useState<string[]>(() => Array.from({ length: initDayGoals?.count ?? 0 }, () => makeId()));
   const [focusGoalIdx, setFocusGoalIdx] = useState<number|null>(null);
+  const goalInputRefs = useRef<(HTMLTextAreaElement|null)[]>([]);
   const handleGoalAdd = () => {
     const n = goalsDraft.count + 1;
     const newDone = [...goalsDraft.done, false];
@@ -2735,6 +2736,30 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const _doneSlice = goalsDraft.done.slice(0, goalsDraft.count);
   const allGoalsDone = goalsDraft.count > 0 && _doneSlice.length === goalsDraft.count && _doneSlice.every(Boolean);
   const scrollBodyRef = useRef<HTMLDivElement|null>(null);
+  const scrollGoalIntoModalView = useCallback((input: HTMLTextAreaElement | null) => {
+    const body = scrollBodyRef.current;
+    if (!input || !body) return;
+    const bodyRect = body.getBoundingClientRect();
+    const inputRect = input.getBoundingClientRect();
+    const padding = 12;
+    if (inputRect.top < bodyRect.top + padding) {
+      body.scrollBy({ top: inputRect.top - bodyRect.top - padding, behavior:"smooth" });
+    } else if (inputRect.bottom > bodyRect.bottom - padding) {
+      body.scrollBy({ top: inputRect.bottom - bodyRect.bottom + padding, behavior:"smooth" });
+    }
+  }, []);
+  useLayoutEffect(() => {
+    if (focusGoalIdx === null) return;
+    const input = goalInputRefs.current[focusGoalIdx];
+    if (!input) return;
+    const frame = requestAnimationFrame(() => {
+      input.focus({ preventScroll:true });
+      setFocusGoalIdx(null);
+      // Let the keyboard settle first, then scroll only this dialog's body.
+      window.setTimeout(() => scrollGoalIntoModalView(input), 320);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusGoalIdx, goalIds, scrollGoalIntoModalView]);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement|null>>({});
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement|null>>({});
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(null);
@@ -3104,12 +3129,12 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       </div>
                       ); })()}
                       <TextareaAutosize
-                        ref={el => { if (el && focusGoalIdx === i) { el.focus(); setFocusGoalIdx(null); } }}
+                        ref={el => { goalInputRefs.current[i] = el; }}
                         value={goalsDraft.labels?.[i] ?? ""}
                         onChange={e => handleGoalLabelChange(i, e.target.value)}
                         onHeightChange={h => handleGoalHeightChange(i, h)}
                         onMouseDown={e => { if (goalColorPickerIdx !== null) setGoalColorPickerIdx(null); e.stopPropagation(); }}
-                        onFocus={e => scrollIntoViewAfterKeyboard(e.target)}
+                        onFocus={e => window.setTimeout(() => scrollGoalIntoModalView(e.target), 320)}
                         placeholder={`${t("goal")} ${i+1}`}
                         minRows={1}
                         style={{ flex:1,background:"transparent",border:"none",outline:"none",resize:"none",overflow:"hidden",overflowWrap:"anywhere",wordBreak:"break-word",fontSize:13,color:textColor,textDecoration:done?"line-through":"none",opacity:done?0.55:1,transition:"color 150ms, opacity 150ms",lineHeight:1.35,fontFamily:"inherit",padding:0,cursor:"text",minWidth:0,display:"block",boxSizing:"border-box" }}
