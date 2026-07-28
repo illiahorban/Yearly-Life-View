@@ -2894,7 +2894,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto" }}
       onClick={() => { setColorPickerEntryId(null); onClose(); }}
     >
@@ -3532,7 +3532,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
 
   return ReactDOM.createPortal(
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto" }}
       onClick={onClose}
     >
@@ -3816,7 +3816,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto" }}
       onClick={onClose}
     >
@@ -4126,7 +4126,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto" }}
       onClick={onClose}
     >
@@ -4524,7 +4524,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
   return (
     <>
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto" }}
       onClick={() => { setColorPickerGoalId(null); finalize(onClose); }}
     >
@@ -4903,7 +4903,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
 
   return (
     <>
-    <motion.div className="fixed inset-0 z-50 flex items-start justify-center p-4"
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto" }}
       initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       onClick={onClose}
@@ -5444,8 +5444,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex justify-center p-4"
-      style={{ overflowY:"auto", alignItems:"flex-start" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ overflowY:"auto" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -5790,7 +5790,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY:"auto" }}
       onClick={onCloseAll ?? onClose}
     >
