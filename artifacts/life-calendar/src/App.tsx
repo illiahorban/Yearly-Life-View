@@ -2911,7 +2911,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={() => { setColorPickerEntryId(null); onClose(); }}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -2932,7 +2932,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
 
         {/* Scrollable body */}
-        <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
+        <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", overscrollBehavior:"contain", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
 
         {/* Daily Goals */}
         <div className="px-5 pt-1 shrink-0" style={{ borderBottom:"1px solid var(--border-soft)", paddingBottom: 12 }}>
@@ -3549,7 +3549,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
   return ReactDOM.createPortal(
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -3579,7 +3579,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1" style={{ overscrollBehavior:"contain" }}>
           <>
           {/* Year goals section — always visible */}
           <div style={{ padding:"10px 12px 4px" }}>
@@ -3833,7 +3833,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -4143,7 +4143,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -4541,7 +4541,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
     <>
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={() => { setColorPickerGoalId(null); finalize(onClose); }}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -4569,7 +4569,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           <button onClick={() => finalize(onClose)} style={{ width:26, height:26, borderRadius:99, background:"rgba(128,128,128,0.15)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)", fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>✕</button>
         </div>
 
-        <div style={{ flex:1, overflowY:"auto", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
+        <div style={{ flex:1, overflowY:"auto", overscrollBehavior:"contain", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
 
         <div className="px-5 pb-3">
           <TextareaAutosize value={description} onChange={e => setDescription(e.target.value)}
@@ -4920,7 +4920,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
   return (
     <>
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       onClick={onClose}
     >
@@ -5461,7 +5461,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -5807,7 +5807,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
   return (
     <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto" }}
+      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
       onClick={onCloseAll ?? onClose}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -5834,7 +5834,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
         </div>
 
         {/* Body */}
-        <div style={{ overflowY:"auto", flex:1, padding:"12px 20px 16px" }}>
+        <div style={{ overflowY:"auto", overscrollBehavior:"contain", flex:1, padding:"12px 20px 16px" }}>
           {editing ? (
             /* ── Edit / Create form ── */
             <div>
