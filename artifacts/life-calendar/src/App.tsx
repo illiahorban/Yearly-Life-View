@@ -2741,12 +2741,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
     if (!input || !body) return;
     const bodyRect = body.getBoundingClientRect();
     const inputRect = input.getBoundingClientRect();
-    const padding = 12;
-    if (inputRect.top < bodyRect.top + padding) {
-      body.scrollBy({ top: inputRect.top - bodyRect.top - padding, behavior:"smooth" });
-    } else if (inputRect.bottom > bodyRect.bottom - padding) {
-      body.scrollBy({ top: inputRect.bottom - bodyRect.bottom + padding, behavior:"smooth" });
-    }
+    const inputCenter = inputRect.top + inputRect.height / 2;
+    const bodyCenter = bodyRect.top + bodyRect.height / 2;
+    body.scrollBy({ top: inputCenter - bodyCenter, behavior:"smooth" });
   }, []);
   useLayoutEffect(() => {
     if (focusGoalIdx === null) return;
