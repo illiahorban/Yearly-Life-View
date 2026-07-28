@@ -962,48 +962,6 @@ function App() {
 
   const [settingsQuarter, setSettingsQuarter] = useState<number|null>(null);
 
-  // Lock scroll whenever any modal is open — overflow:hidden on <html> preserves
-  // Блокируем скролл фона при открытом модальном окне.
-  // Используем position:fixed + отрицательный top, чтобы зафиксировать
-  // позицию скролла без прыжка контента. При закрытии восстанавливаем
-  // точную позицию через window.scrollTo.
-  useEffect(() => {
-    const anyOpen = !!(openNote || goalsOpen || milestonePanelOpen || notesPanelOpen ||
-      lifeCalendarOpen || editGoalsBlockId || editGoalsQi !== null || editYearGoals ||
-      factoryResetStep > 0 || settingsQuarter !== null);
-    const body = document.body;
-    if (anyOpen) {
-      const scrollY = window.scrollY;
-      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-      body.style.position = "fixed";
-      body.style.top = `-${scrollY}px`;
-      body.style.left = "0";
-      body.style.right = "0";
-      body.style.overflow = "hidden";
-      if (scrollBarWidth > 0) body.style.paddingRight = `${scrollBarWidth}px`;
-    } else {
-      const savedTop = parseInt(body.style.top || "0", 10);
-      body.style.position = "";
-      body.style.top = "";
-      body.style.left = "";
-      body.style.right = "";
-      body.style.overflow = "";
-      body.style.paddingRight = "";
-      if (savedTop) window.scrollTo(0, -savedTop);
-    }
-    return () => {
-      const savedTop = parseInt(body.style.top || "0", 10);
-      body.style.position = "";
-      body.style.top = "";
-      body.style.left = "";
-      body.style.right = "";
-      body.style.overflow = "";
-      body.style.paddingRight = "";
-      if (savedTop) window.scrollTo(0, -savedTop);
-    };
-  }, [openNote, goalsOpen, milestonePanelOpen, notesPanelOpen, lifeCalendarOpen,
-      editGoalsBlockId, editGoalsQi, editYearGoals, factoryResetStep, settingsQuarter]);
-
   // Week selection for sprint creation
   const [weekSel, setWeekSel] = useState<{ qi: number; anchor: number; focus: number }|null>(null);
   const handleWeekLabelClick = (qi: number, qOffset: number) => {
@@ -2313,7 +2271,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
             const clipped = lines.length > MAX_LINES;
             const displayText = clipped ? lines.slice(0, MAX_LINES).join("\n") + "\n…" : n.text;
             return (
-              <div key={n.id} style={{ marginTop: i > 0 ? 5 : 0, padding:"6px 9px", borderRadius:8, background: "rgba(255,255,255,0.06)", border: `1.5px solid ${getEventColors(n.color, dark).border || "rgba(255,255,255,0.08)"}`, whiteSpace:"pre-wrap", overflow:"hidden", maxHeight:`${MAX_LINES * LINE_H}px` }}>{displayText}</div>
+              <div key={n.id} style={{ marginTop: i > 0 ? 5 : 0, padding:"6px 9px", borderRadius:8, background: "rgba(255,255,255,0.06)", border: `1.5px solid ${getEventColors(n.color ?? "", dark).border || "rgba(255,255,255,0.08)"}`, whiteSpace:"pre-wrap", overflow:"hidden", maxHeight:`${MAX_LINES * LINE_H}px` }}>{displayText}</div>
             );
           })}
           {!arrowOnTop && <div style={{ position:"absolute", top:"100%", left:arrowLeft, width:0, height:0, borderLeft:"6px solid transparent", borderRight:"6px solid transparent", borderTop:"6px solid rgba(29,29,31,0.96)" }} />}
@@ -2602,6 +2560,11 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
   const [focusId, setFocusId] = useState<string|null>(null);
+  const overlayRef = useRef<HTMLDivElement|null>(null);
+  const [visibleViewport, setVisibleViewport] = useState(() => ({
+    height: window.visualViewport?.height ?? window.innerHeight,
+    top: window.visualViewport?.offsetTop ?? 0,
+  }));
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(() => initDayGoals ?? { count: 0, done: [] });
   // Goals are stored as parallel arrays (no per-item id), but drag-reorder
   // needs a stable identity per item that survives position changes. This
@@ -2662,6 +2625,81 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   const goalColorPopoverRef = useRef<HTMLDivElement|null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmDeleteGoalIdx, setConfirmDeleteGoalIdx] = useState<number|null>(null);
+  // Mobile browsers keep the layout viewport full-height while the keyboard is
+  // open. visualViewport is the actually visible part, so the modal can stay
+  // fully accessible instead of being centred behind the keyboard.
+  useEffect(() => {
+    const updateViewport = () => {
+      const viewport = window.visualViewport;
+      setVisibleViewport({
+        height: viewport?.height ?? window.innerHeight,
+        top: viewport?.offsetTop ?? 0,
+      });
+    };
+    updateViewport();
+    window.visualViewport?.addEventListener("resize", updateViewport);
+    window.visualViewport?.addEventListener("scroll", updateViewport);
+    window.addEventListener("resize", updateViewport);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateViewport);
+      window.visualViewport?.removeEventListener("scroll", updateViewport);
+      window.removeEventListener("resize", updateViewport);
+    };
+  }, []);
+
+  // Prevent a swipe or wheel event from escaping to the calendar when the
+  // modal's own scroll area has reached its top or bottom edge. This is needed
+  // on mobile browsers, where overscroll-behavior alone is not dependable.
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+
+    let lastTouchY: number | null = null;
+    const getScrollArea = (target: EventTarget | null) =>
+      target instanceof Element
+        ? target.closest<HTMLElement>("[data-note-modal-scroll-body]")
+        : null;
+    const atTop = (element: HTMLElement) => element.scrollTop <= 0;
+    const atBottom = (element: HTMLElement) =>
+      element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
+
+    const onWheel = (event: WheelEvent) => {
+      const scrollArea = getScrollArea(event.target);
+      if (!scrollArea || (event.deltaY < 0 && atTop(scrollArea)) ||
+        (event.deltaY > 0 && atBottom(scrollArea))) {
+        event.preventDefault();
+      }
+    };
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 1) lastTouchY = event.touches[0].clientY;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1 || lastTouchY === null) return;
+      const currentTouchY = event.touches[0].clientY;
+      const scrollDelta = lastTouchY - currentTouchY;
+      const scrollArea = getScrollArea(event.target);
+      if (!scrollArea || (scrollDelta < 0 && atTop(scrollArea)) ||
+        (scrollDelta > 0 && atBottom(scrollArea))) {
+        event.preventDefault();
+      }
+      lastTouchY = currentTouchY;
+    };
+    const clearTouch = () => { lastTouchY = null; };
+
+    overlay.addEventListener("wheel", onWheel, { passive: false });
+    overlay.addEventListener("touchstart", onTouchStart, { passive: true });
+    overlay.addEventListener("touchmove", onTouchMove, { passive: false });
+    overlay.addEventListener("touchend", clearTouch);
+    overlay.addEventListener("touchcancel", clearTouch);
+    return () => {
+      overlay.removeEventListener("wheel", onWheel);
+      overlay.removeEventListener("touchstart", onTouchStart);
+      overlay.removeEventListener("touchmove", onTouchMove);
+      overlay.removeEventListener("touchend", clearTouch);
+      overlay.removeEventListener("touchcancel", clearTouch);
+    };
+  }, []);
+
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [] };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
@@ -2935,9 +2973,9 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   }
 
   return (
-    <motion.div initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
+    <motion.div ref={overlayRef} initial={false} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY:"auto", overscrollBehavior:"contain" }}
+      style={{ top:visibleViewport.top, bottom:"auto", height:visibleViewport.height, overflow:"hidden", overscrollBehavior:"none" }}
       onClick={() => { setColorPickerEntryId(null); onClose(); }}
     >
       <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22, ease:"easeOut" }}
@@ -2945,7 +2983,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
       />
       <motion.div initial={{ opacity:0, scale:0.95, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
         transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerEntryId(null); }}
-        style={{ position:"relative", width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"calc(100svh - 2rem)" }}
+        style={{ position:"relative", width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"calc(100% - 2rem)" }}
       >
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
@@ -2958,7 +2996,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
         </div>
 
         {/* Scrollable body */}
-        <div ref={scrollBodyRef} style={{ flex:1, overflowY:"auto", overscrollBehavior:"contain", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
+        <div ref={scrollBodyRef} data-note-modal-scroll-body style={{ flex:1, overflowY:"auto", overscrollBehavior:"contain", minHeight:0, scrollbarWidth:"thin", scrollbarColor: dark?"rgba(255,255,255,0.20) transparent":"rgba(0,0,0,0.18) transparent" }}>
 
         {/* Daily Goals */}
         <div className="px-5 pt-1 shrink-0" style={{ borderBottom:"1px solid var(--border-soft)", paddingBottom: 12 }}>
