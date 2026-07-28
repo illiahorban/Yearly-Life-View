@@ -964,23 +964,43 @@ function App() {
 
   // Lock scroll whenever any modal is open — overflow:hidden on <html> preserves
   // Блокируем скролл фона при открытом модальном окне.
-  // Вешаем overflow:hidden на <body>, а не на <html>, чтобы scrollTop
-  // документа не сбрасывался в 0. Компенсируем ширину скроллбара, чтобы
-  // не было прыжка контента.
+  // Используем position:fixed + отрицательный top, чтобы зафиксировать
+  // позицию скролла без прыжка контента. При закрытии восстанавливаем
+  // точную позицию через window.scrollTo.
   useEffect(() => {
     const anyOpen = !!(openNote || goalsOpen || milestonePanelOpen || notesPanelOpen ||
       lifeCalendarOpen || editGoalsBlockId || editGoalsQi !== null || editYearGoals ||
       factoryResetStep > 0 || settingsQuarter !== null);
     const body = document.body;
     if (anyOpen) {
+      const scrollY = window.scrollY;
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      body.style.position = "fixed";
+      body.style.top = `-${scrollY}px`;
+      body.style.left = "0";
+      body.style.right = "0";
       body.style.overflow = "hidden";
       if (scrollBarWidth > 0) body.style.paddingRight = `${scrollBarWidth}px`;
     } else {
+      const savedTop = parseInt(body.style.top || "0", 10);
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
       body.style.overflow = "";
       body.style.paddingRight = "";
+      if (savedTop) window.scrollTo(0, -savedTop);
     }
-    return () => { body.style.overflow = ""; body.style.paddingRight = ""; };
+    return () => {
+      const savedTop = parseInt(body.style.top || "0", 10);
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.overflow = "";
+      body.style.paddingRight = "";
+      if (savedTop) window.scrollTo(0, -savedTop);
+    };
   }, [openNote, goalsOpen, milestonePanelOpen, notesPanelOpen, lifeCalendarOpen,
       editGoalsBlockId, editGoalsQi, editYearGoals, factoryResetStep, settingsQuarter]);
 
