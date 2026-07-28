@@ -962,6 +962,16 @@ function App() {
 
   const [settingsQuarter, setSettingsQuarter] = useState<number|null>(null);
 
+  // Lock body scroll whenever any modal is open
+  useEffect(() => {
+    const anyOpen = !!(openNote || goalsOpen || milestonePanelOpen || notesPanelOpen ||
+      lifeCalendarOpen || editGoalsBlockId || editGoalsQi !== null || editYearGoals ||
+      factoryResetStep > 0 || settingsQuarter !== null);
+    document.body.style.overflow = anyOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [openNote, goalsOpen, milestonePanelOpen, notesPanelOpen, lifeCalendarOpen,
+      editGoalsBlockId, editGoalsQi, editYearGoals, factoryResetStep, settingsQuarter]);
+
   // Week selection for sprint creation
   const [weekSel, setWeekSel] = useState<{ qi: number; anchor: number; focus: number }|null>(null);
   const handleWeekLabelClick = (qi: number, qOffset: number) => {
