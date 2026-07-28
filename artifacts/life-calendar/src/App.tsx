@@ -962,39 +962,19 @@ function App() {
 
   const [settingsQuarter, setSettingsQuarter] = useState<number|null>(null);
 
-  // Lock body scroll whenever any modal is open, preserving scroll position (iOS-safe)
-  const scrollLockRef = React.useRef<number | null>(null);
+  // Lock scroll whenever any modal is open — overflow:hidden on <html> preserves
+  // scroll position without any layout shift (no position:fixed needed).
   useEffect(() => {
     const anyOpen = !!(openNote || goalsOpen || milestonePanelOpen || notesPanelOpen ||
       lifeCalendarOpen || editGoalsBlockId || editGoalsQi !== null || editYearGoals ||
       factoryResetStep > 0 || settingsQuarter !== null);
+    const root = document.documentElement;
     if (anyOpen) {
-      const scrollY = window.scrollY;
-      scrollLockRef.current = scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = "0";
-      document.body.style.right = "0";
-      document.body.style.overflow = "hidden";
+      root.style.overflow = "hidden";
     } else {
-      const scrollY = scrollLockRef.current ?? 0;
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      document.body.style.overflow = "";
-      window.scrollTo(0, scrollY);
-      scrollLockRef.current = null;
+      root.style.overflow = "";
     }
-    return () => {
-      const scrollY = scrollLockRef.current ?? 0;
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      document.body.style.overflow = "";
-      if (scrollLockRef.current !== null) window.scrollTo(0, scrollY);
-    };
+    return () => { root.style.overflow = ""; };
   }, [openNote, goalsOpen, milestonePanelOpen, notesPanelOpen, lifeCalendarOpen,
       editGoalsBlockId, editGoalsQi, editYearGoals, factoryResetStep, settingsQuarter]);
 
