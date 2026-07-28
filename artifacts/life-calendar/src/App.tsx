@@ -967,8 +967,13 @@ function App() {
     const anyOpen = !!(openNote || goalsOpen || milestonePanelOpen || notesPanelOpen ||
       lifeCalendarOpen || editGoalsBlockId || editGoalsQi !== null || editYearGoals ||
       factoryResetStep > 0 || settingsQuarter !== null);
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = anyOpen ? "hidden" : "";
     document.body.style.overflow = anyOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.documentElement.style.overflow = prev;
+      document.body.style.overflow = "";
+    };
   }, [openNote, goalsOpen, milestonePanelOpen, notesPanelOpen, lifeCalendarOpen,
       editGoalsBlockId, editGoalsQi, editYearGoals, factoryResetStep, settingsQuarter]);
 
