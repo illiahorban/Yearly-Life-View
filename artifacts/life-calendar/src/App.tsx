@@ -2069,7 +2069,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   }.lc-fire-tile{animation:lc-fire-pulse 4s ease-in-out infinite;}
   .lc-goal-dot-extra{display:none;}
   @media(min-width:640px){
-    .lc-goal-markers{bottom:0!important;padding:3px 0;}
+    .lc-goal-markers{padding:3px 0;}
     .lc-goal-dot{width:5px!important;height:5px!important;}
     .lc-goal-dot-extra{display:block;}
   }`;
@@ -2110,7 +2110,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div className="lc-goal-markers" style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
+    <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         const isExtra = i >= 6;
@@ -2293,12 +2293,13 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+          <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
+            <div style={{ flex:1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
+            <div className="flex items-center justify-center" style={{ flex:1, width:"100%" }}>{microMarkers}</div>
             {noteDot}
           </div>
-          {microMarkers}
         </div>
         {tooltipPortal}
       </>
@@ -2321,12 +2322,13 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
                 above is enough to sit visually on top — no z-index needed, and adding one
                 here would re-introduce the bug (a new isolated context that hides the fill
                 from `mix-blend-mode: difference`). */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center">
+              <div style={{ flex:1 }} />
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
+              <div className="flex items-center justify-center" style={{ flex:1, width:"100%" }}>{microMarkers}</div>
             </div>
             {noteDot}
           </div>
-          {microMarkers}
         </div>
         {tooltipPortal}
       </>
@@ -2335,10 +2337,13 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   return (
     <>
       <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
-        <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
-          {msBar}<Label number={dayNumber} month={monthAbbr} tone={labelTone} />{noteDot}
+        <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
+          {msBar}
+          <div style={{ flex:1 }} />
+          <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
+          <div className="flex items-center justify-center" style={{ flex:1, width:"100%" }}>{microMarkers}</div>
+          {noteDot}
         </div>
-        {microMarkers}
       </div>
       {tooltipPortal}
     </>
