@@ -2069,7 +2069,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   }.lc-fire-tile{animation:lc-fire-pulse 4s ease-in-out infinite;}
   .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
-  @media(max-width:639px){.lc-goal-markers{margin-bottom:1px;}}
+  @media(max-width:639px){.lc-goal-markers{margin-bottom:1px;}.lc-goal-dot{width:4.5px!important;height:4.5px!important;}}
   @media(min-width:640px){
     .lc-goal-dot{width:5.5px!important;height:5.5px!important;}
     .lc-goal-dot-extra{display:block;}
