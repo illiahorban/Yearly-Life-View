@@ -2071,7 +2071,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){.lc-goal-markers{margin-bottom:1px;overflow:hidden;max-width:100%;}}
   @media(min-width:640px){
-    .lc-goal-dot{width:6.2px!important;height:6.2px!important;}
+    .lc-goal-dot{width:6px!important;height:6px!important;}
     .lc-goal-dot-extra{display:block;}
   }`;
   document.head.appendChild(s);
