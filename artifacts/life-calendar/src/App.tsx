@@ -2137,7 +2137,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   } else if (!isAllDone) {
     fireDelayRef.current = undefined;
   }
-  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", boxShadow: isAllDone ? undefined : highlightRing, ...(isAllDone ? { animationDelay: fireDelayRef.current } : {}) };
+  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", overflow:"visible", boxShadow: isAllDone ? undefined : highlightRing, ...(isAllDone ? { animationDelay: fireDelayRef.current } : {}) };
 
   // All hooks must run unconditionally on every render (regardless of `isOut`) to keep hook order
   // stable — this effect used to live after the early-return below, crashing when a tile toggled
