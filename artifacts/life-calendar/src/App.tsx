@@ -2068,8 +2068,8 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
     50%{box-shadow:0 0 0 2px #ffaa00,0 0 12px 4px rgba(255,140,0,0.59),0 0 30px 9px rgba(255,70,0,0.36),0 0 50px 14px rgba(255,120,0,0.18);}
   }.lc-fire-tile{animation:lc-fire-pulse 4s ease-in-out infinite;}
   .lc-goal-dot-extra{display:none;}
+  .lc-goal-markers{padding:3px 0;}
   @media(min-width:640px){
-    .lc-goal-markers{padding:3px 0;}
     .lc-goal-dot{width:5px!important;height:5px!important;}
     .lc-goal-dot-extra{display:block;}
   }`;
