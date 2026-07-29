@@ -2066,7 +2066,13 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   s.textContent = `@keyframes lc-fire-pulse {
     0%,100%{box-shadow:0 0 0 1.5px #ff7722,0 0 6px 2px rgba(255,110,0,0.45),0 0 18px 5px rgba(255,50,0,0.26),0 0 32px 8px rgba(255,100,0,0.12);}
     50%{box-shadow:0 0 0 2px #ffaa00,0 0 12px 4px rgba(255,140,0,0.59),0 0 30px 9px rgba(255,70,0,0.36),0 0 50px 14px rgba(255,120,0,0.18);}
-  }.lc-fire-tile{animation:lc-fire-pulse 4s ease-in-out infinite;}`;
+  }.lc-fire-tile{animation:lc-fire-pulse 4s ease-in-out infinite;}
+  .lc-goal-dot-extra{display:none;}
+  @media(min-width:640px){
+    .lc-goal-markers{bottom:0!important;padding:3px 0;}
+    .lc-goal-dot{width:5px!important;height:5px!important;}
+    .lc-goal-dot-extra{display:block;}
+  }`;
   document.head.appendChild(s);
 }
 
@@ -2104,16 +2110,17 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
-      {Array.from({ length: Math.min(dayGoals.count, 6) }, (_, i) => {
+    <div className="lc-goal-markers" style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
+      {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
+        const isExtra = i >= 6;
         return done ? (
-          <svg key={i} width="4" height="4" viewBox="0 0 6 6" fill="none" overflow="visible" style={{ flexShrink:0 }}>
+          <svg key={i} width="4" height="4" viewBox="0 0 6 6" fill="none" overflow="visible" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0 }}>
             <circle cx="3" cy="3" r="3" fill={isPast ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
             <path d="M1.5 3l1 1 2-2" stroke={isPast ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
-          <svg key={i} width="4" height="4" viewBox="0 0 6 6" fill="none" overflow="visible" style={{ flexShrink:0, opacity:0.5 }}>
+          <svg key={i} width="4" height="4" viewBox="0 0 6 6" fill="none" overflow="visible" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5 }}>
             <circle cx="3" cy="3" r="2.5" stroke={isPast ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="0.9"/>
           </svg>
         );
