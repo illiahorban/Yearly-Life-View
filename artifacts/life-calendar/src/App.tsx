@@ -2114,7 +2114,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
-        const isExtra = i >= 6;
+        const isExtra = i >= 8;
         return done ? (
           <svg key={i} width="4" height="4" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
             <circle cx="3" cy="3" r="3" fill={isPast ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
