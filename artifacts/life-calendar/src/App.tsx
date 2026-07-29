@@ -2073,6 +2073,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   @media(min-width:640px){
     .lc-goal-dot{width:6px!important;height:6px!important;}
     .lc-goal-dot-extra{display:block;}
+    .lc-goal-markers{flex-wrap:wrap-reverse!important;width:36px!important;justify-content:flex-start!important;}
   }`;
   document.head.appendChild(s);
 }
@@ -2112,7 +2113,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, zIndex:6, pointerEvents:"none" }}>
-      {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
+      {Array.from({ length: Math.min(dayGoals.count, 9) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         const isExtra = i >= 7;
         return done ? (
