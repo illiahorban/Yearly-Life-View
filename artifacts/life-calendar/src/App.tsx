@@ -2071,7 +2071,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){.lc-goal-markers{margin-bottom:1px;}}
   @media(min-width:640px){
-    .lc-goal-dot{width:6px!important;height:6px!important;}
+    .lc-goal-dot{width:5.5px!important;height:5.5px!important;}
     .lc-goal-dot-extra{display:block;}
   }`;
   document.head.appendChild(s);
@@ -2111,7 +2111,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0.5, zIndex:6, pointerEvents:"none" }}>
+    <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         const isExtra = i >= 6;
