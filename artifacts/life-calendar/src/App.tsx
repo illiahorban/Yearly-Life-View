@@ -2104,8 +2104,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
-      {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
+    <div style={{ position:"absolute", bottom:3, left:0, right:0, display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none", overflow:"hidden" }}>
+      {Array.from({ length: Math.min(dayGoals.count, 6) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         return done ? (
           <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" style={{ flexShrink:0 }}>
