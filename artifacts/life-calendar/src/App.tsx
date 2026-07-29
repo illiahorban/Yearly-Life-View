@@ -2111,7 +2111,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:1, zIndex:6, pointerEvents:"none" }}>
+    <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0.5, zIndex:6, pointerEvents:"none" }}>
       {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         const isExtra = i >= 6;
