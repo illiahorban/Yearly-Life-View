@@ -57,24 +57,6 @@ body {
 
 * { box-sizing: border-box; }
 
-/* iOS Safari: disable dotted underlines on [title] elements (like the week-number button).
-   Data-detector links (phone/date/address auto-detection) are disabled via
-   the format-detection meta tag in index.html — no broad [data-datekey] CSS needed. */
-abbr,
-[title],
-[title] * {
-  text-decoration: none !important;
-  -webkit-text-decoration: none !important;
-}
-
-/* Prevent iOS from underlining detected phone numbers / dates site-wide */
-a[href^="tel:"],
-a[href^="sms:"] {
-  text-decoration: none !important;
-  color: inherit !important;
-  pointer-events: none !important;
-}
-
 .placeholder-dark::placeholder { color: rgba(0,0,0,0.40); }
 
 /* Goal-input placeholder tones — follow the inverted text colour direction. */

@@ -1917,7 +1917,7 @@ function BlocksRenderer({
                           {/* MIDDLE COLUMN — day tiles, fills remaining space */}
                           <div className="grid grid-cols-7 gap-1 sm:gap-3" style={{ flex:1, minWidth:0, justifyContent:"center" }}>
                             {days.map((d, di) => (
-                              <DayTile key={`grid-${dateKey(d)}`} date={d} state={dayState(d)} todayProgress={todayProgress}
+                              <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 dayGoals={dayGoalsMap[dateKey(d)]}
                                 accentColor={effectiveQ.border}
@@ -2123,22 +2123,20 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
                    : (!dark && luminanceOf(accentColor) > 0.90) ? "#27272a"
                    : accentColor;
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
-    (isPast || isToday) ? (needsInvertText ? "invertPale" : "onGreen") : "muted";
-  const dateStr = dateKey(date);
+    isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
       {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
         const done = dayGoals.done[i] ?? false;
         const isExtra = i >= 7;
-        const markerKey = `${dateStr}-marker-${i}-${done}`;
         return done ? (
-          <svg key={markerKey} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
-            <circle cx="3" cy="3" r="3" fill={(isPast || isToday) ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
-            <path d="M1.5 3l1 1 2-2" stroke={(isPast || isToday) ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
+            <circle cx="3" cy="3" r="3" fill={isPast ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
+            <path d="M1.5 3l1 1 2-2" stroke={isPast ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
-          <svg key={markerKey} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
-            <circle cx="3" cy="3" r="2.5" stroke={(isPast || isToday) ? (isPaleAccent ? "rgba(24,24,27,0.7)" : "rgba(255,255,255,0.9)") : "var(--text-tertiary)"} strokeWidth="1.5"/>
+          <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
+            <circle cx="3" cy="3" r="2.5" stroke={isPast ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="0.9"/>
           </svg>
         );
       })}
@@ -2313,7 +2311,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
-          <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:accentColor, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+          <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <div style={{ flex:1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
@@ -2330,9 +2328,19 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:accentColor, boxShadow: hovered ? `inset 0 0 0 1.5px ${ringAccent},0 0 0 4px ${ringAccent}2e,0 4px 18px ${ringAccent}47` : `inset 0 0 0 1.5px ${ringAccent},0 0 0 4px ${ringAccent}1e,0 4px 14px ${ringAccent}2e`, color:"white" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:"var(--surface)", boxShadow: hovered ? `inset 0 0 0 1.5px ${ringAccent},0 0 0 4px ${ringAccent}2e,0 4px 18px ${ringAccent}47` : `inset 0 0 0 1.5px ${ringAccent},0 0 0 4px ${ringAccent}1e,0 4px 14px ${ringAccent}2e`, color:"var(--text)" }}>
             {msBar}
-            {/* Text layer */}
+            {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
+                the SAME stacking context as the text below — `isolation: isolate` on the
+                outer tile is what scopes mix-blend-mode, and any nested element that sets
+                its own z-index would create a second, isolated stacking context and cut
+                the text off from seeing this layer entirely. */}
+            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor, borderRadius:"0 0 10.5px 10.5px" }} />
+            {/* Text layer: position:absolute WITHOUT an explicit z-index. Paint order inside
+                a stacking context follows DOM order, so being declared after the fill layer
+                above is enough to sit visually on top — no z-index needed, and adding one
+                here would re-introduce the bug (a new isolated context that hides the fill
+                from `mix-blend-mode: difference`). */}
             <div className="absolute inset-0 flex flex-col items-center">
               <div style={{ flex:1 }} />
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
