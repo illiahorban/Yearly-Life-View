@@ -2081,7 +2081,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){
-    .lc-goal-markers{margin-bottom:1px;overflow:hidden;max-width:100%;}
+    .lc-goal-markers{padding:0;margin-bottom:0;overflow:hidden;max-width:100%;}
     .lc-fire-glow{box-shadow:0 0 0 1.5px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);}
   }
   @media(min-width:640px){
@@ -2315,7 +2315,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
             {msBar}
             <div style={{ flex:1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
-            <div className="flex items-center justify-center" style={{ flex:1, width:"100%" }}>{microMarkers}</div>
+            <div className="flex items-center justify-center" style={{ flex:1, width:"100%", overflow:"hidden" }}>{microMarkers}</div>
             {noteDot}
           </div>
         </div>
@@ -2344,7 +2344,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
             <div className="absolute inset-0 flex flex-col items-center">
               <div style={{ flex:1 }} />
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
-              <div className="flex items-center justify-center" style={{ flex:1, width:"100%" }}>{microMarkers}</div>
+              <div className="flex items-center justify-center" style={{ flex:1, width:"100%", overflow:"hidden" }}>{microMarkers}</div>
             </div>
             {noteDot}
           </div>
@@ -2361,7 +2361,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
           {msBar}
           <div style={{ flex:1 }} />
           <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
-          <div className="flex items-center justify-center" style={{ flex:1, width:"100%" }}>{microMarkers}</div>
+          <div className="flex items-center justify-center" style={{ flex:1, width:"100%", overflow:"hidden" }}>{microMarkers}</div>
           {noteDot}
         </div>
       </div>
