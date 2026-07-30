@@ -2332,11 +2332,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
           {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:accentColor, boxShadow: hovered ? `inset 0 0 0 1.5px ${ringAccent},0 0 0 4px ${ringAccent}2e,0 4px 18px ${ringAccent}47` : `inset 0 0 0 1.5px ${ringAccent},0 0 0 4px ${ringAccent}1e,0 4px 14px ${ringAccent}2e`, color:"white" }}>
             {msBar}
-            {/* Remaining-day overlay: covers the unfilled top portion with a dark veil that
-                shrinks away as the day progresses, keeping the base accentColor identical
-                to past tiles at all times. */}
-            {todayProgress < 100 && <div className="absolute inset-x-0 top-0 transition-[height] duration-700 ease-out" style={{ height:`${100 - todayProgress}%`, background:"rgba(0,0,0,0.28)", borderRadius:"10.5px 10.5px 0 0", pointerEvents:"none" }} />}
-            {/* Text layer: declared after the overlay so it paints on top via DOM order. */}
+            {/* Text layer */}
             <div className="absolute inset-0 flex flex-col items-center">
               <div style={{ flex:1 }} />
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
