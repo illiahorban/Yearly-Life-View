@@ -2201,25 +2201,44 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       : isToday
       ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "auto")
       : "muted";
-  const microMarkers = dayGoals && dayGoals.count > 0 ? (
-    <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
-      {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
-        const done = dayGoals.done[i] ?? false;
-        const isExtra = i >= 7;
-        const onFill = isPast || isToday;
-        return done ? (
-          <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
-            <circle cx="3" cy="3" r="3" fill={onFill ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
-            <path d="M1.5 3l1 1 2-2" stroke={onFill ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        ) : (
-          <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
-            <circle cx="3" cy="3" r="2.5" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1.5"/>
-          </svg>
-        );
-      })}
-    </div>
-  ) : null;
+  const microMarkers = dayGoals && dayGoals.count > 0 ? (() => {
+    const onFill = isPast || isToday;
+    const showPlus = dayGoals.count > 10;
+    const dotCount = showPlus ? 9 : dayGoals.count;
+    const allDone = showPlus
+      ? Array.from({ length: dayGoals.count }, (_, i) => dayGoals.done[i] ?? false).every(Boolean)
+      : false;
+    const dots = Array.from({ length: dotCount }, (_, i) => {
+      const done = dayGoals.done[i] ?? false;
+      const isExtra = i >= 7;
+      return done ? (
+        <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
+          <circle cx="3" cy="3" r="3" fill={onFill ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
+          <path d="M1.5 3l1 1 2-2" stroke={onFill ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ) : (
+        <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
+          <circle cx="3" cy="3" r="2.5" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1.5"/>
+        </svg>
+      );
+    });
+    const plusDot = showPlus ? (allDone ? (
+      <svg key="plus" width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className="lc-goal-dot lc-goal-dot-extra" style={{ flexShrink:0, overflow:"hidden" }}>
+        <circle cx="3" cy="3" r="3" fill={onFill ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
+        <path d="M3 1.5v3M1.5 3h3" stroke={onFill ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    ) : (
+      <svg key="plus" width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className="lc-goal-dot lc-goal-dot-extra" style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
+        <circle cx="3" cy="3" r="2.5" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1.5"/>
+        <path d="M3 1.8v2.4M1.8 3h2.4" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1" strokeLinecap="round"/>
+      </svg>
+    )) : null;
+    return (
+      <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
+        {dots}{plusDot}
+      </div>
+    );
+  })() : null;
   const activeNotes = dayNotes?.filter(n => n.text.trim()) ?? [];
   const hasNote = activeNotes.length > 0;
   const noteCount = activeNotes.length;
