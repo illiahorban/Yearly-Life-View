@@ -217,7 +217,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     year1:"год", year2:"года", year5:"лет", month1:"месяц", month2:"месяца", month5:"месяцев", day1:"день", day2:"дня", day5:"дней",
-    yr:"лет", mo:"мес", wk:"нед", hr:"ч", min:"мин", sec:"сек.", remaining:"осталось", remainingLabel:"Осталось:", born:"Рождён(а)", age:"Возраст",
+    yr:"лет", mo:"мес", wk:"нед", hr:"ч", min:"мин", sec:"с", remaining:"осталось", remainingLabel:"Осталось:", born:"Рождён(а)", age:"Возраст",
     hour1:"час", hour2:"часа", hour5:"часов", minute1:"минута", minute2:"минуты", minute5:"минут", second1:"секунда", second2:"секунды", second5:"секунд",
     sprintConfig:"Настройка спринтов", sprintConfigDescription:"Сгруппируйте 13 недель квартала в спринты.", saveSprints:"Сохранить", addSprint:"Спринт",
     looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
@@ -5690,7 +5690,8 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                       {remDays > 0 && <>{pluralCount(remDays, lang, t, "day1", "day2", "day5")} </>}
                       {remHours > 0 && <>{pluralCount(remHours, lang, t, "hour1", "hour2", "hour5")} </>}
                       {remMinutes > 0 && <>{pluralCount(remMinutes, lang, t, "minute1", "minute2", "minute5")} </>}
-                      <>{remSeconds} {t("sec")}</>
+                      <span className="hidden sm:inline">{pluralCount(remSeconds, lang, t, "second1", "second2", "second5")}</span>
+                      <span className="sm:hidden">{remSeconds} {t("sec")}</span>
                     </span>
                   </div>
                 )}
