@@ -277,7 +277,7 @@ const LangContext = React.createContext<LangCtx>({ t: k => I18N.en[k] ?? k, mont
 const WEEKS_PER_QUARTER = 13;
 const TOTAL_WEEKS = 52;
 
-type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; text: string; nameColor: string; soft: string; darkSoft: string };
+type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; tileFill: string; text: string; nameColor: string; soft: string; darkSoft: string };
 type Block = { id: string; weeks: number; label: string; color?: AppleColorKey };
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
@@ -428,6 +428,15 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // stay legible — the card/day-tile surface itself keeps each colour's true hue (grey
   // stays grey, black stays black), only the content drawn on top gets the contrast boost.
   const fill = (isAchromaticDark && dark) ? "#ffffff" : hex;
+  // tileFill is the colour used as the day-cell background. `fill` is wrong here:
+  // black/grey in dark mode get fill="#ffffff" (for text contrast) but a white cell
+  // in dark mode shows the wrong colour entirely. White in light mode gets fill="#ffffff"
+  // which merges with the page and makes cells invisible. Use the actual hue instead,
+  // except white-in-light-mode which needs a visible off-white (#e0e0e5) so cells don't
+  // vanish against the white page background.
+  const tileFill = (isAchromaticDark && dark)          ? hex        // grey/black in dark: actual dark hue
+                 : (meta.colorKey === "white" && !dark) ? "#e0e0e5" // white in light: visible grey
+                 : hex;
   // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
   // colour surface the way percentages/progress bars are, so they don't need the
   // white/black contrast boost applied to `text` for legibility. For grey specifically,
@@ -444,6 +453,7 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
     darkTint: `rgba(${r},${g},${b},0.14)`,
     border: hex,
     fill,
+    tileFill,
     text: textHex,
     nameColor,
     soft:     `rgba(${r},${g},${b},0.22)`,
@@ -1920,7 +1930,7 @@ function BlocksRenderer({
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 dayGoals={dayGoalsMap[dateKey(d)]}
-                                accentColor={effectiveQ.fill}
+                                accentColor={effectiveQ.tileFill}
                                 highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
                                 isActiveMatch={activeMatchKey === dateKey(d)}
                                 dark={dark}
@@ -2120,7 +2130,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   // For the today ring: black accent on dark bg and white accent on light bg are both
   // invisible. Swap to the opposite pole so the border and glow stay visible.
   const ringAccent = (dark  && luminanceOf(accentColor) < 0.12) ? "#e5e5e7"
-                   : (!dark && luminanceOf(accentColor) > 0.90) ? "#27272a"
+                   : (!dark && luminanceOf(accentColor) > 0.80) ? "#27272a"
                    : accentColor;
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
