@@ -2212,13 +2212,13 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       const done = dayGoals.done[i] ?? false;
       const isExtra = i >= 7;
       return done ? (
-        <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
-          <circle cx="3" cy="3" r="3" fill={onFill ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
-          <path d="M1.5 3l1 1 2-2" stroke={onFill ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
+          <rect x="0" y="0" width="6" height="6" rx="1.2" fill={onFill ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
+          <path d="M1.4 3l1.1 1.1 2.1-2.2" stroke={onFill ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ) : (
-        <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
-          <circle cx="3" cy="3" r="2.5" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1.5"/>
+        <svg key={i} width="5" height="5" viewBox="0 0 6 6" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
+          <rect x="0.75" y="0.75" width="4.5" height="4.5" rx="1" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1.5"/>
         </svg>
       );
     });
