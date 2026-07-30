@@ -2064,14 +2064,13 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   const s = document.createElement("style");
   s.id = "lc-fire-style";
   s.textContent = `@keyframes lc-fire-pulse {
-    0%,100%{opacity:0.78}
-    50%{opacity:1}
-  }.lc-fire-tile{box-shadow:0 0 0 2px #ff7722,0 0 10px 3px rgba(255,110,0,0.42),0 0 26px 7px rgba(255,50,0,0.22);animation:lc-fire-pulse 4s ease-in-out infinite;will-change:opacity;}
+    0%,100%{filter:drop-shadow(0 0 3px rgba(255,100,0,0.40)) drop-shadow(0 0 8px rgba(255,70,0,0.22));}
+    50%{filter:drop-shadow(0 0 7px rgba(255,140,0,0.70)) drop-shadow(0 0 18px rgba(255,80,0,0.40));}
+  }.lc-fire-tile{box-shadow:0 0 0 2px #ff7722;animation:lc-fire-pulse 4s ease-in-out infinite;will-change:filter;}
   .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){
     .lc-goal-markers{margin-bottom:1px;overflow:hidden;max-width:100%;}
-    .lc-fire-tile{box-shadow:0 0 0 2px #ff7722,0 0 8px 2px rgba(255,110,0,0.35);}
   }
   @media(min-width:640px){
     .lc-goal-dot{width:6px!important;height:6px!important;}
