@@ -434,8 +434,8 @@ function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // which merges with the page and makes cells invisible. Use the actual hue instead,
   // except white-in-light-mode which needs a visible off-white (#e0e0e5) so cells don't
   // vanish against the white page background.
-  const tileFill = (isAchromaticDark && dark)          ? hex        // grey/black in dark: actual dark hue
-                 : (meta.colorKey === "white" && !dark) ? "#e0e0e5" // white in light: visible grey
+  const tileFill = (isAchromaticDark && dark)   ? hex        // grey/black in dark: actual dark hue
+                 : meta.colorKey === "white"   ? "#e0e0e5" // white in both modes: off-white, visible against any bg without inverting content
                  : hex;
   // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
   // colour surface the way percentages/progress bars are, so they don't need the
@@ -2127,11 +2127,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isPaleAccent = luminanceOf(accentColor) > 0.80;    // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
   const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
-  // For the today ring: black accent on dark bg and white accent on light bg are both
-  // invisible. Swap to the opposite pole so the border and glow stay visible.
-  const ringAccent = (dark  && luminanceOf(accentColor) < 0.12) ? "#e5e5e7"
-                   : (!dark && luminanceOf(accentColor) > 0.80) ? "#27272a"
-                   : accentColor;
+  // Use the accent colour directly for the today ring — no inversion.
+  const ringAccent = accentColor;
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
