@@ -2127,10 +2127,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isPaleAccent = luminanceOf(accentColor) > 0.80;    // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
   const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
-  // Black in dark mode: its near-black accent colour is invisible as a ring on a dark surface.
-  // Mirror white-in-light-mode (#e0e0e5 ring): use a hex gray so the hex-alpha suffix
-  // appended to it in the boxShadow template (e.g. ringAccent+"2e") stays valid CSS.
-  const ringAccent = (dark && luminanceOf(accentColor) < 0.12) ? "#aeaeb2" : accentColor;
+  const ringAccent = accentColor;
   // isPaleAccent (white) → explicit dark text rather than mix-blend-mode trickery, which can
   // be unreliable across `contain:paint` / `isolation:isolate` boundaries in Chrome.
   const labelTone: "onGreen" | "invertPale" | "darkOnLight" | "muted" | "auto" =
