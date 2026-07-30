@@ -3204,7 +3204,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                       <div style={{ position:"absolute", top: (goalHeights[i] ?? 18) > 20 ? 8 : "50%", transform: (goalHeights[i] ?? 18) > 20 ? "none" : "translateY(-50%)", right:8, display:"flex", alignItems:"center", gap:6, transition:"top 150ms", opacity:(isHovered||isColorOpen)?1:0, pointerEvents:(isHovered||isColorOpen)?"auto":"none", isolation:"isolate" }}>
                         <button
                           ref={el => { goalColorBtnRefs.current[i] = el; }}
-                          onClick={e => { e.stopPropagation(); if (goalColorPickerIdx===i) { setGoalColorPickerIdx(null); return; } const btn=goalColorBtnRefs.current[i]; if(btn){setGoalColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 152, 100));} setGoalColorPickerIdx(i); }}
+                          onClick={e => { e.stopPropagation(); if (goalColorPickerIdx===i) { setGoalColorPickerIdx(null); return; } const btn=goalColorBtnRefs.current[i]; if(btn){setGoalColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 136, 100));} setGoalColorPickerIdx(i); }}
                           onPointerDown={e => e.stopPropagation()}
                           title={t("chooseColor")}
                           aria-label={t("chooseColor")}
@@ -3244,7 +3244,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
                 transition={{ type:"spring", stiffness:420, damping:28 }}
                 onClick={e => e.stopPropagation()}
-                style={{ position:"fixed", top:goalColorPickerPos.top, left:goalColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate" }}
+                style={{ position:"fixed", top:goalColorPickerPos.top, left:goalColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate" }}
               >
                 <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setGoalColorPickerIdx(null)} />
                 <button onClick={() => handleGoalColorChange(goalColorPickerIdx, undefined)}
@@ -3364,7 +3364,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
                             transition={{ type:"spring", stiffness:420, damping:28 }}
                             onClick={e => e.stopPropagation()}
-                            style={{ position:"fixed", top:msEditColorPickerPos.top, left:msEditColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                            style={{ position:"fixed", top:msEditColorPickerPos.top, left:msEditColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate" }}
                           >
                             <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setMsEditColorPickerOpen(false)} />
                             <button onClick={() => { setMsEditColor(""); setMsEditColorPickerOpen(false); }}
@@ -3386,7 +3386,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           <div className="flex items-center gap-1.5" style={{ isolation:"isolate", marginLeft:2 }}>
                             <button
                               ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
-                              onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
+                              onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 136, 100)); } setMsEditColorPickerOpen(true); }}
                               title={t("chooseColor")}
                               style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(msEditColor) || "transparent", border: "none", boxShadow: msEditColor ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)" : "0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                               {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
@@ -3464,7 +3464,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
                   transition={{ type:"spring", stiffness:420, damping:28 }}
                   onClick={e => e.stopPropagation()}
-                  style={{ position:"fixed", top:newColorPickerPos.top, left:newColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                  style={{ position:"fixed", top:newColorPickerPos.top, left:newColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate" }}
                 >
                   <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setNewColorPickerOpen(false)} />
                   <button onClick={() => { setNewColor(""); setNewColorPickerOpen(false); }}
@@ -3486,7 +3486,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <div className="flex items-center gap-1.5" style={{ isolation:"isolate", marginLeft:2 }}>
                   <button
                     ref={newColorBtnRef}
-                    onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
+                    onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 136, 100)); } setNewColorPickerOpen(true); }}
                     title={t("chooseColor")}
                     style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(newColor) || "transparent", border: "none", boxShadow: newColor ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)" : "0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                     {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
@@ -3580,7 +3580,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
           initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
           transition={{ type:"spring", stiffness:420, damping:28 }}
           onClick={e => e.stopPropagation()}
-          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate", mixBlendMode:"normal" }}
+          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate", mixBlendMode:"normal" }}
         >
             {(() => {
               const entry = entries.find(e => e.id === colorPickerEntryId);
@@ -4155,7 +4155,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
           initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
           transition={{ type:"spring", stiffness:420, damping:28 }}
           onClick={e => e.stopPropagation()}
-          style={{ position:"fixed", top:draftColorPickerPos.top, left:draftColorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate" }}
+          style={{ position:"fixed", top:draftColorPickerPos.top, left:draftColorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate" }}
         >
           <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setDraftColorPickerOpen(false)} />
           <button onClick={() => { setDraftColor(null); setDraftColorPickerOpen(false); }}
@@ -4380,7 +4380,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     />
                     <button
                       ref={draftColorBtnRef}
-                      onClick={e => { e.stopPropagation(); if (draftColorPickerOpen) { setDraftColorPickerOpen(false); return; } const btn = draftColorBtnRef.current; if (btn) { setDraftColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setDraftColorPickerOpen(true); }}
+                      onClick={e => { e.stopPropagation(); if (draftColorPickerOpen) { setDraftColorPickerOpen(false); return; } const btn = draftColorBtnRef.current; if (btn) { setDraftColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 136, 100)); } setDraftColorPickerOpen(true); }}
                       title={t("chooseColor")}
                       style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:draftColor||"transparent", border:"none", boxShadow:draftColor?`0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)`:`0 0 0 1.5px ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                       {!draftColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background:isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
@@ -4403,7 +4403,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
                       transition={{ type:"spring", stiffness:420, damping:28 }}
                       onClick={e => e.stopPropagation()}
-                      style={{ position:"fixed", top:draftColorPickerPos.top, left:draftColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                      style={{ position:"fixed", top:draftColorPickerPos.top, left:draftColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate" }}
                     >
                       <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setDraftColorPickerOpen(false)} />
                       <button onClick={() => { setDraftColor(""); setDraftColorPickerOpen(false); }} title={t("noColor")}
@@ -4485,7 +4485,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           />
                           <button
                             ref={editColorBtnRef}
-                            onClick={e => { e.stopPropagation(); if (editColorPickerOpen) { setEditColorPickerOpen(false); return; } const btn = editColorBtnRef.current; if (btn) { setEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setEditColorPickerOpen(true); }}
+                            onClick={e => { e.stopPropagation(); if (editColorPickerOpen) { setEditColorPickerOpen(false); return; } const btn = editColorBtnRef.current; if (btn) { setEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 136, 100)); } setEditColorPickerOpen(true); }}
                             title={t("chooseColor")}
                             style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:editColor||"transparent", border:"none", boxShadow:editColor?"0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)":"0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                             {!editColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
@@ -4512,7 +4512,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }}
                             transition={{ type:"spring", stiffness:420, damping:28 }}
                             onClick={e => e.stopPropagation()}
-                            style={{ position:"fixed", top:editColorPickerPos.top, left:editColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:156, isolation:"isolate" }}
+                            style={{ position:"fixed", top:editColorPickerPos.top, left:editColorPickerPos.left, zIndex:300, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate" }}
                           >
                             <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setEditColorPickerOpen(false)} />
                             <button onClick={() => { setEditColor(""); setEditColorPickerOpen(false); }} title={t("noColor")}
@@ -4817,7 +4817,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
           initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
           transition={{ type:"spring", stiffness:420, damping:28 }}
           onClick={e => e.stopPropagation()}
-          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152, isolation:"isolate", mixBlendMode:"normal" }}
+          style={{ position:"fixed", top:colorPickerPos.top, left:colorPickerPos.left, zIndex:200, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136, isolation:"isolate", mixBlendMode:"normal" }}
         >
           <button onClick={() => setGoalColor(colorPickerGoalId, undefined)}
             title={t("noColor")}
@@ -5098,7 +5098,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       initial={{ opacity:0, scale:0.94, y:-4 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:-4 }}
                       transition={{ type:"spring", stiffness:420, damping:28 }}
                       onClick={e => e.stopPropagation()}
-                      style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:50, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:152 }}
+                      style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:50, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexWrap:"wrap", gap:5, width:136 }}
                     >
                       {APPLE_COLORS.map(ac => {
                         const selected = colorKey === ac.key;
