@@ -2066,7 +2066,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   s.textContent = `@keyframes lc-fire-pulse {
     0%,100%{filter:drop-shadow(0 0 3px rgba(255,100,0,0.40)) drop-shadow(0 0 8px rgba(255,70,0,0.22));}
     50%{filter:drop-shadow(0 0 7px rgba(255,140,0,0.70)) drop-shadow(0 0 18px rgba(255,80,0,0.40));}
-  }.lc-fire-tile{box-shadow:0 0 0 2px #ff7722;animation:lc-fire-pulse 4s ease-in-out infinite;will-change:filter;}
+  }.lc-fire-tile{box-shadow:0 0 0 2px #ff7722;animation:lc-fire-pulse 12s ease-in-out infinite;will-change:filter;}
   .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){
