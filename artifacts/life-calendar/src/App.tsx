@@ -1917,7 +1917,7 @@ function BlocksRenderer({
                           {/* MIDDLE COLUMN — day tiles, fills remaining space */}
                           <div className="grid grid-cols-7 gap-1 sm:gap-3" style={{ flex:1, minWidth:0, justifyContent:"center" }}>
                             {days.map((d, di) => (
-                              <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
+                              <DayTile key={`grid-${dateKey(d)}`} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 dayGoals={dayGoalsMap[dateKey(d)]}
                                 accentColor={effectiveQ.border}
@@ -2125,7 +2125,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
                    : accentColor;
   const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
     isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
-  const dateStr = date.toISOString().slice(0, 10);
+  const dateStr = dateKey(date);
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
       {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
