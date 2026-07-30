@@ -2195,11 +2195,15 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const ringAccent = (dark && luminanceOf(accentColor) < 0.12) ? "#ffffff" : accentColor;
   // isPaleAccent (white) → explicit dark text rather than mix-blend-mode trickery, which can
   // be unreliable across `contain:paint` / `isolation:isolate` boundaries in Chrome.
+  // In light mode, today's tile background is var(--surface) (light/white) and the accent
+  // fill only covers the bottom portion — white ("onGreen") text would be invisible on the
+  // unfilled surface. Use "muted" (var(--text), dark in light mode) so the label is readable
+  // at any fill level; all normal accents are bright enough to keep dark text legible on fill.
   const labelTone: "onGreen" | "invertPale" | "darkOnLight" | "muted" | "auto" =
     isPast
       ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "onGreen")
       : isToday
-      ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "onGreen")
+      ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : dark ? "onGreen" : "muted")
       : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (() => {
     const onFill = isPast || isToday;
