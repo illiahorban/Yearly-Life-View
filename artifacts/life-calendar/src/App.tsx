@@ -2344,7 +2344,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:"var(--surface)", boxShadow: ringAccent === "#ffffff" ? undefined : (hovered ? `0 4px 18px ${ringAccent}47` : `0 4px 14px ${ringAccent}2e`), color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:"var(--surface)", color:"var(--text)" }}>
             {msBar}
             {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
                 the SAME stacking context as the text below — `isolation: isolate` on the
