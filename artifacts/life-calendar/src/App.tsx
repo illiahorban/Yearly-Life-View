@@ -2313,7 +2313,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
-          <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+          <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:accentColor, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <div style={{ flex:1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
