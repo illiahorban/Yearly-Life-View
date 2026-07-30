@@ -2127,10 +2127,17 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isPaleAccent = luminanceOf(accentColor) > 0.80;    // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
   const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
-  // Use the accent colour directly for the today ring — no inversion.
-  const ringAccent = accentColor;
-  const labelTone: "onGreen" | "invertPale" | "muted" | "auto" =
-    isPast ? (needsInvertText ? "invertPale" : "onGreen") : isToday ? (needsInvertText ? "invertPale" : "auto") : "muted";
+  // Black in dark mode: its near-black accent colour is invisible as a ring on a dark surface.
+  // Use the same soft border colour as ordinary (non-today) day tiles so it visually matches them.
+  const ringAccent = (dark && luminanceOf(accentColor) < 0.12) ? "var(--border-soft)" : accentColor;
+  // isPaleAccent (white) → explicit dark text rather than mix-blend-mode trickery, which can
+  // be unreliable across `contain:paint` / `isolation:isolate` boundaries in Chrome.
+  const labelTone: "onGreen" | "invertPale" | "darkOnLight" | "muted" | "auto" =
+    isPast
+      ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "onGreen")
+      : isToday
+      ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "auto")
+      : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (
     <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
       {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
@@ -2380,21 +2387,20 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 
-function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"invertPale"|"muted"|"auto"|"gold"|"goldBright"|"silver"|"silverBright" }) {
+function Label({ number, month, tone }: { number: number; month: string; tone: "onGreen"|"invertPale"|"darkOnLight"|"muted"|"auto"|"gold"|"goldBright"|"silver"|"silverBright" }) {
   const isGold = tone === "gold";
   const isGoldBright = tone === "goldBright";
   const isSilver = tone === "silver";
   const isSilverBright = tone === "silverBright";
   const isOnGreen = tone === "onGreen";
-  // "invertPale" is used for pale accents (e.g. "White") where a single flat text colour
-  // can never work: the tile is part light fill / part theme surface, and which part is
-  // which changes with fill % and light/dark mode. Instead of guessing a colour, we paint
-  // the text pure white and let `mix-blend-mode: difference` invert it per-pixel against
-  // whatever sits directly underneath — dark backdrop -> stays light, light fill -> flips
-  // to near-black — so the boundary is always correct, at any fill level.
+  // "invertPale" is used for pale accents where a single flat text colour can't win reliably
+  // (mix-blend-mode: difference). "darkOnLight" is used specifically for the white quarter
+  // accent (tileFill ≈ #e0e0e5): a pale background that needs explicit dark ink rather than
+  // the blend-mode trick (which can misbehave across contain:paint / isolation:isolate).
   const isInvertPale = tone === "invertPale";
-  const nc = isOnGreen ? "white" : isInvertPale ? "#ffffff" : "var(--text)";
-  const mc = isOnGreen ? "rgba(255,255,255,0.85)" : isInvertPale ? "#ffffff" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
+  const isDarkOnLight = tone === "darkOnLight";
+  const nc = isOnGreen ? "white" : isInvertPale ? "#ffffff" : isDarkOnLight ? "#18181b" : "var(--text)";
+  const mc = isOnGreen ? "rgba(255,255,255,0.85)" : isInvertPale ? "#ffffff" : isDarkOnLight ? "rgba(24,24,27,0.65)" : tone==="muted" ? "var(--text-tertiary)" : "var(--text-secondary)";
   // solid colours — work on any background without gradient-clip artefacts
   const goldCol  = "#e8b338";        // warm gold, readable on dark & light
   const silverCol = "#9e9eae";       // steel silver, readable on light/dark
