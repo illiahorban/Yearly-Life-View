@@ -1,0 +1,41 @@
+Я нашел точную причину бага с точками целей (microMarkers) при добавлении целей через NoteModal!
+
+ПРИЧИНА:
+В компоненте DayTile массив точек рендерится через индекс `key={i}`:
+`{Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => ... <svg key={i} ...`
+Когда в NoteModal вызывается `handleGoalAdd`, функция `onDayGoalsChange(g)` МГНОВЕННО обновляет React State в App, вызывая перерендер сетки прямо во время взаимодействия с модалкой. Из-за обычного индекса `key={i}` React делает неверный reconciliation DOM-узлов SVG, что приводит к зависанию и искажению точек на экране.
+
+ПОЖАЛУЙСТА, СДЕЛАЙ СЛЕДУЮЩИЕ 2 ИСПРАВЛЕНИЯ В КОДЕ:
+
+1. В компоненте DayTile (в блоке microMarkers):
+Сформируй стабильный уникальный ключ для каждой точки SVG, скомбинировав дату и состояние цели, а не просто индекс `i`.
+
+Замени генерацию SVG-точек на следующий код:
+
+```tsx
+const dateStr = date.toISOString().slice(0, 10);
+const microMarkers = dayGoals && dayGoals.count > 0 ? (
+  <div className="lc-goal-markers"
+    style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
+    {Array.from({ length: Math.min(dayGoals.count, 10) }, (_, i) => {
+      const done = dayGoals.done[i] ?? false;
+      const isExtra = i >= 7;
+      const markerKey = `${dateStr}-marker-${i}-${done}`;
+      return done ? (
+        <svg key={markerKey} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none"
+          className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`}
+          style={{ flexShrink:0, overflow:"hidden" }}>
+          <circle cx="3" cy="3" r="3" fill={isPast ? "rgba(255,255,255,0.92)" : "#34c759"} />
+          <path d="M1.5 3l1 1 2-2" stroke={isPast ? accentColor : "white"}
+            strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ) : (
+        <svg key={markerKey} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none"
+          className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`}
+          style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
+          <circle cx="3" cy="3" r="2.5" stroke="var(--text-tertiary)" strokeWidth="0.9"/>
+        </svg>
+      );
+    })}
+  </div>
+) : null;
