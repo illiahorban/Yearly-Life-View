@@ -2203,8 +2203,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (() => {
     const onFill = isPast || isToday;
-    const showPlus = dayGoals.count > 10;
-    const dotCount = showPlus ? 9 : dayGoals.count;
+    const showPlus = dayGoals.count > 9;
+    const dotCount = showPlus ? 8 : dayGoals.count;
     const allDone = showPlus
       ? Array.from({ length: dayGoals.count }, (_, i) => dayGoals.done[i] ?? false).every(Boolean)
       : false;
@@ -2222,17 +2222,14 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
         </svg>
       );
     });
-    const plusDot = showPlus ? (allDone ? (
-      <svg key="plus" width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className="lc-goal-dot lc-goal-dot-extra" style={{ flexShrink:0, overflow:"hidden" }}>
-        <circle cx="3" cy="3" r="3" fill={onFill ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
-        <path d="M3 1.5v3M1.5 3h3" stroke={onFill ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round"/>
+    const plusColor = allDone
+      ? (onFill ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759")
+      : (onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)");
+    const plusDot = showPlus ? (
+      <svg key="plus" width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className="lc-goal-dot lc-goal-dot-extra" style={{ flexShrink:0, overflow:"hidden", opacity: allDone ? 1 : 0.5 }}>
+        <path d="M3 1v4M1 3h4" stroke={plusColor} strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
-    ) : (
-      <svg key="plus" width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className="lc-goal-dot lc-goal-dot-extra" style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
-        <circle cx="3" cy="3" r="2.5" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1.5"/>
-        <path d="M3 1.8v2.4M1.8 3h2.4" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.85)") : "var(--text-tertiary)"} strokeWidth="1" strokeLinecap="round"/>
-      </svg>
-    )) : null;
+    ) : null;
     return (
       <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
         {dots}{plusDot}
