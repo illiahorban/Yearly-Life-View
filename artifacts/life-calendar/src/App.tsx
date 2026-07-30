@@ -2137,7 +2137,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
           </svg>
         ) : (
           <svg key={i} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
-            <circle cx="3" cy="3" r="2.5" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="1.1"/>
+            <circle cx="3" cy="3" r="2.5" stroke={onFill ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="1.2"/>
           </svg>
         );
       })}
