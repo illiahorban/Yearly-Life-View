@@ -2182,7 +2182,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   // Cleanup long-press timer on unmount to prevent setState after unmount
   useEffect(() => () => { if (holdTimerRef.current !== null) window.clearTimeout(holdTimerRef.current); }, []);
 
-  if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
+  if (isOut) return <div style={{ ...base, background:"transparent", border:"1px solid var(--border-soft)", opacity:0.25, cursor:"default" }} />;
 
   const hasEvents = dayMilestones.length > 0;
   const noteDot = hasNote ? (
@@ -2405,7 +2405,7 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
   const numStyle: React.CSSProperties = { color: numColor, letterSpacing:"-0.02em", ...(isInvertPale ? { mixBlendMode: "difference" } : null) };
   const monStyle: React.CSSProperties = { color: monColor, ...(isInvertPale ? { mixBlendMode: "difference", opacity: 0.85 } : null) };
   return (
-    <div className="flex flex-col items-center justify-center leading-none select-none">
+    <div className="flex flex-col items-center justify-center leading-none select-none" style={{ transform:"translateZ(0)", willChange:"transform" }}>
       <div className="text-[15px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
       <div className="mt-0.5 sm:mt-1 text-[9px] sm:text-[13px] font-medium tracking-widest" style={monStyle}>{month}</div>
     </div>
