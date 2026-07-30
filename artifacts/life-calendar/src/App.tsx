@@ -2199,7 +2199,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     isPast
       ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "onGreen")
       : isToday
-      ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "auto")
+      ? (isPaleAccent ? "darkOnLight" : needsInvertText ? "invertPale" : "onGreen")
       : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (() => {
     const onFill = isPast || isToday;
