@@ -67,7 +67,6 @@ abbr,
   text-decoration: none !important;
   -webkit-text-decoration: none !important;
   text-decoration-style: unset !important;
-  border-bottom: none !important;
 }
 
 /* Prevent iOS from underlining detected phone numbers / dates site-wide */
