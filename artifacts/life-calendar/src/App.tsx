@@ -1628,6 +1628,7 @@ function App() {
               const keys = new Set(blockWeeks.flatMap(w => w.days).map(d => dateKey(d)));
               setNotes(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
               setBlockGoals(prev => { const n = { ...prev }; delete n[blockId]; return n; });
+              setDayGoals(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
               setMilestones(prev => prev.filter(m => !keys.has(m.date)));
             }}
           />
