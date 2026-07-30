@@ -2312,7 +2312,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
-          <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
+          <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:accentColor, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <div style={{ flex:1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
@@ -2336,7 +2336,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
                 outer tile is what scopes mix-blend-mode, and any nested element that sets
                 its own z-index would create a second, isolated stacking context and cut
                 the text off from seeing this layer entirely. */}
-            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, borderRadius:"0 0 10.5px 10.5px" }} />
+            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor, borderRadius:"0 0 10.5px 10.5px" }} />
             {/* Text layer: position:absolute WITHOUT an explicit z-index. Paint order inside
                 a stacking context follows DOM order, so being declared after the fill layer
                 above is enough to sit visually on top — no z-index needed, and adding one
@@ -4057,7 +4057,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                     setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false); setShowAddForm(false);
                   }}
                   disabled={!draftText.trim()}
-                  style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: draftText.trim() ? "linear-gradient(135deg,#5ed47b 0%,#34c759 100%)" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), color: draftText.trim() ? "white" : "var(--text-tertiary)", fontWeight: 600, fontSize: 13, cursor: draftText.trim() ? "pointer" : "default", fontFamily: "inherit", whiteSpace: "nowrap" as const, transition: "background 150ms, color 150ms" }}>
+                  style={{ height: 34, paddingInline: 16, borderRadius: 9, border: "none", background: draftText.trim() ? "#34c759" : (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"), color: draftText.trim() ? "white" : "var(--text-tertiary)", fontWeight: 600, fontSize: 13, cursor: draftText.trim() ? "pointer" : "default", fontFamily: "inherit", whiteSpace: "nowrap" as const, transition: "background 150ms, color 150ms" }}>
                   {t("add")}
                 </button>
               </div>
@@ -5265,7 +5265,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
           <button type="button" onClick={onClose} className="text-[13px] font-medium"
             style={{ padding:"8px 14px", borderRadius:10, color:"var(--text-secondary)", background:"transparent" }}>{t("cancel")}</button>
           <button type="button" onClick={() => valid && onSave({ blocks })} disabled={!valid} className="text-[13px] font-semibold"
-            style={{ padding:"8px 16px", borderRadius:10, color:"white", background: valid?"linear-gradient(180deg,#5ed47b 0%,#34c759 100%)":"rgba(128,128,128,0.2)", boxShadow: valid?"0 1px 2px rgba(40,167,69,0.25)":"none", cursor: valid?"pointer":"not-allowed" }}>
+            style={{ padding:"8px 16px", borderRadius:10, color:"white", background: valid?"#34c759":"rgba(128,128,128,0.2)", boxShadow: valid?"0 1px 2px rgba(40,167,69,0.25)":"none", cursor: valid?"pointer":"not-allowed" }}>
             {t("saveSprints")}
           </button>
         </div>
