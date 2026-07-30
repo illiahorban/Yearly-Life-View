@@ -2127,7 +2127,10 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isPaleAccent = luminanceOf(accentColor) > 0.80;    // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
   const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
-  const ringAccent = accentColor;
+  // When the accent is near-black in dark mode the ring is invisible (black-on-black).
+  // Use white so the today outline is clearly legible — same principle iOS uses for
+  // dark-coloured elements: give them a light border so they read on a dark surface.
+  const ringAccent = (dark && luminanceOf(accentColor) < 0.12) ? "#ffffff" : accentColor;
   // isPaleAccent (white) → explicit dark text rather than mix-blend-mode trickery, which can
   // be unreliable across `contain:paint` / `isolation:isolate` boundaries in Chrome.
   const labelTone: "onGreen" | "invertPale" | "darkOnLight" | "muted" | "auto" =
