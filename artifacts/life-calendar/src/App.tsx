@@ -2335,7 +2335,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
                 outer tile is what scopes mix-blend-mode, and any nested element that sets
                 its own z-index would create a second, isolated stacking context and cut
                 the text off from seeing this layer entirely. */}
-            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor, borderRadius:"0 0 10.5px 10.5px" }} />
+            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, borderRadius:"0 0 10.5px 10.5px" }} />
             {/* Text layer: position:absolute WITHOUT an explicit z-index. Paint order inside
                 a stacking context follows DOM order, so being declared after the fill layer
                 above is enough to sit visually on top — no z-index needed, and adding one
