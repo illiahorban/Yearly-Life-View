@@ -2203,8 +2203,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       : "muted";
   const microMarkers = dayGoals && dayGoals.count > 0 ? (() => {
     const onFill = isPast || isToday;
-    const showPlus = dayGoals.count > 9;
-    const dotCount = showPlus ? 8 : dayGoals.count;
+    const showPlus = dayGoals.count > 8;
+    const dotCount = showPlus ? 7 : dayGoals.count;
     const allDone = showPlus
       ? Array.from({ length: dayGoals.count }, (_, i) => dayGoals.done[i] ?? false).every(Boolean)
       : false;
