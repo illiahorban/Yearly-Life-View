@@ -475,7 +475,7 @@ function hexSaturate(hex: string, factor: number) {
 function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   const ac = APPLE_COLORS.find(c => c.key === meta.colorKey) ?? APPLE_COLORS[0]!;
   const rawHex = dark ? ac.dark : ac.light;
-  const hex = (!dark) ? hexSaturate(rawHex, LIGHT_SAT_FACTOR) : rawHex;
+  const hex = rawHex;
   const [r,g,b] = hexToRgb(hex);
   const isAchromaticDark = meta.colorKey === "black" || meta.colorKey === "grey";
   // Adjust text color for low-contrast hues in light mode. Yellow is exempt: text/icons use
@@ -1263,7 +1263,7 @@ function App() {
     const block = config.quarters[qi]!.blocks.find(b => b.id === editGoalsBlockId);
     if (block?.color) {
       const ac = APPLE_COLORS.find(c => c.key === block.color);
-      if (ac) return dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR);
+      if (ac) return dark ? ac.dark : ac.light;
     }
     return resolvedQuarters[qi]?.border;
   }, [editGoalsBlockId, config, resolvedQuarters, dark]);
@@ -1272,11 +1272,10 @@ function App() {
     setQuarterMeta(prev => prev.map((m, i) => i===qi ? { ...m, ...patch } : m));
 
   // Theme-dependent surface values
-  const SAT_FACTOR = 1.2; // increase saturation in light mode by 20%
-  const headerBg = dark ? "rgba(22,22,24,0.90)" : saturateRgbaString("rgba(245,245,247,0.88)", SAT_FACTOR);
-  const cardBg   = dark ? "rgba(255,255,255,0.06)" : saturateRgbaString("rgba(255,255,255,0.55)", SAT_FACTOR);
-  const modalBg  = dark ? "rgba(30,30,32,0.96)" : saturateRgbaString("rgba(255,255,255,0.93)", SAT_FACTOR);
-  const overlayBg = dark ? "rgba(255,255,255,0.08)" : saturateRgbaString("rgba(0,0,0,0.05)", SAT_FACTOR);
+  const headerBg = dark ? "rgba(22,22,24,0.90)" : "rgba(245,245,247,0.88)";
+  const cardBg   = dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)";
+  const modalBg  = dark ? "rgba(30,30,32,0.96)" : "rgba(255,255,255,0.93)";
+  const overlayBg = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
 
   return (
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
@@ -3331,7 +3330,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
               >
                 <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setGoalColorPickerIdx(null)} />
                 <ColorSwatchGrid
-                  colors={APPLE_COLORS.map(ac => ({ key:ac.key, hex: dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR), label:ac.label }))}
+                  colors={APPLE_COLORS.map(ac => ({ key:ac.key, hex: dark ? ac.dark : ac.light, label:ac.label }))}
                   selected={goalsDraft.colors?.[goalColorPickerIdx] ?? null}
                   onSelect={(hex) => handleGoalColorChange(goalColorPickerIdx, hex)}
                   onClear={() => handleGoalColorChange(goalColorPickerIdx, undefined)}
@@ -5127,8 +5126,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                       style={{ position:"absolute", top:"calc(100% + 7px)", left:0, zIndex:50, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:8, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", width:136 }}
                     >
                       <ColorSwatchGrid
-                        colors={APPLE_COLORS.map(ac => ({ key:ac.key, hex: dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR), label:ac.label }))}
-                        selected={(() => { const ac = APPLE_COLORS.find(a => a.key === colorKey); return ac ? (dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR)) : null; })()}
+                        colors={APPLE_COLORS.map(ac => ({ key:ac.key, hex: dark ? ac.dark : ac.light, label:ac.label }))}
+                        selected={(() => { const ac = APPLE_COLORS.find(a => a.key === colorKey); return ac ? (dark ? ac.dark : ac.light) : null; })()}
                         onSelect={(_hex, key) => { onColorChange(key as typeof APPLE_COLORS[number]["key"]); setQuarterColorOpen(false); }}
                         dark={dark}
                       />
@@ -5167,7 +5166,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 const bAc = b.color ? APPLE_COLORS.find(c => c.key === b.color) : null;
                 const bHex = bAc ? (dark ? bAc.dark : bAc.light) : (dark ? quarter.darkSoft : quarter.soft);
                 // Dot always shows the vivid colour — the block's own if set, else the quarter's fill
-                const bDotHex = bAc ? (dark ? bAc.dark : hexSaturate(bAc.light, LIGHT_SAT_FACTOR)) : quarter.border;
+                const bDotHex = bAc ? (dark ? bAc.dark : bAc.light) : quarter.border;
                 // Tint the sprint row itself using the same colour logic as note/event
                 // cards (getEventColors), so choosing a sprint colour visibly colours
                 // its row here, in the sprint distribution modal.
@@ -5268,8 +5267,8 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                   }}
                 >
                   <ColorSwatchGrid
-                    colors={APPLE_COLORS.map(ac => ({ key:ac.key, hex: dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR), label:ac.label }))}
-                    selected={(() => { if (!activeColorPickerBlock.color) return null; const ac = APPLE_COLORS.find(a => a.key === activeColorPickerBlock.color); return ac ? (dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR)) : null; })()}
+                    colors={APPLE_COLORS.map(ac => ({ key:ac.key, hex: dark ? ac.dark : ac.light, label:ac.label }))}
+                    selected={(() => { if (!activeColorPickerBlock.color) return null; const ac = APPLE_COLORS.find(a => a.key === activeColorPickerBlock.color); return ac ? (dark ? ac.dark : ac.light) : null; })()}
                     onSelect={(_hex, key) => { update(activeColorPickerBlock.id, { color: key as typeof APPLE_COLORS[number]["key"] }); setColorPickerAnchor(null); }}
                     onClear={() => { update(activeColorPickerBlock.id, { color: undefined }); setColorPickerAnchor(null); }}
                     clearLabel={t("quarterDefault")}
