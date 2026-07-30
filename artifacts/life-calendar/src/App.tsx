@@ -2128,8 +2128,9 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   const isDeepAccent = luminanceOf(accentColor) < 0.3;     // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
   // Black in dark mode: its near-black accent colour is invisible as a ring on a dark surface.
-  // Use the same soft border colour as ordinary (non-today) day tiles so it visually matches them.
-  const ringAccent = (dark && luminanceOf(accentColor) < 0.12) ? "var(--border-soft)" : accentColor;
+  // Mirror white-in-light-mode: use a visible gray ring (~rgba(255,255,255,0.32)) so today
+  // stands out the same way white's #e0e0e5 ring does in light theme.
+  const ringAccent = (dark && luminanceOf(accentColor) < 0.12) ? "rgba(255,255,255,0.32)" : accentColor;
   // isPaleAccent (white) → explicit dark text rather than mix-blend-mode trickery, which can
   // be unreliable across `contain:paint` / `isolation:isolate` boundaries in Chrome.
   const labelTone: "onGreen" | "invertPale" | "darkOnLight" | "muted" | "auto" =
