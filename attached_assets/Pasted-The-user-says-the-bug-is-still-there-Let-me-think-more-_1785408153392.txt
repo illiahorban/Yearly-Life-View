@@ -1,0 +1,75 @@
+The user says the bug is still there. Let me think more carefully about what's causing it.
+The issue: on mobile, when adding a day goal, dots appear outside/below the tile boundaries. They disappear on reload.
+I previously added overflow: hidden to the microMarkers wrapper divs and removed padding from .lc-goal-markers on mobile. But the bug persists.
+Let me think about this differently. The fact that the dots disappear on reload is really key. During a session when goals are added, some rendering state causes the dots to appear outside the tile. After reload with the same data, they don't appear outside.
+So the difference is timing: when I add a goal while the modal is open, the tile re-renders with new data while the modal is still visible. But after a reload, the tile renders with the same goal data from the start with no modal present. The modal being open during the re-render—and potentially the keyboard being visible on mobile—might be affecting the viewport or layout calculations in a way that causes the dots to overflow.
+I'm wondering if the real culprit is the CSS style injection happening at module load time. The code checks whether the style element already exists in the DOM before injecting it, but during Vite's hot module reloading in development, that element persists from the previous load, so the condition might be preventing the styles from being properly re-applied. padding override for mobile) 2. User adds a goal → tile re-renders → dots appear outside tile 3. User reloads → style injected again → dots appear correctly inside tile
+So the CSS fix should work in production, but maybe the issue isn't actually about padding. Looking at the screenshot more carefully, the dots are appearing outside tiles that just had goals added to them - specifically the ones for today and future dates. The older tiles without goals don't show this problem, which suggests something about how the dots are positioned when goals are newly rendered.
+Actually, I think I've been misinterpreting this. The microMarkers are rendering inside the tile at the bottom, but on these tiny 40x40px tiles, the dots naturally sit at the very bottom edge, which visually reads as being "below" the tile rather than inside it. The dots aren't actually escaping the tile - they're just positioned at the bottom of the tile's content area. But the user's description about them disappearing on reload doesn't quite match this explanation, so let me reconsider what they actually meant. and the dots are appearing in the gap between tile rows, not inside the tiles themselves. This suggests they might be rendered as a separate element positioned absolutely or fixed, rather than as part of the tile's flex layout. Let me trace through the microMarkers rendering more carefully to understand where these dots are actually being placed in the DOM. The confetti animation only triggers when all goals are completed, which isn't the case here, so that's not it. Toasts would be much larger anyway. I'm thinking the dots might actually be the microMarkers rendering correctly inside the tiles during the session, but something about how they're positioned or styled is making them appear outside the tile boundaries.
+Wait, let me reconsider the user's complaint more carefully. They're saying dots appear when they add a day goal, and then disappear on reload. So the dots are the microMarkers indicators, and the real issue might be that the goals aren't being saved properly—the dots appear temporarily during the session but vanish when the page reloads because the goals themselves aren't persisting. data isn't persisting to localStorage. I'm checking the save mechanism—there's a useState hook that initializes from localStorage and a useEffect that saves whenever dayGoals changes, which looks correct. But the lsSet function might be failing silently if localStorage is unavailable, blocked in private mode, or full, or there could be an issue with how the DayGoals type is being serialized.
+Looking at how goals are stored, the colors array can contain undefined values, and when JSON.stringify serializes those, they become null. When parsed back, they're null instead of undefined, which could cause mismatches in how the data is read.
+But wait—the fact that the dots completely disappear on reload suggests the data isn't being persisted at all, not just being saved incorrectly. Let me think about where the save could be failing. The state updates look correct in-memory during the session, but maybe the useEffect that triggers the save is being skipped somehow. Could be that lsSet is throwing silently, or the component unmounts before the effect runs, or there's something with concurrent rendering interfering.
+Actually, I think the real issue might be a race condition: when the user adds goals in the modal and closes it without explicitly saving, the state updates via onDayGoalsChange and should trigger the useEffect to persist. But if the component unmounts before that effect fires, the save never happens.
+Or there's a key mismatch problem—maybe dateKey is generating different values between when goals are saved and when they're loaded back, so the app is writing to one localStorage key but reading from another.
+Let me take a fresh look — I want to understand the actual root cause by examining the dateKey function and localStorage read/write path.
+
+Show less
+
+Searched for "function dateKey|const …"
+
+$ grep -n "function dateKey\|const dateKey\|dateKey =" artifacts/life-calendar/src/App.tsx | head -5
+
+
+
+Searched for "function lsb|const ls |…"
+
+$ grep -n "function ls\b\|const ls \|lsSet\|localStorage" artifacts/life-calendar/src/App.tsx | head -20
+
+
+Investigating persistent data rendering issue
+
+Investigating persistent data rendering issue
+Let me re-read the user's message. They said "К сожалению проблема никуда не ушла" - the problem hasn't gone away. And they're asking me to just fix the bug without changing functionality or design.
+Let me re-examine what the actual problem is. The user says dots appear when adding a goal, and disappear on reload.
+Let me look at the dateKey function and also really understand the full data flow. Let me look at what dateKey does and whether there's a timing issue.
+
+Opened App.tsx
+
+Searched for "openNote|setOpenNote|on…"
+
+$ grep -n "openNote\|setOpenNote\|onNoteOpen" artifacts/life-calendar/src/App.tsx | head -20
+
+
+Diagnosing UI persistence error
+
+Diagnosing UI persistence error
+Let me look at what triggers setDayGoals({}) and trace the full data flow more carefully.
+
+Show less
+
+Opened App.tsx
+
+Searched for "setDayGoals|dayGoals.*{}"
+Investigating persistent UI bugs
+
+Investigating persistent UI bugs
+Let me examine the full week row layout and lc-side-col CSS to understand the actual mobile tile dimensions.
+
+
+
+
+
+
+6 actions
+I need to look at this fresh. The inner div has overflow: hidden, yet dots escape on mobile Chrome. This matches a known Chrome mobile rendering quirk where overflow: hidden on a position: absolute; inset: 0 child inside an aspect-ratio grid item can fail to clip during a re-render triggered by state change. The outer tile div is overflow: visible — that's the actual escape hatch.
+The fix: overflow: hidden on the outer tile base div itself (a concrete grid item, not absolutely positioned). The only side-effect is the fire-glow box-shadow gets clipped — but I can preserve it by switching the glow to outline (which is never clipped by overflow: hidden).
+
+
+2 actions
+overflow: hidden on the inner absolutely-positioned divs is failing on Chrome mobile — a known rendering quirk with inset: 0 + aspect-ratio grid items. The safe fix without touching the fire glow at all: add clipPath: "inset(0 round 12px)" to those same inner divs. clip-path is a different clipping pipeline in Chrome's compositor and is not affected by the same bug.
+
+
+
+
+4 actions
+Now I'll add clipPath to all three inner divs in parallel:
