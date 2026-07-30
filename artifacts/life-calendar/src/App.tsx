@@ -843,7 +843,7 @@ function App() {
   }, [yearPickerOpen]);
 
   // Dark mode
-  const [dark, setDark] = useState<boolean>(() => ls<boolean>("lifeCalendar:darkMode", true));
+  const [dark, setDark] = useState<boolean>(() => ls<boolean>("lifeCalendar:darkMode", false));
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
