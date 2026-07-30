@@ -143,7 +143,8 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     year1:"year", yearN:"years", month1:"month", monthN:"months", day1:"day", dayN:"days",
-    yr:"yr", mo:"mo", wk:"wk", hr:"hr", min:"min", sec:"sec", remaining:"remaining", born:"Born", age:"Age",
+    yr:"yr", mo:"mo", wk:"wk", hr:"hr", min:"min", sec:"sec", remaining:"remaining", remainingLabel:"Remaining:", born:"Born", age:"Age",
+    hour1:"hour", hourN:"hours", minute1:"minute", minuteN:"minutes", second1:"second", secondN:"seconds",
     sprintConfig:"Sprint configuration", sprintConfigDescription:"Group the 13 weeks of the quarter into sprints.", saveSprints:"Save sprints", addSprint:"Add sprint",
     looksGood:"Looks good", unassigned:"unassigned", over:"over", total:"Total",
     q1:"Q1", q2:"Q2", q3:"Q3", q4:"Q4", todayCountdown:"Today!", daysShort:"d",
@@ -216,7 +217,8 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     year1:"год", year2:"года", year5:"лет", month1:"месяц", month2:"месяца", month5:"месяцев", day1:"день", day2:"дня", day5:"дней",
-    yr:"лет", mo:"мес", wk:"нед", hr:"ч", min:"мин", sec:"с", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
+    yr:"лет", mo:"мес", wk:"нед", hr:"ч", min:"мин", sec:"с", remaining:"осталось", remainingLabel:"Осталось:", born:"Рождён(а)", age:"Возраст",
+    hour1:"час", hour2:"часа", hour5:"часов", minute1:"минута", minute2:"минуты", minute5:"минут", second1:"секунда", second2:"секунды", second5:"секунд",
     sprintConfig:"Настройка спринтов", sprintConfigDescription:"Сгруппируйте 13 недель квартала в спринты.", saveSprints:"Сохранить", addSprint:"Спринт",
     looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
     q1:"К1", q2:"К2", q3:"К3", q4:"К4", todayCountdown:"Сегодня!", daysShort:"д",
@@ -764,6 +766,15 @@ function pluralDayStreak(n: number, lang: string): string {
   if (mod10 === 1 && mod100 !== 11) return `${n} день подряд`;
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} дня подряд`;
   return `${n} дней подряд`;
+}
+
+/** Generic plural helper: k1=singular, k2=few (ru), k5=many (ru) / kN=plural (en). */
+function pluralCount(n: number, lang: string, t: (k: string) => string, k1: string, k2: string, k5: string): string {
+  if (lang !== "ru") return `${n} ${n === 1 ? t(k1) : t(k5)}`;
+  const m10 = n % 10, m100 = n % 100;
+  const one = m10 === 1 && m100 !== 11;
+  const few = m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20);
+  return `${n} ${one ? t(k1) : few ? t(k2) : t(k5)}`;
 }
 
 function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, selEnd: number, sprintLabel: string): QuarterConfig {
@@ -5670,17 +5681,17 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                   {t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
                 </div>
                 {(remYears > 0 || remMonths > 0 || remWeeks > 0 || remDays > 0 || remHours > 0 || remMinutes > 0 || remSeconds > 0) && (
-                  <div className="mt-1 text-[11px] tabular-nums leading-snug flex flex-wrap gap-x-2" style={{ color:"var(--text-tertiary)" }}>
+                  <div className="mt-1 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
+                    <div style={{ marginBottom: 2 }}>{t("remainingLabel")}</div>
                     <span style={{ color: LIFE_ACCENT, fontWeight: 600 }}>
-                      {remYears > 0 && <>{remYears} {t("yr")} </>}
-                      {remMonths > 0 && <>{remMonths} {t("mo")} </>}
-                      {remWeeks > 0 && <>{remWeeks} {t("wk")} </>}
-                      {remDays > 0 && <>{remDays} {t("daysShort")} </>}
-                      {remHours > 0 && <>{remHours} {t("hr")} </>}
-                      {remMinutes > 0 && <>{remMinutes} {t("min")} </>}
-                      <>{String(remSeconds).padStart(2,"0")} {t("sec")}</>
+                      {remYears > 0 && <>{pluralCount(remYears, lang, t, "year1", "year2", "year5")} </>}
+                      {remMonths > 0 && <>{pluralCount(remMonths, lang, t, "month1", "month2", "month5")} </>}
+                      {remWeeks > 0 && <>{pluralCount(remWeeks, lang, t, "week", "week2", "week5")} </>}
+                      {remDays > 0 && <>{pluralCount(remDays, lang, t, "day1", "day2", "day5")} </>}
+                      {remHours > 0 && <>{pluralCount(remHours, lang, t, "hour1", "hour2", "hour5")} </>}
+                      {remMinutes > 0 && <>{pluralCount(remMinutes, lang, t, "minute1", "minute2", "minute5")} </>}
+                      <>{pluralCount(remSeconds, lang, t, "second1", "second2", "second5")}</>
                     </span>
-                    <span>{t("remaining")}</span>
                   </div>
                 )}
               </div>
