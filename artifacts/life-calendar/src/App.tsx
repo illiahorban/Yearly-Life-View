@@ -1720,7 +1720,7 @@ function App() {
 function IconButton({ children, onClick, title, bg, color }: { children: React.ReactNode; onClick: () => void; title: string; bg: string; color?: string }) {
   return (
     <button type="button" onClick={onClick} title={title}
-      style={{ width:30, height:30, borderRadius:8, background:bg, border:"1px solid var(--border-soft)", color: color ?? "var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}
+      style={{ width:30, height:30, borderRadius:8, background:bg, border:"none", boxShadow:"0 0 0 1px var(--border-soft)", color: color ?? "var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}
     >{children}</button>
   );
 }
@@ -1920,7 +1920,7 @@ function BlocksRenderer({
                               <DayTile key={di} date={d} state={dayState(d)} todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]} milestones={milestonesMap[dateKey(d)] ?? []}
                                 dayGoals={dayGoalsMap[dateKey(d)]}
-                                accentColor={effectiveQ.border}
+                                accentColor={effectiveQ.fill}
                                 highlighted={matchedDates.size > 0 ? matchedDates.has(dateKey(d)) : undefined}
                                 isActiveMatch={activeMatchKey === dateKey(d)}
                                 dark={dark}
