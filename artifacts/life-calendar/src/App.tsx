@@ -2064,12 +2064,15 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   const s = document.createElement("style");
   s.id = "lc-fire-style";
   s.textContent = `@keyframes lc-fire-pulse {
-    0%,100%{box-shadow:0 0 0 1.5px #ff7722,0 0 6px 2px rgba(255,110,0,0.45),0 0 18px 5px rgba(255,50,0,0.26),0 0 32px 8px rgba(255,100,0,0.12);}
-    50%{box-shadow:0 0 0 2px #ffaa00,0 0 12px 4px rgba(255,140,0,0.59),0 0 30px 9px rgba(255,70,0,0.36),0 0 50px 14px rgba(255,120,0,0.18);}
-  }.lc-fire-tile{animation:lc-fire-pulse 4s ease-in-out infinite;}
+    0%,100%{opacity:0.78}
+    50%{opacity:1}
+  }.lc-fire-tile{box-shadow:0 0 0 2px #ff7722,0 0 10px 3px rgba(255,110,0,0.42),0 0 26px 7px rgba(255,50,0,0.22);animation:lc-fire-pulse 4s ease-in-out infinite;will-change:opacity;}
   .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
-  @media(max-width:639px){.lc-goal-markers{margin-bottom:1px;overflow:hidden;max-width:100%;}}
+  @media(max-width:639px){
+    .lc-goal-markers{margin-bottom:1px;overflow:hidden;max-width:100%;}
+    .lc-fire-tile{box-shadow:0 0 0 2px #ff7722,0 0 8px 2px rgba(255,110,0,0.35);}
+  }
   @media(min-width:640px){
     .lc-goal-dot{width:6px!important;height:6px!important;}
     .lc-goal-dot-extra{display:block;}
@@ -2165,6 +2168,8 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       window.removeEventListener("pointerdown", hideOnOutsidePointer);
     };
   }, [hovered]);
+  // Cleanup long-press timer on unmount to prevent setState after unmount
+  useEffect(() => () => { if (holdTimerRef.current !== null) window.clearTimeout(holdTimerRef.current); }, []);
 
   if (isOut) return <div style={{ ...base, background:"transparent", border:"1px dashed var(--border-soft)", opacity:0.35, cursor:"default" }} />;
 
@@ -2486,6 +2491,8 @@ function DraggableCard({ id, dark, children }: { id: string; dark: boolean; chil
   const holdTimer = useRef<number | null>(null);
   const holdStartPos = useRef<{ x: number; y: number } | null>(null);
   const [handleHover, setHandleHover] = useState(false);
+  // Cleanup long-press timer on unmount
+  useEffect(() => () => { if (holdTimer.current !== null) { window.clearTimeout(holdTimer.current); holdTimer.current = null; document.body.style.userSelect = ""; (document.body.style as any).webkitUserSelect = ""; } }, []);
   const clearHoldTimer = () => {
     const wasHolding = holdTimer.current !== null;
     if (holdTimer.current !== null) { window.clearTimeout(holdTimer.current); holdTimer.current = null; }
@@ -2798,16 +2805,16 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   };
 
   useEffect(() => {
-    if (focusId) {
-      requestAnimationFrame(() => {
-        const el = areaRefs.current[focusId];
-        if (el) {
-          el.focus({ preventScroll: true });
-          el.setSelectionRange(el.value.length, el.value.length);
-          scheduleFieldIntoModalView(el);
-        }
-      });
-    }
+    if (!focusId) return;
+    const frame = requestAnimationFrame(() => {
+      const el = areaRefs.current[focusId];
+      if (el) {
+        el.focus({ preventScroll: true });
+        el.setSelectionRange(el.value.length, el.value.length);
+        scheduleFieldIntoModalView(el);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [focusId, scheduleFieldIntoModalView]);
 
   // Note height tracking is now delegated entirely to <TextareaAutosize>
