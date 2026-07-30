@@ -57,16 +57,14 @@ body {
 
 * { box-sizing: border-box; }
 
-/* iOS Safari: disable data-detector dotted underlines on [title] elements and
-   any text inside DayTile / Label that could be misread as a phone / date / address. */
+/* iOS Safari: disable dotted underlines on [title] elements (like the week-number button).
+   Data-detector links (phone/date/address auto-detection) are disabled via
+   the format-detection meta tag in index.html — no broad [data-datekey] CSS needed. */
 abbr,
 [title],
-[title] *,
-[data-datekey],
-[data-datekey] * {
+[title] * {
   text-decoration: none !important;
   -webkit-text-decoration: none !important;
-  text-decoration-style: unset !important;
 }
 
 /* Prevent iOS from underlining detected phone numbers / dates site-wide */
