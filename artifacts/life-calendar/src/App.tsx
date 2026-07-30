@@ -2488,7 +2488,7 @@ function NoteEntryItem({
             title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
             aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
             data-testid={`note-color-btn-${idx}`}
-            style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(entryColor) || "transparent", border: entryColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: entryColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+            style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(entryColor) || "transparent", border: "none", boxShadow: entryColor ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)" : "0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
           >
             {!entryColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
           </button>
@@ -3199,7 +3199,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                           onPointerDown={e => e.stopPropagation()}
                           title={t("chooseColor")}
                           aria-label={t("chooseColor")}
-                          style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(goalColor) || "transparent", border: goalColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: goalColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
+                          style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(goalColor) || "transparent", border: "none", boxShadow: goalColor ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)" : "0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate", marginRight:1 }}
                         >
                           {!goalColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                         </button>
@@ -3240,7 +3240,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setGoalColorPickerIdx(null)} />
                 <button onClick={() => handleGoalColorChange(goalColorPickerIdx, undefined)}
                   title={t("noColor")}
-                  style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:!goalsDraft.colors?.[goalColorPickerIdx]?`1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}`:"1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:"none", boxShadow:!goalsDraft.colors?.[goalColorPickerIdx]?`0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}`:undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                   <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                 </button>
                 {APPLE_COLORS.map(ac => {
@@ -3249,7 +3249,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   return (
                     <button key={ac.key} onClick={() => handleGoalColorChange(goalColorPickerIdx, hex)}
                       title={ac.label}
-                      style={{ width:20, height:20, borderRadius:999, background:hex, border:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(ac.key==="white"||ac.key==="grey")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:selected?"scale(1.08)":"scale(1)" }}>
+                      style={{ width:20, height:20, borderRadius:999, background:hex, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(ac.key==="white"||ac.key==="grey")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:selected?"scale(1.08)":"scale(1)" }}>
                       {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(hex) }}>✓</span>}
                     </button>
                   );
@@ -3360,13 +3360,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                             <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setMsEditColorPickerOpen(false)} />
                             <button onClick={() => { setMsEditColor(""); setMsEditColorPickerOpen(false); }}
                               title={t("noColor")}
-                              style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: msEditColor==="" ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:"none", boxShadow: msEditColor==="" ? `0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                               <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                             </button>
                             {MILESTONE_COLORS.map(c => (
                               <button key={c} onClick={() => { setMsEditColor(msEditColor === c ? "" : c); setMsEditColorPickerOpen(false); }}
                                 title={c}
-                                style={{ width:20, height:20, borderRadius:999, background:c, border: msEditColor===c ? "1.5px solid var(--text)" : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: msEditColor===c ? "scale(1.08)" : "scale(1)" }}>
+                                style={{ width:20, height:20, borderRadius:999, background:c, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow: msEditColor===c ? `0 0 0 1.5px var(--text)${(c==="#ffffff"||c==="#8e8e93")&&!dark?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}` : ((c==="#ffffff"||c==="#8e8e93")&&!dark?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined), position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: msEditColor===c ? "scale(1.08)" : "scale(1)" }}>
                                 {msEditColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
                               </button>
                             ))}
@@ -3460,13 +3460,13 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                   <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setNewColorPickerOpen(false)} />
                   <button onClick={() => { setNewColor(""); setNewColorPickerOpen(false); }}
                     title={t("noColor")}
-                    style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: newColor==="" ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:"none", boxShadow: newColor==="" ? `0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                   </button>
                   {MILESTONE_COLORS.map(c => (
                     <button key={c} onClick={() => { setNewColor(newColor === c ? "" : c); setNewColorPickerOpen(false); }}
                       title={c}
-                      style={{ width:20, height:20, borderRadius:999, background:c, border: newColor===c ? `1.5px solid var(--text)` : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (c==="#ffffff" || c==="#8e8e93") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: newColor===c ? "scale(1.08)" : "scale(1)" }}>
+                      style={{ width:20, height:20, borderRadius:999, background:c, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow: newColor===c ? `0 0 0 1.5px var(--text)${(c==="#ffffff"||c==="#8e8e93")?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}` : ((c==="#ffffff"||c==="#8e8e93")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined), position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: newColor===c ? "scale(1.08)" : "scale(1)" }}>
                       {newColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
                     </button>
                   ))}
@@ -3479,7 +3479,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     ref={newColorBtnRef}
                     onClick={e => { e.stopPropagation(); if (newColorPickerOpen) { setNewColorPickerOpen(false); return; } const btn = newColorBtnRef.current; if (btn) { setNewColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setNewColorPickerOpen(true); }}
                     title={t("chooseColor")}
-                    style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(newColor) || "transparent", border: newColor ? "1.5px solid rgba(255,255,255,0.85)" : `1.5px solid var(--border-soft)`, boxShadow: newColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                    style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(newColor) || "transparent", border: "none", boxShadow: newColor ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)" : "0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                     {!newColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                   </button>
                   <button
@@ -3580,7 +3580,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                 <>
                   <button onClick={() => { updateEntryColor(colorPickerEntryId, undefined); setColorPickerEntryId(null); }}
                     title={t("noColor")}
-                    style={{ width:20, height:20, borderRadius:999, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", border: !entryColor ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
+                    style={{ width:20, height:20, borderRadius:999, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", border: "none", boxShadow: !entryColor ? `0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : undefined, cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
                   >
                     <span style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                   </button>
@@ -3590,7 +3590,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                     return (
                       <button key={ac.key} onClick={() => { updateEntryColor(colorPickerEntryId, hex); setColorPickerEntryId(null); }}
                         title={ac.label}
-                        style={{ width:20, height:20, borderRadius:999, background:hex, border:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)" }}
+                        style={{ width:20, height:20, borderRadius:999, background:hex, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)" }}
                       >
                         {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color: swatchCheckColor(hex) }}>✓</span>}
                       </button>
@@ -4151,7 +4151,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
           <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setDraftColorPickerOpen(false)} />
           <button onClick={() => { setDraftColor(null); setDraftColorPickerOpen(false); }}
             title={t("noColor")}
-            style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: draftColor===null ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:"none", boxShadow: draftColor===null ? `0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
           </button>
           {APPLE_COLORS.map(ac => {
@@ -4160,7 +4160,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
             return (
               <button key={ac.key} onClick={() => { setDraftColor(selected ? null : hex); setDraftColorPickerOpen(false); }}
                 title={ac.label}
-                style={{ width:20, height:20, borderRadius:999, background:hex, border: selected ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(ac.key==="white"||ac.key==="grey")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:selected?"scale(1.08)":"scale(1)" }}>
+                style={{ width:20, height:20, borderRadius:999, background:hex, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow: selected ? `0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}${(ac.key==="white"||ac.key==="grey")?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}` : ((ac.key==="white"||ac.key==="grey")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined), position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:selected?"scale(1.08)":"scale(1)" }}>
                 {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(hex) }}>✓</span>}
               </button>
             );
@@ -4398,12 +4398,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                     >
                       <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setDraftColorPickerOpen(false)} />
                       <button onClick={() => { setDraftColor(""); setDraftColorPickerOpen(false); }} title={t("noColor")}
-                        style={{ width:20, height:20, borderRadius:999, background:isWhite?"rgba(0,0,0,0.06)":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"), border:draftColor===""?`1.5px solid ${isWhite?"#18181b":(dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)")}`:"1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        style={{ width:20, height:20, borderRadius:999, background:isWhite?"rgba(0,0,0,0.06)":(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)"), border:"none", boxShadow:draftColor===""?`0 0 0 1.5px ${isWhite?"#18181b":(dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)")}`:undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                         <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                       </button>
                       {MILESTONE_COLORS.map(c => (
                         <button key={c} onClick={() => { setDraftColor(draftColor===c?"":c); setDraftColorPickerOpen(false); }} title={c}
-                          style={{ width:20, height:20, borderRadius:999, background:c, border:draftColor===c?`1.5px solid ${isWhite?"#18181b":"var(--text)"}`:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(c==="#ffffff"||c==="#8e8e93")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:draftColor===c?"scale(1.08)":"scale(1)" }}>
+                          style={{ width:20, height:20, borderRadius:999, background:c, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow:draftColor===c?`0 0 0 1.5px ${isWhite?"#18181b":"var(--text)"}${(c==="#ffffff"||c==="#8e8e93")?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}`:((c==="#ffffff"||c==="#8e8e93")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined), position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:draftColor===c?"scale(1.08)":"scale(1)" }}>
                           {draftColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
                         </button>
                       ))}
@@ -4507,12 +4507,12 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                           >
                             <div style={{ position:"fixed", inset:0, zIndex:-1 }} onClick={() => setEditColorPickerOpen(false)} />
                             <button onClick={() => { setEditColor(""); setEditColorPickerOpen(false); }} title={t("noColor")}
-                              style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:editColor===""?`1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}`:"1.5px solid transparent", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              style={{ width:20, height:20, borderRadius:999, background:dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border:"none", boxShadow:editColor===""?`0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}`:undefined, cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                               <span style={{ fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
                             </button>
                             {MILESTONE_COLORS.map(c => (
                               <button key={c} onClick={() => { setEditColor(editColor===c?"":c); setEditColorPickerOpen(false); }} title={c}
-                                style={{ width:20, height:20, borderRadius:999, background:c, border:editColor===c?`1.5px solid ${dark?"var(--text)":"var(--text)"}`:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow:(c==="#ffffff"||c==="#8e8e93")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined, position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:editColor===c?"scale(1.08)":"scale(1)" }}>
+                                style={{ width:20, height:20, borderRadius:999, background:c, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow:editColor===c?`0 0 0 1.5px var(--text)${(c==="#ffffff"||c==="#8e8e93")?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}`:((c==="#ffffff"||c==="#8e8e93")?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined), position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform:editColor===c?"scale(1.08)":"scale(1)" }}>
                                 {editColor===c && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color:swatchCheckColor(c) }}>✓</span>}
                               </button>
                             ))}
@@ -4771,7 +4771,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
                         onPointerDown={e => e.stopPropagation()}
                         title={t("chooseColor")}
                         aria-label={t("chooseColor")}
-                        style={{ width:20, height:20, borderRadius:999, flexShrink:0, background: normaliseGrey(gc) || "transparent", border: gc ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: gc ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}
+                        style={{ width:20, height:20, borderRadius:999, flexShrink:0, background: normaliseGrey(gc) || "transparent", border: "none", boxShadow: gc ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)" : "0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}
                       >
                         {!gc && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                       </button>
@@ -4812,7 +4812,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
         >
           <button onClick={() => setGoalColor(colorPickerGoalId, undefined)}
             title={t("noColor")}
-            style={{ width:20, height:20, borderRadius:999, background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: !goals.find(g=>g.id===colorPickerGoalId)?.color ? `1.5px solid ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : "1.5px solid transparent", cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
+            style={{ width:20, height:20, borderRadius:999, background: dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.06)", border: "none", boxShadow: !goals.find(g=>g.id===colorPickerGoalId)?.color ? `0 0 0 1.5px ${dark?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.4)"}` : undefined, cursor:"pointer", position:"relative", mixBlendMode:"normal", isolation:"isolate" }}
           >
             <span style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</span>
           </button>
@@ -4823,7 +4823,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
             return (
               <button key={ac.key} onClick={() => setGoalColor(colorPickerGoalId, hex)}
                 title={ac.label}
-                style={{ width:20, height:20, borderRadius:999, background:hex, border:"1.5px solid transparent", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (ac.key==="white"||ac.key==="grey") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)" }}
+                style={{ width:20, height:20, borderRadius:999, background:hex, border:"none", cursor:"pointer", transition:"transform 120ms ease", boxShadow: (ac.key==="white"||ac.key==="grey") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined, mixBlendMode:"normal", isolation:"isolate", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)" }}
               >
                 {selected && <span style={{ fontSize:11, lineHeight:1, fontWeight:700, color: swatchCheckColor(hex) }}>✓</span>}
               </button>
@@ -5097,7 +5097,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                         return (
                           <button key={ac.key} onClick={() => { onColorChange(ac.key); setQuarterColorOpen(false); }}
                             title={ac.label}
-                            style={{ width:20, height:20, borderRadius:999, background: swatchHex, border:"1.5px solid rgba(128,128,128,0.28)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)", transition:"transform 120ms ease" }}
+                            style={{ width:20, height:20, borderRadius:999, background: swatchHex, border:"none", boxShadow:"0 0 0 1.5px rgba(128,128,128,0.28)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transform: selected ? "scale(1.08)" : "scale(1)", transition:"transform 120ms ease" }}
                           >
                             {selected && (
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={swatchCheckColor(swatchHex)} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -5245,11 +5245,11 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                 >
                   <button type="button" onClick={() => { update(activeColorPickerBlock.id, { color: undefined }); setColorPickerAnchor(null); }}
                     title={t("quarterDefault")}
-                    style={{ width:20, height:20, borderRadius:999, background:"transparent", border: !activeColorPickerBlock.color ? "2.5px solid var(--text)" : "2.5px solid var(--border-soft)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</button>
+                    style={{ width:20, height:20, borderRadius:999, background:"transparent", border:"none", boxShadow: !activeColorPickerBlock.color ? "0 0 0 2px var(--text)" : "0 0 0 2px var(--border-soft)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--text-tertiary)" }}>✕</button>
                   {APPLE_COLORS.map(ac => (
                     <button key={ac.key} type="button" onClick={() => { update(activeColorPickerBlock.id, { color: ac.key }); setColorPickerAnchor(null); }}
                       title={ac.label}
-                      style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR), border: activeColorPickerBlock.color===ac.key ? "2.5px solid var(--text)" : "2.5px solid transparent", cursor:"pointer", transition:"border 120ms ease", boxShadow: (ac.key==="white" || ac.key==="grey") && !dark ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined }}
+                      style={{ width:20, height:20, borderRadius:999, background: dark ? ac.dark : hexSaturate(ac.light, LIGHT_SAT_FACTOR), border:"none", cursor:"pointer", transition:"box-shadow 120ms ease", boxShadow: activeColorPickerBlock.color===ac.key ? `0 0 0 2px var(--text)${(ac.key==="white"||ac.key==="grey")&&!dark?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}` : ((ac.key==="white"||ac.key==="grey")&&!dark?"inset 0 0 0 1px rgba(0,0,0,0.15)":undefined) }}
                     />
                   ))}
                 </motion.div>
