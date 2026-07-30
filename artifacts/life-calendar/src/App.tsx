@@ -2231,7 +2231,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       </svg>
     ) : null;
     return (
-      <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:0, pointerEvents:"none" }}>
+      <div className="lc-goal-markers" style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:1, pointerEvents:"none" }}>
         {dots}{plusDot}
       </div>
     );
