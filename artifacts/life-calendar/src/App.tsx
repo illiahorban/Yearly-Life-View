@@ -2344,14 +2344,16 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
           {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
-          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:"var(--surface)", boxShadow: hovered ? `inset 0 0 0 1.5px ${ringAccent},0 4px 18px ${ringAccent}47` : `inset 0 0 0 1.5px ${ringAccent},0 4px 14px ${ringAccent}2e`, color:"var(--text)" }}>
+          <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", contain:"paint", background:"var(--surface)", boxShadow: ringAccent === "#ffffff" ? undefined : (hovered ? `0 4px 18px ${ringAccent}47` : `0 4px 14px ${ringAccent}2e`), color:"var(--text)" }}>
             {msBar}
             {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
                 the SAME stacking context as the text below — `isolation: isolate` on the
                 outer tile is what scopes mix-blend-mode, and any nested element that sets
                 its own z-index would create a second, isolated stacking context and cut
-                the text off from seeing this layer entirely. */}
-            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor, borderRadius:"0 0 10.5px 10.5px" }} />
+                the text off from seeing this layer entirely.
+                borderRadius matches the container (12px) so no corner gaps appear between
+                the fill and the ring overlay that renders on top. */}
+            <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height:`${todayProgress}%`, background:accentColor, borderRadius:"0 0 12px 12px" }} />
             {/* Text layer: position:absolute WITHOUT an explicit z-index. Paint order inside
                 a stacking context follows DOM order, so being declared after the fill layer
                 above is enough to sit visually on top — no z-index needed, and adding one
@@ -2363,6 +2365,9 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
               <div className="flex items-center justify-center" style={{ flex:1, width:"100%", overflow:"hidden" }}>{microMarkers}</div>
             </div>
             {noteDot}
+            {/* Ring overlay — last in DOM so it paints above the fill and text layers,
+                keeping the outline fully visible at every fill level including 100%. */}
+            <div style={{ position:"absolute", inset:0, borderRadius:12, boxShadow:`inset 0 0 0 1.5px ${ringAccent}`, pointerEvents:"none" }} />
           </div>
         </div>
         {tooltipPortal}
