@@ -2064,9 +2064,9 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   const s = document.createElement("style");
   s.id = "lc-fire-style";
   s.textContent = `@keyframes lc-fire-pulse {
-    0%,100%{filter:drop-shadow(0 0 3px rgba(255,100,0,0.40)) drop-shadow(0 0 8px rgba(255,70,0,0.22));}
-    50%{filter:drop-shadow(0 0 7px rgba(255,140,0,0.70)) drop-shadow(0 0 18px rgba(255,80,0,0.40));}
-  }.lc-fire-tile{box-shadow:0 0 0 2px #ff7722;animation:lc-fire-pulse 12s ease-in-out infinite;will-change:filter;}
+    0%,100%{opacity:0.55;}
+    50%{opacity:1;}
+  }.lc-fire-glow{position:absolute;inset:0;border-radius:12px;pointer-events:none;box-shadow:0 0 0 2px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);animation:lc-fire-pulse 4s ease-in-out infinite;will-change:opacity;}
   .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){
@@ -2147,7 +2147,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   } else if (!isAllDone) {
     fireDelayRef.current = undefined;
   }
-  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", overflow:"visible", boxShadow: isAllDone ? undefined : highlightRing, ...(isAllDone ? { animationDelay: fireDelayRef.current } : {}) };
+  const base: React.CSSProperties = { borderRadius:12, aspectRatio:"1/1", cursor: isOut?"default":"pointer", transition: isAllDone ? "none" : "box-shadow 200ms ease", position:"relative", overflow:"visible", boxShadow: isAllDone ? undefined : highlightRing };
 
   // All hooks must run unconditionally on every render (regardless of `isOut`) to keep hook order
   // stable — this effect used to live after the early-return below, crashing when a tile toggled
@@ -2298,6 +2298,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
+          {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
           <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:`linear-gradient(160deg,${accentColor}cc 0%,${accentColor} 60%,${accentColor}dd 100%)`, color:"white", boxShadow: hovered ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)` : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)` }}>
             {msBar}
             <div style={{ flex:1 }} />
@@ -2314,6 +2315,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
     return (
       <>
         <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
+          {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
           <div className="flex flex-col items-center justify-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", isolation:"isolate", background:"var(--surface)", border:`1.5px solid ${ringAccent}`, boxShadow: hovered ? `0 0 0 4px ${ringAccent}2e,0 4px 18px ${ringAccent}47` : `0 0 0 4px ${ringAccent}1e,0 4px 14px ${ringAccent}2e`, color:"var(--text)" }}>
             {msBar}
             {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
@@ -2342,6 +2344,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   return (
     <>
       <div ref={tileRef} data-datekey={dk} className={isAllDone ? "lc-fire-tile" : undefined} style={{ ...base }} {...hov}>
+        {isAllDone && <div className="lc-fire-glow" style={{ animationDelay: fireDelayRef.current }} />}
         <div className="flex flex-col items-center" style={{ position:"absolute", inset:0, borderRadius:12, overflow:"hidden", background:"var(--surface)", border:"1px solid var(--border-soft)", color:"var(--text-secondary)", boxShadow: hovered ? "0 2px 10px rgba(0,0,0,0.08)" : "0 1px 1px rgba(0,0,0,0.02)" }}>
           {msBar}
           <div style={{ flex:1 }} />
