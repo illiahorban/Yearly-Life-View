@@ -5107,7 +5107,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
       />
       <motion.div onClick={e => e.stopPropagation()} initial={{ opacity:0, scale:0.96, y:8 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:4 }}
         transition={{ type:"spring", stiffness:360, damping:32 }} className="w-full max-w-md"
-        style={{ position:"relative", background:modalBg, backdropFilter:"blur(30px) saturate(180%)", WebkitBackdropFilter:"blur(30px) saturate(180%)", borderRadius:22, boxShadow:"0 30px 80px rgba(0,0,0,0.22)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.6)"}` }}
+        style={{ position:"relative", background:modalBg, backdropFilter:"blur(30px) saturate(180%)", WebkitBackdropFilter:"blur(30px) saturate(180%)", borderRadius:22, boxShadow:`0 30px 80px rgba(0,0,0,0.22), 0 0 0 2px ${quarter.border}`, border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.6)"}` }}
       >
         <div className="px-6 pt-6 pb-3">
           <h2 className="text-base font-semibold tracking-tight mb-2" style={{ color:"var(--text)", letterSpacing:"-0.01em" }}>{t("sprintConfig")}</h2>
