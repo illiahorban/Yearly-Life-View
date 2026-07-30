@@ -1713,7 +1713,7 @@ function App() {
             initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:6 }}
             transition={{ duration:0.18 }}
             onClick={scrollToToday}
-            style={{ position:"fixed", bottom:20, right:20, zIndex:15, height:28, paddingInline:10, borderRadius:999, background: dark?"rgba(36,36,40,0.88)":"rgba(242,242,247,0.88)", backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)", border:`1px solid ${dark?"rgba(255,255,255,0.11)":"rgba(0,0,0,0.08)"}`, color:"var(--text-secondary)", fontSize:11, fontWeight:500, cursor:"pointer", display:"flex", alignItems:"center", gap:5, boxShadow:"0 2px 10px rgba(0,0,0,0.10)" }}
+            style={{ position:"fixed", bottom:20, right:20, zIndex:15, height:28, paddingInline:10, borderRadius:999, background: dark?"rgba(36,36,40,0.88)":"rgba(242,242,247,0.88)", backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)", border:"none", color:"var(--text-secondary)", fontSize:11, fontWeight:500, cursor:"pointer", display:"flex", alignItems:"center", gap:5, boxShadow:`0 0 0 1px ${dark?"rgba(255,255,255,0.11)":"rgba(0,0,0,0.08)"}, 0 2px 10px rgba(0,0,0,0.10)` }}
           >
             <span style={{ width:5, height:5, borderRadius:999, background:"var(--text-tertiary)", flexShrink:0 }} />
             {t("today")}
@@ -3379,7 +3379,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
                               ref={el => { if (el) msEditColorBtnRefs.current.set(ms.id, el); else msEditColorBtnRefs.current.delete(ms.id); }}
                               onClick={e => { e.stopPropagation(); if (msEditColorPickerOpen) { setMsEditColorPickerOpen(false); return; } const btn = msEditColorBtnRefs.current.get(ms.id); if (btn) { setMsEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setMsEditColorPickerOpen(true); }}
                               title={t("chooseColor")}
-                              style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(msEditColor) || "transparent", border: msEditColor ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid var(--border-soft)", boxShadow: msEditColor ? "0 1px 3px rgba(0,0,0,0.18)" : undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                              style={{ width:19, height:19, borderRadius:999, flexShrink:0, background: normaliseGrey(msEditColor) || "transparent", border: "none", boxShadow: msEditColor ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)" : "0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
                               {!msEditColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                             </button>
                             <button
@@ -4088,7 +4088,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
               return (
                 <div key={qi}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: quarter.tint, border: `2px solid ${quarter.border}`, flexShrink: 0, display: "inline-block" }} />
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: quarter.tint, border: "none", boxShadow: `0 0 0 2px ${quarter.border}`, flexShrink: 0, display: "inline-block" }} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>{quarter.label}</span>
                     <span style={{ fontSize: 11, color: "var(--text-tertiary)", fontWeight: 500 }}>{group.length}</span>
                   </div>
@@ -4373,7 +4373,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                       ref={draftColorBtnRef}
                       onClick={e => { e.stopPropagation(); if (draftColorPickerOpen) { setDraftColorPickerOpen(false); return; } const btn = draftColorBtnRef.current; if (btn) { setDraftColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setDraftColorPickerOpen(true); }}
                       title={t("chooseColor")}
-                      style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:draftColor||"transparent", border:draftColor?"1.5px solid rgba(255,255,255,0.85)":`1.5px solid ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxShadow:draftColor?"0 1px 3px rgba(0,0,0,0.18)":undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                      style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:draftColor||"transparent", border:"none", boxShadow:draftColor?`0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)`:`0 0 0 1.5px ${isWhite?"#a1a1aa":"var(--border-soft)"}`, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                       {!draftColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background:isWhite?"rgba(0,0,0,0.35)":(dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)"), transform:"rotate(-45deg)" }} />}
                     </button>
                     <button type="button"
@@ -4478,7 +4478,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                             ref={editColorBtnRef}
                             onClick={e => { e.stopPropagation(); if (editColorPickerOpen) { setEditColorPickerOpen(false); return; } const btn = editColorBtnRef.current; if (btn) { setEditColorPickerPos(clampedPopoverPos(btn.getBoundingClientRect(), 156, 100)); } setEditColorPickerOpen(true); }}
                             title={t("chooseColor")}
-                            style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:editColor||"transparent", border:editColor?"1.5px solid rgba(255,255,255,0.85)":"1.5px solid var(--border-soft)", boxShadow:editColor?"0 1px 3px rgba(0,0,0,0.18)":undefined, boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
+                            style={{ width:16, height:16, borderRadius:999, flexShrink:0, background:editColor||"transparent", border:"none", boxShadow:editColor?"0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)":"0 0 0 1.5px var(--border-soft)", boxSizing:"border-box", cursor:"pointer", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", mixBlendMode:"normal", isolation:"isolate" }}>
                             {!editColor && <span style={{ position:"absolute", width:"55%", height:"1.5px", background: dark?"rgba(255,255,255,0.55)":"rgba(0,0,0,0.35)", transform:"rotate(-45deg)" }} />}
                           </button>
                           <button type="button"
@@ -4573,7 +4573,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
                   <React.Fragment key={group.date}>
                     {_showQHeader && (
                       <div className="flex items-center gap-1.5 pt-1.5 pb-0 px-0.5">
-                        <span style={{ width:8, height:8, borderRadius:"50%", background: resolvedQuarters[group.qi]?.tint, border:`2px solid ${resolvedQuarters[group.qi]?.border}`, flexShrink:0, display:"inline-block" }} />
+                        <span style={{ width:8, height:8, borderRadius:"50%", background: resolvedQuarters[group.qi]?.tint, border:"none", boxShadow:`0 0 0 2px ${resolvedQuarters[group.qi]?.border}`, flexShrink:0, display:"inline-block" }} />
                         <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color:"var(--text-tertiary)" }}>
                           {resolvedQuarters[group.qi]?.label ?? t("q" + String(group.qi + 1))}
                         </span>
@@ -5125,7 +5125,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
               : [{n:`1 × ${weeksCapacity}`,p:[weeksCapacity]},{n:"4+4+6",p:[4,4,6]},{n:"5+4+5",p:[5,4,5]},{n:"7+7",p:[7,7]},{n:"5+5+4",p:[5,5,4]}]
             ).map(x => (
               <button key={x.n} onClick={() => applyPreset(x.p)} type="button" className="text-[11px] tabular-nums"
-                style={{ padding:"5px 10px", borderRadius:999, background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.04)", color:"var(--text-secondary)", border:`1px solid ${borderColor}` }}>
+                style={{ padding:"5px 10px", borderRadius:999, background: dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.04)", color:"var(--text-secondary)", border:"none", boxShadow:`0 0 0 1px ${borderColor}` }}>
                 {x.n}
               </button>
             ))}
