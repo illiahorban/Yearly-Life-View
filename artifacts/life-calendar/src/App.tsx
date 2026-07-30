@@ -1932,7 +1932,7 @@ function BlocksRenderer({
                           <div className="lc-side-col" style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {weekTotal > 0 && (
                               <div style={{ display:"flex", flexDirection:"row", alignItems:"center", gap:3 }}>
-                                <span className="text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1 }}>
+                                <span className="lc-week-counter text-[10px] sm:text-[11px] tabular-nums" style={{ fontWeight:500, color: weekDone === weekTotal ? "#34c759" : "var(--text-tertiary)", lineHeight:1, textDecoration:"none", borderBottom:"none" }}>
                                   {weekDone}/{weekTotal}
                                 </span>
                                 {weekDone === weekTotal && (
@@ -2405,9 +2405,9 @@ function Label({ number, month, tone }: { number: number; month: string; tone: "
   const numStyle: React.CSSProperties = { color: numColor, letterSpacing:"-0.02em", ...(isInvertPale ? { mixBlendMode: "difference" } : null) };
   const monStyle: React.CSSProperties = { color: monColor, ...(isInvertPale ? { mixBlendMode: "difference", opacity: 0.85 } : null) };
   return (
-    <div className="flex flex-col items-center justify-center leading-none select-none" style={{ transform:"translateZ(0)", willChange:"transform" }}>
-      <div className="text-[15px] sm:text-[24px] font-semibold tabular-nums" style={numStyle}>{number}</div>
-      <div className="mt-0.5 sm:mt-1 text-[9px] sm:text-[13px] font-medium tracking-widest" style={monStyle}>{month}</div>
+    <div className="lc-label flex flex-col items-center justify-center leading-none select-none" style={{ transform:"translateZ(0)", willChange:"transform" }}>
+      <div className="text-[15px] sm:text-[24px] font-semibold tabular-nums" style={{ ...numStyle, textDecoration:"none", borderBottom:"none" }}>{number}</div>
+      <div className="mt-0.5 sm:mt-1 text-[9px] sm:text-[13px] font-medium tracking-widest" style={{ ...monStyle, textDecoration:"none", borderBottom:"none" }}>{month}</div>
     </div>
   );
 }

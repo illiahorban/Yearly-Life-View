@@ -57,6 +57,23 @@ body {
 
 * { box-sizing: border-box; }
 
+/* ─── iOS / Safari: suppress native dotted underline on [title] elements ─────
+   WebKit (iOS Safari, Chrome iOS) automatically applies `text-decoration:
+   underline dotted` to any element that carries a `title` attribute — the same
+   way it styles <abbr>. This bleeds visually onto nearby text in the same row.
+   Override it globally for every element in the calendar that could be affected. */
+abbr,
+[title],
+.lc-label,
+.lc-label *,
+.lc-week-counter,
+.lc-week-counter * {
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  text-decoration-style: unset !important;
+  border-bottom: none !important;
+}
+
 .placeholder-dark::placeholder { color: rgba(0,0,0,0.40); }
 
 /* Goal-input placeholder tones — follow the inverted text colour direction. */
