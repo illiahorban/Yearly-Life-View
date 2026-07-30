@@ -143,7 +143,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Overview", dateOfBirth:"Date of Birth", lifeExpectancy:"Life Expectancy",
     years:"Years", months:"Months", weeks:"Weeks", days:"Days", elapsed:"elapsed",
     year1:"year", yearN:"years", month1:"month", monthN:"months", day1:"day", dayN:"days",
-    yr:"yr", mo:"mo", wk:"wk", remaining:"remaining", born:"Born", age:"Age",
+    yr:"yr", mo:"mo", wk:"wk", hr:"hr", min:"min", sec:"sec", remaining:"remaining", born:"Born", age:"Age",
     sprintConfig:"Sprint configuration", sprintConfigDescription:"Group the 13 weeks of the quarter into sprints.", saveSprints:"Save sprints", addSprint:"Add sprint",
     looksGood:"Looks good", unassigned:"unassigned", over:"over", total:"Total",
     q1:"Q1", q2:"Q2", q3:"Q3", q4:"Q4", todayCountdown:"Today!", daysShort:"d",
@@ -216,7 +216,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     overview:"Обзор", dateOfBirth:"Дата рождения", lifeExpectancy:"Продолж. жизни",
     years:"Годы", months:"Месяцы", weeks:"Недели", days:"Дни", elapsed:"прожито",
     year1:"год", year2:"года", year5:"лет", month1:"месяц", month2:"месяца", month5:"месяцев", day1:"день", day2:"дня", day5:"дней",
-    yr:"лет", mo:"мес", wk:"нед", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
+    yr:"лет", mo:"мес", wk:"нед", hr:"ч", min:"мин", sec:"с", remaining:"осталось", born:"Рождён(а)", age:"Возраст",
     sprintConfig:"Настройка спринтов", sprintConfigDescription:"Сгруппируйте 13 недель квартала в спринты.", saveSprints:"Сохранить", addSprint:"Спринт",
     looksGood:"Отлично", unassigned:"не распределено", over:"лишних", total:"Итого",
     q1:"К1", q2:"К2", q3:"К3", q4:"К4", todayCountdown:"Сегодня!", daysShort:"д",
@@ -5401,6 +5401,11 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const timer = window.setInterval(() => setToday(startOfDay(new Date())), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [viewportSize, setViewportSize] = useState(() => ({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -5448,6 +5453,11 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
     const leftover = Math.max(0, Math.round((lifespanEnd.getTime() - anchor.getTime()) / 86_400_000));
     return { remYears: years, remMonths: months, remWeeks: Math.floor(leftover / 7), remDays: leftover % 7 };
   }, [lifespanEnd, today]);
+  const { remHours, remMinutes, remSeconds } = useMemo(() => {
+    if (!lifespanEnd || lifespanEnd <= now) return { remHours: 0, remMinutes: 0, remSeconds: 0 };
+    const totalSecs = Math.floor((lifespanEnd.getTime() - now.getTime()) / 1000);
+    return { remHours: Math.floor(totalSecs / 3600) % 24, remMinutes: Math.floor(totalSecs / 60) % 60, remSeconds: totalSecs % 60 };
+  }, [lifespanEnd, now]);
 
   const { cols, cellPx, gapPx, totalUnits, currentUnit, currentCell, labelW, headerH, displayCurr, displayTotal } = useMemo(() => {
     const ls = settings.lifespan;
@@ -5659,13 +5669,16 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
                 <div className="mt-1.5 text-[11px] tabular-nums leading-snug" style={{ color:"var(--text-tertiary)" }}>
                   {t("born")} {new Date(settings.birthDate + "T00:00:00").toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}
                 </div>
-                {(remYears > 0 || remMonths > 0 || remWeeks > 0 || remDays > 0) && (
+                {(remYears > 0 || remMonths > 0 || remWeeks > 0 || remDays > 0 || remHours > 0 || remMinutes > 0 || remSeconds > 0) && (
                   <div className="mt-1 text-[11px] tabular-nums leading-snug flex flex-wrap gap-x-2" style={{ color:"var(--text-tertiary)" }}>
                     <span style={{ color: LIFE_ACCENT, fontWeight: 600 }}>
                       {remYears > 0 && <>{remYears} {t("yr")} </>}
                       {remMonths > 0 && <>{remMonths} {t("mo")} </>}
                       {remWeeks > 0 && <>{remWeeks} {t("wk")} </>}
                       {remDays > 0 && <>{remDays} {t("daysShort")} </>}
+                      {remHours > 0 && <>{remHours} {t("hr")} </>}
+                      {remMinutes > 0 && <>{remMinutes} {t("min")} </>}
+                      <>{String(remSeconds).padStart(2,"0")} {t("sec")}</>
                     </span>
                     <span>{t("remaining")}</span>
                   </div>
