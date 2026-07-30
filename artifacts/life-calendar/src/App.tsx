@@ -2132,14 +2132,11 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
         const done = dayGoals.done[i] ?? false;
         const isExtra = i >= 7;
         const markerKey = `${dateStr}-marker-${i}-${done}`;
-        return done ? (
+        if (!done) return null;
+        return (
           <svg key={markerKey} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, overflow:"hidden" }}>
             <circle cx="3" cy="3" r="3" fill={isPast ? (isPaleAccent ? "rgba(24,24,27,0.16)" : "rgba(255,255,255,0.92)") : "#34c759"} />
             <path d="M1.5 3l1 1 2-2" stroke={isPast ? (isPaleAccent ? "#18181b" : accentColor) : "white"} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        ) : (
-          <svg key={markerKey} width="5" height="5" viewBox="-0.5 -0.5 7 7" fill="none" className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`} style={{ flexShrink:0, opacity:0.5, overflow:"hidden" }}>
-            <circle cx="3" cy="3" r="2.5" stroke={isPast ? (isPaleAccent ? "rgba(24,24,27,0.55)" : "rgba(255,255,255,0.7)") : "var(--text-tertiary)"} strokeWidth="0.9"/>
           </svg>
         );
       })}
@@ -2319,7 +2316,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
             <div style={{ flex:1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
             <div className="flex items-center justify-center" style={{ flex:1, width:"100%", height:"12px", maxHeight:"12px", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center", isolation:"isolate", transform:"translateZ(0)" }}>{microMarkers}</div>
-            {noteDot}
           </div>
         </div>
         {tooltipPortal}
@@ -2349,7 +2345,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
               <div className="flex items-center justify-center" style={{ flex:1, width:"100%", height:"12px", maxHeight:"12px", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center", isolation:"isolate", transform:"translateZ(0)" }}>{microMarkers}</div>
             </div>
-            {noteDot}
           </div>
         </div>
         {tooltipPortal}
@@ -2365,7 +2360,6 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
           <div style={{ flex:1 }} />
           <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
           <div className="flex items-center justify-center" style={{ flex:1, width:"100%", overflow:"hidden" }}>{microMarkers}</div>
-          {noteDot}
         </div>
       </div>
       {tooltipPortal}
