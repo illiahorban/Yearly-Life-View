@@ -29,3 +29,4 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 ## User Preferences
 
 - **Bilingualism**: All new UI text must be added in both Russian and English via the existing i18n system. Never add hardcoded strings — always use the `t()` helper from `LangContext`.
+- **Browser**: User uses Google Chrome on both mobile and desktop. All fixes and adaptations should target Chrome behaviour — not Safari/WebKit quirks.
