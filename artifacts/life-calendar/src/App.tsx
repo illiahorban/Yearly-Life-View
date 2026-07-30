@@ -370,7 +370,7 @@ function ColorSwatchGrid({
               background: c.hex, border:"none", cursor:"pointer",
               transition:"transform 120ms ease",
               boxShadow: sel
-                ? `0 0 0 1.5px ${dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)"}${(c.key==="white"||c.key==="grey")&&!dark?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}`
+                ? `0 0 0 2px rgba(255,255,255,0.9), 0 1px 4px rgba(0,0,0,0.22)${(c.key==="white"||c.key==="grey")?", inset 0 0 0 1px rgba(0,0,0,0.15)":""}`
                 : (c.key==="white"||c.key==="grey") ? "inset 0 0 0 1px rgba(0,0,0,0.15)" : undefined,
               position:"relative", display:"flex", alignItems:"center", justifyContent:"center",
               transform: sel ? "scale(1.08)" : "scale(1)",
