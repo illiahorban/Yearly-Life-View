@@ -2066,7 +2066,7 @@ if (typeof document !== "undefined" && !document.getElementById("lc-fire-style")
   s.textContent = `@keyframes lc-fire-pulse {
     0%,100%{opacity:0.55;}
     50%{opacity:1;}
-  }.lc-fire-glow{position:absolute;inset:0;border-radius:12px;pointer-events:none;box-shadow:0 0 0 2px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);animation:lc-fire-pulse 4s ease-in-out infinite;will-change:opacity;}
+  }.lc-fire-glow{position:absolute;inset:0;border-radius:12px;pointer-events:none;box-shadow:0 0 0 2px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);animation:lc-fire-pulse 5s ease-in-out infinite;will-change:opacity;}
   .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){
