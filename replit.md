@@ -1,32 +1,29 @@
-# Workspace
+# Life Calendar
 
-## Overview
-
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+A personal life-calendar / year-planner app. Displays the current year as a weekly/daily grid, lets you log notes, goals, and milestones for each day, and tracks yearly progress.
 
 ## Stack
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite + TypeScript (Tailwind CSS, Radix UI, Framer Motion) |
+| Backend | Express 5 + TypeScript (built with esbuild) |
+| Workspace | pnpm monorepo |
 
-## Key Commands
+### Packages
+- `artifacts/life-calendar` — React frontend, port **22196** in dev
+- `artifacts/api-server` — Express API, port **8080** in dev
+- `packages/` — shared workspace packages (`api-zod`, `api-client-react`, `db`, …)
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
+## Running locally
 
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+Both services start together via the **Project** run button (parallel workflows):
 
-## User Preferences
+```
+pnpm install && PORT=8080 pnpm --filter @workspace/api-server run dev
+pnpm install && PORT=22196 BASE_PATH=/ pnpm --filter @workspace/life-calendar run dev
+```
 
-- **Bilingualism**: All new UI text must be added in both Russian and English via the existing i18n system. Never add hardcoded strings — always use the `t()` helper from `LangContext`.
-- **Browser**: User uses Google Chrome on both mobile and desktop. All fixes and adaptations should target Chrome behaviour — not Safari/WebKit quirks.
+## User preferences
+
+- All new UI text must be added in both Russian and English via the existing i18n system.
