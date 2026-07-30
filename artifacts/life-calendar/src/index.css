@@ -57,6 +57,27 @@ body {
 
 * { box-sizing: border-box; }
 
+/* iOS Safari: disable data-detector dotted underlines on [title] elements and
+   any text inside DayTile / Label that could be misread as a phone / date / address. */
+abbr,
+[title],
+[title] *,
+[data-datekey],
+[data-datekey] * {
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  text-decoration-style: unset !important;
+  border-bottom: none !important;
+}
+
+/* Prevent iOS from underlining detected phone numbers / dates site-wide */
+a[href^="tel:"],
+a[href^="sms:"] {
+  text-decoration: none !important;
+  color: inherit !important;
+  pointer-events: none !important;
+}
+
 .placeholder-dark::placeholder { color: rgba(0,0,0,0.40); }
 
 /* Goal-input placeholder tones — follow the inverted text colour direction. */
