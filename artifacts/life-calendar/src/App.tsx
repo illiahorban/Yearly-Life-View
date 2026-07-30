@@ -832,14 +832,14 @@ function App() {
   }, [yearPickerOpen]);
 
   // Dark mode
-  const [dark, setDark] = useState<boolean>(() => ls<boolean>("lifeCalendar:darkMode", false));
+  const [dark, setDark] = useState<boolean>(() => ls<boolean>("lifeCalendar:darkMode", true));
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
     lsSet("lifeCalendar:darkMode", dark);
   }, [dark]);
 
-  const [lang, setLang] = useState<Lang>(() => ls<string>("lifeCalendar:lang", "en") === "ru" ? "ru" : "en");
+  const [lang, setLang] = useState<Lang>(() => ls<string>("lifeCalendar:lang", "ru") === "ru" ? "ru" : "en");
   useEffect(() => { lsSet("lifeCalendar:lang", lang); document.documentElement.lang = lang; }, [lang]);
   const t = (k: string) => I18N[lang][k] ?? I18N.en[k] ?? k;
   const months = MONTHS_I18N[lang];
