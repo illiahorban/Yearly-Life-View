@@ -5,26 +5,16 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 const rawPort = process.env.PORT;
+// PORT is optional — defaults to 5173 for static builds / GitHub Pages CI.
+const port = rawPort ? Number(rawPort) : 5173;
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
+if (rawPort && (Number.isNaN(port) || port <= 0)) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+// BASE_PATH is optional — defaults to "/" for local and GitHub Pages root deploys.
+// For a GitHub Pages sub-path deploy set BASE_PATH=/repo-name/ in the build env.
+const basePath = process.env.BASE_PATH ?? process.env.VITE_BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,

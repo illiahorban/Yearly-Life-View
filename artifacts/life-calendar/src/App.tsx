@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 import { AnimatePresence, motion, LayoutGroup, Reorder, useDragControls } from "framer-motion";
 import confetti from "canvas-confetti";
 import TextareaAutosize from "react-textarea-autosize";
+import { useSyncEngine } from "./lib/use-sync";
+import type { AppSnapshot, SyncMilestone, SyncNoteEntry, SyncDayTemplate, SyncBlockGoals, SyncDayGoals } from "./lib/sync-types";
 
 // ─── Tiny localStorage helpers ────────────────────────────────────────────────
 
@@ -196,6 +198,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     copyToTomorrow: "Copy to tomorrow", copiedToTomorrow: "Copied!",
     tomorrowHasGoals: "Tomorrow already has goals. Replace?", replace: "Replace",
     templates: "Templates", noTemplates: "No templates yet.", newTemplate: "New template", templateNamePlaceholder: "e.g. Morning routine, Work day…", addTemplateItem: "Add item", applyTemplate: "Apply", deleteTemplate: "Delete", saveTemplate: "Save template", templatesTitle: "Day Goal Templates", applyTemplateBtn: "Apply template", saveAsTemplate: "Save as template", savedAsTemplate: "Saved!",
+    signInGoogle: "Sign in with Google", signOut: "Sign out", syncNow: "Sync now",
+    syncSynced: "Synced", syncSyncing: "Syncing…", syncUploading: "Uploading…", syncError: "Sync error",
+    syncStatus: "Sync status",
   },
   ru: {
     complete:"выполнено", daysOf:"дней", of:"из", daysRemaining:"дней осталось",
@@ -270,6 +275,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     copyToTomorrow: "Скопировать на завтра", copiedToTomorrow: "Скопировано!",
     tomorrowHasGoals: "На завтра уже есть цели. Заменить?", replace: "Заменить",
     templates: "Шаблоны", noTemplates: "Шаблонов пока нет.", newTemplate: "Новый шаблон", templateNamePlaceholder: "напр. Утро, Рабочий день…", addTemplateItem: "Добавить пункт", applyTemplate: "Применить", deleteTemplate: "Удалить", saveTemplate: "Сохранить шаблон", templatesTitle: "Шаблоны дневных целей", applyTemplateBtn: "Применить шаблон", saveAsTemplate: "Сохранить как шаблон", savedAsTemplate: "Сохранено!",
+    signInGoogle: "Войти через Google", signOut: "Выйти", syncNow: "Синхронизировать",
+    syncSynced: "Синхронизировано", syncSyncing: "Синхронизация…", syncUploading: "Загрузка…", syncError: "Ошибка синхронизации",
+    syncStatus: "Статус синхронизации",
   },
 };
 type LangCtx = { t: (k: string) => string; months: string[]; weekdays: string[]; lang: Lang };
@@ -282,14 +290,15 @@ type Block = { id: string; weeks: number; label: string; color?: AppleColorKey }
 type QuarterConfig = { blocks: Block[] };
 type CalendarConfig = { quarters: QuarterConfig[] };
 type DayState = "past" | "today" | "future" | "out";
-type Milestone = { id: string; label: string; date: string; color: string; description?: string; recurring?: boolean };
+type Milestone = { id: string; label: string; date: string; color: string; description?: string; recurring?: boolean; updatedAt?: number; isDeleted?: boolean };
 type Goal = { id: string; text: string; done: boolean; color?: string };
 type BlockGoals = { description: string; goals: Goal[] };
-type NoteEntry = { id: string; text: string; createdAt: number; color?: string };
+type NoteEntry = { id: string; text: string; createdAt: number; color?: string; updatedAt?: number; isDeleted?: boolean };
 type LifeSettings = { birthDate: string; lifespan: number };
 type LifeView = "years" | "months" | "weeks" | "days";
 type DayGoals = { count: number; done: boolean[]; labels?: string[]; colors?: (string|undefined)[] };
-type DayTemplate = { id: string; name: string; items: string[] };
+type DayTemplate = { id: string; name: string; items: string[]; updatedAt?: number; isDeleted?: boolean };
+type QuarterMetaForSync = { name?: string; color?: string }[];
 
 function fireConfettiCannons() {
   const colors = ["#ffd700","#ff6b6b","#51cf66","#74c0fc","#f783ac","#ff922b","#cc5de8"];
@@ -1059,6 +1068,174 @@ function App() {
   const [quarterMeta, setQuarterMeta] = useState<QuarterMeta[]>(() => ls<QuarterMeta[]>("lifeCalendar:quarterMeta", DEFAULT_QUARTER_META));
   useEffect(() => { lsSet("lifeCalendar:quarterMeta", quarterMeta); }, [quarterMeta]);
 
+  // ── Google Drive Sync ──────────────────────────────────────────────────────
+
+  /** Build a full snapshot from current React state for upload. */
+  const buildSnapshot = useCallback((): AppSnapshot => {
+    const now2 = Date.now();
+    const stamp = (x: { updatedAt?: number }) => x.updatedAt ?? now2;
+
+    const snapshotMilestones: SyncMilestone[] = milestones.map(m => ({
+      id: m.id, label: m.label, date: m.date, color: m.color,
+      description: m.description, recurring: m.recurring,
+      updatedAt: stamp(m), isDeleted: m.isDeleted ?? false,
+    }));
+
+    const snapshotNotes: Record<string, import("./lib/sync-types").SyncNoteEntry[]> = {};
+    for (const [k, entries] of Object.entries(notes)) {
+      snapshotNotes[k] = entries.map(e => ({
+        id: e.id, text: e.text, createdAt: e.createdAt, color: e.color,
+        updatedAt: stamp(e), isDeleted: e.isDeleted ?? false,
+      }));
+    }
+
+    const snapshotDayGoals: Record<string, SyncDayGoals> = {};
+    for (const [k, g] of Object.entries(dayGoals)) {
+      snapshotDayGoals[k] = { ...g, updatedAt: (g as { updatedAt?: number }).updatedAt ?? now2 };
+    }
+
+    const snapshotDayTemplates: import("./lib/sync-types").SyncDayTemplate[] = dayTemplates.map(dt => ({
+      id: dt.id, name: dt.name, items: dt.items,
+      updatedAt: stamp(dt), isDeleted: dt.isDeleted ?? false,
+    }));
+
+    const snapshotBlockGoals: Record<string, SyncBlockGoals> = {};
+    for (const [k, v] of Object.entries(blockGoals)) {
+      snapshotBlockGoals[k] = { ...v, updatedAt: (v as { updatedAt?: number }).updatedAt ?? now2 };
+    }
+
+    const snapshotQuarterGoals: Record<string, SyncBlockGoals> = {};
+    for (const [k, v] of Object.entries(quarterGoals)) {
+      snapshotQuarterGoals[String(k)] = { ...v, updatedAt: (v as { updatedAt?: number }).updatedAt ?? now2 };
+    }
+
+    const snapshotYearGoals: Record<string, SyncBlockGoals> = {};
+    for (const [k, v] of Object.entries(yearGoals)) {
+      snapshotYearGoals[String(k)] = { ...v, updatedAt: (v as { updatedAt?: number }).updatedAt ?? now2 };
+    }
+
+    // Collect all loaded calendar configs from localStorage
+    const snapshotCalendarConfigs: Record<string, import("./lib/sync-types").SyncCalendarConfig> = {};
+    for (let y = 2020; y <= 2040; y++) {
+      const raw = localStorage.getItem(`lifeCalendar:v1:${y}`);
+      if (raw) {
+        try {
+          const cfg = JSON.parse(raw);
+          const ts = (cfg as { updatedAt?: number }).updatedAt ?? now2;
+          snapshotCalendarConfigs[String(y)] = { data: cfg, updatedAt: ts };
+        } catch { /* skip */ }
+      }
+    }
+
+    return {
+      version: 1,
+      exportedAt: now2,
+      milestones: snapshotMilestones,
+      lifeSettings: { ...lifeSettings, updatedAt: (lifeSettings as { updatedAt?: number }).updatedAt ?? now2 },
+      dayGoals: snapshotDayGoals,
+      dayTemplates: snapshotDayTemplates,
+      notes: snapshotNotes,
+      blockGoals: snapshotBlockGoals,
+      quarterGoals: snapshotQuarterGoals,
+      yearGoals: snapshotYearGoals,
+      quarterMeta: { data: quarterMeta, updatedAt: (quarterMeta as unknown as { updatedAt?: number }).updatedAt ?? now2 },
+      calendarConfigs: snapshotCalendarConfigs,
+    };
+  }, [milestones, notes, dayGoals, dayTemplates, blockGoals, quarterGoals, yearGoals, quarterMeta, lifeSettings]);
+
+  /** Apply a merged snapshot from Drive back into React state. */
+  const applySnapshot = useCallback((snapshot: AppSnapshot) => {
+    // Milestones — filter soft-deleted for display, keep isDeleted flag
+    const ms = snapshot.milestones as Milestone[];
+    setMilestones(ms.filter(m => !m.isDeleted));
+    lsSet("lifeCalendar:milestones", ms.filter(m => !m.isDeleted));
+
+    // Life settings
+    setLifeSettings(snapshot.lifeSettings);
+    lsSet("lifeCalendar:lifeSettings", snapshot.lifeSettings);
+
+    // Day goals
+    const dg: Record<string, DayGoals> = {};
+    for (const [k, v] of Object.entries(snapshot.dayGoals)) dg[k] = v;
+    setDayGoals(dg);
+    lsSet("lifeCalendar:dayGoals", dg);
+
+    // Day templates
+    const dt = (snapshot.dayTemplates as DayTemplate[]).filter(t => !t.isDeleted);
+    setDayTemplates(dt);
+    lsSet("lifeCalendar:dayTemplates", dt);
+
+    // Notes — filter deleted entries
+    const mergedNotes: Record<string, NoteEntry[]> = {};
+    for (const [k, entries] of Object.entries(snapshot.notes)) {
+      const active = (entries as NoteEntry[]).filter(e => !e.isDeleted && e.text.trim());
+      if (active.length) mergedNotes[k] = active;
+    }
+    setNotes(mergedNotes);
+    lsSet("lifeCalendar:notes", mergedNotes);
+
+    // Block / quarter / year goals
+    const bg: Record<string, BlockGoals> = {};
+    for (const [k, v] of Object.entries(snapshot.blockGoals)) bg[k] = v;
+    setBlockGoals(bg);
+    lsSet("lifeCalendar:goals", bg);
+
+    const qg: Record<number, BlockGoals> = {};
+    for (const [k, v] of Object.entries(snapshot.quarterGoals)) qg[Number(k)] = v;
+    setQuarterGoals(qg);
+    lsSet("lifeCalendar:quarterGoals", qg);
+
+    const yg: Record<number, BlockGoals> = {};
+    for (const [k, v] of Object.entries(snapshot.yearGoals)) yg[Number(k)] = v;
+    setYearGoals(yg);
+    lsSet("lifeCalendar:yearGoals", yg);
+
+    // Quarter meta
+    if (snapshot.quarterMeta?.data) {
+      const qm = snapshot.quarterMeta.data as QuarterMeta[];
+      if (Array.isArray(qm) && qm.length === 4) {
+        setQuarterMeta(qm);
+        lsSet("lifeCalendar:quarterMeta", qm);
+      }
+    }
+
+    // Calendar configs
+    for (const [yr, cfg] of Object.entries(snapshot.calendarConfigs)) {
+      if (cfg?.data) localStorage.setItem(`lifeCalendar:v1:${yr}`, JSON.stringify(cfg.data));
+    }
+    // Reload config for current viewYear
+    setConfig(loadConfig(viewYear));
+  }, [viewYear]);
+
+  // Wire up sync engine
+  const { syncStatus, userInfo, signIn: googleSignIn, signOut: googleSignOut, triggerSync, markDirty } = useSyncEngine({ applySnapshot });
+
+  // Notify sync engine of any state change (debounced inside the hook)
+  const syncDirtyRef = useRef(0);
+  useEffect(() => {
+    syncDirtyRef.current++;
+    if (syncDirtyRef.current <= 1) return; // skip initial mount
+    markDirty(buildSnapshot());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [milestones, notes, dayGoals, dayTemplates, blockGoals, quarterGoals, yearGoals, quarterMeta, lifeSettings, config]);
+
+  // ── Sync status label helper ──────────────────────────────────────────────
+
+  const syncLabel = useMemo(() => {
+    if (syncStatus === "synced")    return t("syncSynced");
+    if (syncStatus === "syncing")   return t("syncSyncing");
+    if (syncStatus === "uploading") return t("syncUploading");
+    if (syncStatus === "error")     return t("syncError");
+    return t("syncNow");
+  }, [syncStatus, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const syncColor = useMemo(() => {
+    if (syncStatus === "error")     return "#ff3b30";
+    if (syncStatus === "synced")    return "#34c759";
+    if (syncStatus === "syncing" || syncStatus === "uploading") return "#ff9500";
+    return "var(--text-secondary)";
+  }, [syncStatus]);
+
   // Q4 may need 14 weeks when the year's Dec 31 falls after week 52 ends.
   const q4Weeks = useMemo(() => gridWeeksForYear(viewYear) - 3 * WEEKS_PER_QUARTER, [viewYear]);
 
@@ -1308,6 +1485,57 @@ function App() {
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <div className="hidden sm:block" style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
               <div className="flex"><IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton></div>
+              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
+              {/* ── Google Drive Sync ────────────────────────────── */}
+              {userInfo ? (
+                <>
+                  {/* Sync status button */}
+                  <button
+                    title={syncLabel}
+                    onClick={() => void triggerSync()}
+                    disabled={syncStatus === "syncing" || syncStatus === "uploading"}
+                    style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:8, border:"1px solid var(--border-soft)", background: overlayBg, cursor: syncStatus === "syncing" || syncStatus === "uploading" ? "default" : "pointer", color: syncColor, fontSize:11, fontWeight:600, letterSpacing:"-0.01em", whiteSpace:"nowrap", lineHeight:1.2, transition:"color 0.2s" }}
+                  >
+                    {syncStatus === "syncing" || syncStatus === "uploading" ? (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation:"spin 1s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    ) : syncStatus === "synced" ? (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    ) : syncStatus === "error" ? (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    ) : (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
+                    )}
+                    <span className="hidden sm:inline">{syncLabel}</span>
+                  </button>
+                  {/* User avatar / sign-out */}
+                  <button
+                    title={`${userInfo.name} — ${t("signOut")}`}
+                    onClick={() => void googleSignOut()}
+                    style={{ width:26, height:26, borderRadius:999, border:"1.5px solid var(--border-soft)", overflow:"hidden", cursor:"pointer", padding:0, background:"var(--bg-secondary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                  >
+                    {userInfo.picture ? (
+                      <img src={userInfo.picture} alt={userInfo.name} width={26} height={26} style={{ display:"block" }} referrerPolicy="no-referrer" />
+                    ) : (
+                      <span style={{ fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>{userInfo.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  title={t("signInGoogle")}
+                  onClick={() => void googleSignIn()}
+                  style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"4px 9px", borderRadius:8, border:"1px solid var(--border-soft)", background: overlayBg, cursor:"pointer", color:"var(--text-secondary)", fontSize:11, fontWeight:600, whiteSpace:"nowrap", lineHeight:1.2 }}
+                >
+                  {/* Google "G" logo */}
+                  <svg width="11" height="11" viewBox="0 0 24 24" style={{ flexShrink:0 }}>
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  <span className="hidden sm:inline">{t("signInGoogle")}</span>
+                </button>
+              )}
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
               {/* Settings gear */}
               <div ref={settingsRef} style={{ position:"relative" }}>
