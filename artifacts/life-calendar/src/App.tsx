@@ -198,7 +198,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     copyToTomorrow: "Copy to tomorrow", copiedToTomorrow: "Copied!",
     tomorrowHasGoals: "Tomorrow already has goals. Replace?", replace: "Replace",
     templates: "Templates", noTemplates: "No templates yet.", newTemplate: "New template", templateNamePlaceholder: "e.g. Morning routine, Work day…", addTemplateItem: "Add item", applyTemplate: "Apply", deleteTemplate: "Delete", saveTemplate: "Save template", templatesTitle: "Day Goal Templates", applyTemplateBtn: "Apply template", saveAsTemplate: "Save as template", savedAsTemplate: "Saved!",
-    signInGoogle: "Sign in with Google", signOut: "Sign out", syncNow: "Sync now",
+    signInGoogle: "Sign in with Google", signOut: "Sign out", signOutAccount: "Sign out of account", signOutConfirm: "Sign out of your account?\nYour local data will be kept, but syncing will stop.", googleProfile: "Google profile",
     syncSynced: "Synced", syncSyncing: "Syncing…", syncUploading: "Uploading…", syncError: "Sync error",
     syncStatus: "Sync status",
   },
@@ -275,7 +275,7 @@ const I18N: Record<Lang, Record<string, string>> = {
     copyToTomorrow: "Скопировать на завтра", copiedToTomorrow: "Скопировано!",
     tomorrowHasGoals: "На завтра уже есть цели. Заменить?", replace: "Заменить",
     templates: "Шаблоны", noTemplates: "Шаблонов пока нет.", newTemplate: "Новый шаблон", templateNamePlaceholder: "напр. Утро, Рабочий день…", addTemplateItem: "Добавить пункт", applyTemplate: "Применить", deleteTemplate: "Удалить", saveTemplate: "Сохранить шаблон", templatesTitle: "Шаблоны дневных целей", applyTemplateBtn: "Применить шаблон", saveAsTemplate: "Сохранить как шаблон", savedAsTemplate: "Сохранено!",
-    signInGoogle: "Войти через Google", signOut: "Выйти", syncNow: "Синхронизировать",
+    signInGoogle: "Войти через Google", signOut: "Выйти", signOutAccount: "Выйти из аккаунта", signOutConfirm: "Выйти из аккаунта?\nЛокальные данные сохранятся, но синхронизация остановится.", googleProfile: "Профиль Google",
     syncSynced: "Синхронизировано", syncSyncing: "Синхронизация…", syncUploading: "Загрузка…", syncError: "Ошибка синхронизации",
     syncStatus: "Статус синхронизации",
   },
@@ -955,6 +955,19 @@ function App() {
     return () => document.removeEventListener("mousedown", handler);
   }, [settingsOpen]);
 
+  // Google profile dropdown
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const profileRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [profileOpen]);
+
   // Search
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1222,7 +1235,7 @@ function App() {
   }, [viewYear]);
 
   // Wire up sync engine
-  const { syncStatus, userInfo, signIn: googleSignIn, signOut: googleSignOut, triggerSync, markDirty } = useSyncEngine({ applySnapshot });
+  const { syncStatus, userInfo, signIn: googleSignIn, signOut: googleSignOut, markDirty } = useSyncEngine({ applySnapshot });
 
   // Notify sync engine of any state change (debounced inside the hook)
   const syncDirtyRef = useRef(0);
@@ -1505,52 +1518,72 @@ function App() {
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
               {/* ── Google Drive Sync ────────────────────────────── */}
               {userInfo ? (
-                <>
-                  {/* Sync status button */}
+                <div ref={profileRef} style={{ position:"relative" }}>
                   <button
-                    title={syncLabel}
-                    onClick={() => void triggerSync()}
-                    disabled={syncStatus === "syncing" || syncStatus === "uploading"}
-                    style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:8, border:"none", boxShadow:"inset 0 0 0 1px var(--border-soft)", background: overlayBg, cursor: syncStatus === "syncing" || syncStatus === "uploading" ? "default" : "pointer", color: syncColor, fontSize:11, fontWeight:600, letterSpacing:"-0.01em", whiteSpace:"nowrap", lineHeight:1.2, transition:"color 0.2s" }}
-                  >
-                    {syncStatus === "syncing" || syncStatus === "uploading" ? (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation:"spin 1s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    ) : syncStatus === "synced" ? (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    ) : syncStatus === "error" ? (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    ) : (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
-                    )}
-                    <span className="hidden sm:inline">{syncLabel}</span>
-                  </button>
-                  {/* User avatar / sign-out */}
-                  <button
-                    title={`${userInfo.name} — ${t("signOut")}`}
-                    onClick={() => void googleSignOut()}
-                    style={{ width:26, height:26, borderRadius:999, border:"none", boxShadow:"inset 0 0 0 1.5px var(--border-soft)", overflow:"hidden", cursor:"pointer", padding:0, background:"var(--bg-secondary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                    type="button"
+                    title={`${userInfo.name} — ${t("googleProfile")}`}
+                    aria-label={`${userInfo.name} — ${t("googleProfile")}`}
+                    aria-expanded={profileOpen}
+                    onClick={() => { setProfileOpen(o => !o); setSettingsOpen(false); }}
+                    style={{ position:"relative", width:30, height:30, borderRadius:999, border:"none", boxShadow:"inset 0 0 0 1.5px var(--border-soft)", overflow:"visible", cursor:"pointer", padding:0, background:"var(--bg-secondary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                   >
                     {userInfo.picture ? (
-                      <img src={userInfo.picture} alt={userInfo.name} width={26} height={26} style={{ display:"block" }} referrerPolicy="no-referrer" />
+                      <img src={userInfo.picture} alt="" width={30} height={30} style={{ display:"block", width:30, height:30, borderRadius:"inherit", objectFit:"cover" }} referrerPolicy="no-referrer" />
                     ) : (
                       <span style={{ fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>{userInfo.name.charAt(0).toUpperCase()}</span>
                     )}
+                    <span aria-hidden="true" style={{ position:"absolute", right:-1, bottom:-1, width:8, height:8, borderRadius:999, background:syncColor, boxShadow:"0 0 0 2px var(--bg)" }} />
                   </button>
-                </>
+                  <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, zIndex:50 }}>
+                    <AnimatePresence>
+                      {profileOpen && (
+                        <motion.div
+                          key="profile-menu"
+                          initial={{ opacity:0, y:-8, scale:0.95 }}
+                          animate={{ opacity:1, y:0, scale:1 }}
+                          exit={{ opacity:0, y:-8, scale:0.95 }}
+                          transition={{ type:"spring", stiffness:380, damping:28 }}
+                          style={{ width:228, background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"8px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"none", display:"flex", flexDirection:"column", gap:6 }}
+                        >
+                          <div style={{ padding:"4px 6px 6px", minWidth:0 }}>
+                            <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
+                            <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo.email}</div>
+                          </div>
+                          <div style={{ display:"flex", alignItems:"center", gap:7, padding:"7px 8px", borderRadius:8, background:overlayBg, color:syncColor, fontSize:12, fontWeight:600 }}>
+                            <span aria-hidden="true" style={{ width:7, height:7, borderRadius:999, background:syncColor, flexShrink:0 }} />
+                            <span>{syncLabel}</span>
+                          </div>
+                          <div style={{ height:1, background:"var(--border-soft)", margin:"1px 2px" }} />
+                          <button
+                            type="button"
+                            onClick={() => { setProfileOpen(false); setConfirmSignOut(true); }}
+                            style={{ display:"flex", alignItems:"center", gap:7, width:"100%", padding:"8px", borderRadius:8, border:"none", background:"transparent", color:"#ff3b30", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/>
+                            </svg>
+                            {t("signOutAccount")}
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
               ) : (
                 <button
+                  type="button"
                   title={t("signInGoogle")}
                   onClick={() => void googleSignIn()}
-                  style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"4px 9px", borderRadius:8, border:"none", boxShadow:"inset 0 0 0 1px var(--border)", background: overlayBg, cursor:"pointer", color:"var(--text-secondary)", fontSize:11, fontWeight:600, whiteSpace:"nowrap", lineHeight:1.2 }}
+                  aria-label={t("signInGoogle")}
+                  style={{ width:30, height:30, display:"flex", alignItems:"center", justifyContent:"center", padding:0, borderRadius:8, border:"none", boxShadow:"0 0 0 1px var(--border-soft)", background: overlayBg, cursor:"pointer", color:"var(--text-secondary)", fontSize:11, fontWeight:600, lineHeight:1.2 }}
                 >
                   {/* Google "G" logo */}
-                  <svg width="11" height="11" viewBox="0 0 24 24" style={{ flexShrink:0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" style={{ flexShrink:0 }}>
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                   </svg>
-                  <span className="hidden sm:inline">{t("signInGoogle")}</span>
                 </button>
               )}
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
@@ -2030,6 +2063,15 @@ function App() {
             window.location.href = window.location.origin + window.location.pathname;
           }
         }}
+        dark={dark}
+      />
+
+      <ConfirmDialog
+        open={confirmSignOut}
+        onClose={() => setConfirmSignOut(false)}
+        onConfirm={() => { void googleSignOut(); }}
+        message={t("signOutConfirm")}
+        confirmLabel={t("signOutAccount")}
         dark={dark}
       />
 
