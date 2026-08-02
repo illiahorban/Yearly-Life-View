@@ -1142,7 +1142,7 @@ function App() {
       blockGoals: snapshotBlockGoals,
       quarterGoals: snapshotQuarterGoals,
       yearGoals: snapshotYearGoals,
-      quarterMeta: { data: quarterMeta, updatedAt: (quarterMeta as unknown as { updatedAt?: number }).updatedAt ?? now2 },
+      quarterMeta: { data: quarterMeta, updatedAt: (() => { const s = localStorage.getItem("lifeCalendar:quarterMeta:updatedAt"); return s ? Number(s) : now2; })() },
       calendarConfigs: snapshotCalendarConfigs,
     };
   }, [milestones, notes, dayGoals, dayTemplates, blockGoals, quarterGoals, yearGoals, quarterMeta, lifeSettings]);
@@ -1194,12 +1194,16 @@ function App() {
     setYearGoals(yg);
     lsSet("lifeCalendar:yearGoals", yg);
 
-    // Quarter meta
+    // Quarter meta — also persist the updatedAt so buildSnapshot can read it
+    // back without falling back to Date.now() (which breaks the fingerprint).
     if (snapshot.quarterMeta?.data) {
       const qm = snapshot.quarterMeta.data as QuarterMeta[];
       if (Array.isArray(qm) && qm.length === 4) {
         setQuarterMeta(qm);
         lsSet("lifeCalendar:quarterMeta", qm);
+        if (snapshot.quarterMeta.updatedAt) {
+          localStorage.setItem("lifeCalendar:quarterMeta:updatedAt", String(snapshot.quarterMeta.updatedAt));
+        }
       }
     }
 
@@ -1455,8 +1459,11 @@ function App() {
     return resolvedQuarters[qi]?.border;
   }, [editGoalsBlockId, config, resolvedQuarters, dark]);
 
-  const updateQuarterMeta = (qi: number, patch: Partial<QuarterMeta>) =>
+  const updateQuarterMeta = (qi: number, patch: Partial<QuarterMeta>) => {
     setQuarterMeta(prev => prev.map((m, i) => i===qi ? { ...m, ...patch } : m));
+    // Stamp updatedAt so buildSnapshot fingerprint stays stable after user edits
+    localStorage.setItem("lifeCalendar:quarterMeta:updatedAt", String(Date.now()));
+  };
 
   // Theme-dependent surface values
   const headerBg = dark ? "rgba(22,22,24,0.90)" : "rgba(245,245,247,0.88)";

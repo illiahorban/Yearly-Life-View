@@ -205,21 +205,32 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
       }
 
       if (merged) {
+        const mergedFp = snapshotFingerprint(merged);
+
+        // ── Hard stop ────────────────────────────────────────────────────────
+        // If the merged content is identical to what we last synced, skip
+        // applyRef (no setState) and skip any network upload.  This is the
+        // primary guard against the poll-triggered infinite loop: even if the
+        // interval calls doSync again, it returns here without touching React.
+        if (lastSyncedContentRef.current !== "" && mergedFp === lastSyncedContentRef.current) {
+          setSyncStatus("synced");
+          return; // finally still runs → isSyncingRef reset
+        }
+
         applyRef.current(merged);
 
         // Record the content fingerprint of what we just applied. markDirty
         // will compare against this to detect whether the user has actually
         // changed anything since we synced.
-        lastSyncedContentRef.current = snapshotFingerprint(merged);
+        lastSyncedContentRef.current = mergedFp;
 
         const shouldUpload =
           !readOnly &&
           (!!snapshotToUpload || !fileIdRef.current || !remote);
 
         if (shouldUpload) {
-          // Belt-and-suspenders: also skip the upload if the merged content
-          // is identical to the remote (nothing new to push).
-          const mergedFp = snapshotFingerprint(merged);
+          // Also skip the upload if merged content equals what's already on
+          // Drive (handles the case where remote was newer but identical data).
           const remoteFp = remote ? snapshotFingerprint(remote) : "";
           if (mergedFp !== remoteFp || !remote) {
             setSyncStatus("uploading");
@@ -227,7 +238,7 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
             fileIdRef.current = await uploadSnapshot(
               token, fileIdRef.current, toUpload,
             );
-            // Update fingerprint to the uploaded version
+            // Keep fingerprint in sync with what's now on Drive
             lastSyncedContentRef.current = snapshotFingerprint(toUpload);
           }
         }
