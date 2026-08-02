@@ -176,6 +176,7 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
   // ── Core sync ─────────────────────────────────────────────────────────────
 
   const doSync = useCallback(async (snapshotToUpload?: AppSnapshot) => {
+    console.trace("[SYNC TRIGGERED BY]:");
     if (!isSignedIn()) return;
     if (isSyncingRef.current) return;
 
@@ -256,13 +257,23 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
   }, []);
 
   useEffect(() => {
-    const onFocus   = () => { if (isSignedIn()) void doSync(); };
-    const onVisible = () => { if (!document.hidden && isSignedIn()) void doSync(); };
+    let focusTimer: ReturnType<typeof setTimeout> | null = null;
+    const onFocus = () => {
+      if (!isSignedIn()) return;
+      if (focusTimer) clearTimeout(focusTimer);
+      focusTimer = setTimeout(() => { focusTimer = null; void doSync(); }, 5_000);
+    };
+    const onVisible = () => {
+      if (document.hidden || !isSignedIn()) return;
+      if (focusTimer) clearTimeout(focusTimer);
+      focusTimer = setTimeout(() => { focusTimer = null; void doSync(); }, 5_000);
+    };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisible);
+      if (focusTimer) clearTimeout(focusTimer);
     };
   }, [doSync]);
 

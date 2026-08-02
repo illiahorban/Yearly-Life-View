@@ -1120,9 +1120,13 @@ function App() {
       const raw = localStorage.getItem(`lifeCalendar:v1:${y}`);
       if (raw) {
         try {
-          const cfg = JSON.parse(raw);
-          const ts = (cfg as { updatedAt?: number }).updatedAt ?? now2;
-          snapshotCalendarConfigs[String(y)] = { data: cfg, updatedAt: ts };
+          const cfg = JSON.parse(raw) as { updatedAt?: number } & Record<string, unknown>;
+          // updatedAt is embedded alongside the CalendarConfig fields by applySnapshot.
+          // Strip it out so `data` only contains the actual config (quarters, etc.),
+          // matching the shape that Drive stores and snapshotFingerprint compares.
+          const { updatedAt: storedTs, ...dataOnly } = cfg;
+          const ts = storedTs ?? now2;
+          snapshotCalendarConfigs[String(y)] = { data: dataOnly as CalendarConfig, updatedAt: ts };
         } catch { /* skip */ }
       }
     }
@@ -1199,9 +1203,15 @@ function App() {
       }
     }
 
-    // Calendar configs
+    // Calendar configs — embed updatedAt inside the stored object so buildSnapshot
+    // can read it back and produce a stable fingerprint (prevents sync loop).
     for (const [yr, cfg] of Object.entries(snapshot.calendarConfigs)) {
-      if (cfg?.data) localStorage.setItem(`lifeCalendar:v1:${yr}`, JSON.stringify(cfg.data));
+      if (cfg?.data) {
+        localStorage.setItem(
+          `lifeCalendar:v1:${yr}`,
+          JSON.stringify({ ...cfg.data, updatedAt: cfg.updatedAt }),
+        );
+      }
     }
     // Reload config for current viewYear
     setConfig(loadConfig(viewYear));

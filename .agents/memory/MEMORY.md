@@ -7,4 +7,4 @@
 - [Reorder drag selects sibling text](reorder-drag-text-selection.md) — dragging a Framer Motion Reorder.Item over sibling inputs triggers native text selection; suspend document.body.userSelect during onDragStart/onDragEnd.
 - [Reordering index-only array lists](reorder-index-based-list.md) — Framer Motion Reorder.Group needs a stable per-item id; parallel-array state (no ids) needs a local shadow id array kept in sync with every count-changing operation.
 - [Mobile day-modal scrolling](mobile-day-modal-scrolling.md) — use visualViewport sizing and boundary gesture handling; never fix the page body to prevent modal scroll chaining.
-- [Sync loop fix — content fingerprint](sync-loop-fix.md) — Drive sync loop caused by buildSnapshot's `?? Date.now()` fallback; fixed via snapshotFingerprint() + lastSyncedContentRef.
+- [Sync loop fix — calendarConfigs updatedAt](sync-loop-fix.md) — Drive sync loop: applySnapshot wrote cfg.data (no updatedAt) to localStorage; buildSnapshot assigned updatedAt=Date.now(); fingerprints never matched. Fix: embed updatedAt in stored object, strip it back out in buildSnapshot.
