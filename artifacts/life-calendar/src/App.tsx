@@ -1511,7 +1511,7 @@ function App() {
                     title={syncLabel}
                     onClick={() => void triggerSync()}
                     disabled={syncStatus === "syncing" || syncStatus === "uploading"}
-                    style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:8, border:"1px solid var(--border-soft)", background: overlayBg, cursor: syncStatus === "syncing" || syncStatus === "uploading" ? "default" : "pointer", color: syncColor, fontSize:11, fontWeight:600, letterSpacing:"-0.01em", whiteSpace:"nowrap", lineHeight:1.2, transition:"color 0.2s" }}
+                    style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:8, border:"none", boxShadow:"inset 0 0 0 1px var(--border-soft)", background: overlayBg, cursor: syncStatus === "syncing" || syncStatus === "uploading" ? "default" : "pointer", color: syncColor, fontSize:11, fontWeight:600, letterSpacing:"-0.01em", whiteSpace:"nowrap", lineHeight:1.2, transition:"color 0.2s" }}
                   >
                     {syncStatus === "syncing" || syncStatus === "uploading" ? (
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation:"spin 1s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -1528,7 +1528,7 @@ function App() {
                   <button
                     title={`${userInfo.name} — ${t("signOut")}`}
                     onClick={() => void googleSignOut()}
-                    style={{ width:26, height:26, borderRadius:999, border:"1.5px solid var(--border-soft)", overflow:"hidden", cursor:"pointer", padding:0, background:"var(--bg-secondary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
+                    style={{ width:26, height:26, borderRadius:999, border:"none", boxShadow:"inset 0 0 0 1.5px var(--border-soft)", overflow:"hidden", cursor:"pointer", padding:0, background:"var(--bg-secondary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                   >
                     {userInfo.picture ? (
                       <img src={userInfo.picture} alt={userInfo.name} width={26} height={26} style={{ display:"block" }} referrerPolicy="no-referrer" />
