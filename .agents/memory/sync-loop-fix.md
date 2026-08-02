@@ -28,5 +28,12 @@ Before calling `applyRef.current(merged)`, fingerprint the merged snapshot. If i
 
 **Why:** React 18 flushes batched state updates AFTER `isSyncingRef` is cleared in `finally`, so the markDirty guard based on `isSyncingRef` alone is not sufficient — the fingerprint guard is needed too.
 
+## Deletions must be tombstones
+Any syncable item that is deleted locally must remain in the local snapshot as `{ isDeleted: true, updatedAt: Date.now() }` until the cloud snapshot contains the tombstone. UI selectors filter tombstones from display, while merge and fingerprint logic retain them.
+
+**Why:** Removing an item from the local array gives last-write-wins merge no local record to compare against, so an older cloud item is treated as remote-only and gets resurrected on reload.
+
+**How to apply:** Add/update/delete handlers should stamp `updatedAt`; never physically remove syncable records before propagation. Initial cloud pulls must merge with the current local snapshot and upload the merged result when local changes win.
+
 ## HMR hook-count mismatch after removing hooks
 Removing `useCallback`/`useEffect` hooks from `useSyncEngine` changes the total hook count React tracks in `App.tsx` during HMR. This throws "invalid hook call" and requires a **workflow restart** (not just a save) to recover.

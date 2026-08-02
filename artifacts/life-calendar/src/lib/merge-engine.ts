@@ -18,12 +18,15 @@ import { emptySnapshot } from "./sync-types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function newer<T extends { updatedAt: number }>(a: T, b: T): T {
-  return a.updatedAt >= b.updatedAt ? a : b;
+function newer<T extends { updatedAt?: number }>(a: T, b: T): T {
+  // Legacy snapshots may not have sync metadata. Treat those records as
+  // timestamp 0 so a current local edit or tombstone cannot be resurrected
+  // by an older metadata-free remote record.
+  return (a.updatedAt ?? 0) >= (b.updatedAt ?? 0) ? a : b;
 }
 
 /** Merge two arrays of items identified by `id`. Winner = higher updatedAt. */
-function mergeById<T extends { id: string; updatedAt: number; isDeleted: boolean }>(
+function mergeById<T extends { id: string; updatedAt?: number; isDeleted: boolean }>(
   local: T[],
   remote: T[],
 ): T[] {
@@ -37,7 +40,7 @@ function mergeById<T extends { id: string; updatedAt: number; isDeleted: boolean
 }
 
 /** Merge two Records where each value has an `updatedAt`. */
-function mergeRecord<T extends { updatedAt: number }>(
+function mergeRecord<T extends { updatedAt?: number }>(
   local: Record<string, T>,
   remote: Record<string, T>,
 ): Record<string, T> {

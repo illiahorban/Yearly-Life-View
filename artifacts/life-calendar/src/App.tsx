@@ -992,6 +992,12 @@ function App() {
   // Milestones
   const [milestones, setMilestones] = useState<Milestone[]>(() => ls<Milestone[]>("lifeCalendar:milestones", []));
   useEffect(() => { lsSet("lifeCalendar:milestones", milestones); }, [milestones]);
+  // Deleted milestones stay in this state as tombstones so the sync snapshot
+  // can propagate the deletion. All user-facing views use activeMilestones.
+  const activeMilestones = useMemo(
+    () => milestones.filter(m => !m.isDeleted),
+    [milestones],
+  );
   const [milestonePanelOpen, setMilestonePanelOpen] = useState(false);
   const [notesPanelOpen, setNotesPanelOpen] = useState(false);
   const [goalsOpen, setGoalsOpen] = useState(false);
@@ -1162,10 +1168,11 @@ function App() {
 
   /** Apply a merged snapshot from Drive back into React state. */
   const applySnapshot = useCallback((snapshot: AppSnapshot) => {
-    // Milestones — filter soft-deleted for display, keep isDeleted flag
+    // Milestones — retain tombstones locally so a page reload can protect a
+    // recent deletion from an older cloud snapshot. Views filter them out.
     const ms = snapshot.milestones as Milestone[];
-    setMilestones(ms.filter(m => !m.isDeleted));
-    lsSet("lifeCalendar:milestones", ms.filter(m => !m.isDeleted));
+    setMilestones(ms);
+    lsSet("lifeCalendar:milestones", ms);
 
     // Life settings
     setLifeSettings(snapshot.lifeSettings);
@@ -1235,7 +1242,10 @@ function App() {
   }, [viewYear]);
 
   // Wire up sync engine
-  const { syncStatus, userInfo, signIn: googleSignIn, signOut: googleSignOut, markDirty } = useSyncEngine({ applySnapshot });
+  const { syncStatus, userInfo, signIn: googleSignIn, signOut: googleSignOut, markDirty } = useSyncEngine({
+    applySnapshot,
+    getLocalSnapshot: buildSnapshot,
+  });
 
   // Notify sync engine of any state change (debounced inside the hook)
   const syncDirtyRef = useRef(0);
@@ -1300,7 +1310,7 @@ function App() {
 
   const milestonesMap = useMemo(() => {
     const m: Record<string, Milestone[]> = {};
-    for (const ms of milestones) {
+    for (const ms of activeMilestones) {
       if (!m[ms.date]) m[ms.date] = [];
       m[ms.date]!.push(ms);
       if (ms.recurring) {
@@ -1319,7 +1329,7 @@ function App() {
     const todayStr = dateKey(today);
     const thisYear = today.getFullYear();
     const list: Milestone[] = [];
-    for (const ms of milestones) {
+    for (const ms of activeMilestones) {
       if (ms.recurring) {
         const parts = ms.date.split("-");
         for (const yr of [thisYear, thisYear + 1]) {
@@ -1340,7 +1350,7 @@ function App() {
     for (const [key, entries] of Object.entries(notes)) {
       if (entries.some(e => e.text.toLowerCase().includes(q))) result.add(key);
     }
-    for (const ms of milestones) {
+    for (const ms of activeMilestones) {
       const matchLabel = ms.label.toLowerCase().includes(q);
       const matchDesc = ms.description?.toLowerCase().includes(q) ?? false;
       if (matchLabel || matchDesc) result.add(ms.date);
@@ -1906,7 +1916,13 @@ function App() {
               setNotes(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
               setBlockGoals(prev => { const n = { ...prev }; delete n[blockId]; return n; });
               setDayGoals(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
-              setMilestones(prev => prev.filter(m => !keys.has(m.date)));
+              setMilestones(prev => {
+                const deletedAt = Date.now();
+                return prev.map(m => keys.has(m.date)
+                  ? { ...m, updatedAt: deletedAt, isDeleted: true }
+                  : m,
+                );
+              });
             }}
           />
         )}
@@ -1921,9 +1937,16 @@ function App() {
             tomorrowInitGoals={(() => { const [yr,mo,dy] = openNote.split("-").map(Number); return dayGoals[dateKey(new Date(yr,mo-1,dy+1))]; })()}
             dayTemplates={dayTemplates}
             onSaveTemplates={setDayTemplates}
-            onMilestoneUpdate={ms => setMilestones(prev => prev.map(m => m.id === ms.id ? ms : m))}
-            onMilestoneAdd={ms => setMilestones(prev => [...prev, ms])}
-            onMilestoneDelete={id => setMilestones(prev => prev.filter(m => m.id !== id))}
+            onMilestoneUpdate={ms => setMilestones(prev => prev.map(m =>
+              m.id === ms.id ? { ...ms, updatedAt: Date.now(), isDeleted: false } : m,
+            ))}
+            onMilestoneAdd={ms => setMilestones(prev => [
+              ...prev,
+              { ...ms, updatedAt: Date.now(), isDeleted: false },
+            ])}
+            onMilestoneDelete={id => setMilestones(prev => prev.map(m =>
+              m.id === id ? { ...m, updatedAt: Date.now(), isDeleted: true } : m,
+            ))}
             onMilestoneReorder={ids => setMilestones(prev => reorderByIds(prev, ids))}
             onDayGoalsChange={g => updateDayGoals(openNote, g)}
             onCopyGoalsTo={(targetDk, g) => updateDayGoals(targetDk, g)}
@@ -1968,9 +1991,32 @@ function App() {
       <AnimatePresence>
         {milestonePanelOpen && (
           <MilestoneModal key="milestones"
-            milestones={milestones} resolvedQuarters={resolvedQuarters} weeks={weeks} dark={dark} modalBg={modalBg}
+            milestones={activeMilestones} resolvedQuarters={resolvedQuarters} weeks={weeks} dark={dark} modalBg={modalBg}
             onClose={() => setMilestonePanelOpen(false)}
-            onChange={m => { setMilestones(m); }}
+            onChange={m => {
+              setMilestones(prev => {
+                const changedAt = Date.now();
+                const nextIds = new Set(m.map(item => item.id));
+                const removed = prev
+                  .filter(item => !item.isDeleted && !nextIds.has(item.id))
+                  .map(item => ({ ...item, updatedAt: changedAt, isDeleted: true }));
+                const next = m.map(item => {
+                  const previous = prev.find(existing => existing.id === item.id);
+                  const changed = !previous ||
+                    previous.label !== item.label ||
+                    previous.date !== item.date ||
+                    previous.color !== item.color ||
+                    previous.description !== item.description ||
+                    previous.recurring !== item.recurring;
+                  return {
+                    ...item,
+                    updatedAt: changed ? changedAt : (previous.updatedAt ?? changedAt),
+                    isDeleted: false,
+                  };
+                });
+                return [...prev.filter(item => item.isDeleted), ...next, ...removed];
+              });
+            }}
           />
         )}
       </AnimatePresence>

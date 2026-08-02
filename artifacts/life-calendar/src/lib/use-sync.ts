@@ -35,6 +35,7 @@ export interface SyncEngine {
 
 interface Options {
   applySnapshot: (snapshot: AppSnapshot) => void;
+  getLocalSnapshot?: () => AppSnapshot;
 }
 
 // ── Content fingerprint ───────────────────────────────────────────────────────
@@ -44,7 +45,8 @@ interface Options {
 //
 // Normalisations:
 //  1. `exportedAt` excluded — changes on every upload.
-//  2. Soft-deleted items excluded — applySnapshot() filters them from state.
+//  2. Soft-deleted items stay in the fingerprint — a deletion is a real
+//     change and must be uploaded even though the UI hides the item.
 //  3. `updatedAt ?? 0` — items without a timestamp (legacy data) fingerprint
 //     as 0, preventing a mismatch against buildSnapshot()'s `?? Date.now()`.
 //  4. Arrays sorted by `id`, object keys sorted alphabetically.
@@ -66,10 +68,10 @@ function snapshotFingerprint(s: AppSnapshot): string {
       updatedAt:  s.lifeSettings.updatedAt ?? 0,
     },
 
-    milestones: sortById(s.milestones.filter(m => !m.isDeleted)).map(m => ({
+    milestones: sortById(s.milestones).map(m => ({
       id: m.id, label: m.label, date: m.date, color: m.color,
       description: m.description ?? null, recurring: m.recurring ?? false,
-      updatedAt: m.updatedAt ?? 0,
+      updatedAt: m.updatedAt ?? 0, isDeleted: m.isDeleted ?? false,
     })),
 
     notes: sortedKeys(
@@ -138,7 +140,7 @@ function snapshotFingerprint(s: AppSnapshot): string {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
+export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): SyncEngine {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
@@ -147,6 +149,8 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
   const debounceTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const applyRef           = useRef(applySnapshot);
   applyRef.current = applySnapshot;
+  const getLocalSnapshotRef = useRef(getLocalSnapshot);
+  getLocalSnapshotRef.current = getLocalSnapshot;
 
   /**
    * Content fingerprint of the last successfully synced snapshot.
@@ -163,12 +167,6 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
   const isSyncingRef = useRef(false);
 
   /**
-   * True during the first on-mount pull so it stays strictly read-only
-   * (no upload regardless of local state).
-   */
-  const isInitialSyncRef = useRef(false);
-
-  /**
    * Guards against our own localStorage writes re-triggering doSync via a
    * storage event in the unlikely case another listener exists in the page.
    * Set to true before any localStorage write inside doSync, cleared after.
@@ -182,8 +180,13 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
     if (!isSignedIn()) return;
     if (isSyncingRef.current) return;
 
-    const readOnly = isInitialSyncRef.current;
-    isInitialSyncRef.current = false;
+    // Consume the snapshot that started this request. If another edit arrives
+    // while the request is in flight, markDirty will replace this ref and it
+    // will be uploaded from finally below.
+    const snapshotAtStart = snapshotToUpload ?? pendingSnapshotRef.current;
+    if (pendingSnapshotRef.current === snapshotAtStart) {
+      pendingSnapshotRef.current = null;
+    }
 
     isSyncingRef.current = true;
     try {
@@ -196,14 +199,18 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
         isWritingStorageRef.current = false;
       }
 
-      let merged: AppSnapshot | null = snapshotToUpload ?? null;
+      // Pulls also include the current local snapshot. This prevents a
+      // recently-created local tombstone from being replaced by an older
+      // remote item during page startup.
+      const localSnapshot = snapshotAtStart ?? getLocalSnapshotRef.current?.();
+      let merged: AppSnapshot | null = localSnapshot ?? null;
       let remote: AppSnapshot | null = null;
 
       if (fileIdRef.current) {
         remote = await downloadSnapshot(token, fileIdRef.current);
-        if (remote && snapshotToUpload) {
-          merged = mergeSnapshots(snapshotToUpload, remote);
-        } else if (remote && !snapshotToUpload) {
+        if (remote && localSnapshot) {
+          merged = mergeSnapshots(localSnapshot, remote);
+        } else if (remote && !localSnapshot) {
           merged = remote;
         }
       }
@@ -227,8 +234,7 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
         lastSyncedContentRef.current = mergedFp;
 
         const shouldUpload =
-          !readOnly &&
-          (!!snapshotToUpload || !fileIdRef.current || !remote);
+          !!localSnapshot || !fileIdRef.current || !remote;
 
         if (shouldUpload) {
           const remoteFp = remote ? snapshotFingerprint(remote) : "";
@@ -250,6 +256,12 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
     } finally {
       isWritingStorageRef.current = false;
       isSyncingRef.current = false;
+
+      const queuedSnapshot = pendingSnapshotRef.current;
+      if (queuedSnapshot) {
+        pendingSnapshotRef.current = null;
+        void doSync(queuedSnapshot);
+      }
     }
   }, []);
 
@@ -273,8 +285,7 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
     if (tryRestoreSession()) {
       const stored = getStoredUserInfo();
       if (stored) setUserInfo(stored);
-      isInitialSyncRef.current = true; // first pull is read-only
-      void doSync();
+       void doSync(getLocalSnapshotRef.current?.());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // runs exactly once on mount
@@ -317,7 +328,6 @@ export function useSyncEngine({ applySnapshot }: Options): SyncEngine {
     setSyncStatus("idle");
     fileIdRef.current            = null;
     lastSyncedContentRef.current = "";
-    isInitialSyncRef.current     = false;
   }, []);
 
   const triggerSync = useCallback(async () => {
