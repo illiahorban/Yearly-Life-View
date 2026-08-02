@@ -1982,17 +1982,36 @@ function App() {
       <FactoryResetDialog
         open={factoryResetStep >= 1}
         onClose={() => setFactoryResetStep(0)}
-        onConfirm={() => {
-          setNotes({});
-          setBlockGoals({});
-          setQuarterGoals({});
-          setYearGoals({});
-          setMilestones([]);
-          setDayGoals({});
-          setDayTemplates([]);
-          setConfig(defaultConfig(q4Weeks));
-          setQuarterMeta(DEFAULT_QUARTER_META);
-          setLifeSettings({ birthDate: "", lifespan: 80 });
+        onConfirm={async () => {
+          try {
+            // 1. Все виды хранилищ браузера
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 2. IndexedDB (если используется)
+            if (window.indexedDB && (indexedDB as { databases?: () => Promise<{ name?: string }[]> }).databases) {
+              const dbs = await (indexedDB as { databases: () => Promise<{ name?: string }[]> }).databases();
+              dbs.forEach(db => { if (db.name) indexedDB.deleteDatabase(db.name); });
+            }
+
+            // 3. Cache Storage (кэш PWA / ресурсов)
+            if ("caches" in window) {
+              const cacheNames = await caches.keys();
+              await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
+
+            // 4. Cookies
+            document.cookie.split(";").forEach((c) => {
+              document.cookie = c
+                .replace(/^ +/, "")
+                .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+          } catch (e) {
+            console.error("Ошибка при полной очистке данных:", e);
+          } finally {
+            // 5. Жёсткая перезагрузка — useState(() => ls(...)) вернутся к дефолтам
+            window.location.href = window.location.origin + window.location.pathname;
+          }
         }}
         dark={dark}
       />
@@ -5183,7 +5202,7 @@ function ConfirmDialog({ open, onClose, onConfirm, message, confirmLabel, dark }
 // ─── FactoryResetDialog ───────────────────────────────────────────────────────
 
 function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
-  open: boolean; onClose: () => void; onConfirm: () => void; dark: boolean;
+  open: boolean; onClose: () => void; onConfirm: () => void | Promise<void>; dark: boolean;
 }) {
   const { t } = React.useContext(LangContext);
   const [step, setStep] = useState(1);

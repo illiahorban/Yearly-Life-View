@@ -1,0 +1,55 @@
+Нам нужно полностью переработать / исправить логику кнопки «Сброс до заводских настроек» (Factory Reset), чтобы она сбрасывала абсолютно ВСЕ данные и настройки приложения в начальное состояние (как при самом первом открытии сайта).
+
+ПРОБЛЕМА:
+Сейчас сброс работает частично — не удаляются некоторые параметры (тема оформления, акцентный цвет, кэшированные состояния и локальные настройки).
+
+ВНЕСИ СЛЕДУЮЩИЕ ИСПРАВЛЕНИЯ ПОД КЛЮЧ:
+
+1. НАЙДИ И ОБНОВИ ФУНКЦИЮ СБРОСА (handleFactoryReset / resetApp):
+Найди компонент/кнопку сброса настроек и создай универсальную функцию полного сброса:
+
+const handleFactoryReset = async () => {
+  const confirmed = window.confirm(
+    "Вы уверены, что хотите полностью сбросить календарь до заводских настроек? Все цели, заметки, темы и индивидуальные настройки будут безвозвратно удалены."
+  );
+  
+  if (!confirmed) return;
+
+  try {
+    // 1. Очищаем все виды хранилищ браузера
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 2. Очищаем IndexedDB (если используется)
+    if (window.indexedDB && indexedDB.databases) {
+      const dbs = await indexedDB.databases();
+      dbs.forEach(db => { if (db.name) indexedDB.deleteDatabase(db.name); });
+    }
+
+    // 3. Очищаем Cache Storage (кэш PWA / ресурсов)
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+    }
+
+    // 4. Очищаем Cookies (если есть)
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
+  } catch (e) {
+    console.error("Ошибка при полной очистке данных:", e);
+  } finally {
+    // 5. Перенаправляем на чистый URL и жестко перезагружаем страницу
+    window.location.href = window.location.origin + window.location.pathname;
+  }
+};
+
+2. ПРОВЕРКА ДЕФОЛТНЫХ СОСТОЯНИЙ (Initial States):
+- Убедись, что при первом запуске (когда localStorage чист), все переменные темы (ThemeContext, accentColor, dark mode) инициализируются стандартными дефолтными значениями, а не берут старые флаги.
+- Если тема или цвета записываются в CSS-переменные (root style / data-theme на body/html), убедись, что при жесткой перезагрузке они сбрасываются к дефолтной теме календаря.
+
+3. ПРИВЯЗКА К КНОПКЕ:
+Привяжи эту функцию `handleFactoryReset` к кнопке «Сброс до заводских настроек» в модальном окне настроек.
