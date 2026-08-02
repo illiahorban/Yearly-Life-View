@@ -1524,7 +1524,7 @@ function App() {
                 <button
                   title={t("signInGoogle")}
                   onClick={() => void googleSignIn()}
-                  style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"4px 9px", borderRadius:8, border:"1px solid var(--border-soft)", background: overlayBg, cursor:"pointer", color:"var(--text-secondary)", fontSize:11, fontWeight:600, whiteSpace:"nowrap", lineHeight:1.2 }}
+                  style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"4px 9px", borderRadius:8, border:"none", boxShadow:"inset 0 0 0 1px var(--border)", background: overlayBg, cursor:"pointer", color:"var(--text-secondary)", fontSize:11, fontWeight:600, whiteSpace:"nowrap", lineHeight:1.2 }}
                 >
                   {/* Google "G" logo */}
                   <svg width="11" height="11" viewBox="0 0 24 24" style={{ flexShrink:0 }}>
