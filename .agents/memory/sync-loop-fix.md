@@ -1,37 +1,32 @@
 ---
-name: Sync loop fix — content fingerprint approach
-description: How the Google Drive auto-sync infinite loop was fixed and why simpler approaches failed.
+name: Sync loop fix
+description: Root causes and fix for the Google Drive infinite sync loop in Life Calendar.
 ---
 
+# Drive Sync Infinite Loop — Root Causes & Fix
+
 ## The loop
+`doSync` → `applySnapshot` → `setState` → React useEffect → `markDirty` → debounce setTimeout → `doSync` → ...
 
-`doSync()` (pull-only) → `applySnapshot(merged)` sets React state → `useEffect` → `markDirty(buildSnapshot())` → debounce → `doSync(snapshot)` → apply again → loop.
+## Root cause 1 — too many doSync triggers
+The hook had a `setInterval` (every 10 s), a `focus` listener, and a `visibilitychange` listener, all calling `doSync`. Combined with the markDirty path, this produced 9+ calls/second when the fingerprint guard failed.
 
-## Why timestamp comparison fails
+**Fix:** Removed the interval, focus, and visibilitychange triggers entirely. `doSync` is now called from exactly two places: (1) the mount `useEffect` (once, read-only pull) and (2) `markDirty`'s debounce (user edit, 1 s debounce).
 
-`buildSnapshot()` in App.tsx uses `const now2 = Date.now()` with `updatedAt ?? now2` for every field that lacks a timestamp (legacy data, `QuarterMeta[]` type has no `updatedAt`, etc.). Every call to `buildSnapshot()` produces a snapshot where some items have `updatedAt = Date.now()`, so `maxUpdatedAt(snapshot) > lastSyncedAtRef` is always true — the guard never fires.
+## Root cause 2 — calendarConfigs updatedAt lost in localStorage
+`applySnapshot` wrote `cfg.data` (the raw `CalendarConfig`) to `localStorage("lifeCalendar:v1:{yr}")` without the `updatedAt` wrapper. `buildSnapshot` then read it back and fell back to `Date.now()`. `snapshotFingerprint` normalises with `?? 0`, so `Date.now() !== storedUpdatedAt` → fingerprint mismatch → loop.
 
-## Why `setTimeout(0)` is unreliable
+**Fix:** `applySnapshot` now stores `{ ...cfg.data, updatedAt: cfg.updatedAt }`. `buildSnapshot` destructures `updatedAt` back out so `data` stays clean.
 
-React 18 schedules passive effects (`useEffect`) via MessageChannel. MessageChannel and `setTimeout(0)` are both macro-tasks; their relative order varies by browser and load, so `preventAutoSaveRef` reset via `setTimeout(0)` cannot reliably fire after the React effect.
+## Root cause 3 — quarterMeta updatedAt lost
+`quarterMeta` state is `QuarterMeta[]`. `buildSnapshot` tried to read `.updatedAt` off the array (always `undefined`) and fell back to `Date.now()`. Same fingerprint mismatch.
 
-## The fix: `snapshotFingerprint()` + `lastSyncedContentRef`
+**Fix:** `applySnapshot` stores `snapshot.quarterMeta.updatedAt` to `localStorage("lifeCalendar:quarterMeta:updatedAt")`. `buildSnapshot` reads it from there. `updateQuarterMeta` stamps `Date.now()` to the same key on user edits.
 
-`snapshotFingerprint(s: AppSnapshot): string` normalises the snapshot before stringifying:
-1. Excludes `exportedAt` (changes every upload).
-2. Filters soft-deleted items (applySnapshot filters them; buildSnapshot won't have them).
-3. Uses `updatedAt ?? 0` — legacy items without a timestamp get 0, not `Date.now()`.
-4. Sorts arrays by `id` and object keys alphabetically for stable stringify.
+## Hard stop guard in doSync
+Before calling `applyRef.current(merged)`, fingerprint the merged snapshot. If it matches `lastSyncedContentRef.current`, skip `applyRef` and the upload entirely (no setState, no network). This breaks any residual loop even if fingerprints drift.
 
-After every successful pull or upload, `lastSyncedContentRef.current = snapshotFingerprint(merged)` is stored. `markDirty` returns early if `snapshotFingerprint(incoming) === lastSyncedContentRef.current`.
+**Why:** React 18 flushes batched state updates AFTER `isSyncingRef` is cleared in `finally`, so the markDirty guard based on `isSyncingRef` alone is not sufficient — the fingerprint guard is needed too.
 
-**Why this works:** after `applySnapshot(merged)`, `buildSnapshot()` reconstructs state with the same `updatedAt` values as `merged` (because `stamp(m) = m.updatedAt ?? now2` returns the stored value when it exists). Legacy items get `0` in the fingerprint on both sides, making them equal. The only structural difference — deleted items — is handled by the filter.
-
-## Additional guards kept
-
-- `isSyncingRef`: prevents overlapping/re-entrant sync calls. Also blocks `markDirty` during `await uploadSnapshot` (React flushes effects at that yield with the flag still true).
-- `isInitialSyncRef`: first pull after auto-session-restore is strictly read-only.
-
-## Auth persistence
-
-Token + expiresAt stored in `localStorage` (`gSync:accessToken`, `gSync:expiresAt`). `tryRestoreSession()` restores to module state if > 30 s remaining. User info stored under `gSync:userInfo`. All cleared on sign-out. `use-sync.ts` calls `tryRestoreSession()` in a mount-only `useEffect` with `[]` deps — `syncStatus` is intentionally absent from the dirty-effect deps array.
+## HMR hook-count mismatch after removing hooks
+Removing `useCallback`/`useEffect` hooks from `useSyncEngine` changes the total hook count React tracks in `App.tsx` during HMR. This throws "invalid hook call" and requires a **workflow restart** (not just a save) to recover.
