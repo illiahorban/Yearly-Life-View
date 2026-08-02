@@ -2,6 +2,7 @@
 - [MilestoneModal ConfirmDialog placement](milestone-confirm-placement.md) — ConfirmDialog must live inside MilestoneModal (not GoalsModal), and delete onConfirm must call onChange to persist.
 - [Portal click bubbles via React tree, not DOM](portal-event-bubbling.md) — a react-portal dialog's own onClick(onClose) must stopPropagation, or it bubbles to an ancestor modal's backdrop onClick and closes it too.
 - [Shared ref inside .map() list](shared-ref-in-list.md) — a single useRef assigned inside a list .map() only ever points at the last-rendered item; use a Map keyed by id for per-item outside-click refs.
+- [Border pattern — inset box-shadow](border-pattern.md) — never use `border:` on UI elements; use `box-shadow: inset 0 0 0 1px` so borders never merge with adjacent container edges.
 - [Drag handle vs full-card text input](drag-handle-vs-textarea.md) — a card that's mostly a textarea/input can't double as a whole-card drag trigger; carve out a dedicated grip strip instead.
 - [Reorder drag selects sibling text](reorder-drag-text-selection.md) — dragging a Framer Motion Reorder.Item over sibling inputs triggers native text selection; suspend document.body.userSelect during onDragStart/onDragEnd.
 - [Reordering index-only array lists](reorder-index-based-list.md) — Framer Motion Reorder.Group needs a stable per-item id; parallel-array state (no ids) needs a local shadow id array kept in sync with every count-changing operation.

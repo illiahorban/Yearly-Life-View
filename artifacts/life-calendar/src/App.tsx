@@ -2508,7 +2508,7 @@ function DayTile({ date, state, todayProgress, notes: dayNotes, milestones: dayM
   // Cleanup long-press timer on unmount to prevent setState after unmount
   useEffect(() => () => { if (holdTimerRef.current !== null) window.clearTimeout(holdTimerRef.current); }, []);
 
-  if (isOut) return <div style={{ ...base, background:"transparent", border:"1px solid var(--border-soft)", opacity:0.25, cursor:"default" }} />;
+  if (isOut) return <div style={{ ...base, background:"transparent", boxShadow:"inset 0 0 0 1px var(--border-soft)", opacity:0.25, cursor:"default" }} />;
 
   const hasEvents = dayMilestones.length > 0;
   const noteDot = hasNote ? (
@@ -3380,7 +3380,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
       />
       <motion.div initial={{ opacity:0, scale:0.95, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
         transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => { e.stopPropagation(); setColorPickerEntryId(null); }}
-        style={{ position:"relative", width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"calc(100% - 2rem)" }}
+        style={{ position:"relative", width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:`0 8px 48px rgba(0,0,0,0.26), inset 0 0 0 1px ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"calc(100% - 2rem)" }}
       >
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
@@ -3986,7 +3986,7 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
       <motion.div initial={{ opacity:0, scale:0.96, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md flex flex-col"
-        style={{ position:"relative", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", maxHeight:"calc(100dvh - 2rem)" }}
+        style={{ position:"relative", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:`0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", maxHeight:"calc(100dvh - 2rem)" }}
       >
         {/* Header */}
         <div style={{ padding:"18px 20px 14px", borderBottom:`1px solid ${borderColor}`, flexShrink:0 }}>
@@ -4270,7 +4270,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
       <motion.div layout initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }}
         transition={{ type: "spring", stiffness: 360, damping: 30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md"
-        style={{ position:"relative", background: modalBg, backdropFilter: "saturate(180%) blur(28px)", WebkitBackdropFilter: "saturate(180%) blur(28px)", borderRadius: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.24)", border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`, overflowY: "auto", maxHeight: "calc(100dvh - 2rem)" }}
+        style={{ position:"relative", background: modalBg, backdropFilter: "saturate(180%) blur(28px)", WebkitBackdropFilter: "saturate(180%) blur(28px)", borderRadius: 22, boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`, overflowY: "auto", maxHeight: "calc(100dvh - 2rem)" }}
       >
         {/* Header */}
         <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${borderColor}` }}>
@@ -4572,7 +4572,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
       <motion.div layout initial={{ opacity:0, scale:0.96, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.97, y:8 }}
         transition={{ type:"spring", stiffness:360, damping:30 }} onClick={e => e.stopPropagation()}
         className="w-full max-w-md"
-        style={{ position:"relative", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:"0 24px 70px rgba(0,0,0,0.24)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflowY:"auto", maxHeight:"calc(100dvh - 2rem)" }}
+        style={{ position:"relative", background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)", borderRadius:22, boxShadow:`0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflowY:"auto", maxHeight:"calc(100dvh - 2rem)" }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -5150,8 +5150,7 @@ function ConfirmDialog({ open, onClose, onConfirm, message, confirmLabel, dark }
               WebkitBackdropFilter: "blur(30px) saturate(180%)",
               borderRadius: 20,
               padding: "20px",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08)",
-              border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+              boxShadow: `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
               display: "flex", flexDirection: "column", gap: 16,
             }}
           >
@@ -5227,8 +5226,7 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
               WebkitBackdropFilter: "blur(30px) saturate(180%)",
               borderRadius: 20,
               padding: "20px",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08)",
-              border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+              boxShadow: `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
               display: "flex", flexDirection: "column", gap: 16, overflow: "hidden",
             }}
           >
@@ -5489,8 +5487,7 @@ function SprintSettingsModal({ quarterIndex:_qi, quarter, initial, dark, modalBg
                     WebkitBackdropFilter:"blur(20px)",
                     borderRadius:12,
                     padding:8,
-                    boxShadow:"0 8px 32px rgba(0,0,0,0.26)",
-                    border:"1px solid var(--border-soft)",
+                    boxShadow:"0 8px 32px rgba(0,0,0,0.26), inset 0 0 0 1px var(--border-soft)",
                     width:136,
                   }}
                 >
@@ -5879,8 +5876,7 @@ function LifeCalendarModal({ dark, modalBg, settings, onSettingsChange, onClose 
            maxHeight: (view === "months" || view === "weeks") ? undefined : "96vh",
            borderRadius: 24,
           background:modalBg, backdropFilter:"saturate(180%) blur(28px)", WebkitBackdropFilter:"saturate(180%) blur(28px)",
-          boxShadow:"0 24px 80px rgba(0,0,0,0.28)",
-          border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`,
+          boxShadow:`0 24px 80px rgba(0,0,0,0.28), inset 0 0 0 1px ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`,
           overflow:"hidden", display:"flex", flexDirection:"column",
           transition:"width 0.3s ease-in-out, height 0.3s ease-in-out, border-radius 0.3s ease-in-out, max-height 0.3s ease-in-out",
         }}
@@ -6222,7 +6218,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
       />
       <motion.div layout initial={{ opacity:0, scale:0.95, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:8 }}
         transition={{ type:"spring", stiffness:380, damping:30 }} onClick={e => e.stopPropagation()}
-        style={{ position:"relative", width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:"0 8px 48px rgba(0,0,0,0.26)", border:`1px solid ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"calc(100dvh - 2rem)" }}
+        style={{ position:"relative", width:"min(92vw,400px)", background:modalBg, backdropFilter:"saturate(180%) blur(24px)", WebkitBackdropFilter:"saturate(180%) blur(24px)", borderRadius:22, boxShadow:`0 8px 48px rgba(0,0,0,0.26), inset 0 0 0 1px ${dark?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.7)"}`, overflow:"hidden", display:"flex", flexDirection:"column", maxHeight:"calc(100dvh - 2rem)" }}
       >
         {/* Header */}
         <div style={{ padding:"18px 20px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, borderBottom:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}` }}>
