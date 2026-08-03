@@ -1,6 +1,7 @@
 // ─── Sync Data Types ──────────────────────────────────────────────────────────
 // These extend the app's existing data structures with sync metadata.
-// All field additions are optional so old localStorage data loads without errors.
+// The app normalises legacy records at the storage boundary, so every record
+// written to Drive has both creation and modification timestamps.
 
 export type SyncStatus =
   | "idle"       // signed out, or synced with no pending changes
@@ -18,6 +19,8 @@ export interface UserInfo {
 // ── Per-item sync metadata ────────────────────────────────────────────────────
 
 export interface SyncMeta {
+  /** Unix ms timestamp when the record was first created. */
+  createdAt: number;
   /** Unix ms timestamp of last local modification. */
   updatedAt: number;
   /** Soft-deleted: hidden in the UI, still kept in sync data for propagation. */
@@ -33,6 +36,7 @@ export interface SyncMilestone {
   color: string;
   description?: string;
   recurring?: boolean;
+  createdAt: number;
   updatedAt: number;
   isDeleted: boolean;
 }
@@ -51,11 +55,14 @@ export interface SyncGoal {
   text: string;
   done: boolean;
   color?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface SyncBlockGoals {
   description: string;
   goals: SyncGoal[];
+  createdAt: number;
   updatedAt: number;
 }
 
@@ -64,6 +71,7 @@ export interface SyncDayGoals {
   done: boolean[];
   labels?: string[];
   colors?: (string | undefined)[];
+  createdAt: number;
   updatedAt: number;
 }
 
@@ -71,6 +79,7 @@ export interface SyncDayTemplate {
   id: string;
   name: string;
   items: string[];
+  createdAt: number;
   updatedAt: number;
   isDeleted: boolean;
 }
@@ -78,16 +87,19 @@ export interface SyncDayTemplate {
 export interface SyncLifeSettings {
   birthDate: string;
   lifespan: number;
+  createdAt: number;
   updatedAt: number;
 }
 
 export interface SyncQuarterMeta {
   data: unknown; // QuarterMeta[] — typed as unknown to avoid circular imports
+  createdAt: number;
   updatedAt: number;
 }
 
 export interface SyncCalendarConfig {
   data: unknown; // CalendarConfig
+  createdAt: number;
   updatedAt: number;
 }
 
@@ -115,14 +127,14 @@ export function emptySnapshot(): AppSnapshot {
     version: 1,
     exportedAt: 0,
     milestones: [],
-    lifeSettings: { birthDate: "", lifespan: 80, updatedAt: 0 },
+    lifeSettings: { birthDate: "", lifespan: 80, createdAt: 0, updatedAt: 0 },
     dayGoals: {},
     dayTemplates: [],
     notes: {},
     blockGoals: {},
     quarterGoals: {},
     yearGoals: {},
-    quarterMeta: { data: null, updatedAt: 0 },
+    quarterMeta: { data: null, createdAt: 0, updatedAt: 0 },
     calendarConfigs: {},
   };
 }

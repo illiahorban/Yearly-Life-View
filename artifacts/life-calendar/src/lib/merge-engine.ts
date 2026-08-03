@@ -1,5 +1,5 @@
 // ─── Merge Engine ─────────────────────────────────────────────────────────────
-// Last-write-wins merge by `updatedAt` timestamp.
+// Last-write-wins merge by `updatedAt`, falling back to `createdAt`.
 // Items that exist on only one side are always kept.
 // `isDeleted` items are propagated (not filtered here — filtering is in the UI).
 
@@ -18,15 +18,24 @@ import { emptySnapshot } from "./sync-types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function newer<T extends { updatedAt?: number }>(a: T, b: T): T {
-  // Legacy snapshots may not have sync metadata. Treat those records as
-  // timestamp 0 so a current local edit or tombstone cannot be resurrected
-  // by an older metadata-free remote record.
-  return (a.updatedAt ?? 0) >= (b.updatedAt ?? 0) ? a : b;
+function timestampOf(value: { updatedAt?: unknown; createdAt?: unknown }): number {
+  const updatedAt = typeof value.updatedAt === "number" && Number.isFinite(value.updatedAt) ? value.updatedAt : 0;
+  const createdAt = typeof value.createdAt === "number" && Number.isFinite(value.createdAt) ? value.createdAt : 0;
+  return Math.max(updatedAt, createdAt);
+}
+
+function newer<T extends { updatedAt?: number; createdAt?: number; isDeleted?: boolean }>(a: T, b: T): T {
+  const aTimestamp = timestampOf(a);
+  const bTimestamp = timestampOf(b);
+  if (aTimestamp !== bTimestamp) return aTimestamp > bTimestamp ? a : b;
+  // On an exact timestamp tie, deletion wins. This protects a tombstone from
+  // an older active copy that was created in the same millisecond.
+  if (a.isDeleted !== b.isDeleted) return a.isDeleted ? a : b;
+  return a;
 }
 
 /** Merge two arrays of items identified by `id`. Winner = higher updatedAt. */
-function mergeById<T extends { id: string; updatedAt?: number; isDeleted: boolean }>(
+function mergeById<T extends { id: string; updatedAt?: number; createdAt?: number; isDeleted: boolean }>(
   local: T[],
   remote: T[],
 ): T[] {
@@ -40,7 +49,7 @@ function mergeById<T extends { id: string; updatedAt?: number; isDeleted: boolea
 }
 
 /** Merge two Records where each value has an `updatedAt`. */
-function mergeRecord<T extends { updatedAt?: number }>(
+function mergeRecord<T extends { updatedAt?: number; createdAt?: number }>(
   local: Record<string, T>,
   remote: Record<string, T>,
 ): Record<string, T> {

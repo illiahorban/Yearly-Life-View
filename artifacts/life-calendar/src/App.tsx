@@ -288,16 +288,17 @@ const TOTAL_WEEKS = 52;
 type Quarter = { key: AppleColorKey; label: string; tint: string; darkTint: string; border: string; fill: string; tileFill: string; text: string; nameColor: string; soft: string; darkSoft: string };
 type Block = { id: string; weeks: number; label: string; color?: AppleColorKey };
 type QuarterConfig = { blocks: Block[] };
-type CalendarConfig = { quarters: QuarterConfig[] };
+type TimestampFields = { createdAt?: number; updatedAt?: number };
+type CalendarConfig = { quarters: QuarterConfig[] } & TimestampFields;
 type DayState = "past" | "today" | "future" | "out";
-type Milestone = { id: string; label: string; date: string; color: string; description?: string; recurring?: boolean; updatedAt?: number; isDeleted?: boolean };
-type Goal = { id: string; text: string; done: boolean; color?: string };
-type BlockGoals = { description: string; goals: Goal[] };
-type NoteEntry = { id: string; text: string; createdAt: number; color?: string; updatedAt?: number; isDeleted?: boolean };
-type LifeSettings = { birthDate: string; lifespan: number };
+type Milestone = { id: string; label: string; date: string; color: string; description?: string; recurring?: boolean } & TimestampFields & { isDeleted?: boolean };
+type Goal = { id: string; text: string; done: boolean; color?: string } & TimestampFields;
+type BlockGoals = { description: string; goals: Goal[] } & TimestampFields;
+type NoteEntry = { id: string; text: string; createdAt?: number; color?: string; isDeleted?: boolean } & TimestampFields;
+type LifeSettings = { birthDate: string; lifespan: number } & TimestampFields;
 type LifeView = "years" | "months" | "weeks" | "days";
-type DayGoals = { count: number; done: boolean[]; labels?: string[]; colors?: (string|undefined)[] };
-type DayTemplate = { id: string; name: string; items: string[]; updatedAt?: number; isDeleted?: boolean };
+type DayGoals = { count: number; done: boolean[]; labels?: string[]; colors?: (string|undefined)[] } & TimestampFields;
+type DayTemplate = { id: string; name: string; items: string[] } & TimestampFields & { isDeleted?: boolean };
 type QuarterMetaForSync = { name?: string; color?: string }[];
 
 function fireConfettiCannons() {
@@ -798,6 +799,71 @@ function LifeIcon() {
 
 function makeId() { return Math.random().toString(36).slice(2,10); }
 
+function validTimestamp(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function withTimestamps<T extends TimestampFields>(value: T, fallback = Date.now()): T & Required<TimestampFields> {
+  const updatedAt = validTimestamp(value.updatedAt, validTimestamp(value.createdAt, fallback));
+  const createdAt = validTimestamp(value.createdAt, updatedAt);
+  return { ...value, createdAt, updatedAt };
+}
+
+function newTimestamps(): Required<TimestampFields> {
+  const timestamp = Date.now();
+  return { createdAt: timestamp, updatedAt: timestamp };
+}
+
+function normalizeGoals(goals: Goal[], fallback: number): Goal[] {
+  return goals.map(goal => withTimestamps(goal, fallback));
+}
+
+function normalizeBlockGoals(value: BlockGoals, fallback: number): BlockGoals {
+  const stamped = withTimestamps(value, fallback);
+  return { ...stamped, goals: normalizeGoals(value.goals ?? [], fallback) };
+}
+
+function normalizeMilestone(value: Milestone, fallback: number): Milestone & Required<TimestampFields> {
+  return withTimestamps(value, fallback);
+}
+
+function normalizeNote(value: NoteEntry, fallback: number): NoteEntry & Required<TimestampFields> {
+  return withTimestamps(value, fallback);
+}
+
+function normalizeDayTemplate(value: DayTemplate, fallback: number): DayTemplate & Required<TimestampFields> {
+  return withTimestamps(value, fallback);
+}
+
+function normalizeDayGoals(value: DayGoals, fallback: number): DayGoals & Required<TimestampFields> {
+  return withTimestamps(value, fallback);
+}
+
+function normalizeLifeSettings(value: LifeSettings, fallback: number): LifeSettings & Required<TimestampFields> {
+  return withTimestamps(value, fallback);
+}
+
+function updateBlockGoals(previous: BlockGoals | undefined, next: BlockGoals): BlockGoals {
+  const changedAt = Date.now();
+  const prior = previous ? normalizeBlockGoals(previous, changedAt) : undefined;
+  const base = normalizeBlockGoals(next, changedAt);
+  const previousById = new Map((prior?.goals ?? []).map(goal => [goal.id, goal]));
+  return {
+    ...base,
+    createdAt: prior?.createdAt ?? base.createdAt,
+    updatedAt: changedAt,
+    goals: base.goals.map(goal => {
+      const old = previousById.get(goal.id);
+      const changed = !old || old.text !== goal.text || old.done !== goal.done || old.color !== goal.color;
+      return {
+        ...goal,
+        createdAt: old?.createdAt ?? goal.createdAt,
+        updatedAt: changed ? changedAt : old.updatedAt,
+      };
+    }),
+  };
+}
+
 // Reorders the subset of `list` whose id is in `orderedIds` into that new
 // relative order, while leaving every other item's position untouched.
 // Matching by id (not by any grouping key) keeps this safe for lists like
@@ -883,7 +949,7 @@ function createSprintFromSelection(qConfig: QuarterConfig, selStart: number, sel
   return { blocks: newBlocks };
 }
 function defaultConfig(q4Cap = WEEKS_PER_QUARTER): CalendarConfig {
-  return { quarters: [0,1,2,3].map(qi => ({ blocks: [{ id: makeId(), weeks: qi === 3 ? q4Cap : WEEKS_PER_QUARTER, label: "All weeks" }] })) };
+  return { ...newTimestamps(), quarters: [0,1,2,3].map(qi => ({ blocks: [{ id: makeId(), weeks: qi === 3 ? q4Cap : WEEKS_PER_QUARTER, label: "All weeks" }] })) };
 }
 function loadConfig(year: number): CalendarConfig {
   const q4Cap = gridWeeksForYear(year) - 3 * WEEKS_PER_QUARTER;
@@ -891,7 +957,7 @@ function loadConfig(year: number): CalendarConfig {
   try {
     const raw = localStorage.getItem(`lifeCalendar:v1:${year}`);
     if (!raw) return defaultConfig(q4Cap);
-    const p = JSON.parse(raw) as CalendarConfig;
+    const p = withTimestamps(JSON.parse(raw) as CalendarConfig);
     if (!p?.quarters || p.quarters.length !== 4) return defaultConfig(q4Cap);
     for (let qi = 0; qi < 4; qi++) {
       const cap = qi === 3 ? q4Cap : WEEKS_PER_QUARTER;
@@ -901,7 +967,7 @@ function loadConfig(year: number): CalendarConfig {
   } catch { return defaultConfig(q4Cap); }
 }
 function saveConfig(year: number, cfg: CalendarConfig) {
-  try { localStorage.setItem(`lifeCalendar:v1:${year}`, JSON.stringify(cfg)); } catch {}
+  try { localStorage.setItem(`lifeCalendar:v1:${year}`, JSON.stringify(withTimestamps(cfg))); } catch {}
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
@@ -988,7 +1054,10 @@ function App() {
   }, [searchOpen]);
 
   // Milestones
-  const [milestones, setMilestones] = useState<Milestone[]>(() => ls<Milestone[]>("lifeCalendar:milestones", []));
+  const [milestones, setMilestones] = useState<Milestone[]>(() => {
+    const fallback = Date.now();
+    return ls<Milestone[]>("lifeCalendar:milestones", []).map(item => normalizeMilestone(item, fallback));
+  });
   useEffect(() => { lsSet("lifeCalendar:milestones", milestones); }, [milestones]);
   // Deleted milestones stay in this state as tombstones so the sync snapshot
   // can propagate the deletion. All user-facing views use activeMilestones.
@@ -1000,17 +1069,38 @@ function App() {
   const [notesPanelOpen, setNotesPanelOpen] = useState(false);
   const [goalsOpen, setGoalsOpen] = useState(false);
   const [lifeCalendarOpen, setLifeCalendarOpen] = useState(false);
-  const [lifeSettings, setLifeSettings] = useState<LifeSettings>(() => ls<LifeSettings>("lifeCalendar:lifeSettings", { birthDate: "", lifespan: 80 }));
+  const [lifeSettings, setLifeSettings] = useState<LifeSettings>(() => {
+    const fallback = Date.now();
+    return normalizeLifeSettings(ls<LifeSettings>("lifeCalendar:lifeSettings", { birthDate: "", lifespan: 80 }), fallback);
+  });
   useEffect(() => { lsSet("lifeCalendar:lifeSettings", lifeSettings); }, [lifeSettings]);
 
   // Day Goals
-  const [dayGoals, setDayGoals] = useState<Record<string, DayGoals>>(() => ls<Record<string, DayGoals>>("lifeCalendar:dayGoals", {}));
+  const [dayGoals, setDayGoals] = useState<Record<string, DayGoals>>(() => {
+    const fallback = Date.now();
+    const raw = ls<Record<string, DayGoals>>("lifeCalendar:dayGoals", {});
+    return Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, normalizeDayGoals(value, fallback)]));
+  });
   useEffect(() => { lsSet("lifeCalendar:dayGoals", dayGoals); }, [dayGoals]);
   // Day Templates
-  const [dayTemplates, setDayTemplates] = useState<DayTemplate[]>(() => ls<DayTemplate[]>("lifeCalendar:dayTemplates", []));
+  const [dayTemplates, setDayTemplates] = useState<DayTemplate[]>(() => {
+    const fallback = Date.now();
+    return ls<DayTemplate[]>("lifeCalendar:dayTemplates", []).map(item => normalizeDayTemplate(item, fallback));
+  });
   useEffect(() => { lsSet("lifeCalendar:dayTemplates", dayTemplates); }, [dayTemplates]);
   const updateDayGoals = (dk: string, goals: DayGoals) => {
-    setDayGoals(prev => ({ ...prev, [dk]: goals }));
+    setDayGoals(prev => {
+      const previous = prev[dk];
+      const now3 = Date.now();
+      return {
+        ...prev,
+        [dk]: {
+          ...goals,
+          createdAt: previous?.createdAt ?? validTimestamp(goals.createdAt, now3),
+          updatedAt: now3,
+        },
+      };
+    });
   };
   const computeQuarterStreak = useCallback((qAllDays: Date[]): number => {
     const isDone = (dk: string) => { const g = dayGoals[dk]; return g != null && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean); };
@@ -1030,9 +1120,10 @@ function App() {
     const migrated: Record<string, NoteEntry[]> = {};
     for (const [k, v] of Object.entries(raw)) {
       if (typeof v === "string") {
-        if ((v as string).trim()) migrated[k] = [{ id: makeId(), text: v as string, createdAt: Date.now() }];
+        if ((v as string).trim()) migrated[k] = [{ id: makeId(), text: v as string, ...newTimestamps() }];
       } else if (Array.isArray(v)) {
-        migrated[k] = v as NoteEntry[];
+        const fallback = Date.now();
+        migrated[k] = (v as NoteEntry[]).map(entry => normalizeNote(entry, fallback));
       }
     }
     return migrated;
@@ -1042,25 +1133,56 @@ function App() {
   const upsertNotes = (key: string, entries: NoteEntry[]) => {
     setNotes(prev => {
       const next = { ...prev };
-      const valid = entries.filter(e => e.text.trim());
-      if (valid.length > 0) next[key] = valid; else delete next[key];
+      const previous = prev[key] ?? [];
+      const previousById = new Map(previous.map(entry => [entry.id, entry]));
+      const changedAt = Date.now();
+      const incomingIds = new Set(entries.map(entry => entry.id));
+      const valid = entries
+        .filter(e => e.text.trim() || e.isDeleted)
+        .map(entry => {
+          const old = previousById.get(entry.id);
+          const changed = !old || old.text !== entry.text || old.color !== entry.color || old.isDeleted !== entry.isDeleted;
+          const stamped = normalizeNote(entry, changedAt);
+          return {
+            ...stamped,
+            createdAt: old?.createdAt ?? stamped.createdAt,
+            updatedAt: changed ? changedAt : old?.updatedAt ?? stamped.updatedAt,
+          };
+        });
+      const removed = previous
+        .filter(entry => !incomingIds.has(entry.id) && !entry.isDeleted)
+        .map(entry => ({ ...normalizeNote(entry, changedAt), updatedAt: changedAt, isDeleted: true }));
+      const merged = [...valid, ...removed];
+      if (merged.length > 0) next[key] = merged; else delete next[key];
       lsSet("lifeCalendar:notes", next);
       return next;
     });
   };
 
   // Block goals
-  const [blockGoals, setBlockGoals] = useState<Record<string,BlockGoals>>(() => ls<Record<string,BlockGoals>>("lifeCalendar:goals", {}));
+  const [blockGoals, setBlockGoals] = useState<Record<string,BlockGoals>>(() => {
+    const fallback = Date.now();
+    const raw = ls<Record<string,BlockGoals>>("lifeCalendar:goals", {});
+    return Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, normalizeBlockGoals(value, fallback)]));
+  });
   useEffect(() => { lsSet("lifeCalendar:goals", blockGoals); }, [blockGoals]);
   const [editGoalsBlockId, setEditGoalsBlockId] = useState<string|null>(null);
 
   // Quarter goals
-  const [quarterGoals, setQuarterGoals] = useState<Record<number, BlockGoals>>(() => ls<Record<number, BlockGoals>>("lifeCalendar:quarterGoals", {}));
+  const [quarterGoals, setQuarterGoals] = useState<Record<number, BlockGoals>>(() => {
+    const fallback = Date.now();
+    const raw = ls<Record<number, BlockGoals>>("lifeCalendar:quarterGoals", {});
+    return Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, normalizeBlockGoals(value, fallback)]));
+  });
   useEffect(() => { lsSet("lifeCalendar:quarterGoals", quarterGoals); }, [quarterGoals]);
   const [editGoalsQi, setEditGoalsQi] = useState<number|null>(null);
 
   // Year goals (keyed by year)
-  const [yearGoals, setYearGoals] = useState<Record<number, BlockGoals>>(() => ls<Record<number, BlockGoals>>("lifeCalendar:yearGoals", {}));
+  const [yearGoals, setYearGoals] = useState<Record<number, BlockGoals>>(() => {
+    const fallback = Date.now();
+    const raw = ls<Record<number, BlockGoals>>("lifeCalendar:yearGoals", {});
+    return Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, normalizeBlockGoals(value, fallback)]));
+  });
   useEffect(() => { lsSet("lifeCalendar:yearGoals", yearGoals); }, [yearGoals]);
   const [editYearGoals, setEditYearGoals] = useState(false);
   const editGoalsBlock = useMemo(() => {
@@ -1090,45 +1212,66 @@ function App() {
   /** Build a full snapshot from current React state for upload. */
   const buildSnapshot = useCallback((): AppSnapshot => {
     const now2 = Date.now();
-    const stamp = (x: { updatedAt?: number }) => x.updatedAt ?? now2;
+    const stamp = <T extends TimestampFields>(x: T) => withTimestamps(x, now2);
 
     const snapshotMilestones: SyncMilestone[] = milestones.map(m => ({
+      ...stamp(m),
       id: m.id, label: m.label, date: m.date, color: m.color,
       description: m.description, recurring: m.recurring,
-      updatedAt: stamp(m), isDeleted: m.isDeleted ?? false,
+      isDeleted: m.isDeleted ?? false,
     }));
 
     const snapshotNotes: Record<string, import("./lib/sync-types").SyncNoteEntry[]> = {};
     for (const [k, entries] of Object.entries(notes)) {
-      snapshotNotes[k] = entries.map(e => ({
-        id: e.id, text: e.text, createdAt: e.createdAt, color: e.color,
-        updatedAt: stamp(e), isDeleted: e.isDeleted ?? false,
-      }));
+      snapshotNotes[k] = entries.map(e => {
+        const timestamps = stamp(e);
+        return {
+          ...timestamps,
+          id: e.id, text: e.text, color: e.color,
+          isDeleted: e.isDeleted ?? false,
+        };
+      });
     }
 
     const snapshotDayGoals: Record<string, SyncDayGoals> = {};
     for (const [k, g] of Object.entries(dayGoals)) {
-      snapshotDayGoals[k] = { ...g, updatedAt: (g as { updatedAt?: number }).updatedAt ?? now2 };
+      snapshotDayGoals[k] = { ...stamp(g), count: g.count, done: g.done, labels: g.labels, colors: g.colors };
     }
 
     const snapshotDayTemplates: import("./lib/sync-types").SyncDayTemplate[] = dayTemplates.map(dt => ({
+      ...stamp(dt),
       id: dt.id, name: dt.name, items: dt.items,
-      updatedAt: stamp(dt), isDeleted: dt.isDeleted ?? false,
+      isDeleted: dt.isDeleted ?? false,
     }));
 
     const snapshotBlockGoals: Record<string, SyncBlockGoals> = {};
     for (const [k, v] of Object.entries(blockGoals)) {
-      snapshotBlockGoals[k] = { ...v, updatedAt: (v as { updatedAt?: number }).updatedAt ?? now2 };
+      const block = normalizeBlockGoals(v, now2);
+      snapshotBlockGoals[k] = {
+        ...stamp(block),
+        description: block.description,
+        goals: block.goals.map(goal => ({ ...stamp(goal), id: goal.id, text: goal.text, done: goal.done, color: goal.color })),
+      };
     }
 
     const snapshotQuarterGoals: Record<string, SyncBlockGoals> = {};
     for (const [k, v] of Object.entries(quarterGoals)) {
-      snapshotQuarterGoals[String(k)] = { ...v, updatedAt: (v as { updatedAt?: number }).updatedAt ?? now2 };
+      const block = normalizeBlockGoals(v, now2);
+      snapshotQuarterGoals[String(k)] = {
+        ...stamp(block),
+        description: block.description,
+        goals: block.goals.map(goal => ({ ...stamp(goal), id: goal.id, text: goal.text, done: goal.done, color: goal.color })),
+      };
     }
 
     const snapshotYearGoals: Record<string, SyncBlockGoals> = {};
     for (const [k, v] of Object.entries(yearGoals)) {
-      snapshotYearGoals[String(k)] = { ...v, updatedAt: (v as { updatedAt?: number }).updatedAt ?? now2 };
+      const block = normalizeBlockGoals(v, now2);
+      snapshotYearGoals[String(k)] = {
+        ...stamp(block),
+        description: block.description,
+        goals: block.goals.map(goal => ({ ...stamp(goal), id: goal.id, text: goal.text, done: goal.done, color: goal.color })),
+      };
     }
 
     // Collect all loaded calendar configs from localStorage
@@ -1137,13 +1280,16 @@ function App() {
       const raw = localStorage.getItem(`lifeCalendar:v1:${y}`);
       if (raw) {
         try {
-          const cfg = JSON.parse(raw) as { updatedAt?: number } & Record<string, unknown>;
+          const cfg = JSON.parse(raw) as Record<string, unknown>;
           // updatedAt is embedded alongside the CalendarConfig fields by applySnapshot.
           // Strip it out so `data` only contains the actual config (quarters, etc.),
           // matching the shape that Drive stores and snapshotFingerprint compares.
-          const { updatedAt: storedTs, ...dataOnly } = cfg;
-          const ts = storedTs ?? now2;
-          snapshotCalendarConfigs[String(y)] = { data: dataOnly as CalendarConfig, updatedAt: ts };
+          const { createdAt: storedCreatedAt, updatedAt: storedUpdatedAt, ...dataOnly } = cfg;
+          const timestamps = withTimestamps({
+            createdAt: typeof storedCreatedAt === "number" ? storedCreatedAt : undefined,
+            updatedAt: typeof storedUpdatedAt === "number" ? storedUpdatedAt : undefined,
+          }, now2);
+          snapshotCalendarConfigs[String(y)] = { data: dataOnly as CalendarConfig, ...timestamps };
         } catch { /* skip */ }
       }
     }
@@ -1152,14 +1298,21 @@ function App() {
       version: 1,
       exportedAt: now2,
       milestones: snapshotMilestones,
-      lifeSettings: { ...lifeSettings, updatedAt: (lifeSettings as { updatedAt?: number }).updatedAt ?? now2 },
+      lifeSettings: { ...stamp(lifeSettings), birthDate: lifeSettings.birthDate, lifespan: lifeSettings.lifespan },
       dayGoals: snapshotDayGoals,
       dayTemplates: snapshotDayTemplates,
       notes: snapshotNotes,
       blockGoals: snapshotBlockGoals,
       quarterGoals: snapshotQuarterGoals,
       yearGoals: snapshotYearGoals,
-      quarterMeta: { data: quarterMeta, updatedAt: (() => { const s = localStorage.getItem("lifeCalendar:quarterMeta:updatedAt"); return s ? Number(s) : now2; })() },
+      quarterMeta: (() => {
+        const created = Number(localStorage.getItem("lifeCalendar:quarterMeta:createdAt"));
+        const updated = Number(localStorage.getItem("lifeCalendar:quarterMeta:updatedAt"));
+        const timestamps = withTimestamps({ createdAt: created, updatedAt: updated }, now2);
+        if (!created) localStorage.setItem("lifeCalendar:quarterMeta:createdAt", String(timestamps.createdAt));
+        if (!updated) localStorage.setItem("lifeCalendar:quarterMeta:updatedAt", String(timestamps.updatedAt));
+        return { data: quarterMeta, ...timestamps };
+      })(),
       calendarConfigs: snapshotCalendarConfigs,
     };
   }, [milestones, notes, dayGoals, dayTemplates, blockGoals, quarterGoals, yearGoals, quarterMeta, lifeSettings]);
@@ -1168,47 +1321,50 @@ function App() {
   const applySnapshot = useCallback((snapshot: AppSnapshot) => {
     // Milestones — retain tombstones locally so a page reload can protect a
     // recent deletion from an older cloud snapshot. Views filter them out.
-    const ms = snapshot.milestones as Milestone[];
+    const stateFallback = Date.now();
+    const ms = (snapshot.milestones as Milestone[]).map(item => normalizeMilestone(item, stateFallback));
     setMilestones(ms);
     lsSet("lifeCalendar:milestones", ms);
 
     // Life settings
-    setLifeSettings(snapshot.lifeSettings);
-    lsSet("lifeCalendar:lifeSettings", snapshot.lifeSettings);
+    const normalizedLifeSettings = normalizeLifeSettings(snapshot.lifeSettings, stateFallback);
+    setLifeSettings(normalizedLifeSettings);
+    lsSet("lifeCalendar:lifeSettings", normalizedLifeSettings);
 
     // Day goals
     const dg: Record<string, DayGoals> = {};
-    for (const [k, v] of Object.entries(snapshot.dayGoals)) dg[k] = v;
+    for (const [k, v] of Object.entries(snapshot.dayGoals)) dg[k] = normalizeDayGoals(v, stateFallback);
     setDayGoals(dg);
     lsSet("lifeCalendar:dayGoals", dg);
 
     // Day templates
-    const dt = (snapshot.dayTemplates as DayTemplate[]).filter(t => !t.isDeleted);
+    const dt = (snapshot.dayTemplates as DayTemplate[]).map(t => normalizeDayTemplate(t, stateFallback));
     setDayTemplates(dt);
     lsSet("lifeCalendar:dayTemplates", dt);
 
-    // Notes — filter deleted entries
+    // Notes — retain deleted entries as tombstones for future conflict-safe sync.
     const mergedNotes: Record<string, NoteEntry[]> = {};
     for (const [k, entries] of Object.entries(snapshot.notes)) {
-      const active = (entries as NoteEntry[]).filter(e => !e.isDeleted && e.text.trim());
-      if (active.length) mergedNotes[k] = active;
+      const normalized = (entries as NoteEntry[]).map(e => normalizeNote(e, stateFallback))
+        .filter(e => e.isDeleted || e.text.trim());
+      if (normalized.length) mergedNotes[k] = normalized;
     }
     setNotes(mergedNotes);
     lsSet("lifeCalendar:notes", mergedNotes);
 
     // Block / quarter / year goals
     const bg: Record<string, BlockGoals> = {};
-    for (const [k, v] of Object.entries(snapshot.blockGoals)) bg[k] = v;
+    for (const [k, v] of Object.entries(snapshot.blockGoals)) bg[k] = normalizeBlockGoals(v, stateFallback);
     setBlockGoals(bg);
     lsSet("lifeCalendar:goals", bg);
 
     const qg: Record<number, BlockGoals> = {};
-    for (const [k, v] of Object.entries(snapshot.quarterGoals)) qg[Number(k)] = v;
+    for (const [k, v] of Object.entries(snapshot.quarterGoals)) qg[Number(k)] = normalizeBlockGoals(v, stateFallback);
     setQuarterGoals(qg);
     lsSet("lifeCalendar:quarterGoals", qg);
 
     const yg: Record<number, BlockGoals> = {};
-    for (const [k, v] of Object.entries(snapshot.yearGoals)) yg[Number(k)] = v;
+    for (const [k, v] of Object.entries(snapshot.yearGoals)) yg[Number(k)] = normalizeBlockGoals(v, stateFallback);
     setYearGoals(yg);
     lsSet("lifeCalendar:yearGoals", yg);
 
@@ -1219,6 +1375,9 @@ function App() {
       if (Array.isArray(qm) && qm.length === 4) {
         setQuarterMeta(qm);
         lsSet("lifeCalendar:quarterMeta", qm);
+        if (snapshot.quarterMeta.createdAt) {
+          localStorage.setItem("lifeCalendar:quarterMeta:createdAt", String(snapshot.quarterMeta.createdAt));
+        }
         if (snapshot.quarterMeta.updatedAt) {
           localStorage.setItem("lifeCalendar:quarterMeta:updatedAt", String(snapshot.quarterMeta.updatedAt));
         }
@@ -1231,7 +1390,7 @@ function App() {
       if (cfg?.data) {
         localStorage.setItem(
           `lifeCalendar:v1:${yr}`,
-          JSON.stringify({ ...cfg.data, updatedAt: cfg.updatedAt }),
+          JSON.stringify({ ...cfg.data, createdAt: cfg.createdAt, updatedAt: cfg.updatedAt }),
         );
       }
     }
@@ -1437,29 +1596,33 @@ function App() {
     return "future";
   };
 
-  const updateQuarter = (qi: number, next: QuarterConfig) => setConfig(prev => { const q = prev.quarters.slice(); q[qi]=next; return { quarters: q }; });
+  const updateQuarter = (qi: number, next: QuarterConfig) => setConfig(prev => {
+    const q = prev.quarters.slice();
+    q[qi] = next;
+    return { ...withTimestamps(prev), createdAt: prev.createdAt ?? Date.now(), updatedAt: Date.now(), quarters: q };
+  });
   const updateBlockLabel = (qi: number, blockId: string, label: string) => setConfig(prev => {
     const q = prev.quarters.slice();
     q[qi] = { blocks: q[qi]!.blocks.map(b => b.id===blockId ? { ...b, label } : b) };
-    return { quarters: q };
+    return { ...withTimestamps(prev), createdAt: prev.createdAt ?? Date.now(), updatedAt: Date.now(), quarters: q };
   });
   const toggleGoal = (blockId: string, goalId: string) => setBlockGoals(prev => {
     const bg = prev[blockId]; if (!bg) return prev;
     const updated = bg.goals.map(g => g.id===goalId ? { ...g, done: !g.done } : g);
     if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
-    return { ...prev, [blockId]: { ...bg, goals: updated } };
+    return { ...prev, [blockId]: updateBlockGoals(bg, { ...bg, goals: updated }) };
   });
   const toggleQuarterGoal = (qi: number, goalId: string) => setQuarterGoals(prev => {
     const bg = prev[qi] ?? { description: "", goals: [] };
     const updated = bg.goals.map(g => g.id === goalId ? { ...g, done: !g.done } : g);
     if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
-    return { ...prev, [qi]: { ...bg, goals: updated } };
+    return { ...prev, [qi]: updateBlockGoals(prev[qi], { ...bg, goals: updated }) };
   });
   const toggleYearGoal = (year: number, goalId: string) => setYearGoals(prev => {
     const bg = prev[year] ?? { description: "", goals: [] };
     const updated = bg.goals.map(g => g.id === goalId ? { ...g, done: !g.done } : g);
     if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
-    return { ...prev, [year]: { ...bg, goals: updated } };
+    return { ...prev, [year]: updateBlockGoals(prev[year], { ...bg, goals: updated }) };
   });
 
   // Resolved quarters (color + label derived from meta)
@@ -1481,9 +1644,12 @@ function App() {
   }, [editGoalsBlockId, config, resolvedQuarters, dark]);
 
   const updateQuarterMeta = (qi: number, patch: Partial<QuarterMeta>) => {
+    const changedAt = Date.now();
     setQuarterMeta(prev => prev.map((m, i) => i===qi ? { ...m, ...patch } : m));
-    // Stamp updatedAt so buildSnapshot fingerprint stays stable after user edits
-    localStorage.setItem("lifeCalendar:quarterMeta:updatedAt", String(Date.now()));
+    if (!localStorage.getItem("lifeCalendar:quarterMeta:createdAt")) {
+      localStorage.setItem("lifeCalendar:quarterMeta:createdAt", String(changedAt));
+    }
+    localStorage.setItem("lifeCalendar:quarterMeta:updatedAt", String(changedAt));
   };
 
   // Theme-dependent surface values
@@ -2001,18 +2167,37 @@ function App() {
       <AnimatePresence>
         {openNote !== null && (
           <NoteModal key="note"
-            dateKey={openNote} initial={notes[openNote] ?? []} dark={dark} modalBg={modalBg}
+            dateKey={openNote} initial={(notes[openNote] ?? []).filter(entry => !entry.isDeleted)} dark={dark} modalBg={modalBg}
             dayMilestones={milestonesMap[openNote] ?? []}
             initDayGoals={dayGoals[openNote]}
             tomorrowInitGoals={(() => { const [yr,mo,dy] = openNote.split("-").map(Number); return dayGoals[dateKey(new Date(yr,mo-1,dy+1))]; })()}
-            dayTemplates={dayTemplates}
-            onSaveTemplates={setDayTemplates}
+            dayTemplates={dayTemplates.filter(template => !template.isDeleted)}
+            onSaveTemplates={templates => setDayTemplates(prev => {
+              const previousById = new Map(prev.map(template => [template.id, template]));
+              const changedAt = Date.now();
+              const next = templates.map(template => {
+                const previous = previousById.get(template.id);
+                const unchanged = previous &&
+                  previous.name === template.name &&
+                  previous.items.join("\u0000") === template.items.join("\u0000");
+                return {
+                  ...template,
+                  createdAt: previous?.createdAt ?? template.createdAt ?? changedAt,
+                  updatedAt: unchanged ? (previous.updatedAt ?? changedAt) : changedAt,
+                };
+              });
+              const incomingIds = new Set(templates.map(template => template.id));
+              const removed = prev
+                .filter(template => !incomingIds.has(template.id) && !template.isDeleted)
+                .map(template => ({ ...template, updatedAt: changedAt, isDeleted: true }));
+              return [...next, ...removed];
+            })}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m =>
-              m.id === ms.id ? { ...ms, updatedAt: Date.now(), isDeleted: false } : m,
+              m.id === ms.id ? { ...ms, createdAt: m.createdAt ?? ms.createdAt ?? Date.now(), updatedAt: Date.now(), isDeleted: false } : m,
             ))}
             onMilestoneAdd={ms => setMilestones(prev => [
               ...prev,
-              { ...ms, updatedAt: Date.now(), isDeleted: false },
+              { ...ms, ...newTimestamps(), isDeleted: false },
             ])}
             onMilestoneDelete={id => setMilestones(prev => prev.map(m =>
               m.id === id ? { ...m, updatedAt: Date.now(), isDeleted: true } : m,
@@ -2080,6 +2265,7 @@ function App() {
                     previous.recurring !== item.recurring;
                   return {
                     ...item,
+                    createdAt: previous?.createdAt ?? item.createdAt ?? changedAt,
                     updatedAt: changed ? changedAt : (previous.updatedAt ?? changedAt),
                     isDeleted: false,
                   };
@@ -2097,7 +2283,7 @@ function App() {
             blockId={editGoalsBlockId} blockLabel={editGoalsBlock.label}
             initial={blockGoals[editGoalsBlockId] ?? { description:"", goals:[] }}
             dark={dark} modalBg={modalBg} accentColor={editGoalsAccentColor}
-            onSave={(bg, lbl) => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: bg })); const qi = config.quarters.findIndex(q => q.blocks.some(b => b.id === editGoalsBlockId)); if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl); }}
+            onSave={(bg, lbl) => { setBlockGoals(prev => ({ ...prev, [editGoalsBlockId!]: updateBlockGoals(prev[editGoalsBlockId!], bg) })); const qi = config.quarters.findIndex(q => q.blocks.some(b => b.id === editGoalsBlockId)); if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl); }}
             onClose={() => setEditGoalsBlockId(null)}
           />
         )}
@@ -2112,7 +2298,7 @@ function App() {
             dark={dark} modalBg={modalBg} accentColor={resolvedQuarters[editGoalsQi]?.fill}
             titleLabel={t("quarterGoals")}
             descPlaceholder={t("quarterDescPlaceholder")}
-            onSave={(bg, lbl) => { setQuarterGoals(prev => ({ ...prev, [editGoalsQi!]: bg })); updateQuarterMeta(editGoalsQi!, { name: lbl }); }}
+            onSave={(bg, lbl) => { setQuarterGoals(prev => ({ ...prev, [editGoalsQi!]: updateBlockGoals(prev[editGoalsQi!], bg) })); updateQuarterMeta(editGoalsQi!, { name: lbl }); }}
             onClose={() => setEditGoalsQi(null)}
           />
         )}
@@ -2127,7 +2313,7 @@ function App() {
             dark={dark} modalBg={modalBg}
             titleLabel={t("yearGoals")}
             descPlaceholder={t("yearDescPlaceholder")}
-            onSave={(bg) => { setYearGoals(prev => ({ ...prev, [viewYear]: bg })); }}
+            onSave={(bg) => { setYearGoals(prev => ({ ...prev, [viewYear]: updateBlockGoals(prev[viewYear], bg) })); }}
             onClose={() => setEditYearGoals(false)}
             onBack={() => { setEditYearGoals(false); setGoalsOpen(true); }}
           />
@@ -2139,7 +2325,11 @@ function App() {
           <LifeCalendarModal key="life-cal"
             dark={dark} modalBg={modalBg}
             settings={lifeSettings}
-            onSettingsChange={setLifeSettings}
+            onSettingsChange={next => setLifeSettings(previous => ({
+              ...next,
+              createdAt: previous.createdAt ?? next.createdAt ?? Date.now(),
+              updatedAt: Date.now(),
+            }))}
             onClose={() => setLifeCalendarOpen(false)}
           />
         )}
@@ -3521,7 +3711,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
 
   const addEntry = () => {
     const id = makeId();
-    setEntries(prev => [...prev, { id, text: "", createdAt: Date.now() }]);
+    setEntries(prev => [...prev, { id, text: "", ...newTimestamps() }]);
     setFocusId(id);
   };
   const updateEntry = (id: string, text: string) =>
@@ -4409,9 +4599,10 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
       w.days.forEach(d => { dateToQi[dateKey(d)] = qi; });
     });
     for (const [dk, allEntries] of Object.entries(notes)) {
+      const activeEntries = allEntries.filter(entry => !entry.isDeleted && entry.text.trim());
       const entries = q
-        ? allEntries.filter(e => e.text.toLowerCase().includes(q))
-        : allEntries;
+        ? activeEntries.filter(e => e.text.toLowerCase().includes(q))
+        : activeEntries;
       if (!entries.length) continue;
       const qi = dateToQi[dk] ?? -1;
       if (qi >= 0) qGroups[qi]!.push({ dateKey: dk, entries });
@@ -4429,7 +4620,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
       w.days.forEach(d => { dateToQi[dateKey(d)] = qi; });
     });
     for (const [dk, entries] of Object.entries(notes)) {
-      if (entries.length && dateToQi[dk] !== undefined) n++;
+      if (entries.some(entry => !entry.isDeleted && entry.text.trim()) && dateToQi[dk] !== undefined) n++;
     }
     return n;
   }, [notes, weeks]);
@@ -4517,7 +4708,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                   onKeyDown={e => {
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && draftText.trim()) {
                       e.preventDefault();
-                      onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
+                      onAddNote(draftDate, { id: makeId(), text: draftText.trim(), ...newTimestamps(), color: draftColor ?? undefined });
                       setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false); setShowAddForm(false);
                     }
                     if (e.key === "Escape") { setShowAddForm(false); setDraftText(""); setDraftColor(null); setDraftColorPickerOpen(false); }
@@ -4542,7 +4733,7 @@ function NotesPanel({ notes, weeks, resolvedQuarters, dark, modalBg, onOpenNote,
                 <button
                   onClick={() => {
                     if (!draftText.trim()) return;
-                    onAddNote(draftDate, { id: makeId(), text: draftText.trim(), createdAt: Date.now(), color: draftColor ?? undefined });
+                    onAddNote(draftDate, { id: makeId(), text: draftText.trim(), ...newTimestamps(), color: draftColor ?? undefined });
                     setDraftText(""); setDraftColor(null); setDraftDate(dateKey(new Date())); setDraftColorPickerOpen(false); setShowAddForm(false);
                   }}
                   disabled={!draftText.trim()}
@@ -4742,7 +4933,7 @@ function MilestoneModal({ milestones, resolvedQuarters, weeks, dark, modalBg, on
 
   const add = () => {
     if (!draftLabel.trim()) return;
-    const newItems = [...items, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined, recurring: draftRecurring || undefined }].sort((a,b)=>a.date.localeCompare(b.date));
+    const newItems = [...items, { id:makeId(), label:draftLabel.trim(), date:draftDate, color:draftColor, description:draftDesc.trim()||undefined, recurring: draftRecurring || undefined, ...newTimestamps(), isDeleted: false }].sort((a,b)=>a.date.localeCompare(b.date));
     setItems(newItems);
     onChange(newItems);
     resetDraft();
@@ -5193,7 +5384,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
 
         {goals.length === 0 ? (
           <div className="px-5 py-3">
-            <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false }])}
+            <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false, ...newTimestamps() }])}
               style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
               <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addGoal")}
             </button>
@@ -5256,7 +5447,7 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
             })}
           </div>
           {canAdd && (
-            <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false }])}
+            <button onClick={() => setGoals(prev => [...prev, { id:makeId(), text:"", done:false, ...newTimestamps() }])}
               className="mt-2"
               style={{ width:"100%", height:34, borderRadius:10, border:`1.5px dashed ${dark?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.13)"}`, background:"transparent", color:"var(--text-secondary)", fontSize:13, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
               <span style={{ fontSize:16, lineHeight:1 }}>+</span> {t("addGoal")}
@@ -6377,7 +6568,7 @@ function DayTemplatesModal({ dark, modalBg, templates, onSave, onApply, onClose,
     const items = formItems.map(s => s.trim()).filter(s => s.length > 0);
     if (items.length === 0) return;
     if (editingId === "__new__") {
-      const newTpl: DayTemplate = { id: makeId(), name, items };
+      const newTpl: DayTemplate = { id: makeId(), name, items, ...newTimestamps(), isDeleted: false };
       const updated = [...draft, newTpl];
       setDraft(updated);
       onSave(updated);

@@ -47,8 +47,8 @@ interface Options {
 //  1. `exportedAt` excluded — changes on every upload.
 //  2. Soft-deleted items stay in the fingerprint — a deletion is a real
 //     change and must be uploaded even though the UI hides the item.
-//  3. `updatedAt ?? 0` — items without a timestamp (legacy data) fingerprint
-//     as 0, preventing a mismatch against buildSnapshot()'s `?? Date.now()`.
+//  3. Missing timestamps fingerprint as 0; storage normalization supplies
+//     stable values for legacy records before they are uploaded.
 //  4. Arrays sorted by `id`, object keys sorted alphabetically.
 
 function snapshotFingerprint(s: AppSnapshot): string {
@@ -65,13 +65,14 @@ function snapshotFingerprint(s: AppSnapshot): string {
     lifeSettings: {
       birthDate:  s.lifeSettings.birthDate,
       lifespan:   s.lifeSettings.lifespan,
+      createdAt:  s.lifeSettings.createdAt ?? 0,
       updatedAt:  s.lifeSettings.updatedAt ?? 0,
     },
 
     milestones: sortById(s.milestones).map(m => ({
       id: m.id, label: m.label, date: m.date, color: m.color,
       description: m.description ?? null, recurring: m.recurring ?? false,
-      updatedAt: m.updatedAt ?? 0, isDeleted: m.isDeleted ?? false,
+      createdAt: m.createdAt ?? 0, updatedAt: m.updatedAt ?? 0, isDeleted: m.isDeleted ?? false,
     })),
 
     notes: sortedKeys(
@@ -79,9 +80,10 @@ function snapshotFingerprint(s: AppSnapshot): string {
         Object.entries(s.notes)
           .map(([k, entries]) => [
             k,
-            sortById(entries.filter(e => !e.isDeleted)).map(e => ({
+            sortById(entries).map(e => ({
               id: e.id, text: e.text, color: e.color ?? null,
-              updatedAt: e.updatedAt ?? 0,
+              createdAt: e.createdAt ?? 0, updatedAt: e.updatedAt ?? 0,
+              isDeleted: e.isDeleted ?? false,
             })),
           ])
           .filter(([, v]) => (v as unknown[]).length > 0),
@@ -93,19 +95,21 @@ function snapshotFingerprint(s: AppSnapshot): string {
         Object.entries(s.dayGoals).map(([k, v]) => [
           k,
           { count: v.count, done: v.done, labels: v.labels ?? null,
-            colors: v.colors ?? null, updatedAt: v.updatedAt ?? 0 },
+            colors: v.colors ?? null, createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
         ]),
       ),
     ),
 
-    dayTemplates: sortById(s.dayTemplates.filter(t => !t.isDeleted)).map(t => ({
-      id: t.id, name: t.name, items: t.items, updatedAt: t.updatedAt ?? 0,
+    dayTemplates: sortById(s.dayTemplates).map(t => ({
+      id: t.id, name: t.name, items: t.items,
+      createdAt: t.createdAt ?? 0, updatedAt: t.updatedAt ?? 0, isDeleted: t.isDeleted ?? false,
     })),
 
     blockGoals: sortedKeys(
       Object.fromEntries(
         Object.entries(s.blockGoals).map(([k, v]) => [
-          k, { description: v.description, goals: v.goals, updatedAt: v.updatedAt ?? 0 },
+          k, { description: v.description, goals: v.goals,
+            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
         ]),
       ),
     ),
@@ -113,7 +117,8 @@ function snapshotFingerprint(s: AppSnapshot): string {
     quarterGoals: sortedKeys(
       Object.fromEntries(
         Object.entries(s.quarterGoals).map(([k, v]) => [
-          k, { description: v.description, goals: v.goals, updatedAt: v.updatedAt ?? 0 },
+          k, { description: v.description, goals: v.goals,
+            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
         ]),
       ),
     ),
@@ -121,17 +126,22 @@ function snapshotFingerprint(s: AppSnapshot): string {
     yearGoals: sortedKeys(
       Object.fromEntries(
         Object.entries(s.yearGoals).map(([k, v]) => [
-          k, { description: v.description, goals: v.goals, updatedAt: v.updatedAt ?? 0 },
+          k, { description: v.description, goals: v.goals,
+            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
         ]),
       ),
     ),
 
-    quarterMeta: { data: s.quarterMeta.data, updatedAt: s.quarterMeta.updatedAt ?? 0 },
+    quarterMeta: {
+      data: s.quarterMeta.data,
+      createdAt: s.quarterMeta.createdAt ?? 0,
+      updatedAt: s.quarterMeta.updatedAt ?? 0,
+    },
 
     calendarConfigs: sortedKeys(
       Object.fromEntries(
         Object.entries(s.calendarConfigs).map(([k, v]) => [
-          k, { data: v.data, updatedAt: v.updatedAt ?? 0 },
+          k, { data: v.data, createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
         ]),
       ),
     ),
