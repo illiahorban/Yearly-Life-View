@@ -949,7 +949,11 @@ function App() {
   useEffect(() => {
     if (!settingsOpen) return;
     const handler = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) { setSettingsOpen(false); setFactoryResetStep(0); }
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+        setProfileOpen(false);
+        setFactoryResetStep(0);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -1593,7 +1597,10 @@ function App() {
               <div ref={settingsRef} style={{ position:"relative" }}>
                 <IconButton
                   title={t("settings")}
-                  onClick={() => setSettingsOpen(o => !o)}
+                  onClick={() => {
+                    if (settingsOpen) setProfileOpen(false);
+                    setSettingsOpen(o => !o);
+                  }}
                   bg={settingsOpen ? "rgba(0,122,255,0.13)" : overlayBg}
                 >
                   <span style={{ display:"inline-flex", transition:"transform 320ms cubic-bezier(0.34,1.56,0.64,1)", transform: settingsOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
@@ -1652,7 +1659,7 @@ function App() {
                           )}
                         </IconButton>
                         {userInfo && profileOpen && (
-                          <div style={{ width:228, padding:"4px 6px 6px", background:overlayBg, borderRadius:8 }}>
+                          <div style={{ width:228, padding:"4px 6px 6px", background:modalBg, borderRadius:8 }}>
                             <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
                             <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo.email}</div>
                             <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:7, padding:"7px 8px", borderRadius:8, background:modalBg, color:syncColor, fontSize:12, fontWeight:600 }}>
