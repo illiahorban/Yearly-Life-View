@@ -1845,7 +1845,7 @@ function App() {
                      style={{ position:"absolute", top:-2, right:-2, width:8, height:8, borderRadius:999, background:syncColor, boxShadow:"0 0 0 2px var(--bg)", pointerEvents:"none" }}
                    />
                 </IconButton>
-                <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, zIndex:50 }}>
+                <div style={{ position:"absolute", top:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50 }}>
                   <AnimatePresence>
                     {settingsOpen && (
                       <motion.div
@@ -1854,7 +1854,7 @@ function App() {
                         animate={{ opacity:1, y:0, scale:1 }}
                         exit={{ opacity:0, y:-8, scale:0.95 }}
                         transition={{ type:"spring", stiffness:380, damping:28 }}
-                        style={{ position:"relative", boxSizing:"border-box", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:4, width:40 }}
+                        style={{ position:"relative", boxSizing:"border-box", background: dark ? "rgb(28,28,30)" : "rgb(255,255,255)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:4, width:40 }}
                       >
                         {/* Google Drive — first shared settings control */}
                         <IconButton
@@ -1867,7 +1867,7 @@ function App() {
                               void googleSignIn();
                             }
                           }}
-                          bg={overlayBg}
+                          bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
                         >
                           {userInfo?.picture ? (
                             <img
@@ -1897,13 +1897,13 @@ function App() {
                             animate={{ opacity:1, x:0, scale:1 }}
                             exit={{ opacity:0, x:-6, scale:0.98 }}
                             transition={{ type:"spring", stiffness:380, damping:28 }}
-                            style={{ position:"absolute", top:4, right:"calc(100% + 8px)", width:"max-content", maxWidth:"min(280px, calc(100vw - 32px))", padding:"8px", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", zIndex:2 }}
+                            style={{ position:"absolute", top:4, right:"calc(100% + 8px)", width:"max-content", maxWidth:"min(280px, calc(100vw - 32px))", padding:"8px", background: dark ? "rgb(28,28,30)" : "rgb(255,255,255)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", zIndex:2 }}
                           >
                             <div style={{ padding:"0 2px", minWidth:0 }}>
                               <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
                               <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo.email}</div>
                             </div>
-                            <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:7, padding:"7px 8px", borderRadius:8, background:overlayBg, color:syncColor, fontSize:12, fontWeight:600 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:7, padding:"7px 8px", borderRadius:8, background: dark ? "rgb(44,44,46)" : "rgb(232,232,237)", color:syncColor, fontSize:12, fontWeight:600 }}>
                               <span aria-hidden="true" style={{ width:7, height:7, borderRadius:999, background:syncColor, flexShrink:0 }} />
                               <span>{syncLabel}</span>
                             </div>
@@ -1919,14 +1919,14 @@ function App() {
                             </button>
                           </motion.div>
                         )}
-                        <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
+                        <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}>
                           {dark ? <SunIcon /> : <MoonIcon />}
                         </IconButton>
-                        <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={overlayBg}>
+                        <IconButton title={lang==="en" ? t("switchToRussian") : t("switchToEnglish")} onClick={() => setLang(l => l==="en"?"ru":"en")} bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}>
                           <span style={{ fontSize:10, fontWeight:700, letterSpacing:"-0.02em", lineHeight:1 }}>{lang==="en"?"RU":"EN"}</span>
                         </IconButton>
                         <div style={{ height:1, background:"var(--border-soft)", margin:"1px 2px" }} />
-                        <IconButton title={t("factoryReset")} onClick={() => { setFactoryResetStep(1); setSettingsOpen(false); }} bg={overlayBg} color="#ff3b30">
+                        <IconButton title={t("factoryReset")} onClick={() => { setFactoryResetStep(1); setSettingsOpen(false); }} bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"} color="#ff3b30">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
                         </IconButton>
                       </motion.div>
