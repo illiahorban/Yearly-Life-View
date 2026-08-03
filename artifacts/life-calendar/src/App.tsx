@@ -1639,7 +1639,7 @@ function App() {
                               referrerPolicy="no-referrer"
                             />
                           ) : userInfo ? (
-                            <span style={{ fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>
+                            <span style={{ width:15, height:15, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, lineHeight:1, fontWeight:700, color:"var(--text-secondary)" }}>
                               {userInfo.name.charAt(0).toUpperCase()}
                             </span>
                           ) : (
