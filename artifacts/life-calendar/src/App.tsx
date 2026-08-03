@@ -962,6 +962,9 @@ function App() {
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!settingsOpen) setProfileOpen(false);
+  }, [settingsOpen]);
 
   // Search
   const [searchOpen, setSearchOpen] = useState(false);
@@ -1621,7 +1624,7 @@ function App() {
                         animate={{ opacity:1, y:0, scale:1 }}
                         exit={{ opacity:0, y:-8, scale:0.95 }}
                         transition={{ type:"spring", stiffness:380, damping:28 }}
-                        style={{ background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:3, width:38 }}
+                        style={{ position:"relative", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:3, width:38 }}
                       >
                         {/* Google Drive — first shared settings control */}
                         <IconButton
@@ -1659,10 +1662,18 @@ function App() {
                           )}
                         </IconButton>
                         {userInfo && profileOpen && (
-                          <div style={{ width:228, padding:"4px 6px 6px", background:modalBg, borderRadius:8 }}>
-                            <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
-                            <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo.email}</div>
-                            <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:7, padding:"7px 8px", borderRadius:8, background:modalBg, color:syncColor, fontSize:12, fontWeight:600 }}>
+                          <motion.div
+                            initial={{ opacity:0, x:-6, scale:0.98 }}
+                            animate={{ opacity:1, x:0, scale:1 }}
+                            exit={{ opacity:0, x:-6, scale:0.98 }}
+                            transition={{ type:"spring", stiffness:380, damping:28 }}
+                            style={{ position:"absolute", top:4, left:"calc(100% + 8px)", width:"max-content", maxWidth:"min(280px, calc(100vw - 32px))", padding:"8px", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", zIndex:2 }}
+                          >
+                            <div style={{ padding:"0 2px", minWidth:0 }}>
+                              <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
+                              <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo.email}</div>
+                            </div>
+                            <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:7, padding:"7px 8px", borderRadius:8, background:overlayBg, color:syncColor, fontSize:12, fontWeight:600 }}>
                               <span aria-hidden="true" style={{ width:7, height:7, borderRadius:999, background:syncColor, flexShrink:0 }} />
                               <span>{syncLabel}</span>
                             </div>
@@ -1676,7 +1687,7 @@ function App() {
                               </svg>
                               {t("signOutAccount")}
                             </button>
-                          </div>
+                          </motion.div>
                         )}
                         <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
                           {dark ? <SunIcon /> : <MoonIcon />}
