@@ -955,18 +955,9 @@ function App() {
     return () => document.removeEventListener("mousedown", handler);
   }, [settingsOpen]);
 
-  // Google profile dropdown
-  const [profileOpen, setProfileOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!profileOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [profileOpen]);
 
   // Search
   const [searchOpen, setSearchOpen] = useState(false);
@@ -1525,22 +1516,22 @@ function App() {
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
               <div className="hidden sm:block" style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
               <div className="flex"><IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton></div>
-              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
+              {false && (<React.Fragment>
               {/* ── Google Drive Sync ────────────────────────────── */}
               {userInfo ? (
                 <div ref={profileRef} style={{ position:"relative" }}>
                   <button
                     type="button"
-                    title={`${userInfo.name} — ${t("googleProfile")}`}
-                    aria-label={`${userInfo.name} — ${t("googleProfile")}`}
+                    title={`${userInfo!.name} — ${t("googleProfile")}`}
+                    aria-label={`${userInfo!.name} — ${t("googleProfile")}`}
                     aria-expanded={profileOpen}
                     onClick={() => { setProfileOpen(o => !o); setSettingsOpen(false); }}
                     style={{ position:"relative", width:30, height:30, borderRadius:999, border:"none", boxShadow:"inset 0 0 0 1.5px var(--border-soft)", overflow:"visible", cursor:"pointer", padding:0, background:"var(--bg-secondary)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}
                   >
-                    {userInfo.picture ? (
-                      <img src={userInfo.picture} alt="" width={30} height={30} style={{ display:"block", width:30, height:30, borderRadius:"inherit", objectFit:"cover" }} referrerPolicy="no-referrer" />
+                    {userInfo!.picture ? (
+                      <img src={userInfo!.picture} alt="" width={30} height={30} style={{ display:"block", width:30, height:30, borderRadius:"inherit", objectFit:"cover" }} referrerPolicy="no-referrer" />
                     ) : (
-                      <span style={{ fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>{userInfo.name.charAt(0).toUpperCase()}</span>
+                      <span style={{ fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>{userInfo!.name.charAt(0).toUpperCase()}</span>
                     )}
                     <span aria-hidden="true" style={{ position:"absolute", right:-1, bottom:-1, width:8, height:8, borderRadius:999, background:syncColor, boxShadow:"0 0 0 2px var(--bg)" }} />
                   </button>
@@ -1557,7 +1548,7 @@ function App() {
                         >
                           <div style={{ padding:"4px 6px 6px", minWidth:0 }}>
                             <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
-                            <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo.email}</div>
+                            <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo!.email}</div>
                           </div>
                           <div style={{ display:"flex", alignItems:"center", gap:7, padding:"7px 8px", borderRadius:8, background:overlayBg, color:syncColor, fontSize:12, fontWeight:600 }}>
                             <span aria-hidden="true" style={{ width:7, height:7, borderRadius:999, background:syncColor, flexShrink:0 }} />
@@ -1596,6 +1587,7 @@ function App() {
                   </svg>
                 </button>
               )}
+              </React.Fragment>)}
               <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0 }} />
               {/* Settings gear */}
               <div ref={settingsRef} style={{ position:"relative" }}>
@@ -1607,6 +1599,11 @@ function App() {
                   <span style={{ display:"inline-flex", transition:"transform 320ms cubic-bezier(0.34,1.56,0.64,1)", transform: settingsOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
                     <GearIcon />
                   </span>
+                   <span
+                     aria-hidden="true"
+                     title={syncLabel}
+                     style={{ position:"absolute", top:-2, right:-2, width:8, height:8, borderRadius:999, background:syncColor, boxShadow:"0 0 0 2px var(--bg)", pointerEvents:"none" }}
+                   />
                 </IconButton>
                 <div style={{ position:"absolute", top:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50 }}>
                   <AnimatePresence>
@@ -1619,6 +1616,61 @@ function App() {
                         transition={{ type:"spring", stiffness:380, damping:28 }}
                         style={{ background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:3, width:38 }}
                       >
+                        {/* Google Drive — first shared settings control */}
+                        <IconButton
+                          title={userInfo ? `${userInfo.name} — ${t("googleProfile")}` : t("signInGoogle")}
+                          aria-expanded={userInfo ? profileOpen : undefined}
+                          onClick={() => {
+                            if (userInfo) setProfileOpen(o => !o);
+                            else {
+                              setSettingsOpen(false);
+                              void googleSignIn();
+                            }
+                          }}
+                          bg={overlayBg}
+                        >
+                          {userInfo?.picture ? (
+                            <img
+                              src={userInfo.picture}
+                              alt=""
+                              width={18}
+                              height={18}
+                              style={{ display:"block", width:18, height:18, borderRadius:"50%", objectFit:"cover" }}
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : userInfo ? (
+                            <span style={{ fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>
+                              {userInfo.name.charAt(0).toUpperCase()}
+                            </span>
+                          ) : (
+                            <svg width="15" height="15" viewBox="0 0 24 24" style={{ flexShrink:0 }}>
+                              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                          )}
+                        </IconButton>
+                        {userInfo && profileOpen && (
+                          <div style={{ width:228, padding:"4px 6px 6px", background:overlayBg, borderRadius:8 }}>
+                            <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
+                            <div style={{ fontSize:12, color:"var(--text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{userInfo.email}</div>
+                            <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:7, padding:"7px 8px", borderRadius:8, background:modalBg, color:syncColor, fontSize:12, fontWeight:600 }}>
+                              <span aria-hidden="true" style={{ width:7, height:7, borderRadius:999, background:syncColor, flexShrink:0 }} />
+                              <span>{syncLabel}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => { setProfileOpen(false); setSettingsOpen(false); setConfirmSignOut(true); }}
+                              style={{ display:"flex", alignItems:"center", gap:7, width:"100%", marginTop:6, padding:"7px 8px", borderRadius:8, border:"none", background:"transparent", color:"#ff3b30", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/>
+                              </svg>
+                              {t("signOutAccount")}
+                            </button>
+                          </div>
+                        )}
                         <IconButton title={dark ? t("lightMode") : t("darkMode")} onClick={() => setDark(d => !d)} bg={overlayBg}>
                           {dark ? <SunIcon /> : <MoonIcon />}
                         </IconButton>
@@ -2141,10 +2193,10 @@ function App() {
 
 // ─── IconButton ───────────────────────────────────────────────────────────────
 
-function IconButton({ children, onClick, title, bg, color }: { children: React.ReactNode; onClick: () => void; title: string; bg: string; color?: string }) {
+function IconButton({ children, onClick, title, bg, color, "aria-expanded": ariaExpanded }: { children: React.ReactNode; onClick: () => void; title: string; bg: string; color?: string; "aria-expanded"?: boolean }) {
   return (
-    <button type="button" onClick={onClick} title={title}
-      style={{ width:30, height:30, borderRadius:8, background:bg, border:"none", boxShadow:"0 0 0 1px var(--border-soft)", color: color ?? "var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}
+    <button type="button" onClick={onClick} title={title} aria-expanded={ariaExpanded}
+      style={{ position:"relative", width:30, height:30, borderRadius:8, background:bg, border:"none", boxShadow:"0 0 0 1px var(--border-soft)", color: color ?? "var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}
     >{children}</button>
   );
 }
