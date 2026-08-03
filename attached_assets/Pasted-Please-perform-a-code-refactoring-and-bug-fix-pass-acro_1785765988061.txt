@@ -1,0 +1,28 @@
+Please perform a code refactoring and bug fix pass across the repository based on the following specific requirements:
+
+## 1. Performance Optimizations
+- **File:** `src/components/ui/field.tsx`
+  - Remove unnecessary `useMemo` wrapping for basic conditional JSX logic. Compute the content directly inside the component body to avoid React hook engine overhead.
+- **File:** `src/components/ui/chart.tsx`
+  - In `ChartStyle`, wrap the dynamic CSS string generation in a `useMemo` hook depending on `[id, config]` so styles aren't re-computed on every render.
+
+## 2. Reliability & Type Fixes
+- **File:** `artifacts/api-server/src/index.ts`
+  - Fix Express `app.listen` callback logic. Do not check `err` in the callback (it has `() => void` signature). Instead, store the returned server instance and handle errors via `server.on("error", (err) => { ... process.exit(1); })`.
+- **File:** `artifacts/api-server/src/app.ts`
+  - In the CORS configuration callback, when an origin is disallowed, call `cb(null, false)` instead of `cb(new Error(...))` to prevent throwing an unexpected 500 Internal Server Error.
+- **File:** `artifacts/mockup-sandbox/src/App.tsx`
+  - Improve component validation when parsing module exports. Replace simple `typeof v === "function"` checks with a helper function that also handles React Memo (`$$typeof: Symbol(react.memo)`) and `forwardRef` objects.
+
+## 3. Logic & Race Condition Fixes
+- **File:** `artifacts/mockup-sandbox/mockupPreviewPlugin.ts`
+  - Fix race condition in `refresh()`: store the active promise in a module-level variable (`pendingRefresh: Promise<boolean> | null`). Return the existing promise if a refresh is already in flight, rather than returning `false` immediately.
+  - Normalize path operations to avoid cross-platform bugs on Windows (ensure POSIX forward slashes `/` are used instead of assuming `\`).
+- **File:** `src/components/ui/input-group.tsx`
+  - In `InputGroupAddon` click-to-focus handler, change the search selector from `"input"` to `"input, textarea, select, [data-slot=input-group-control]"` to support textareas and selects.
+
+## 4. Code Cleanup
+- **File:** `src/components/ui/field.tsx`
+  - Filter out invalid/empty items from `errors` array before mapping over them, and use a combined unique key (e.g., `${err.message}-${index}`) instead of relying solely on array index.
+
+After applying these changes, run the project's typechecker and linter to confirm there are no syntax or type errors.

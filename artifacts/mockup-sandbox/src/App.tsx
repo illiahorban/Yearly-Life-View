@@ -1,21 +1,39 @@
-import { useEffect, useState, type ComponentType } from "react";
+import * as React from "react";
+import { useEffect, useState } from "react";
 
 import { modules as discoveredModules } from "./.generated/mockup-components";
 
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 
+function isReactComponent(value: unknown): value is React.ElementType {
+  if (typeof value === "function") {
+    return true;
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const type = (value as { $$typeof?: unknown }).$$typeof;
+  return (
+    type === Symbol.for("react.memo") ||
+    type === Symbol.for("react.forward_ref")
+  );
+}
+
 function _resolveComponent(
   mod: Record<string, unknown>,
   name: string,
-): ComponentType | undefined {
-  const fns = Object.values(mod).filter(
-    (v) => typeof v === "function",
-  ) as ComponentType[];
+): React.ElementType | undefined {
+  const components = Object.values(mod).filter(isReactComponent);
+  const getComponent = (value: unknown) =>
+    isReactComponent(value) ? value : undefined;
+
   return (
-    (mod.default as ComponentType) ||
-    (mod.Preview as ComponentType) ||
-    (mod[name] as ComponentType) ||
-    fns[fns.length - 1]
+    getComponent(mod.default) ??
+    getComponent(mod.Preview) ??
+    getComponent(mod[name]) ??
+    components[components.length - 1]
   );
 }
 
@@ -26,7 +44,7 @@ function PreviewRenderer({
   componentPath: string;
   modules: ModuleMap;
 }) {
-  const [Component, setComponent] = useState<ComponentType | null>(null);
+  const [Component, setComponent] = useState<React.ElementType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

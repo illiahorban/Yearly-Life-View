@@ -13,6 +13,9 @@ interface DiscoveredComponent {
   importPath: string;
 }
 
+const toPosixPath = (value: string): string => value.replace(/\\/g, "/");
+let pendingRefresh: Promise<boolean> | null = null;
+
 export function mockupPreviewPlugin(): Plugin {
   let root = "";
   let currentSource = "";
@@ -27,27 +30,30 @@ export function mockupPreviewPlugin(): Plugin {
   }
 
   function isMockupFile(absolutePath: string): boolean {
-    const rel = path.relative(getMockupsAbsDir(), absolutePath);
+    const rel = toPosixPath(path.relative(getMockupsAbsDir(), absolutePath));
     return (
-      !rel.startsWith("..") && !path.isAbsolute(rel) && rel.endsWith(".tsx")
+      rel !== ".." &&
+      !rel.startsWith("../") &&
+      !path.isAbsolute(rel) &&
+      rel.endsWith(".tsx")
     );
   }
 
   function isPreviewTarget(relativeToMockups: string): boolean {
-    return relativeToMockups
-      .split(path.sep)
+    return toPosixPath(relativeToMockups)
+      .split("/")
       .every((segment) => !segment.startsWith("_"));
   }
 
   async function discoverComponents(): Promise<Array<DiscoveredComponent>> {
-    const files = await glob(`${MOCKUPS_DIR}/**/*.tsx`, {
+    const files = await glob(`${toPosixPath(MOCKUPS_DIR)}/**/*.tsx`, {
       cwd: root,
       ignore: ["**/_*/**", "**/_*.tsx"],
     });
 
     return files.map((f) => ({
-      globKey: "./" + f.slice("src/".length),
-      importPath: path.posix.relative("src/.generated", f),
+      globKey: "./" + toPosixPath(f).slice("src/".length),
+      importPath: path.posix.relative("src/.generated", toPosixPath(f)),
     }));
   }
 
@@ -76,38 +82,38 @@ export function mockupPreviewPlugin(): Plugin {
     );
   }
 
-  let refreshInFlight = false;
   let refreshQueued = false;
 
-  async function refresh(): Promise<boolean> {
-    if (refreshInFlight) {
+  function refresh(): Promise<boolean> {
+    if (pendingRefresh) {
       refreshQueued = true;
-      return false;
+      return pendingRefresh;
     }
 
-    refreshInFlight = true;
-    let changed = false;
-    try {
-      const components = await discoverComponents();
-      const newSource = generateSource(components);
-      if (newSource !== currentSource) {
-        currentSource = newSource;
-        const generatedModuleAbsPath = getGeneratedModuleAbsPath();
-        mkdirSync(path.dirname(generatedModuleAbsPath), { recursive: true });
-        writeFileSync(generatedModuleAbsPath, currentSource);
-        changed = true;
+    pendingRefresh = (async () => {
+      let changed = false;
+      try {
+        do {
+          refreshQueued = false;
+          const components = await discoverComponents();
+          const newSource = generateSource(components);
+          if (newSource !== currentSource) {
+            currentSource = newSource;
+            const generatedModuleAbsPath = getGeneratedModuleAbsPath();
+            mkdirSync(path.dirname(generatedModuleAbsPath), {
+              recursive: true,
+            });
+            writeFileSync(generatedModuleAbsPath, currentSource);
+            changed = true;
+          }
+        } while (refreshQueued);
+        return changed;
+      } finally {
+        pendingRefresh = null;
       }
-    } finally {
-      refreshInFlight = false;
-    }
+    })();
 
-    if (refreshQueued) {
-      refreshQueued = false;
-      const followUp = await refresh();
-      return changed || followUp;
-    }
-
-    return changed;
+    return pendingRefresh;
   }
 
   async function onFileAddedOrRemoved(): Promise<void> {

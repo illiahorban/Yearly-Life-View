@@ -30,7 +30,7 @@ app.use(
       );
       if (allowed) return cb(null, true);
       logger.warn({ origin }, "CORS: rejected request from unlisted origin");
-      cb(new Error(`CORS: origin '${origin}' not allowed`));
+      cb(null, false);
     },
     credentials: true,
   }),
