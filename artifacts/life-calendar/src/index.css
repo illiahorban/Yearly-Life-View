@@ -119,3 +119,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
 [data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.20); }
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.32); }
+
+/* ─── Mobile responsive improvements ────────────────────────────────────────── */
+
+/* Touch targets: on mobile, icon buttons expand to 40 × 40 px for finger comfort */
+@media (max-width: 639px) {
+  .lc-icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+}
+
+/* Modal outer wrappers: tighter side padding on very narrow screens */
+@media (max-width: 639px) {
+  .lc-modal-outer {
+    padding: 12px !important;
+  }
+}
+
+/* Prevent any fixed-position popup from overflowing the viewport horizontally */
+@media (max-width: 639px) {
+  .lc-dropdown-safe {
+    max-width: calc(100vw - 24px);
+  }
+}

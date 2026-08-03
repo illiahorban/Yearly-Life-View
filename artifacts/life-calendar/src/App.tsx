@@ -1845,7 +1845,7 @@ function App() {
                      style={{ position:"absolute", top:-2, right:-2, width:8, height:8, borderRadius:999, background:syncColor, boxShadow:"0 0 0 2px var(--bg)", pointerEvents:"none" }}
                    />
                 </IconButton>
-                <div style={{ position:"absolute", top:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", zIndex:50 }}>
+                <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, zIndex:50 }}>
                   <AnimatePresence>
                     {settingsOpen && (
                       <motion.div
@@ -1897,7 +1897,7 @@ function App() {
                             animate={{ opacity:1, x:0, scale:1 }}
                             exit={{ opacity:0, x:-6, scale:0.98 }}
                             transition={{ type:"spring", stiffness:380, damping:28 }}
-                            style={{ position:"absolute", top:4, left:"calc(100% + 8px)", width:"max-content", maxWidth:"min(280px, calc(100vw - 32px))", padding:"8px", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", zIndex:2 }}
+                            style={{ position:"absolute", top:4, right:"calc(100% + 8px)", width:"max-content", maxWidth:"min(280px, calc(100vw - 32px))", padding:"8px", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", zIndex:2 }}
                           >
                             <div style={{ padding:"0 2px", minWidth:0 }}>
                               <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>
@@ -2500,6 +2500,7 @@ function App() {
 function IconButton({ children, onClick, title, bg, color, "aria-expanded": ariaExpanded }: { children: React.ReactNode; onClick: () => void; title: string; bg: string; color?: string; "aria-expanded"?: boolean }) {
   return (
     <button type="button" onClick={onClick} title={title} aria-expanded={ariaExpanded}
+      className="lc-icon-btn"
       style={{ position:"relative", width:30, height:30, borderRadius:8, background:bg, border:"none", boxShadow:"0 0 0 1px var(--border-soft)", color: color ?? "var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}
     >{children}</button>
   );
@@ -5605,7 +5606,7 @@ function ConfirmDialog({ open, onClose, onConfirm, message, confirmLabel, dark }
       {open && (
         <motion.div
           key="confirm-overlay"
-          className="fixed inset-0 flex items-center justify-center p-6"
+          className="fixed inset-0 flex items-center justify-center p-4 sm:p-6"
           style={{ zIndex: 60 }}
           initial={false}
           exit={{ opacity: 0 }}
@@ -5681,7 +5682,7 @@ function FactoryResetDialog({ open, onClose, onConfirm, dark }: {
       {open && (
         <motion.div
           key="factory-reset-overlay"
-          className="fixed inset-0 flex items-center justify-center p-6"
+          className="fixed inset-0 flex items-center justify-center p-4 sm:p-6"
           style={{ zIndex: 60 }}
           initial={false}
           exit={{ opacity: 0 }}
