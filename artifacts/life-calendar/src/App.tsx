@@ -1624,7 +1624,7 @@ function App() {
                         animate={{ opacity:1, y:0, scale:1 }}
                         exit={{ opacity:0, y:-8, scale:0.95 }}
                         transition={{ type:"spring", stiffness:380, damping:28 }}
-                        style={{ position:"relative", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:3, width:38 }}
+                        style={{ position:"relative", boxSizing:"border-box", background:modalBg, backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.22)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:4, width:40 }}
                       >
                         {/* Google Drive — first shared settings control */}
                         <IconButton
