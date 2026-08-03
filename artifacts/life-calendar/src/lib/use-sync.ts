@@ -95,7 +95,8 @@ function snapshotFingerprint(s: AppSnapshot): string {
         Object.entries(s.dayGoals).map(([k, v]) => [
           k,
           { count: v.count, done: v.done, labels: v.labels ?? null,
-            colors: v.colors ?? null, createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
+            colors: v.colors ?? null, createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false },
         ]),
       ),
     ),
@@ -109,7 +110,8 @@ function snapshotFingerprint(s: AppSnapshot): string {
       Object.fromEntries(
         Object.entries(s.blockGoals).map(([k, v]) => [
           k, { description: v.description, goals: v.goals,
-            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
+            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false },
         ]),
       ),
     ),
@@ -118,7 +120,8 @@ function snapshotFingerprint(s: AppSnapshot): string {
       Object.fromEntries(
         Object.entries(s.quarterGoals).map(([k, v]) => [
           k, { description: v.description, goals: v.goals,
-            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
+            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false },
         ]),
       ),
     ),
@@ -127,7 +130,8 @@ function snapshotFingerprint(s: AppSnapshot): string {
       Object.fromEntries(
         Object.entries(s.yearGoals).map(([k, v]) => [
           k, { description: v.description, goals: v.goals,
-            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
+            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false },
         ]),
       ),
     ),

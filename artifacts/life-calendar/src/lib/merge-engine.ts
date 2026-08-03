@@ -61,6 +61,34 @@ function mergeRecord<T extends { updatedAt?: number; createdAt?: number }>(
   return merged;
 }
 
+/** Merge goal collections independently so deleting one goal cannot be
+ * resurrected by a newer edit to a different goal in the same block. */
+function mergeBlockGoals(
+  local: Record<string, SyncBlockGoals>,
+  remote: Record<string, SyncBlockGoals>,
+): Record<string, SyncBlockGoals> {
+  const merged: Record<string, SyncBlockGoals> = {};
+  const allKeys = new Set([...Object.keys(local), ...Object.keys(remote)]);
+  for (const key of allKeys) {
+    const localBlock = local[key];
+    const remoteBlock = remote[key];
+    if (!localBlock) {
+      merged[key] = remoteBlock!;
+      continue;
+    }
+    if (!remoteBlock) {
+      merged[key] = localBlock;
+      continue;
+    }
+    const winner = newer(localBlock, remoteBlock);
+    merged[key] = {
+      ...winner,
+      goals: mergeById(localBlock.goals ?? [], remoteBlock.goals ?? []),
+    };
+  }
+  return merged;
+}
+
 /** Merge notes: Record<dateKey, SyncNoteEntry[]> — merge per-day by note id. */
 function mergeNotes(
   local: Record<string, SyncNoteEntry[]>,
@@ -109,17 +137,17 @@ export function mergeSnapshots(local: AppSnapshot, remote: AppSnapshot): AppSnap
 
     notes: mergeNotes(local.notes ?? {}, remote.notes ?? {}),
 
-    blockGoals: mergeRecord(
+    blockGoals: mergeBlockGoals(
       local.blockGoals ?? {},
       remote.blockGoals ?? {},
     ) as Record<string, SyncBlockGoals>,
 
-    quarterGoals: mergeRecord(
+    quarterGoals: mergeBlockGoals(
       local.quarterGoals ?? {},
       remote.quarterGoals ?? {},
     ) as Record<string, SyncBlockGoals>,
 
-    yearGoals: mergeRecord(
+    yearGoals: mergeBlockGoals(
       local.yearGoals ?? {},
       remote.yearGoals ?? {},
     ) as Record<string, SyncBlockGoals>,

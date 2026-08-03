@@ -57,6 +57,7 @@ export interface SyncGoal {
   color?: string;
   createdAt: number;
   updatedAt: number;
+  isDeleted: boolean;
 }
 
 export interface SyncBlockGoals {
@@ -64,6 +65,7 @@ export interface SyncBlockGoals {
   goals: SyncGoal[];
   createdAt: number;
   updatedAt: number;
+  isDeleted: boolean;
 }
 
 export interface SyncDayGoals {
@@ -73,6 +75,7 @@ export interface SyncDayGoals {
   colors?: (string | undefined)[];
   createdAt: number;
   updatedAt: number;
+  isDeleted: boolean;
 }
 
 export interface SyncDayTemplate {

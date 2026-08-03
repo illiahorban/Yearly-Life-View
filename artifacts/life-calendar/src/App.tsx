@@ -292,12 +292,12 @@ type TimestampFields = { createdAt?: number; updatedAt?: number };
 type CalendarConfig = { quarters: QuarterConfig[] } & TimestampFields;
 type DayState = "past" | "today" | "future" | "out";
 type Milestone = { id: string; label: string; date: string; color: string; description?: string; recurring?: boolean } & TimestampFields & { isDeleted?: boolean };
-type Goal = { id: string; text: string; done: boolean; color?: string } & TimestampFields;
-type BlockGoals = { description: string; goals: Goal[] } & TimestampFields;
+type Goal = { id: string; text: string; done: boolean; color?: string; isDeleted?: boolean } & TimestampFields;
+type BlockGoals = { description: string; goals: Goal[]; isDeleted?: boolean } & TimestampFields;
 type NoteEntry = { id: string; text: string; createdAt?: number; color?: string; isDeleted?: boolean } & TimestampFields;
 type LifeSettings = { birthDate: string; lifespan: number } & TimestampFields;
 type LifeView = "years" | "months" | "weeks" | "days";
-type DayGoals = { count: number; done: boolean[]; labels?: string[]; colors?: (string|undefined)[] } & TimestampFields;
+type DayGoals = { count: number; done: boolean[]; labels?: string[]; colors?: (string|undefined)[]; isDeleted?: boolean } & TimestampFields;
 type DayTemplate = { id: string; name: string; items: string[] } & TimestampFields & { isDeleted?: boolean };
 type QuarterMetaForSync = { name?: string; color?: string }[];
 
@@ -815,12 +815,19 @@ function newTimestamps(): Required<TimestampFields> {
 }
 
 function normalizeGoals(goals: Goal[], fallback: number): Goal[] {
-  return goals.map(goal => withTimestamps(goal, fallback));
+  return goals.map(goal => ({
+    ...withTimestamps(goal, fallback),
+    isDeleted: goal.isDeleted ?? false,
+  }));
 }
 
 function normalizeBlockGoals(value: BlockGoals, fallback: number): BlockGoals {
   const stamped = withTimestamps(value, fallback);
-  return { ...stamped, goals: normalizeGoals(value.goals ?? [], fallback) };
+  return {
+    ...stamped,
+    isDeleted: value.isDeleted ?? false,
+    goals: normalizeGoals(value.goals ?? [], fallback),
+  };
 }
 
 function normalizeMilestone(value: Milestone, fallback: number): Milestone & Required<TimestampFields> {
@@ -836,7 +843,7 @@ function normalizeDayTemplate(value: DayTemplate, fallback: number): DayTemplate
 }
 
 function normalizeDayGoals(value: DayGoals, fallback: number): DayGoals & Required<TimestampFields> {
-  return withTimestamps(value, fallback);
+  return { ...withTimestamps(value, fallback), isDeleted: value.isDeleted ?? false };
 }
 
 function normalizeLifeSettings(value: LifeSettings, fallback: number): LifeSettings & Required<TimestampFields> {
@@ -848,19 +855,36 @@ function updateBlockGoals(previous: BlockGoals | undefined, next: BlockGoals): B
   const prior = previous ? normalizeBlockGoals(previous, changedAt) : undefined;
   const base = normalizeBlockGoals(next, changedAt);
   const previousById = new Map((prior?.goals ?? []).map(goal => [goal.id, goal]));
+  const incomingIds = new Set(base.goals.map(goal => goal.id));
+  const removed = (prior?.goals ?? [])
+    .filter(goal => !incomingIds.has(goal.id) && !goal.isDeleted)
+    .map(goal => ({ ...goal, updatedAt: changedAt, isDeleted: true }));
+  const existingTombstones = (prior?.goals ?? []).filter(
+    goal => !incomingIds.has(goal.id) && goal.isDeleted,
+  );
   return {
     ...base,
+    isDeleted: false,
     createdAt: prior?.createdAt ?? base.createdAt,
     updatedAt: changedAt,
-    goals: base.goals.map(goal => {
-      const old = previousById.get(goal.id);
-      const changed = !old || old.text !== goal.text || old.done !== goal.done || old.color !== goal.color;
-      return {
-        ...goal,
-        createdAt: old?.createdAt ?? goal.createdAt,
-        updatedAt: changed ? changedAt : old.updatedAt,
-      };
-    }),
+    goals: [
+      ...base.goals.map(goal => {
+        const old = previousById.get(goal.id);
+        const changed = !old ||
+          old.text !== goal.text ||
+          old.done !== goal.done ||
+          old.color !== goal.color ||
+          old.isDeleted !== goal.isDeleted;
+        return {
+          ...goal,
+          createdAt: old?.createdAt ?? goal.createdAt,
+          updatedAt: changed ? changedAt : old.updatedAt,
+          isDeleted: goal.isDeleted ?? false,
+        };
+      }),
+      ...removed,
+      ...existingTombstones,
+    ],
   };
 }
 
@@ -1098,12 +1122,16 @@ function App() {
           ...goals,
           createdAt: previous?.createdAt ?? validTimestamp(goals.createdAt, now3),
           updatedAt: now3,
+          isDeleted: goals.isDeleted ?? false,
         },
       };
     });
   };
   const computeQuarterStreak = useCallback((qAllDays: Date[]): number => {
-    const isDone = (dk: string) => { const g = dayGoals[dk]; return g != null && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean); };
+    const isDone = (dk: string) => {
+      const g = dayGoals[dk];
+      return g != null && !g.isDeleted && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean);
+    };
     const t0 = startOfDay(new Date());
     const relevant = qAllDays.filter(d => d <= t0).sort((a, b) => a.getTime() - b.getTime());
     if (relevant.length === 0) return 0;
@@ -1150,8 +1178,10 @@ function App() {
           };
         });
       const removed = previous
-        .filter(entry => !incomingIds.has(entry.id) && !entry.isDeleted)
-        .map(entry => ({ ...normalizeNote(entry, changedAt), updatedAt: changedAt, isDeleted: true }));
+        .filter(entry => !incomingIds.has(entry.id))
+        .map(entry => entry.isDeleted
+          ? entry
+          : { ...normalizeNote(entry, changedAt), updatedAt: changedAt, isDeleted: true });
       const merged = [...valid, ...removed];
       if (merged.length > 0) next[key] = merged; else delete next[key];
       lsSet("lifeCalendar:notes", next);
@@ -1235,7 +1265,14 @@ function App() {
 
     const snapshotDayGoals: Record<string, SyncDayGoals> = {};
     for (const [k, g] of Object.entries(dayGoals)) {
-      snapshotDayGoals[k] = { ...stamp(g), count: g.count, done: g.done, labels: g.labels, colors: g.colors };
+      snapshotDayGoals[k] = {
+        ...stamp(g),
+        count: g.count,
+        done: g.done,
+        labels: g.labels,
+        colors: g.colors,
+        isDeleted: g.isDeleted ?? false,
+      };
     }
 
     const snapshotDayTemplates: import("./lib/sync-types").SyncDayTemplate[] = dayTemplates.map(dt => ({
@@ -1250,7 +1287,15 @@ function App() {
       snapshotBlockGoals[k] = {
         ...stamp(block),
         description: block.description,
-        goals: block.goals.map(goal => ({ ...stamp(goal), id: goal.id, text: goal.text, done: goal.done, color: goal.color })),
+        goals: block.goals.map(goal => ({
+          ...stamp(goal),
+          id: goal.id,
+          text: goal.text,
+          done: goal.done,
+          color: goal.color,
+          isDeleted: goal.isDeleted ?? false,
+        })),
+        isDeleted: block.isDeleted ?? false,
       };
     }
 
@@ -1260,7 +1305,15 @@ function App() {
       snapshotQuarterGoals[String(k)] = {
         ...stamp(block),
         description: block.description,
-        goals: block.goals.map(goal => ({ ...stamp(goal), id: goal.id, text: goal.text, done: goal.done, color: goal.color })),
+        goals: block.goals.map(goal => ({
+          ...stamp(goal),
+          id: goal.id,
+          text: goal.text,
+          done: goal.done,
+          color: goal.color,
+          isDeleted: goal.isDeleted ?? false,
+        })),
+        isDeleted: block.isDeleted ?? false,
       };
     }
 
@@ -1270,7 +1323,15 @@ function App() {
       snapshotYearGoals[String(k)] = {
         ...stamp(block),
         description: block.description,
-        goals: block.goals.map(goal => ({ ...stamp(goal), id: goal.id, text: goal.text, done: goal.done, color: goal.color })),
+        goals: block.goals.map(goal => ({
+          ...stamp(goal),
+          id: goal.id,
+          text: goal.text,
+          done: goal.done,
+          color: goal.color,
+          isDeleted: goal.isDeleted ?? false,
+        })),
+        isDeleted: block.isDeleted ?? false,
       };
     }
 
@@ -1609,19 +1670,22 @@ function App() {
   const toggleGoal = (blockId: string, goalId: string) => setBlockGoals(prev => {
     const bg = prev[blockId]; if (!bg) return prev;
     const updated = bg.goals.map(g => g.id===goalId ? { ...g, done: !g.done } : g);
-    if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
+    const active = updated.filter(g => !g.isDeleted && g.text.trim());
+    if (active.every(g => g.done) && active.length > 0) setTimeout(fireConfettiCannons, 80);
     return { ...prev, [blockId]: updateBlockGoals(bg, { ...bg, goals: updated }) };
   });
   const toggleQuarterGoal = (qi: number, goalId: string) => setQuarterGoals(prev => {
     const bg = prev[qi] ?? { description: "", goals: [] };
     const updated = bg.goals.map(g => g.id === goalId ? { ...g, done: !g.done } : g);
-    if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
+    const active = updated.filter(g => !g.isDeleted && g.text.trim());
+    if (active.every(g => g.done) && active.length > 0) setTimeout(fireConfettiCannons, 80);
     return { ...prev, [qi]: updateBlockGoals(prev[qi], { ...bg, goals: updated }) };
   });
   const toggleYearGoal = (year: number, goalId: string) => setYearGoals(prev => {
     const bg = prev[year] ?? { description: "", goals: [] };
     const updated = bg.goals.map(g => g.id === goalId ? { ...g, done: !g.done } : g);
-    if (updated.filter(g => g.text.trim()).every(g => g.done) && updated.filter(g => g.text.trim()).length > 0) setTimeout(fireConfettiCannons, 80);
+    const active = updated.filter(g => !g.isDeleted && g.text.trim());
+    if (active.every(g => g.done) && active.length > 0) setTimeout(fireConfettiCannons, 80);
     return { ...prev, [year]: updateBlockGoals(prev[year], { ...bg, goals: updated }) };
   });
 
@@ -2021,7 +2085,7 @@ function App() {
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button type="button" onClick={() => setEditGoalsQi(qi)} title={t("quarterGoals")}
-                        style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>g.text.trim()).length ?? 0) > 0 ? quarter.nameColor : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                        style={{ width:28, height:28, borderRadius:8, background:"transparent", border:"none", color: (quarterGoals[qi]?.goals.filter(g=>!g.isDeleted && g.text.trim()).length ?? 0) > 0 ? quarter.nameColor : mt.tertiary, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
                       ><GoalsIcon /></button>
                       <IconButton title={t("sprintConfig")} onClick={() => setSettingsQuarter(qi)} bg={overlayBg} color={quarter.text}><GearIcon /></IconButton>
                     </div>
@@ -2043,7 +2107,7 @@ function App() {
                     {/* Quarter goal progress bar */}
                     {(() => {
                       const qg = quarterGoals[qi];
-                      const activeQGoals = qg?.goals.filter(g => g.text.trim()) ?? [];
+            const activeQGoals = qg?.goals.filter(g => !g.isDeleted && g.text.trim()) ?? [];
                       if (activeQGoals.length === 0) return null;
                       const goalPct = (activeQGoals.filter(g => g.done).length / activeQGoals.length) * 100;
                       return (
@@ -2063,7 +2127,7 @@ function App() {
                   {/* Quarter goal checklist */}
                   {(() => {
                     const qg = quarterGoals[qi];
-                    const activeQGoals = qg?.goals.filter(g => g.text.trim()) ?? [];
+                    const activeQGoals = qg?.goals.filter(g => !g.isDeleted && g.text.trim()) ?? [];
                     if (activeQGoals.length === 0) return null;
                     return (
                       <div className="px-3 sm:px-5 pb-3">
@@ -2149,9 +2213,39 @@ function App() {
               const si = qi * WEEKS_PER_QUARTER;
               const blockWeeks = weeks.slice(si + blockStart, si + blockEnd);
               const keys = new Set(blockWeeks.flatMap(w => w.days).map(d => dateKey(d)));
-              setNotes(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
-              setBlockGoals(prev => { const n = { ...prev }; delete n[blockId]; return n; });
-              setDayGoals(prev => { const n = { ...prev }; keys.forEach(k => delete n[k]); return n; });
+               const deletedAt = Date.now();
+               setNotes(prev => {
+                 const next = { ...prev };
+                 keys.forEach(k => {
+                   const entries = next[k];
+                   if (!entries) return;
+                   next[k] = entries.map(entry => ({ ...entry, updatedAt: deletedAt, isDeleted: true }));
+                 });
+                 return next;
+               });
+               setBlockGoals(prev => {
+                 const block = prev[blockId];
+                 return block
+                   ? {
+                       ...prev,
+                       [blockId]: {
+                         ...block,
+                         updatedAt: deletedAt,
+                         isDeleted: true,
+                         goals: block.goals.map(goal => ({ ...goal, updatedAt: deletedAt, isDeleted: true })),
+                       },
+                     }
+                   : prev;
+               });
+               setDayGoals(prev => {
+                 const next = { ...prev };
+                 keys.forEach(k => {
+                   const goals = next[k];
+                   if (!goals) return;
+                   next[k] = { ...goals, updatedAt: deletedAt, isDeleted: true };
+                 });
+                 return next;
+               });
               setMilestones(prev => {
                 const deletedAt = Date.now();
                 return prev.map(m => keys.has(m.date)
@@ -2188,8 +2282,10 @@ function App() {
               });
               const incomingIds = new Set(templates.map(template => template.id));
               const removed = prev
-                .filter(template => !incomingIds.has(template.id) && !template.isDeleted)
-                .map(template => ({ ...template, updatedAt: changedAt, isDeleted: true }));
+                 .filter(template => !incomingIds.has(template.id))
+                 .map(template => template.isDeleted
+                   ? template
+                   : { ...template, updatedAt: changedAt, isDeleted: true });
               return [...next, ...removed];
             })}
             onMilestoneUpdate={ms => setMilestones(prev => prev.map(m =>
@@ -2456,14 +2552,17 @@ function BlocksRenderer({
             const timePct = totalDays > 0 ? Math.max(0, Math.min(100, (completedPortion/totalDays)*100)) : 0;
 
             const bg = blockGoals[block.id];
-            const activeGoals = bg?.goals.filter(g => g.text.trim()) ?? [];
+            const activeGoals = bg?.isDeleted ? [] : (bg?.goals.filter(g => !g.isDeleted && g.text.trim()) ?? []);
             const goalPct = activeGoals.length > 0 ? (activeGoals.filter(g => g.done).length/activeGoals.length)*100 : null;
             const pct = timePct;
             const daysLeft = Math.max(0, totalDays - pastDays - (hasToday ? 1 : 0));
             const isFuture = yearDays.length > 0 && yearDays[0]! > _now;
             const isComplete = yearDays.length > 0 && yearDays[yearDays.length-1]! < _now;
             const blockStreak = (() => {
-              const isDone = (dk: string) => { const g = dayGoalsMap[dk]; return g != null && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean); };
+            const isDone = (dk: string) => {
+              const g = dayGoalsMap[dk];
+              return g != null && !g.isDeleted && g.count > 0 && g.done.length >= g.count && g.done.every(Boolean);
+            };
               const t0 = startOfDay(new Date());
               const rel = allDays.filter(d => d <= t0).sort((a, b) => a.getTime() - b.getTime());
               if (rel.length === 0) return 0;
@@ -3453,7 +3552,7 @@ function NoteModal({ dateKey: dk, initial, dark, modalBg, dayMilestones, initDay
   }, []);
 
   const handleGoalReset = () => {
-    const g: DayGoals = { count: 0, done: [], labels: [] };
+    const g: DayGoals = { count: 0, done: [], labels: [], isDeleted: true };
     setGoalsDraft(g); onDayGoalsChange(g); setConfirmReset(false);
     setGoalIds([]);
   };
@@ -4328,8 +4427,8 @@ function HighlightText({ text, query }: { text: string; query: string }) {
 function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, resolvedQuarters, dark, modalBg, onToggleGoal, onToggleQuarterGoal, onToggleYearGoal, onEditGoals, onEditQuarterGoals, onEditYearGoals, onClose }: {
   config: CalendarConfig;
   blockGoals: Record<string, BlockGoals>;
-  quarterGoals: Record<number, { description: string; goals: Goal[] }>;
-  yearGoals: { description: string; goals: Goal[] };
+   quarterGoals: Record<number, BlockGoals>;
+   yearGoals: BlockGoals;
   viewYear: number;
   resolvedQuarters: Quarter[];
   dark: boolean; modalBg: string;
@@ -4344,15 +4443,15 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
   const { t } = React.useContext(LangContext);
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
 
-  const activeYearGoals = yearGoals.goals.filter(g => g.text.trim());
+  const activeYearGoals = yearGoals.isDeleted ? [] : yearGoals.goals.filter(g => !g.isDeleted && g.text.trim());
   let totalGoals = activeYearGoals.length, doneGoals = activeYearGoals.filter(g => g.done).length;
   config.quarters.forEach((qc, qi) => {
-    const qGoals = quarterGoals[qi]?.goals.filter(g => g.text.trim()) ?? [];
+    const qGoals = quarterGoals[qi]?.isDeleted ? [] : (quarterGoals[qi]?.goals.filter(g => !g.isDeleted && g.text.trim()) ?? []);
     totalGoals += qGoals.length;
     doneGoals += qGoals.filter(g => g.done).length;
     qc.blocks.forEach(b => {
       const bg = blockGoals[b.id];
-      const active = bg?.goals.filter(g => g.text.trim()) ?? [];
+      const active = bg?.isDeleted ? [] : (bg?.goals.filter(g => !g.isDeleted && g.text.trim()) ?? []);
       totalGoals += active.length;
       doneGoals += active.filter(g => g.done).length;
     });
@@ -4442,10 +4541,10 @@ function AllGoalsPanel({ config, blockGoals, quarterGoals, yearGoals, viewYear, 
 
             {config.quarters.map((qc, qi) => { // eslint-disable-line
               const qr = resolvedQuarters[qi]!;
-              const qGoals = quarterGoals[qi]?.goals.filter(g => g.text.trim()) ?? [];
+              const qGoals = quarterGoals[qi]?.isDeleted ? [] : (quarterGoals[qi]?.goals.filter(g => !g.isDeleted && g.text.trim()) ?? []);
               const blocksWithGoals = qc.blocks.map(b => {
                 const bg = blockGoals[b.id];
-                const goals = bg?.goals.filter(g => g.text.trim()) ?? [];
+                const goals = bg?.isDeleted ? [] : (bg?.goals.filter(g => !g.isDeleted && g.text.trim()) ?? []);
                 return { block: b, goals };
               }).filter(x => x.goals.length > 0);
               if (qGoals.length === 0 && blocksWithGoals.length === 0) return null;
@@ -5284,8 +5383,8 @@ function GoalsModal({ blockId:_bid, blockLabel, initial, dark, modalBg, accentCo
   const { t } = React.useContext(LangContext);
   const [label, setLabel] = useState(blockLabel);
   const [description, setDescription] = useState(initial.description);
-  const [goals, setGoals] = useState<Goal[]>(() => initial.goals.map(g=>({...g})));
-  const activeGoals = goals.filter(g => g.text.trim());
+  const [goals, setGoals] = useState<Goal[]>(() => initial.goals.filter(g => !g.isDeleted).map(g=>({...g})));
+  const activeGoals = goals.filter(g => !g.isDeleted && g.text.trim());
   const canAdd = true;
 
   const [confirmDeleteGoalId, setConfirmDeleteGoalId] = useState<string|null>(null);
