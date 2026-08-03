@@ -1040,16 +1040,33 @@ function App() {
   const settingsRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!settingsOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-        setProfileOpen(false);
-        setFactoryResetStep(0);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [settingsOpen]);
+    if (isMobile) {
+      // Mobile: capture-phase click fires before React's synthetic handlers.
+      // stopPropagation() prevents the tapped element from receiving the click,
+      // so the first tap only closes the menu; the second tap works normally.
+      const handler = (e: MouseEvent) => {
+        if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+          setSettingsOpen(false);
+          setProfileOpen(false);
+          setFactoryResetStep(0);
+          e.stopPropagation();
+        }
+      };
+      document.addEventListener("click", handler, true);
+      return () => document.removeEventListener("click", handler, true);
+    } else {
+      // Desktop: original mousedown behaviour — close without blocking the click.
+      const handler = (e: MouseEvent) => {
+        if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+          setSettingsOpen(false);
+          setProfileOpen(false);
+          setFactoryResetStep(0);
+        }
+      };
+      document.addEventListener("mousedown", handler);
+      return () => document.removeEventListener("mousedown", handler);
+    }
+  }, [settingsOpen, isMobile]);
 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
