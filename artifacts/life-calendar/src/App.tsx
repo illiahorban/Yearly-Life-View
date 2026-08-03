@@ -1747,11 +1747,11 @@ function App() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <div ref={searchBtnRef}><IconButton title={t("search")} onClick={() => { setSearchOpen(o => !o); setSearchQuery(""); }} bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}><SearchIcon /></IconButton></div>
-              <div className="hidden sm:block" style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
+              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
               <IconButton title={t("allGoals")} onClick={() => setGoalsOpen(o => !o)} bg={goalsOpen ? "rgba(52,199,89,0.15)" : overlayBg}><GoalsIcon /></IconButton>
               <IconButton title={t("notesPanel")} onClick={() => setNotesPanelOpen(true)} bg={overlayBg}><NotesIcon /></IconButton>
               <IconButton title={t("milestones")} onClick={() => setMilestonePanelOpen(true)} bg={overlayBg}><FlagIcon /></IconButton>
-              <div className="hidden sm:block" style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
+              <div style={{ width:1, height:16, background:"var(--border-soft)", flexShrink:0, margin:"0 2px" }} />
               <div className="flex"><IconButton title={t("lifeCalendarBtn")} onClick={() => setLifeCalendarOpen(true)} bg={overlayBg}><LifeIcon /></IconButton></div>
               {false && (<React.Fragment>
               {/* ── Google Drive Sync ────────────────────────────── */}
