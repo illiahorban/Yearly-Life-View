@@ -1,3 +1,14 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#34C759"/>
+  <!-- Row 1 -->
+  <rect x="0"   y="0"   width="52" height="52" rx="10" fill="#34C759"/>
+  <rect x="64"  y="0"   width="52" height="52" rx="10" fill="#34C759"/>
+  <rect x="128" y="0"   width="52" height="52" rx="10" fill="#34C759"/>
+  <!-- Row 2 -->
+  <rect x="0"   y="64"  width="52" height="52" rx="10" fill="#34C759"/>
+  <rect x="64"  y="64"  width="52" height="52" rx="10" fill="#34C759"/>
+  <rect x="128" y="64"  width="52" height="52" rx="10" fill="#34C759"/>
+  <!-- Row 3 -->
+  <rect x="0"   y="128" width="52" height="52" rx="10" fill="#34C759"/>
+  <rect x="64"  y="128" width="52" height="52" rx="10" fill="#34C759"/>
+  <rect x="128" y="128" width="52" height="52" rx="10" fill="#34C759"/>
 </svg>
