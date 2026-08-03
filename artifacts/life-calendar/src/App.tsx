@@ -5,6 +5,7 @@ import confetti from "canvas-confetti";
 import TextareaAutosize from "react-textarea-autosize";
 import { useSyncEngine } from "./lib/use-sync";
 import type { AppSnapshot, SyncMilestone, SyncNoteEntry, SyncDayTemplate, SyncBlockGoals, SyncDayGoals } from "./lib/sync-types";
+import { useIsMobile } from "./hooks/use-mobile";
 
 // ─── Tiny localStorage helpers ────────────────────────────────────────────────
 
@@ -997,6 +998,7 @@ function saveConfig(year: number, cfg: CalendarConfig) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 function App() {
+  const isMobile = useIsMobile();
   const [now, setNow] = useState<Date>(() => new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t); }, []);
 
@@ -1854,6 +1856,7 @@ function App() {
                         animate={{ opacity:1, y:0, scale:1 }}
                         exit={{ opacity:0, y:-8, scale:0.95 }}
                         transition={{ type:"spring", stiffness:380, damping:28 }}
+                        className="lc-settings-panel"
                         style={{ position:"relative", boxSizing:"border-box", background: dark ? "rgb(28,28,30)" : "rgb(255,255,255)", borderRadius:12, padding:"4px", boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", display:"flex", flexDirection:"column", gap:4, width:40 }}
                       >
                         {/* Google Drive — first shared settings control */}
@@ -1897,7 +1900,7 @@ function App() {
                             animate={{ opacity:1, x:0, scale:1 }}
                             exit={{ opacity:0, x:-6, scale:0.98 }}
                             transition={{ type:"spring", stiffness:380, damping:28 }}
-                            style={{ position:"absolute", top:4, right:"calc(100% + 8px)", width:"max-content", maxWidth:"min(280px, calc(100vw - 32px))", padding:"8px", background: dark ? "rgb(28,28,30)" : "rgb(255,255,255)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", zIndex:2 }}
+                            style={{ position:"absolute", top:4, ...(isMobile ? { right:"calc(100% + 8px)" } : { left:"calc(100% + 8px)" }), width:"max-content", maxWidth:"min(280px, calc(100vw - 32px))", padding:"8px", background: dark ? "rgb(28,28,30)" : "rgb(255,255,255)", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.28)", border:"1px solid var(--border-soft)", zIndex:2 }}
                           >
                             <div style={{ padding:"0 2px", minWidth:0 }}>
                               <div style={{ fontSize:10, color:"var(--text-tertiary)", marginBottom:3 }}>{t("googleProfile")}</div>

@@ -122,12 +122,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* ─── Mobile responsive improvements ────────────────────────────────────────── */
 
-/* Touch targets: on mobile, icon buttons expand to 40 × 40 px for finger comfort */
+/* Touch targets: on mobile, icon buttons expand for finger comfort */
 @media (max-width: 639px) {
   .lc-icon-btn {
     width: 36px !important;
     height: 36px !important;
     border-radius: 10px !important;
+  }
+  /* Inside the compact settings panel, keep buttons at their original 30px size */
+  .lc-settings-panel .lc-icon-btn {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
   }
 }
 
