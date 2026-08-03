@@ -1036,10 +1036,15 @@ function App() {
 
   // Settings dropdown
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [factoryResetStep, setFactoryResetStep] = useState(0);
   const settingsRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!settingsOpen) return;
+    // The Google profile menu is rendered inside the settings container, but
+    // keep it in this condition explicitly: it is a separate transient menu
+    // from the user's point of view and must get the same mobile first-tap
+    // treatment.
+    if (!settingsOpen && !profileOpen) return;
     if (isMobile) {
       // Mobile: capture-phase click fires before React's synthetic handlers.
       // stopPropagation() prevents the tapped element from receiving the click,
@@ -1066,10 +1071,9 @@ function App() {
       document.addEventListener("mousedown", handler);
       return () => document.removeEventListener("mousedown", handler);
     }
-  }, [settingsOpen, isMobile]);
+  }, [settingsOpen, profileOpen, isMobile]);
 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!settingsOpen) setProfileOpen(false);
