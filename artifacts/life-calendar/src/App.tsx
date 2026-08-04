@@ -5405,6 +5405,7 @@ function BlocksRenderer({
                           >
                             <button
                               type="button"
+                              className="lc-week-label"
                               onClick={() => onWeekLabelClick(_qi, qOffset)}
                               title={
                                 hasSelection
@@ -5421,7 +5422,7 @@ function BlocksRenderer({
                                 fontWeight: isCurrent ? 600 : 400,
                                 background: "transparent",
                                  borderRadius: 12,
-                                padding: "2px 6px",
+                                 padding: 0,
                                 border: "none",
                                  display: "flex",
                                  alignItems: "center",

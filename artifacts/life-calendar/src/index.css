@@ -64,9 +64,17 @@ body {
   width: 36px;
   flex-shrink: 0;
 }
+.lc-week-label {
+  width: 28px;
+  height: 28px;
+}
 @media (min-width: 640px) {
   .lc-side-col {
     width: 60px;
+  }
+  .lc-week-label {
+    width: 34px;
+    height: 34px;
   }
 }
 
