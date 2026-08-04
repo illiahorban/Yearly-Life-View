@@ -2562,13 +2562,13 @@ function App() {
     return "var(--text-secondary)";
   }, [syncStatus]);
 
-  // The gear is a calm connection indicator, not a live network activity
-  // meter. Background pulls happen every few seconds and should not make the
-  // dot flash. Only an actual Drive write gets the temporary amber state.
+  // The gear shows the current Drive activity. Both downloads (syncing) and
+  // uploads use the temporary amber state; idle/success remains green.
   const gearSyncColor = useMemo(() => {
     if (!userInfo) return "var(--text-secondary)";
     if (syncStatus === "error") return "#ff3b30";
-    if (syncStatus === "uploading") return "#ff9500";
+    if (syncStatus === "syncing" || syncStatus === "uploading")
+      return "#ff9500";
     return "#34c759";
   }, [syncStatus, userInfo]);
 
