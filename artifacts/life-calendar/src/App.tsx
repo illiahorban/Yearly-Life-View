@@ -3018,15 +3018,7 @@ function App() {
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
       <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
         {/* ── Header ─────────────────────────────────────────────────── */}
-        <motion.header
-          layout
-          transition={{
-            layout: {
-              type: "spring",
-              stiffness: 400,
-              damping: 35,
-            },
-          }}
+        <header
           className="sticky top-0 z-20"
           style={{
             background: headerBg,
@@ -3035,17 +3027,7 @@ function App() {
             borderBottom: "1px solid var(--border-soft)",
           }}
         >
-          <motion.div
-            layout
-            transition={{
-              layout: {
-                type: "spring",
-                stiffness: 400,
-                damping: 35,
-              },
-            }}
-            className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4"
-          >
+          <div className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div
                 className="flex items-center gap-1.5"
@@ -3922,28 +3904,39 @@ function App() {
             </AnimatePresence>
 
             {/* Search bar */}
-            <motion.div
-              ref={searchBarRef}
-              layout="size"
-              className="transform-gpu will-change-transform"
-            >
-              <AnimatePresence initial={false} mode="popLayout">
+            <div ref={searchBarRef}>
+              <AnimatePresence>
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={{ y: "-100%", opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: "-100%", opacity: 0 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 35,
-                    }}
-                    className="transform-gpu will-change-transform"
+                    initial={
+                      isMobile
+                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
+                        : { opacity: 0, height: 0, marginTop: 0 }
+                    }
+                    animate={
+                      isMobile
+                        ? { opacity: 1, height: 44, marginTop: 10, y: 0 }
+                        : { opacity: 1, height: "auto", marginTop: 10 }
+                    }
+                    exit={
+                      isMobile
+                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
+                        : { opacity: 0, height: 0, marginTop: 0 }
+                    }
+                    transition={
+                      isMobile
+                        ? { duration: 0.18, ease: "easeInOut" }
+                        : { duration: 0.2, ease: "easeInOut" }
+                    }
                     style={{
                       overflow: "hidden",
-                      marginTop: 10,
-                      WebkitTapHighlightColor: "transparent",
+                      ...(isMobile
+                        ? {
+                            marginTop: 10,
+                            willChange: "height, opacity, transform",
+                          }
+                        : {}),
                     }}
                   >
                     <div className="relative flex items-center">
@@ -4118,7 +4111,7 @@ function App() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
 
             {/* Sticky weekday labels */}
             <div className="mt-3 px-[13px] sm:px-[21px] flex flex-row items-center">
@@ -4139,8 +4132,8 @@ function App() {
               </div>
               <div className="lc-side-col" />
             </div>
-          </motion.div>
-        </motion.header>
+          </div>
+        </header>
 
         <main className="mx-auto max-w-3xl px-3 sm:px-8 py-4 sm:py-8">
           <LayoutGroup>
