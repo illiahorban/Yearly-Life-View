@@ -1788,6 +1788,33 @@ function saveConfig(year: number, cfg: CalendarConfig) {
 
 function App() {
   const isMobile = useIsMobile();
+  const headerRef = useRef<HTMLElement>(null);
+  const [mobileHeaderHeight, setMobileHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileHeaderHeight(0);
+      return;
+    }
+
+    const updateHeaderHeight = () => {
+      const height = headerRef.current?.getBoundingClientRect().height ?? 0;
+      setMobileHeaderHeight(Math.ceil(height));
+    };
+
+    updateHeaderHeight();
+    const observer = new ResizeObserver(updateHeaderHeight);
+    if (headerRef.current) observer.observe(headerRef.current);
+    window.addEventListener("resize", updateHeaderHeight);
+    window.visualViewport?.addEventListener("resize", updateHeaderHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeaderHeight);
+      window.visualViewport?.removeEventListener("resize", updateHeaderHeight);
+    };
+  }, [isMobile]);
+
   const [now, setNow] = useState<Date>(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -3019,8 +3046,14 @@ function App() {
       <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
         {/* ── Header ─────────────────────────────────────────────────── */}
         <header
-          className="sticky top-0 z-20"
+          ref={headerRef}
+          className="z-20"
           style={{
+            position: isMobile ? "fixed" : "sticky",
+            top: 0,
+            left: isMobile ? 0 : undefined,
+            right: isMobile ? 0 : undefined,
+            width: isMobile ? "100%" : undefined,
             background: headerBg,
             backdropFilter: "saturate(180%) blur(20px)",
             WebkitBackdropFilter: "saturate(180%) blur(20px)",
@@ -4156,6 +4189,12 @@ function App() {
             </div>
           </div>
         </header>
+        {isMobile && (
+          <div
+            aria-hidden="true"
+            style={{ height: mobileHeaderHeight, pointerEvents: "none" }}
+          />
+        )}
 
         <main className="mx-auto max-w-3xl px-3 sm:px-8 py-4 sm:py-8">
           <LayoutGroup>

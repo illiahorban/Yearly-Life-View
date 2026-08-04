@@ -16,4 +16,5 @@
 - [Sync while editing](sync-while-editing.md) — a Drive response must merge against the newest local snapshot, not the state captured when the request started.
 - [Cross-device sync control markers](cross-device-sync.md) — factory reset and explicit sign-out need separate authoritative markers in the shared Drive snapshot.
 - [Mobile search animation](mobile-search-animation.md) — avoid auto-height animation in the sticky header on phones; use a short opacity/transform transition instead.
+- [Mobile fixed header](mobile-fixed-header.md) — use a measured flow spacer with a fixed mobile header so it stays visible while search and keyboard are open.
 - [Mobile window first tap](mobile-window-first-tap.md) — on phones, dismiss the current window or week selection first; scrolling must not dismiss week selection.
