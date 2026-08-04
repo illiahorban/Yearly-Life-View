@@ -2501,6 +2501,7 @@ function App() {
     userInfo,
     signIn: googleSignIn,
     signOut: googleSignOut,
+    resetCloudData,
     markDirty,
   } = useSyncEngine({
     applySnapshot,
@@ -4762,6 +4763,12 @@ function App() {
           onClose={() => setFactoryResetStep(0)}
           onConfirm={async () => {
             try {
+              // Clear the Drive snapshot before clearing auth/local storage.
+              // Otherwise the next sign-in would merge the old cloud data
+              // back into the freshly-reset local calendar.
+              await resetCloudData();
+              await googleSignOut();
+
               // 1. Все виды хранилищ браузера
               localStorage.clear();
               sessionStorage.clear();
@@ -4801,11 +4808,19 @@ function App() {
                   );
               });
             } catch (e) {
-              console.error("Ошибка при полной очистке данных:", e);
+              console.error("Ошибка при сбросе данных календаря:", e);
+              window.alert(
+                lang === "ru"
+                  ? "Не удалось завершить сброс: данные Google Drive не были изменены."
+                  : "The reset could not finish: Google Drive data was not changed.",
+              );
+              return;
             } finally {
-              // 5. Жёсткая перезагрузка — useState(() => ls(...)) вернутся к дефолтам
-              window.location.href =
-                window.location.origin + window.location.pathname;
+              if (localStorage.length === 0) {
+                // 5. Жёсткая перезагрузка — useState(() => ls(...)) вернутся к дефолтам
+                window.location.href =
+                  window.location.origin + window.location.pathname;
+              }
             }
           }}
           dark={dark}

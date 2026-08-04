@@ -11,3 +11,4 @@
 - [Nested goal tombstones](nested-goal-tombstones.md) — goal lists need per-goal tombstones, not only container timestamps, or deleting one goal can resurrect it during a later merge.
 - [Google GIS token lifetime](google-session-expiry.md) — localStorage preserves the token only as a hint; restore and sync must silently refresh expiring Google access tokens.
 - [iOS keyboard accessory](ios-keyboard-accessory.md) — avoid programmatic autofocus on mobile; it triggers iOS Chrome's previous/next/checkmark bar, while manual focus preserves standard AutoFill UI.
+- [Factory reset and Drive](factory-reset-drive.md) — factory reset must replace the cloud snapshot before clearing local auth/data, or the next sign-in resurrects old content.
