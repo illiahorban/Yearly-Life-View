@@ -3,8 +3,8 @@ name: Mobile search animation
 description: The Life Calendar search bar needs a separate low-reflow animation on phone layouts.
 ---
 
-On mobile, avoid animating the search bar's `height` to `"auto"` inside the sticky calendar header. Use matching fixed-height open/close animations with opacity and a small transform, while keeping the desktop height animation unchanged.
+The mobile search bar intentionally mirrors the desktop animation: Framer Motion animates `height` to `"auto"` with matching opacity and margin transitions so both layouts feel identical. Keep the mobile input's explicit height and iOS-safe typography separately.
 
-**Why:** Animating auto height on a mobile sticky header forces repeated layout recalculation across the large calendar and can look like low frame rate. An opacity-only close leaves the header's layout collapsing abruptly.
+**Why:** The user explicitly prefers the desktop search motion on mobile; the fixed-height variant felt different and less polished. The input still needs an explicit mobile height to avoid iOS clipping.
 
-**How to apply:** Branch the search animation using the existing mobile viewport signal; animate the same fixed height and margin in both directions, keep the duration short, and use `will-change` only for the animated properties.
+**How to apply:** Use one shared `initial/animate/exit` definition for desktop and mobile (`height: 0` ↔ `height: "auto"`, opacity, and margin), with the shared short ease-in-out transition. Keep mobile-only input sizing (`height`, `lineHeight`, and 16px font) outside the container animation.

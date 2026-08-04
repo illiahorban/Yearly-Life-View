@@ -3909,34 +3909,13 @@ function App() {
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={
-                      isMobile
-                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    animate={
-                      isMobile
-                        ? { opacity: 1, height: 44, marginTop: 10, y: 0 }
-                        : { opacity: 1, height: "auto", marginTop: 10 }
-                    }
-                    exit={
-                      isMobile
-                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    transition={
-                      isMobile
-                        ? { duration: 0.18, ease: "easeInOut" }
-                        : { duration: 0.2, ease: "easeInOut" }
-                    }
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 10 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
                     style={{
                       overflow: "hidden",
-                      ...(isMobile
-                        ? {
-                            marginTop: 10,
-                            willChange: "height, opacity, transform",
-                          }
-                        : {}),
+                      willChange: "height, opacity",
                     }}
                   >
                     <div className="relative flex items-center">
