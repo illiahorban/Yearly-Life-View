@@ -8504,6 +8504,7 @@ function NoteModal({
                             style={{
                               maxHeight: isEditing ? "2000px" : 0,
                               opacity: isEditing ? 1 : 0,
+                              display: isEditing ? "block" : "none",
                               overflow: "hidden",
                               pointerEvents: isEditing ? "auto" : "none",
                             }}
@@ -8860,6 +8861,7 @@ function NoteModal({
               style={{
                 maxHeight: addEventOpen ? "2000px" : 0,
                 opacity: addEventOpen ? 1 : 0,
+                display: addEventOpen ? "block" : "none",
                 overflow: "hidden",
                 pointerEvents: addEventOpen ? "auto" : "none",
               }}
@@ -10336,6 +10338,7 @@ function NotesPanel({
         }}
       />
       <motion.div
+        layout
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -10499,7 +10502,7 @@ function NotesPanel({
             style={{
               maxHeight: showAddForm ? 0 : 40,
               opacity: showAddForm ? 0 : 1,
-              visibility: showAddForm ? "hidden" : "visible",
+              display: showAddForm ? "none" : "block",
               overflow: "hidden",
               pointerEvents: showAddForm ? "none" : "auto",
             }}
@@ -10532,7 +10535,7 @@ function NotesPanel({
             style={{
               maxHeight: showAddForm ? 260 : 0,
               opacity: showAddForm ? 1 : 0,
-              visibility: showAddForm ? "visible" : "hidden",
+              display: showAddForm ? "block" : "none",
               overflow: "hidden",
               pointerEvents: showAddForm ? "auto" : "none",
             }}
@@ -11314,7 +11317,7 @@ function MilestoneModal({
             style={{
               maxHeight: showAddForm ? 0 : 38,
               opacity: showAddForm ? 0 : 1,
-              visibility: showAddForm ? "hidden" : "visible",
+              display: showAddForm ? "none" : "block",
               overflow: "hidden",
               pointerEvents: showAddForm ? "none" : "auto",
             }}
@@ -11347,7 +11350,7 @@ function MilestoneModal({
             style={{
               maxHeight: showAddForm ? 500 : 0,
               opacity: showAddForm ? 1 : 0,
-              visibility: showAddForm ? "visible" : "hidden",
+              display: showAddForm ? "block" : "none",
               overflow: "hidden",
               pointerEvents: showAddForm ? "auto" : "none",
             }}
@@ -11753,7 +11756,7 @@ function MilestoneModal({
                         aria-hidden={!isEditing}
                         style={{
                           isolation: "isolate",
-                          visibility: isEditing ? "visible" : "hidden",
+                          display: isEditing ? "block" : "none",
                           opacity: isEditing ? 1 : 0,
                           pointerEvents: isEditing ? "auto" : "none",
                           position: isEditing ? "relative" : "absolute",
@@ -12042,7 +12045,7 @@ function MilestoneModal({
                       </div>
                       <div
                         style={{
-                          visibility: isEditing ? "hidden" : "visible",
+                          display: isEditing ? "none" : "block",
                           opacity: isEditing ? 0 : 1,
                           pointerEvents: isEditing ? "none" : "auto",
                         }}
@@ -12502,6 +12505,7 @@ function GoalsModal({
           }}
         />
         <motion.div
+          layout
           initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -14666,6 +14670,7 @@ function LifeCalendarModal({
         }}
       />
       <motion.div
+        layout
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -15491,6 +15496,7 @@ function DayTemplatesModal({
         }}
       />
       <motion.div
+        layout
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -15610,7 +15616,7 @@ function DayTemplatesModal({
             inert={!editing}
             aria-hidden={!editing}
             style={{
-              visibility: editing ? "visible" : "hidden",
+              display: editing ? "block" : "none",
               opacity: editing ? 1 : 0,
               pointerEvents: editing ? "auto" : "none",
               position: editing ? "relative" : "absolute",
@@ -15795,7 +15801,7 @@ function DayTemplatesModal({
             inert={editing}
             aria-hidden={editing}
             style={{
-              visibility: editing ? "hidden" : "visible",
+              display: editing ? "none" : "block",
               opacity: editing ? 0 : 1,
               pointerEvents: editing ? "none" : "auto",
             }}

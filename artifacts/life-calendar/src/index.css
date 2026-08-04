@@ -47,6 +47,11 @@ body,
   height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -183,16 +188,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     width: 36px !important;
     height: 36px !important;
     border-radius: 10px !important;
-  }
-
-  /*
-   * iOS Safari/Chrome zooms controls below 16px while opening the keyboard.
-   * That viewport shift makes WebKit rebuild its keyboard accessory bar.
-   * Keep every editable control at the native, zoom-free size on mobile.
-   */
-  input,
-  textarea {
-    font-size: 16px !important;
   }
 
   /* Inside the compact settings panel, keep buttons at their original 30px size */
