@@ -2569,6 +2569,16 @@ function App() {
     return "var(--text-secondary)";
   }, [syncStatus]);
 
+  // The gear is a calm connection indicator, not a live network activity
+  // meter. Background pulls happen every few seconds and should not make the
+  // dot flash. Only an actual Drive write gets the temporary amber state.
+  const gearSyncColor = useMemo(() => {
+    if (!userInfo) return "var(--text-secondary)";
+    if (syncStatus === "error") return "#ff3b30";
+    if (syncStatus === "uploading") return "#ff9500";
+    return "#34c759";
+  }, [syncStatus, userInfo]);
+
   // Q4 may need 14 weeks when the year's Dec 31 falls after week 52 ends.
   const q4Weeks = useMemo(
     () => gridWeeksForYear(viewYear) - 3 * WEEKS_PER_QUARTER,
@@ -3388,7 +3398,7 @@ function App() {
                         width: 8,
                         height: 8,
                         borderRadius: 999,
-                        background: syncColor,
+                        background: gearSyncColor,
                         boxShadow: "0 0 0 2px var(--bg)",
                         pointerEvents: "none",
                       }}
