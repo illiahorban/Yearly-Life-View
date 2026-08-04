@@ -4099,6 +4099,7 @@ function App() {
                             value={meta.name}
                             onChange={(name) => updateQuarterMeta(qi, { name })}
                             color={quarter.nameColor}
+                            underline={false}
                           />
                           <span
                             className="text-[10px] tabular-nums"
@@ -5763,7 +5764,7 @@ function BlockLabel({
       className="text-[12px] font-semibold bg-transparent outline-none"
       style={{
         color,
-        borderBottom: `1px solid ${color}`,
+         borderBottom: "none",
         padding: "1px 2px",
         width: "100%",
         resize: "none",
