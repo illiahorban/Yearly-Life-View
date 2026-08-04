@@ -7016,11 +7016,6 @@ function NoteModal({
   const isMobile = useIsMobile();
   const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
   const [focusId, setFocusId] = useState<string | null>(null);
-  const overlayRef = useRef<HTMLDivElement | null>(null);
-  const [visibleViewport, setVisibleViewport] = useState(() => ({
-    height: window.visualViewport?.height ?? window.innerHeight,
-    top: window.visualViewport?.offsetTop ?? 0,
-  }));
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(
     () => initDayGoals ?? { count: 0, done: [] },
   );
@@ -7144,89 +7139,6 @@ function NoteModal({
   const [confirmDeleteGoalIdx, setConfirmDeleteGoalIdx] = useState<
     number | null
   >(null);
-  // Mobile browsers keep the layout viewport full-height while the keyboard is
-  // open. visualViewport is the actually visible part, so the modal can stay
-  // fully accessible instead of being centred behind the keyboard.
-  useEffect(() => {
-    const updateViewport = () => {
-      const viewport = window.visualViewport;
-      setVisibleViewport({
-        height: viewport?.height ?? window.innerHeight,
-        top: viewport?.offsetTop ?? 0,
-      });
-    };
-    updateViewport();
-    window.visualViewport?.addEventListener("resize", updateViewport);
-    window.visualViewport?.addEventListener("scroll", updateViewport);
-    window.addEventListener("resize", updateViewport);
-    return () => {
-      window.visualViewport?.removeEventListener("resize", updateViewport);
-      window.visualViewport?.removeEventListener("scroll", updateViewport);
-      window.removeEventListener("resize", updateViewport);
-    };
-  }, []);
-
-  // Prevent a swipe or wheel event from escaping to the calendar when the
-  // modal's own scroll area has reached its top or bottom edge. This is needed
-  // on mobile browsers, where overscroll-behavior alone is not dependable.
-  useEffect(() => {
-    const overlay = overlayRef.current;
-    if (!overlay) return;
-
-    let lastTouchY: number | null = null;
-    const getScrollArea = (target: EventTarget | null) =>
-      target instanceof Element
-        ? target.closest<HTMLElement>("[data-note-modal-scroll-body]")
-        : null;
-    const atTop = (element: HTMLElement) => element.scrollTop <= 0;
-    const atBottom = (element: HTMLElement) =>
-      element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
-
-    const onWheel = (event: WheelEvent) => {
-      const scrollArea = getScrollArea(event.target);
-      if (
-        !scrollArea ||
-        (event.deltaY < 0 && atTop(scrollArea)) ||
-        (event.deltaY > 0 && atBottom(scrollArea))
-      ) {
-        event.preventDefault();
-      }
-    };
-    const onTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 1) lastTouchY = event.touches[0].clientY;
-    };
-    const onTouchMove = (event: TouchEvent) => {
-      if (event.touches.length !== 1 || lastTouchY === null) return;
-      const currentTouchY = event.touches[0].clientY;
-      const scrollDelta = lastTouchY - currentTouchY;
-      const scrollArea = getScrollArea(event.target);
-      if (
-        !scrollArea ||
-        (scrollDelta < 0 && atTop(scrollArea)) ||
-        (scrollDelta > 0 && atBottom(scrollArea))
-      ) {
-        event.preventDefault();
-      }
-      lastTouchY = currentTouchY;
-    };
-    const clearTouch = () => {
-      lastTouchY = null;
-    };
-
-    overlay.addEventListener("wheel", onWheel, { passive: false });
-    overlay.addEventListener("touchstart", onTouchStart, { passive: true });
-    overlay.addEventListener("touchmove", onTouchMove, { passive: false });
-    overlay.addEventListener("touchend", clearTouch);
-    overlay.addEventListener("touchcancel", clearTouch);
-    return () => {
-      overlay.removeEventListener("wheel", onWheel);
-      overlay.removeEventListener("touchstart", onTouchStart);
-      overlay.removeEventListener("touchmove", onTouchMove);
-      overlay.removeEventListener("touchend", clearTouch);
-      overlay.removeEventListener("touchcancel", clearTouch);
-    };
-  }, []);
-
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [], isDeleted: true };
     setGoalsDraft(g);
@@ -7640,18 +7552,11 @@ function NoteModal({
 
   return (
     <motion.div
-      ref={overlayRef}
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        top: visibleViewport.top,
-        bottom: "auto",
-        height: visibleViewport.height,
-        overflow: "hidden",
-        overscrollBehavior: "none",
-      }}
+      style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={() => {
         setColorPickerEntryId(null);
         onClose();
@@ -7690,7 +7595,7 @@ function NoteModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          maxHeight: "calc(100% - 2rem)",
+          maxHeight: "calc(100svh - 2rem)",
         }}
       >
         {/* Header */}
@@ -7729,7 +7634,6 @@ function NoteModal({
         {/* Scrollable body */}
         <div
           ref={scrollBodyRef}
-          data-note-modal-scroll-body
           style={{
             flex: 1,
             overflowY: "auto",

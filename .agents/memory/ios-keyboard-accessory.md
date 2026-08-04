@@ -7,4 +7,4 @@ On iPhone Chrome, opening a field with `autoFocus` or a programmatic `.focus()` 
 
 **Why:** The requested standard keyboard appearance is controlled by iOS/Chrome, not by an in-app toolbar. `autocomplete="off"` is not the right fix and can remove useful browser suggestions.
 
-**How to apply:** Use the existing mobile breakpoint to guard autofocus effects and conditional `autoFocus`; preserve desktop autofocus and the modal's scroll-into-view behavior for fields the user manually taps.
+**How to apply:** Use the existing mobile breakpoint to guard autofocus effects and conditional `autoFocus`; preserve desktop autofocus and manual focus behavior. Do not add `visualViewport` resize positioning or non-passive touch handlers around the modal, because those can also trigger the non-standard accessory state.
