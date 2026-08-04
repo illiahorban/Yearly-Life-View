@@ -3018,7 +3018,15 @@ function App() {
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
       <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
         {/* ── Header ─────────────────────────────────────────────────── */}
-        <header
+        <motion.header
+          layout
+          transition={{
+            layout: {
+              type: "spring",
+              stiffness: 400,
+              damping: 35,
+            },
+          }}
           className="sticky top-0 z-20"
           style={{
             background: headerBg,
@@ -3027,7 +3035,17 @@ function App() {
             borderBottom: "1px solid var(--border-soft)",
           }}
         >
-          <div className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4">
+          <motion.div
+            layout
+            transition={{
+              layout: {
+                type: "spring",
+                stiffness: 400,
+                damping: 35,
+              },
+            }}
+            className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4"
+          >
             <div className="flex items-center justify-between">
               <div
                 className="flex items-center gap-1.5"
@@ -3906,10 +3924,10 @@ function App() {
             {/* Search bar */}
             <motion.div
               ref={searchBarRef}
-              layout
+              layout="size"
               className="transform-gpu will-change-transform"
             >
-              <AnimatePresence initial={false}>
+              <AnimatePresence initial={false} mode="popLayout">
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
@@ -4121,8 +4139,8 @@ function App() {
               </div>
               <div className="lc-side-col" />
             </div>
-          </div>
-        </header>
+          </motion.div>
+        </motion.header>
 
         <main className="mx-auto max-w-3xl px-3 sm:px-8 py-4 sm:py-8">
           <LayoutGroup>
