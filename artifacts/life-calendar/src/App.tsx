@@ -2929,8 +2929,12 @@ function App() {
           className="sticky top-0 z-20"
           style={{
             background: headerBg,
-            backdropFilter: "saturate(180%) blur(20px)",
-            WebkitBackdropFilter: "saturate(180%) blur(20px)",
+            backdropFilter: isMobile
+              ? "saturate(180%) blur(10px)"
+              : "saturate(180%) blur(20px)",
+            WebkitBackdropFilter: isMobile
+              ? "saturate(180%) blur(10px)"
+              : "saturate(180%) blur(20px)",
             borderBottom: "1px solid var(--border-soft)",
           }}
         >
@@ -3175,19 +3179,37 @@ function App() {
                             {profileOpen && (
                               <motion.div
                                 key="profile-menu"
-                                initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 380,
-                                  damping: 28,
-                                }}
+                                initial={
+                                  isMobile
+                                    ? { opacity: 0, y: -4 }
+                                    : { opacity: 0, y: -8, scale: 0.95 }
+                                }
+                                animate={
+                                  isMobile
+                                    ? { opacity: 1, y: 0 }
+                                    : { opacity: 1, y: 0, scale: 1 }
+                                }
+                                exit={
+                                  isMobile
+                                    ? { opacity: 0, y: -4 }
+                                    : { opacity: 0, y: -8, scale: 0.95 }
+                                }
+                                transition={
+                                  isMobile
+                                    ? { duration: 0.12, ease: "easeOut" }
+                                    : {
+                                        type: "spring",
+                                        stiffness: 380,
+                                        damping: 28,
+                                      }
+                                }
                                 style={{
                                   width: 228,
                                   background: modalBg,
-                                  backdropFilter: "blur(20px)",
-                                  WebkitBackdropFilter: "blur(20px)",
+                                  backdropFilter: isMobile ? "none" : "blur(20px)",
+                                  WebkitBackdropFilter: isMobile
+                                    ? "none"
+                                    : "blur(20px)",
                                   borderRadius: 12,
                                   padding: "8px",
                                   boxShadow: "0 8px 32px rgba(0,0,0,0.22)",
@@ -3411,14 +3433,30 @@ function App() {
                       {settingsOpen && (
                         <motion.div
                           key="settings-menu"
-                          initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 380,
-                            damping: 28,
-                          }}
+                          initial={
+                            isMobile
+                              ? { opacity: 0, y: -4 }
+                              : { opacity: 0, y: -8, scale: 0.95 }
+                          }
+                          animate={
+                            isMobile
+                              ? { opacity: 1, y: 0 }
+                              : { opacity: 1, y: 0, scale: 1 }
+                          }
+                          exit={
+                            isMobile
+                              ? { opacity: 0, y: -4 }
+                              : { opacity: 0, y: -8, scale: 0.95 }
+                          }
+                          transition={
+                            isMobile
+                              ? { duration: 0.12, ease: "easeOut" }
+                              : {
+                                  type: "spring",
+                                  stiffness: 380,
+                                  damping: 28,
+                                }
+                          }
                           className="lc-settings-panel"
                           style={{
                             position: "relative",
@@ -3512,19 +3550,39 @@ function App() {
                           </IconButton>
                           {userInfo && profileOpen && (
                             <motion.div
-                              initial={{ opacity: 0, x: -6, scale: 0.98 }}
-                              animate={{ opacity: 1, x: 0, scale: 1 }}
-                              exit={{ opacity: 0, x: -6, scale: 0.98 }}
-                              transition={{
-                                type: "spring",
-                                stiffness: 380,
-                                damping: 28,
-                              }}
+                              initial={
+                                isMobile
+                                  ? { opacity: 0, x: 4 }
+                                  : { opacity: 0, x: -6, scale: 0.98 }
+                              }
+                              animate={
+                                isMobile
+                                  ? { opacity: 1, x: 0 }
+                                  : { opacity: 1, x: 0, scale: 1 }
+                              }
+                              exit={
+                                isMobile
+                                  ? { opacity: 0, x: 4 }
+                                  : { opacity: 0, x: -6, scale: 0.98 }
+                              }
+                              transition={
+                                isMobile
+                                  ? { duration: 0.12, ease: "easeOut" }
+                                  : {
+                                      type: "spring",
+                                      stiffness: 380,
+                                      damping: 28,
+                                    }
+                              }
                               style={{
                                 position: "absolute",
                                 top: 4,
                                 ...(isMobile
-                                  ? { right: "calc(100% + 8px)" }
+                                  ? {
+                                      right: "calc(100% + 8px)",
+                                      backdropFilter: "none",
+                                      WebkitBackdropFilter: "none",
+                                    }
                                   : { left: "calc(100% + 8px)" }),
                                 width: "max-content",
                                 maxWidth: "min(280px, calc(100vw - 32px))",
@@ -4054,8 +4112,8 @@ function App() {
                 const mt = mutedTextColors(meta.colorKey, dark);
 
                 return (
-                  <motion.section
-                    layout
+                    <motion.section
+                      layout={!isMobile}
                     key={qi}
                     className="overflow-visible"
                     style={{
@@ -5038,6 +5096,7 @@ function BlocksRenderer({
   onCancelSel: () => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   let cursor = 0;
   const blocks = qConfig.blocks.map((b) => {
     const r = { start: cursor, end: cursor + b.weeks };
@@ -5134,7 +5193,7 @@ function BlocksRenderer({
 
             return (
               <motion.div
-                layout
+                layout={!isMobile}
                 key={block.id}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -7014,6 +7073,7 @@ function NoteModal({
   onSave: (entries: NoteEntry[]) => void;
   onClose: () => void;
 }) {
+  const isMobile = useIsMobile();
   const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
   const entriesRef = useRef(entries);
   const commitEntries = (next: NoteEntry[]) => {
@@ -7489,15 +7549,25 @@ function NoteModal({
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.32)",
-          backdropFilter: "blur(4px)",
-          WebkitBackdropFilter: "blur(4px)",
+          backdropFilter: isMobile ? "none" : "blur(4px)",
+          WebkitBackdropFilter: isMobile ? "none" : "blur(4px)",
         }}
       />
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+        initial={
+          isMobile ? { opacity: 0, y: 10 } : { opacity: 0, scale: 0.95, y: 16 }
+        }
+        animate={
+          isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+        }
+        exit={
+          isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.96, y: 8 }
+        }
+        transition={
+          isMobile
+            ? { duration: 0.14, ease: "easeOut" }
+            : { type: "spring", stiffness: 380, damping: 30 }
+        }
         onClick={(e) => {
           e.stopPropagation();
           if (colorPickerEntryId !== null) setColorPickerEntryId(null);
@@ -7506,8 +7576,10 @@ function NoteModal({
           position: "relative",
           width: "min(92vw,400px)",
           background: modalBg,
-          backdropFilter: "saturate(180%) blur(24px)",
-          WebkitBackdropFilter: "saturate(180%) blur(24px)",
+          backdropFilter: isMobile ? "none" : "saturate(180%) blur(24px)",
+          WebkitBackdropFilter: isMobile
+            ? "none"
+            : "saturate(180%) blur(24px)",
           borderRadius: 22,
           boxShadow: `0 8px 48px rgba(0,0,0,0.26), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflow: "hidden",
@@ -9432,6 +9504,7 @@ function AllGoalsPanel({
   onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
 
   const activeYearGoals = yearGoals.isDeleted
@@ -9474,22 +9547,34 @@ function AllGoalsPanel({
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.34)",
-          backdropFilter: "blur(5px)",
-          WebkitBackdropFilter: "blur(5px)",
+          backdropFilter: isMobile ? "none" : "blur(5px)",
+          WebkitBackdropFilter: isMobile ? "none" : "blur(5px)",
         }}
       />
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 8 }}
-        transition={{ type: "spring", stiffness: 360, damping: 30 }}
+        initial={
+          isMobile ? { opacity: 0, y: 10 } : { opacity: 0, scale: 0.96, y: 16 }
+        }
+        animate={
+          isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+        }
+        exit={
+          isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.97, y: 8 }
+        }
+        transition={
+          isMobile
+            ? { duration: 0.14, ease: "easeOut" }
+            : { type: "spring", stiffness: 360, damping: 30 }
+        }
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md flex flex-col"
         style={{
           position: "relative",
           background: modalBg,
-          backdropFilter: "saturate(180%) blur(28px)",
-          WebkitBackdropFilter: "saturate(180%) blur(28px)",
+          backdropFilter: isMobile ? "none" : "saturate(180%) blur(28px)",
+          WebkitBackdropFilter: isMobile
+            ? "none"
+            : "saturate(180%) blur(28px)",
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflow: "hidden",
@@ -10247,6 +10332,7 @@ function NotesPanel({
   onClose: () => void;
 }) {
   const { t, months, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
   const [draftText, setDraftText] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
@@ -10353,23 +10439,35 @@ function NotesPanel({
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.34)",
-          backdropFilter: "blur(5px)",
-          WebkitBackdropFilter: "blur(5px)",
+          backdropFilter: isMobile ? "none" : "blur(5px)",
+          WebkitBackdropFilter: isMobile ? "none" : "blur(5px)",
         }}
       />
       <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 8 }}
-        transition={{ type: "spring", stiffness: 360, damping: 30 }}
+        layout={!isMobile}
+        initial={
+          isMobile ? { opacity: 0, y: 10 } : { opacity: 0, scale: 0.96, y: 16 }
+        }
+        animate={
+          isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+        }
+        exit={
+          isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.97, y: 8 }
+        }
+        transition={
+          isMobile
+            ? { duration: 0.14, ease: "easeOut" }
+            : { type: "spring", stiffness: 360, damping: 30 }
+        }
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md"
         style={{
           position: "relative",
           background: modalBg,
-          backdropFilter: "saturate(180%) blur(28px)",
-          WebkitBackdropFilter: "saturate(180%) blur(28px)",
+          backdropFilter: isMobile ? "none" : "saturate(180%) blur(28px)",
+          WebkitBackdropFilter: isMobile
+            ? "none"
+            : "saturate(180%) blur(28px)",
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
@@ -11033,6 +11131,7 @@ function MilestoneModal({
   onChange: (m: Milestone[]) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const [items, setItems] = useState<Milestone[]>(() =>
     [...milestones].sort((a, b) => a.date.localeCompare(b.date)),
   );
@@ -11193,23 +11292,35 @@ function MilestoneModal({
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.34)",
-          backdropFilter: "blur(5px)",
-          WebkitBackdropFilter: "blur(5px)",
+          backdropFilter: isMobile ? "none" : "blur(5px)",
+          WebkitBackdropFilter: isMobile ? "none" : "blur(5px)",
         }}
       />
       <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 8 }}
-        transition={{ type: "spring", stiffness: 360, damping: 30 }}
+        layout={!isMobile}
+        initial={
+          isMobile ? { opacity: 0, y: 10 } : { opacity: 0, scale: 0.96, y: 16 }
+        }
+        animate={
+          isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+        }
+        exit={
+          isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.97, y: 8 }
+        }
+        transition={
+          isMobile
+            ? { duration: 0.14, ease: "easeOut" }
+            : { type: "spring", stiffness: 360, damping: 30 }
+        }
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md"
         style={{
           position: "relative",
           background: modalBg,
-          backdropFilter: "saturate(180%) blur(28px)",
-          WebkitBackdropFilter: "saturate(180%) blur(28px)",
+          backdropFilter: isMobile ? "none" : "saturate(180%) blur(28px)",
+          WebkitBackdropFilter: isMobile
+            ? "none"
+            : "saturate(180%) blur(28px)",
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
@@ -12539,16 +12650,26 @@ function GoalsModal({
             position: "fixed",
             inset: 0,
             background: "rgba(0,0,0,0.32)",
-            backdropFilter: "blur(5px)",
-            WebkitBackdropFilter: "blur(5px)",
+            backdropFilter: isMobile ? "none" : "blur(5px)",
+            WebkitBackdropFilter: isMobile ? "none" : "blur(5px)",
           }}
         />
         <motion.div
-          layout
-          initial={{ opacity: 0, scale: 0.96, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.97, y: 8 }}
-          transition={{ type: "spring", stiffness: 360, damping: 30 }}
+          layout={!isMobile}
+          initial={
+            isMobile ? { opacity: 0, y: 10 } : { opacity: 0, scale: 0.96, y: 12 }
+          }
+          animate={
+            isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+          }
+          exit={
+            isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.97, y: 8 }
+          }
+          transition={
+            isMobile
+              ? { duration: 0.14, ease: "easeOut" }
+              : { type: "spring", stiffness: 360, damping: 30 }
+          }
           onClick={(e) => {
             e.stopPropagation();
             setColorPickerGoalId(null);
@@ -12557,8 +12678,10 @@ function GoalsModal({
           style={{
             position: "relative",
             background: modalBg,
-            backdropFilter: "saturate(180%) blur(28px)",
-            WebkitBackdropFilter: "saturate(180%) blur(28px)",
+            backdropFilter: isMobile ? "none" : "saturate(180%) blur(28px)",
+            WebkitBackdropFilter: isMobile
+              ? "none"
+              : "saturate(180%) blur(28px)",
             borderRadius: 22,
             boxShadow: accentColor
               ? `0 24px 70px rgba(0,0,0,0.22), 0 0 0 1.5px ${accentColor}`
@@ -13039,6 +13162,7 @@ function ConfirmDialog({
   dark: boolean;
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const modalBg = dark ? "rgba(28,28,30,0.97)" : "rgba(255,255,255,0.97)";
   if (typeof document === "undefined") return null;
   return ReactDOM.createPortal(
@@ -13065,23 +13189,37 @@ function ConfirmDialog({
               position: "absolute",
               inset: 0,
               background: "rgba(0,0,0,0.32)",
-              backdropFilter: "blur(10px) saturate(160%)",
-              WebkitBackdropFilter: "blur(10px) saturate(160%)",
+              backdropFilter: isMobile ? "none" : "blur(10px) saturate(160%)",
+              WebkitBackdropFilter: isMobile
+                ? "none"
+                : "blur(10px) saturate(160%)",
             }}
           />
           <motion.div
             key="confirm-card"
             onClick={(e) => e.stopPropagation()}
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            initial={
+              isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95, y: 10 }
+            }
+            animate={
+              isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+            }
+            exit={
+              isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.95, y: 10 }
+            }
+            transition={
+              isMobile
+                ? { duration: 0.14, ease: "easeOut" }
+                : { type: "spring", stiffness: 420, damping: 32 }
+            }
             style={{
               position: "relative",
               width: "min(92vw, 320px)",
               background: modalBg,
-              backdropFilter: "blur(30px) saturate(180%)",
-              WebkitBackdropFilter: "blur(30px) saturate(180%)",
+              backdropFilter: isMobile ? "none" : "blur(30px) saturate(180%)",
+              WebkitBackdropFilter: isMobile
+                ? "none"
+                : "blur(30px) saturate(180%)",
               borderRadius: 20,
               padding: "20px",
               boxShadow: `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
@@ -13184,6 +13322,7 @@ function FactoryResetDialog({
   dark: boolean;
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const [step, setStep] = useState(1);
   const modalBg = dark ? "rgba(28,28,30,0.97)" : "rgba(255,255,255,0.97)";
 
@@ -13213,23 +13352,37 @@ function FactoryResetDialog({
               position: "absolute",
               inset: 0,
               background: "rgba(0,0,0,0.32)",
-              backdropFilter: "blur(10px) saturate(160%)",
-              WebkitBackdropFilter: "blur(10px) saturate(160%)",
+              backdropFilter: isMobile ? "none" : "blur(10px) saturate(160%)",
+              WebkitBackdropFilter: isMobile
+                ? "none"
+                : "blur(10px) saturate(160%)",
             }}
           />
           <motion.div
             key="factory-reset-card"
             onClick={(e) => e.stopPropagation()}
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            initial={
+              isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95, y: 10 }
+            }
+            animate={
+              isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+            }
+            exit={
+              isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.95, y: 10 }
+            }
+            transition={
+              isMobile
+                ? { duration: 0.14, ease: "easeOut" }
+                : { type: "spring", stiffness: 420, damping: 32 }
+            }
             style={{
               position: "relative",
               width: "min(92vw, 340px)",
               background: modalBg,
-              backdropFilter: "blur(30px) saturate(180%)",
-              WebkitBackdropFilter: "blur(30px) saturate(180%)",
+              backdropFilter: isMobile ? "none" : "blur(30px) saturate(180%)",
+              WebkitBackdropFilter: isMobile
+                ? "none"
+                : "blur(30px) saturate(180%)",
               borderRadius: 20,
               padding: "20px",
               boxShadow: `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
@@ -13507,6 +13660,7 @@ function SprintSettingsModal({
   weeksCapacity: number;
 }) {
   const { t, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initial.blocks.map((b) => ({ ...b })),
   );
@@ -13563,22 +13717,38 @@ function SprintSettingsModal({
             position: "fixed",
             inset: 0,
             background: "rgba(20,20,25,0.38)",
-            backdropFilter: "blur(14px) saturate(160%)",
-            WebkitBackdropFilter: "blur(14px) saturate(160%)",
+            backdropFilter: isMobile
+              ? "none"
+              : "blur(14px) saturate(160%)",
+            WebkitBackdropFilter: isMobile
+              ? "none"
+              : "blur(14px) saturate(160%)",
           }}
         />
         <motion.div
           onClick={(e) => e.stopPropagation()}
-          initial={{ opacity: 0, scale: 0.96, y: 8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.97, y: 4 }}
-          transition={{ type: "spring", stiffness: 360, damping: 32 }}
+          initial={
+            isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.96, y: 8 }
+          }
+          animate={
+            isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+          }
+          exit={
+            isMobile ? { opacity: 0, y: 5 } : { opacity: 0, scale: 0.97, y: 4 }
+          }
+          transition={
+            isMobile
+              ? { duration: 0.14, ease: "easeOut" }
+              : { type: "spring", stiffness: 360, damping: 32 }
+          }
           className="w-full max-w-md"
           style={{
             position: "relative",
             background: modalBg,
-            backdropFilter: "blur(30px) saturate(180%)",
-            WebkitBackdropFilter: "blur(30px) saturate(180%)",
+            backdropFilter: isMobile ? "none" : "blur(30px) saturate(180%)",
+            WebkitBackdropFilter: isMobile
+              ? "none"
+              : "blur(30px) saturate(180%)",
             borderRadius: 22,
             boxShadow: `0 30px 80px rgba(0,0,0,0.22), 0 0 0 2px ${quarter.border}`,
             border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.6)"}`,
@@ -13775,7 +13945,7 @@ function SprintSettingsModal({
                     : "var(--text)";
                   return (
                     <motion.div
-                      layout
+                      layout={!isMobile}
                       key={b.id}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -14375,6 +14545,7 @@ function LifeCalendarModal({
   onClose: () => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const [view, setView] = useState<LifeView>("years");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
@@ -14700,17 +14871,27 @@ function LifeCalendarModal({
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.40)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
+            backdropFilter: isMobile ? "none" : "blur(6px)",
+            WebkitBackdropFilter: isMobile ? "none" : "blur(6px)",
           pointerEvents: "none",
         }}
       />
       <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 12 }}
-        transition={{ type: "spring", stiffness: 360, damping: 30 }}
+        layout={!isMobile}
+        initial={
+          isMobile ? { opacity: 0, y: 10 } : { opacity: 0, scale: 0.95, y: 20 }
+        }
+        animate={
+          isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+        }
+        exit={
+          isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.96, y: 12 }
+        }
+        transition={
+          isMobile
+            ? { duration: 0.14, ease: "easeOut" }
+            : { type: "spring", stiffness: 360, damping: 30 }
+        }
         onClick={(e) => e.stopPropagation()}
         style={{
           width:
@@ -14722,8 +14903,10 @@ function LifeCalendarModal({
           maxHeight: view === "months" || view === "weeks" ? undefined : "96vh",
           borderRadius: 24,
           background: modalBg,
-          backdropFilter: "saturate(180%) blur(28px)",
-          WebkitBackdropFilter: "saturate(180%) blur(28px)",
+          backdropFilter: isMobile ? "none" : "saturate(180%) blur(28px)",
+          WebkitBackdropFilter: isMobile
+            ? "none"
+            : "saturate(180%) blur(28px)",
           boxShadow: `0 24px 80px rgba(0,0,0,0.28), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflow: "hidden",
           display: "flex",
@@ -15409,6 +15592,7 @@ function DayTemplatesModal({
   prefillItems?: string[];
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
   const inputStyle: React.CSSProperties = {
@@ -15525,23 +15709,35 @@ function DayTemplatesModal({
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.32)",
-          backdropFilter: "blur(4px)",
-          WebkitBackdropFilter: "blur(4px)",
+          backdropFilter: isMobile ? "none" : "blur(4px)",
+          WebkitBackdropFilter: isMobile ? "none" : "blur(4px)",
         }}
       />
       <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.95, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+        layout={!isMobile}
+        initial={
+          isMobile ? { opacity: 0, y: 10 } : { opacity: 0, scale: 0.95, y: 16 }
+        }
+        animate={
+          isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }
+        }
+        exit={
+          isMobile ? { opacity: 0, y: 6 } : { opacity: 0, scale: 0.96, y: 8 }
+        }
+        transition={
+          isMobile
+            ? { duration: 0.14, ease: "easeOut" }
+            : { type: "spring", stiffness: 380, damping: 30 }
+        }
         onClick={(e) => e.stopPropagation()}
         style={{
           position: "relative",
           width: "min(92vw,400px)",
           background: modalBg,
-          backdropFilter: "saturate(180%) blur(24px)",
-          WebkitBackdropFilter: "saturate(180%) blur(24px)",
+          backdropFilter: isMobile ? "none" : "saturate(180%) blur(24px)",
+          WebkitBackdropFilter: isMobile
+            ? "none"
+            : "saturate(180%) blur(24px)",
           borderRadius: 22,
           boxShadow: `0 8px 48px rgba(0,0,0,0.26), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflow: "hidden",
