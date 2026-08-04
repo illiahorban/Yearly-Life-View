@@ -5420,7 +5420,7 @@ function BlocksRenderer({
                                     : mt.tertiary,
                                 fontWeight: isCurrent ? 600 : 400,
                                 background: "transparent",
-                                borderRadius: 4,
+                                 borderRadius: 12,
                                 padding: "2px 6px",
                                 border: "none",
                                  display: "flex",
@@ -5428,7 +5428,7 @@ function BlocksRenderer({
                                  justifyContent: "center",
                                  lineHeight: 1,
                                 boxShadow: isSel
-                                  ? `inset 0 0 0 1.5px ${quarter.border}66`
+                                   ? `inset 0 0 0 1.5px ${effectiveQ.border}`
                                   : "inset 0 0 0 1.5px transparent",
                                 cursor: "pointer",
                                 fontFamily: "inherit",
