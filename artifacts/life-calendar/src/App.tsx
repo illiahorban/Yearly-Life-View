@@ -6978,6 +6978,14 @@ function NoteModal({
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(
     () => initDayGoals ?? { count: 0, done: [] },
   );
+  // React may batch several taps into one render on mobile. Keep the latest
+  // draft synchronously so a second fast tap never builds on stale state.
+  const goalsDraftRef = useRef(goalsDraft);
+  const commitGoalsDraft = (next: DayGoals) => {
+    goalsDraftRef.current = next;
+    setGoalsDraft(next);
+    onDayGoalsChange(next);
+  };
   // Goals are stored as parallel arrays (no per-item id), but drag-reorder
   // needs a stable identity per item that survives position changes. This
   // local, non-persisted id list tracks 1:1 with goalsDraft's slots and is
@@ -6986,14 +6994,15 @@ function NoteModal({
     Array.from({ length: initDayGoals?.count ?? 0 }, () => makeId()),
   );
   const handleGoalAdd = () => {
-    const n = goalsDraft.count + 1;
-    const newDone = [...goalsDraft.done, false];
+    const current = goalsDraftRef.current;
+    const n = current.count + 1;
+    const newDone = [...current.done, false];
     const newLabels = [
-      ...(goalsDraft.labels ?? Array(goalsDraft.count).fill("")),
+      ...(current.labels ?? Array(current.count).fill("")),
       "",
     ];
     const newColors = [
-      ...(goalsDraft.colors ?? Array(goalsDraft.count).fill(undefined)),
+      ...(current.colors ?? Array(current.count).fill(undefined)),
       undefined,
     ];
     const g: DayGoals = {
@@ -7002,83 +7011,76 @@ function NoteModal({
       labels: newLabels,
       colors: newColors,
     };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    commitGoalsDraft(g);
     setGoalIds((prev) => [...prev, makeId()]);
   };
   const handleGoalReorder = (newIds: string[]) => {
+    const current = goalsDraftRef.current;
     const perm = newIds.map((id) => goalIds.indexOf(id));
     const reorder = <T,>(arr: T[]): T[] => perm.map((idx) => arr[idx]);
     const newDone = reorder(
-      Array.from(
-        { length: goalsDraft.count },
-        (_, i) => goalsDraft.done[i] ?? false,
-      ),
+      Array.from({ length: current.count }, (_, i) => current.done[i] ?? false),
     );
     const newLabels = reorder(
       Array.from(
-        { length: goalsDraft.count },
-        (_, i) => goalsDraft.labels?.[i] ?? "",
+        { length: current.count },
+        (_, i) => current.labels?.[i] ?? "",
       ),
     );
     const newColors = reorder(
-      Array.from(
-        { length: goalsDraft.count },
-        (_, i) => goalsDraft.colors?.[i],
-      ),
+      Array.from({ length: current.count }, (_, i) => current.colors?.[i]),
     );
     const g: DayGoals = {
-      count: goalsDraft.count,
+      count: current.count,
       done: newDone,
       labels: newLabels,
       colors: newColors,
     };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    commitGoalsDraft(g);
     setGoalIds(newIds);
   };
   const handleGoalToggle = (i: number) => {
-    const newDone = Array.from({ length: goalsDraft.count }, (_, j) =>
-      j === i ? !(goalsDraft.done[j] ?? false) : (goalsDraft.done[j] ?? false),
+    const current = goalsDraftRef.current;
+    const newDone = Array.from({ length: current.count }, (_, j) =>
+      j === i ? !(current.done[j] ?? false) : (current.done[j] ?? false),
     );
-    const g: DayGoals = { ...goalsDraft, done: newDone };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    const g: DayGoals = { ...current, done: newDone };
+    commitGoalsDraft(g);
     if (newDone.every(Boolean) && newDone.length > 0)
       setTimeout(fireConfettiCannons, 80);
   };
   const handleGoalLabelChange = (i: number, value: string) => {
-    const newLabels = Array.from({ length: goalsDraft.count }, (_, j) =>
-      j === i ? value : (goalsDraft.labels?.[j] ?? ""),
+    const current = goalsDraftRef.current;
+    const newLabels = Array.from({ length: current.count }, (_, j) =>
+      j === i ? value : (current.labels?.[j] ?? ""),
     );
-    const g: DayGoals = { ...goalsDraft, labels: newLabels };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    const g: DayGoals = { ...current, labels: newLabels };
+    commitGoalsDraft(g);
   };
   const handleGoalColorChange = (i: number, color: string | undefined) => {
+    const current = goalsDraftRef.current;
     const newColors: (string | undefined)[] = Array.from(
-      { length: goalsDraft.count },
-      (_, j) => (j === i ? color : goalsDraft.colors?.[j]),
+      { length: current.count },
+      (_, j) => (j === i ? color : current.colors?.[j]),
     );
-    const g: DayGoals = { ...goalsDraft, colors: newColors };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    const g: DayGoals = { ...current, colors: newColors };
+    commitGoalsDraft(g);
     setGoalColorPickerIdx(null);
   };
   const handleGoalDelete = (i: number) => {
-    const newCount = goalsDraft.count - 1;
+    const current = goalsDraftRef.current;
+    const newCount = current.count - 1;
     if (newCount < 0) return;
-    const newDone = goalsDraft.done.filter((_, j) => j !== i);
-    const newLabels = (goalsDraft.labels ?? []).filter((_, j) => j !== i);
-    const newColors = (goalsDraft.colors ?? []).filter((_, j) => j !== i);
+    const newDone = current.done.filter((_, j) => j !== i);
+    const newLabels = (current.labels ?? []).filter((_, j) => j !== i);
+    const newColors = (current.colors ?? []).filter((_, j) => j !== i);
     const g: DayGoals = {
       count: newCount,
       done: newDone,
       labels: newLabels,
       colors: newColors,
     };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    commitGoalsDraft(g);
     setGoalIds((prev) => prev.filter((_, j) => j !== i));
   };
   const [hoveredGoalIdx, setHoveredGoalIdx] = useState<number | null>(null);
@@ -7097,8 +7099,7 @@ function NoteModal({
   >(null);
   const handleGoalReset = () => {
     const g: DayGoals = { count: 0, done: [], labels: [], isDeleted: true };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    commitGoalsDraft(g);
     setConfirmReset(false);
     setGoalIds([]);
   };
@@ -7112,8 +7113,7 @@ function NoteModal({
       done: Array(n).fill(false),
       labels: items.slice(0, n),
     };
-    setGoalsDraft(g);
-    onDayGoalsChange(g);
+    commitGoalsDraft(g);
     setTemplateMgrOpen(false);
     setGoalIds(Array.from({ length: n }, () => makeId()));
   };
@@ -7126,10 +7126,11 @@ function NoteModal({
   })();
   const tomorrowAlreadyHasGoals = (tomorrowInitGoals?.count ?? 0) > 0;
   const doCopyToTomorrow = () => {
+    const current = goalsDraftRef.current;
     const g: DayGoals = {
-      count: goalsDraft.count,
-      done: Array(goalsDraft.count).fill(false),
-      labels: goalsDraft.labels ? [...goalsDraft.labels] : [],
+      count: current.count,
+      done: Array(current.count).fill(false),
+      labels: current.labels ? [...current.labels] : [],
     };
     onCopyGoalsTo(tomorrowDk, g);
     setCopiedTomorrow(true);
