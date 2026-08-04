@@ -5582,8 +5582,7 @@ function BlocksRenderer({
                                 className="text-[10px]"
                                 style={{ color: "var(--text-tertiary)" }}
                               >
-                                {pluralWeeks(selMax - selMin + 1, lang, t)} ·{" "}
-                                {t("clickWeekToAdjust")}
+                                {pluralWeeks(selMax - selMin + 1, lang, t)}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
