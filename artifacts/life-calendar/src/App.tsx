@@ -1800,7 +1800,7 @@ function App() {
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const yearPickerRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!yearPickerOpen) return;
+    if (!yearPickerOpen || isMobile) return;
     const handler = (e: MouseEvent) => {
       if (
         yearPickerRef.current &&
@@ -1810,7 +1810,7 @@ function App() {
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [yearPickerOpen]);
+  }, [yearPickerOpen, isMobile]);
 
   // Dark mode
   const [dark, setDark] = useState<boolean>(() =>
@@ -1853,43 +1853,22 @@ function App() {
   const [factoryResetStep, setFactoryResetStep] = useState(0);
   const settingsRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // The Google profile menu is rendered inside the settings container, but
-    // keep it in this condition explicitly: it is a separate transient menu
-    // from the user's point of view and must get the same mobile first-tap
-    // treatment.
     if (!settingsOpen && !profileOpen) return;
-    if (isMobile) {
-      // Mobile: capture-phase click fires before React's synthetic handlers.
-      // stopPropagation() prevents the tapped element from receiving the click,
-      // so the first tap only closes the menu; the second tap works normally.
-      const handler = (e: MouseEvent) => {
-        if (
-          settingsRef.current &&
-          !settingsRef.current.contains(e.target as Node)
-        ) {
-          setSettingsOpen(false);
-          setProfileOpen(false);
-          setFactoryResetStep(0);
-          e.stopPropagation();
-        }
-      };
-      document.addEventListener("click", handler, true);
-      return () => document.removeEventListener("click", handler, true);
-    } else {
-      // Desktop: original mousedown behaviour — close without blocking the click.
-      const handler = (e: MouseEvent) => {
-        if (
-          settingsRef.current &&
-          !settingsRef.current.contains(e.target as Node)
-        ) {
-          setSettingsOpen(false);
-          setProfileOpen(false);
-          setFactoryResetStep(0);
-        }
-      };
-      document.addEventListener("mousedown", handler);
-      return () => document.removeEventListener("mousedown", handler);
-    }
+    if (isMobile) return;
+
+    // Desktop: close without blocking the click that opened another area.
+    const handler = (e: MouseEvent) => {
+      if (
+        settingsRef.current &&
+        !settingsRef.current.contains(e.target as Node)
+      ) {
+        setSettingsOpen(false);
+        setProfileOpen(false);
+        setFactoryResetStep(0);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [settingsOpen, profileOpen, isMobile]);
 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -1904,7 +1883,7 @@ function App() {
   const searchBtnRef = React.useRef<HTMLDivElement>(null);
   const searchBarRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!searchOpen) return;
+    if (!searchOpen || isMobile) return;
     const handler = (e: MouseEvent) => {
       const target = e.target as Node;
       if (
@@ -1919,7 +1898,44 @@ function App() {
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [searchOpen]);
+  }, [searchOpen, isMobile]);
+
+  // On mobile, a tap outside any currently open header menu closes that menu
+  // first. Capture it before React's click handlers so the same tap cannot
+  // also open the newly tapped area. The next tap then opens it.
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handler = (e: MouseEvent) => {
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+
+      const activeAreas: HTMLElement[] = [];
+      if (yearPickerOpen && yearPickerRef.current)
+        activeAreas.push(yearPickerRef.current);
+      if (searchOpen) {
+        if (searchBtnRef.current) activeAreas.push(searchBtnRef.current);
+        if (searchBarRef.current) activeAreas.push(searchBarRef.current);
+      }
+      if ((settingsOpen || profileOpen) && settingsRef.current)
+        activeAreas.push(settingsRef.current);
+      if (activeAreas.length === 0) return;
+
+      if (activeAreas.some((area) => area.contains(target))) return;
+
+      closeMobileWindows();
+      e.stopPropagation();
+    };
+
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [
+    isMobile,
+    yearPickerOpen,
+    searchOpen,
+    settingsOpen,
+    profileOpen,
+  ]);
 
   // Milestones
   const [milestones, setMilestones] = useState<Milestone[]>(() => {
@@ -2163,6 +2179,10 @@ function App() {
     focus: number;
   } | null>(null);
   const handleWeekLabelClick = (qi: number, qOffset: number) => {
+    if (isMobile && hasMobileWindowOpen && !weekSel) {
+      closeMobileWindows();
+      return;
+    }
     setWeekSel((prev) => {
       if (!prev || prev.qi !== qi)
         return { qi, anchor: qOffset, focus: qOffset };
@@ -2173,7 +2193,7 @@ function App() {
   useEffect(() => {
     if (!weekSel) return;
 
-    const handleOutsideWeekSelection = (event: PointerEvent) => {
+    const handleOutsideWeekSelection = (event: Event) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (
@@ -2183,12 +2203,16 @@ function App() {
         return;
       }
       setWeekSel(null);
+      // On mobile this is the first-tap close. Prevent the same tap from
+      // opening another calendar action underneath the selection panel.
+      if (isMobile) event.stopPropagation();
     };
 
-    document.addEventListener("pointerdown", handleOutsideWeekSelection);
+    const eventName = isMobile ? "click" : "pointerdown";
+    document.addEventListener(eventName, handleOutsideWeekSelection, isMobile);
     return () =>
-      document.removeEventListener("pointerdown", handleOutsideWeekSelection);
-  }, [weekSel]);
+      document.removeEventListener(eventName, handleOutsideWeekSelection, isMobile);
+  }, [weekSel, isMobile]);
 
   // Quarter meta (names + colors)
   const [quarterMeta, setQuarterMeta] = useState<QuarterMeta[]>(() =>
@@ -2197,6 +2221,55 @@ function App() {
   useEffect(() => {
     lsSet("lifeCalendar:quarterMeta", quarterMeta);
   }, [quarterMeta]);
+
+  const hasMobileWindowOpen =
+    yearPickerOpen ||
+    settingsOpen ||
+    profileOpen ||
+    factoryResetStep > 0 ||
+    confirmSignOut ||
+    searchOpen ||
+    milestonePanelOpen ||
+    notesPanelOpen ||
+    goalsOpen ||
+    lifeCalendarOpen ||
+    openNote !== null ||
+    editGoalsBlockId !== null ||
+    editGoalsQi !== null ||
+    editYearGoals ||
+    settingsQuarter !== null ||
+    weekSel !== null;
+
+  const closeMobileWindows = () => {
+    setYearPickerOpen(false);
+    setSettingsOpen(false);
+    setProfileOpen(false);
+    setFactoryResetStep(0);
+    setConfirmSignOut(false);
+    setSearchOpen(false);
+    setSearchQuery("");
+    setMilestonePanelOpen(false);
+    setNotesPanelOpen(false);
+    setGoalsOpen(false);
+    setLifeCalendarOpen(false);
+    setOpenNote(null);
+    setEditGoalsBlockId(null);
+    setEditGoalsQi(null);
+    setEditYearGoals(false);
+    setSettingsQuarter(null);
+    setWeekSel(null);
+  };
+
+  // On a phone, a tap on another work area first dismisses the currently
+  // visible window. The second tap performs the new action. This prevents
+  // one tap from both closing one panel and opening another underneath it.
+  const runMobileWindowAction = (targetIsOpen: boolean, action: () => void) => {
+    if (isMobile && hasMobileWindowOpen && !targetIsOpen) {
+      closeMobileWindows();
+      return;
+    }
+    action();
+  };
 
   // ── Google Drive Sync ──────────────────────────────────────────────────────
 
@@ -2961,7 +3034,11 @@ function App() {
                 style={{ position: "relative" }}
               >
                 <button
-                  onClick={() => setYearPickerOpen((o) => !o)}
+                  onClick={() =>
+                    runMobileWindowAction(yearPickerOpen, () =>
+                      setYearPickerOpen((o) => !o),
+                    )
+                  }
                   style={{
                     background: "none",
                     border: "none",
@@ -3055,8 +3132,10 @@ function App() {
                   <IconButton
                     title={t("search")}
                     onClick={() => {
-                      setSearchOpen((o) => !o);
-                      setSearchQuery("");
+                      runMobileWindowAction(searchOpen, () => {
+                        setSearchOpen((o) => !o);
+                        setSearchQuery("");
+                      });
                     }}
                     bg={searchOpen ? "rgba(0,122,255,0.15)" : overlayBg}
                   >
@@ -3074,21 +3153,33 @@ function App() {
                 />
                 <IconButton
                   title={t("allGoals")}
-                  onClick={() => setGoalsOpen((o) => !o)}
+                  onClick={() =>
+                    runMobileWindowAction(goalsOpen, () =>
+                      setGoalsOpen((o) => !o),
+                    )
+                  }
                   bg={goalsOpen ? "rgba(52,199,89,0.15)" : overlayBg}
                 >
                   <GoalsIcon />
                 </IconButton>
                 <IconButton
                   title={t("notesPanel")}
-                  onClick={() => setNotesPanelOpen(true)}
+                  onClick={() =>
+                    runMobileWindowAction(notesPanelOpen, () =>
+                      setNotesPanelOpen(true),
+                    )
+                  }
                   bg={overlayBg}
                 >
                   <NotesIcon />
                 </IconButton>
                 <IconButton
                   title={t("milestones")}
-                  onClick={() => setMilestonePanelOpen(true)}
+                  onClick={() =>
+                    runMobileWindowAction(milestonePanelOpen, () =>
+                      setMilestonePanelOpen(true),
+                    )
+                  }
                   bg={overlayBg}
                 >
                   <FlagIcon />
@@ -3105,7 +3196,11 @@ function App() {
                 <div className="flex">
                   <IconButton
                     title={t("lifeCalendarBtn")}
-                    onClick={() => setLifeCalendarOpen(true)}
+                    onClick={() =>
+                      runMobileWindowAction(lifeCalendarOpen, () =>
+                        setLifeCalendarOpen(true),
+                      )
+                    }
                     bg={overlayBg}
                   >
                     <LifeIcon />
@@ -3384,8 +3479,10 @@ function App() {
                   <IconButton
                     title={t("settings")}
                     onClick={() => {
-                      if (settingsOpen) setProfileOpen(false);
-                      setSettingsOpen((o) => !o);
+                      runMobileWindowAction(settingsOpen, () => {
+                        if (settingsOpen) setProfileOpen(false);
+                        setSettingsOpen((o) => !o);
+                      });
                     }}
                     bg={settingsOpen ? "rgba(0,122,255,0.13)" : overlayBg}
                   >
@@ -3464,11 +3561,13 @@ function App() {
                             }
                             aria-expanded={userInfo ? profileOpen : undefined}
                             onClick={() => {
-                              if (userInfo) setProfileOpen((o) => !o);
-                              else {
-                                setSettingsOpen(false);
-                                void googleSignIn();
-                              }
+                              runMobileWindowAction(profileOpen, () => {
+                                if (userInfo) setProfileOpen((o) => !o);
+                                else {
+                                  setSettingsOpen(false);
+                                  void googleSignIn();
+                                }
+                              });
                             }}
                             bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
                           >
@@ -3777,7 +3876,12 @@ function App() {
                     return (
                       <button
                         key={ms.id}
-                        onClick={() => setMilestonePanelOpen(true)}
+                        onClick={() =>
+                          runMobileWindowAction(
+                            milestonePanelOpen,
+                            () => setMilestonePanelOpen(true),
+                          )
+                        }
                         className="h-7 inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium shrink-0 box-border"
                         style={{
                           background: "transparent",
@@ -4124,7 +4228,12 @@ function App() {
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button
                             type="button"
-                            onClick={() => setEditGoalsQi(qi)}
+                            onClick={() =>
+                              runMobileWindowAction(
+                                editGoalsQi === qi,
+                                () => setEditGoalsQi(qi),
+                              )
+                            }
                             title={t("quarterGoals")}
                             style={{
                               width: 28,
@@ -4148,7 +4257,12 @@ function App() {
                           </button>
                           <IconButton
                             title={t("sprintConfig")}
-                            onClick={() => setSettingsQuarter(qi)}
+                            onClick={() =>
+                              runMobileWindowAction(
+                                settingsQuarter === qi,
+                                () => setSettingsQuarter(qi),
+                              )
+                            }
                             bg={overlayBg}
                             color={quarter.text}
                           >
@@ -4375,12 +4489,22 @@ function App() {
                         weekSel={weekSel}
                         matchedDates={matchedDates}
                         activeMatchKey={matchedDatesArray[searchIndex]}
-                        onNoteOpen={(k) => setOpenNote(k)}
+                        onNoteOpen={(k) =>
+                          runMobileWindowAction(
+                            openNote === k,
+                            () => setOpenNote(k),
+                          )
+                        }
                         onLabelChange={(bid, lbl) =>
                           updateBlockLabel(qi, bid, lbl)
                         }
                         onGoalToggle={toggleGoal}
-                        onEditGoals={(bid) => setEditGoalsBlockId(bid)}
+                        onEditGoals={(bid) =>
+                          runMobileWindowAction(
+                            editGoalsBlockId === bid,
+                            () => setEditGoalsBlockId(bid),
+                          )
+                        }
                         onWeekLabelClick={handleWeekLabelClick}
                         onCreateSprint={(selStart, selEnd) => {
                           updateQuarter(
@@ -4634,16 +4758,22 @@ function App() {
               onToggleQuarterGoal={toggleQuarterGoal}
               onToggleYearGoal={(goalId) => toggleYearGoal(viewYear, goalId)}
               onEditGoals={(id) => {
-                setEditGoalsBlockId(id);
-                setGoalsOpen(false);
+                runMobileWindowAction(editGoalsBlockId === id, () => {
+                  setEditGoalsBlockId(id);
+                  setGoalsOpen(false);
+                });
               }}
               onEditQuarterGoals={(qi) => {
-                setEditGoalsQi(qi);
-                setGoalsOpen(false);
+                runMobileWindowAction(editGoalsQi === qi, () => {
+                  setEditGoalsQi(qi);
+                  setGoalsOpen(false);
+                });
               }}
               onEditYearGoals={() => {
-                setEditYearGoals(true);
-                setGoalsOpen(false);
+                runMobileWindowAction(editYearGoals, () => {
+                  setEditYearGoals(true);
+                  setGoalsOpen(false);
+                });
               }}
               onClose={() => setGoalsOpen(false)}
             />
@@ -4659,7 +4789,12 @@ function App() {
               resolvedQuarters={resolvedQuarters}
               dark={dark}
               modalBg={modalBg}
-              onOpenNote={(key) => setOpenNote(key)}
+              onOpenNote={(key) =>
+                runMobileWindowAction(
+                  openNote === key,
+                  () => setOpenNote(key),
+                )
+              }
               onAddNote={(dk, entry) =>
                 upsertNotes(dk, [...(notes[dk] ?? []), entry])
               }
