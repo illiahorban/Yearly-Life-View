@@ -3561,17 +3561,13 @@ function App() {
                             }
                             aria-expanded={userInfo ? profileOpen : undefined}
                             onClick={() => {
-                              // This action is already inside the settings
-                              // panel. Do not route it through the mobile
-                              // "close current window first" guard: that
-                              // would consume the first tap and close the
-                              // gear menu instead of starting Google auth.
-                              if (userInfo) {
-                                setProfileOpen((o) => !o);
-                              } else {
-                                setSettingsOpen(false);
-                                void googleSignIn();
-                              }
+                              runMobileWindowAction(profileOpen, () => {
+                                if (userInfo) setProfileOpen((o) => !o);
+                                else {
+                                  setSettingsOpen(false);
+                                  void googleSignIn();
+                                }
+                              });
                             }}
                             bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
                           >
@@ -3921,7 +3917,7 @@ function App() {
                     }
                     animate={
                       isMobile
-                        ? { opacity: 1, height: 46, marginTop: 10, y: 0 }
+                        ? { opacity: 1, height: 38, marginTop: 10, y: 0 }
                         : { opacity: 1, height: "auto", marginTop: 10 }
                     }
                     exit={
@@ -3931,14 +3927,13 @@ function App() {
                     }
                     transition={
                       isMobile
-                        ? { duration: 0.22, ease: "easeOut" }
+                        ? { duration: 0.18, ease: "easeInOut" }
                         : { duration: 0.2, ease: "easeInOut" }
                     }
                     style={{
                       overflow: "hidden",
                       ...(isMobile
                         ? {
-                            height: 46,
                             marginTop: 10,
                             willChange: "height, opacity, transform",
                           }
@@ -3986,15 +3981,6 @@ function App() {
                                 : 34,
                           paddingTop: 8,
                           paddingBottom: 8,
-                          ...(isMobile
-                            ? {
-                                height: 44,
-                                paddingTop: 0,
-                                paddingBottom: 0,
-                                lineHeight: "22px",
-                                boxSizing: "border-box",
-                              }
-                            : {}),
                           borderRadius: 10,
                           background: dark
                             ? "rgba(255,255,255,0.07)"
@@ -4498,7 +4484,6 @@ function App() {
                         blockGoals={blockGoals}
                         dayGoalsMap={dayGoals}
                         dark={dark}
-                        isMobile={isMobile}
                         cardBg={cardBg}
                         overlayBg={overlayBg}
                         weekSel={weekSel}
@@ -5137,7 +5122,6 @@ function BlocksRenderer({
   blockGoals,
   dayGoalsMap,
   dark,
-  isMobile,
   cardBg,
   overlayBg,
   weekSel,
@@ -5167,7 +5151,6 @@ function BlocksRenderer({
   blockGoals: Record<string, BlockGoals>;
   dayGoalsMap: Record<string, DayGoals>;
   dark: boolean;
-  isMobile: boolean;
   cardBg: string;
   overlayBg: string;
   weekSel: { qi: number; anchor: number; focus: number } | null;
@@ -5702,27 +5685,15 @@ function BlocksRenderer({
                             )}
                           </div>
                         </div>
-                        {/* Reserved accordion slot — always in DOM so mobile
-                            open/close can animate without mounting jumps. */}
+                        {/* Reserved accordion slot — always in DOM, opens with CSS height transition */}
                         <div
                           style={{
                             overflow: "hidden",
-                            maxHeight: isPanelOpen
-                              ? isMobile
-                                ? "86px"
-                                : "72px"
-                              : "0",
+                            maxHeight: isPanelOpen ? "72px" : "0",
                             opacity: isPanelOpen ? 1 : 0,
                             marginTop: isPanelOpen ? "8px" : "0",
-                            transform: isPanelOpen
-                              ? "translateY(0)"
-                              : "translateY(-5px)",
-                            transition: isMobile
-                              ? "max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease-out, margin-top 0.38s cubic-bezier(0.22, 1, 0.36, 1), transform 0.38s cubic-bezier(0.22, 1, 0.36, 1)"
-                              : "max-height 0.3s ease-out, opacity 0.25s ease-out, margin-top 0.3s ease-out",
-                            willChange: isMobile
-                              ? "max-height, opacity, margin-top, transform"
-                              : undefined,
+                            transition:
+                              "max-height 0.3s ease-out, opacity 0.25s ease-out, margin-top 0.3s ease-out",
                             pointerEvents: isPanelOpen ? "auto" : "none",
                           }}
                         >
@@ -7170,7 +7141,6 @@ function NoteModal({
   onSave: (entries: NoteEntry[]) => void;
   onClose: () => void;
 }) {
-  const isMobile = useIsMobile();
   const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
   const entriesRef = useRef(entries);
   const commitEntries = (next: NoteEntry[]) => {
@@ -8497,15 +8467,8 @@ function NoteModal({
                               maxHeight: isEditing ? 0 : "none",
                               opacity: isEditing ? 0 : 1,
                               overflow: "hidden",
-                              transform: isEditing
-                                ? "translateY(-4px)"
-                                : "translateY(0)",
-                              transition: isMobile
-                                ? "max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease-out, transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)"
-                                : "max-height 0.3s ease-in-out, opacity 0.18s ease-in-out",
-                              willChange: isMobile
-                                ? "max-height, opacity, transform"
-                                : undefined,
+                              transition:
+                                "max-height 0.3s ease-in-out, opacity 0.18s ease-in-out",
                               pointerEvents: isEditing ? "none" : "auto",
                             }}
                           >
@@ -8697,15 +8660,8 @@ function NoteModal({
                               maxHeight: isEditing ? "2000px" : 0,
                               opacity: isEditing ? 1 : 0,
                               overflow: "hidden",
-                              transform: isEditing
-                                ? "translateY(0)"
-                                : "translateY(-4px)",
-                              transition: isMobile
-                                ? "max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease-out, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)"
-                                : "max-height 0.35s ease-in-out, opacity 0.22s ease-in-out",
-                              willChange: isMobile
-                                ? "max-height, opacity, transform"
-                                : undefined,
+                              transition:
+                                "max-height 0.35s ease-in-out, opacity 0.22s ease-in-out",
                               pointerEvents: isEditing ? "auto" : "none",
                             }}
                           >
@@ -9021,15 +8977,8 @@ function NoteModal({
                   addEventOpen || dayMilestones.length >= 10 ? 0 : "40px",
                 opacity: addEventOpen || dayMilestones.length >= 10 ? 0 : 1,
                 overflow: "hidden",
-                transform: addEventOpen
-                  ? "translateY(-4px)"
-                  : "translateY(0)",
-                transition: isMobile
-                  ? "max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease-out, transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)"
-                  : "max-height 0.3s ease-in-out, opacity 0.18s ease-in-out",
-                willChange: isMobile
-                  ? "max-height, opacity, transform"
-                  : undefined,
+                transition:
+                  "max-height 0.3s ease-in-out, opacity 0.18s ease-in-out",
                 pointerEvents:
                   addEventOpen || dayMilestones.length >= 10 ? "none" : "auto",
               }}
@@ -9063,15 +9012,8 @@ function NoteModal({
                 maxHeight: addEventOpen ? "2000px" : 0,
                 opacity: addEventOpen ? 1 : 0,
                 overflow: "hidden",
-                transform: addEventOpen
-                  ? "translateY(0)"
-                  : "translateY(-4px)",
-                transition: isMobile
-                  ? "max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease-out, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)"
-                  : "max-height 0.35s ease-in-out, opacity 0.22s ease-in-out",
-                willChange: isMobile
-                  ? "max-height, opacity, transform"
-                  : undefined,
+                transition:
+                  "max-height 0.35s ease-in-out, opacity 0.22s ease-in-out",
                 pointerEvents: addEventOpen ? "auto" : "none",
               }}
             >
