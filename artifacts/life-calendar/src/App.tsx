@@ -3789,28 +3789,31 @@ function App() {
                     key="search-bar"
                     initial={
                       isMobile
-                        ? { opacity: 0, y: -4 }
+                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
                         : { opacity: 0, height: 0, marginTop: 0 }
                     }
                     animate={
                       isMobile
-                        ? { opacity: 1, y: 0 }
+                        ? { opacity: 1, height: 38, marginTop: 10, y: 0 }
                         : { opacity: 1, height: "auto", marginTop: 10 }
                     }
                     exit={
                       isMobile
-                        ? { opacity: 0, y: -4 }
+                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
                         : { opacity: 0, height: 0, marginTop: 0 }
                     }
                     transition={
                       isMobile
-                        ? { duration: 0.12, ease: "easeOut" }
+                        ? { duration: 0.18, ease: "easeInOut" }
                         : { duration: 0.2, ease: "easeInOut" }
                     }
                     style={{
                       overflow: "hidden",
                       ...(isMobile
-                        ? { marginTop: 10, willChange: "opacity, transform" }
+                        ? {
+                            marginTop: 10,
+                            willChange: "height, opacity, transform",
+                          }
                         : {}),
                     }}
                   >
@@ -5397,10 +5400,6 @@ function BlocksRenderer({
                     const qOffset = block.start + ri;
                     const isCurrent = wi === currentWeekIndex;
                     const isSel = qOffset >= selMin && qOffset <= selMax;
-                    const isAnchor =
-                      hasSelection &&
-                      (weekSel!.anchor === qOffset ||
-                        weekSel!.focus === qOffset);
                     const isPanelOpen = hasSelection && qOffset === selMax;
                     const weekDone = days.reduce((s, d) => {
                       const g = dayGoalsMap[dateKey(d)];
@@ -5454,9 +5453,10 @@ function BlocksRenderer({
                                 background: "transparent",
                                 borderRadius: 4,
                                 padding: "2px 6px",
-                                border: isAnchor
-                                  ? `1.5px solid ${quarter.border}66`
-                                  : "1.5px solid transparent",
+                                border: "none",
+                                boxShadow: isSel
+                                  ? `inset 0 0 0 1.5px ${quarter.border}66`
+                                  : "inset 0 0 0 1.5px transparent",
                                 cursor: "pointer",
                                 fontFamily: "inherit",
                                 outline: "none",
