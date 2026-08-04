@@ -3904,18 +3904,61 @@ function App() {
             </AnimatePresence>
 
             {/* Search bar */}
-            <div ref={searchBarRef}>
+            <div
+              ref={searchBarRef}
+              style={
+                isMobile
+                  ? {
+                      position: "relative",
+                      height: searchOpen ? 52 : 0,
+                      overflow: "visible",
+                    }
+                  : undefined
+              }
+            >
               <AnimatePresence>
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: "auto", marginTop: 10 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    initial={
+                      isMobile
+                        ? { opacity: 0, y: -8 }
+                        : { opacity: 0, height: 0, marginTop: 0 }
+                    }
+                    animate={
+                      isMobile
+                        ? { opacity: 1, y: 0 }
+                        : { opacity: 1, height: "auto", marginTop: 10 }
+                    }
+                    exit={
+                      isMobile
+                        ? { opacity: 0, y: -8 }
+                        : { opacity: 0, height: 0, marginTop: 0 }
+                    }
+                    transition={
+                      isMobile
+                        ? {
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 35,
+                          }
+                        : { duration: 0.2, ease: "easeInOut" }
+                    }
+                    className={isMobile ? "transform-gpu will-change-transform" : undefined}
                     style={{
-                      overflow: "hidden",
-                      willChange: "height, opacity",
+                      ...(isMobile
+                        ? {
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            marginTop: 10,
+                            WebkitTapHighlightColor: "transparent",
+                          }
+                        : {
+                            overflow: "hidden",
+                            willChange: "height, opacity",
+                          }),
                     }}
                   >
                     <div className="relative flex items-center">
