@@ -3561,13 +3561,11 @@ function App() {
                             }
                             aria-expanded={userInfo ? profileOpen : undefined}
                             onClick={() => {
-                              runMobileWindowAction(profileOpen, () => {
-                                if (userInfo) setProfileOpen((o) => !o);
-                                else {
-                                  setSettingsOpen(false);
-                                  void googleSignIn();
-                                }
-                              });
+                              if (userInfo) setProfileOpen((o) => !o);
+                              else {
+                                setSettingsOpen(false);
+                                void googleSignIn();
+                              }
                             }}
                             bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
                           >
@@ -3917,7 +3915,7 @@ function App() {
                     }
                     animate={
                       isMobile
-                        ? { opacity: 1, height: 38, marginTop: 10, y: 0 }
+                        ? { opacity: 1, height: 44, marginTop: 10, y: 0 }
                         : { opacity: 1, height: "auto", marginTop: 10 }
                     }
                     exit={
@@ -3981,6 +3979,14 @@ function App() {
                                 : 34,
                           paddingTop: 8,
                           paddingBottom: 8,
+                          ...(isMobile
+                            ? {
+                                height: 42,
+                                paddingTop: 9,
+                                paddingBottom: 9,
+                                lineHeight: "22px",
+                              }
+                            : {}),
                           borderRadius: 10,
                           background: dark
                             ? "rgba(255,255,255,0.07)"
