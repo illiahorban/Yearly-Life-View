@@ -26,13 +26,6 @@ import type {
 } from "./lib/sync-types";
 import { useIsMobile } from "./hooks/use-mobile";
 
-const iosAutoFillOffProps = {
-  autoComplete: "off",
-  autoCorrect: "off",
-  spellCheck: false,
-  "data-1p-ignore": "true",
-} as const;
-
 // ─── Tiny localStorage helpers ────────────────────────────────────────────────
 
 function ls<T>(key: string, fb: T): T {
@@ -3813,8 +3806,6 @@ function App() {
                       </div>
                       <input
                         type="text"
-                        {...iosAutoFillOffProps}
-                        name="calendar-search"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => {
@@ -5673,8 +5664,6 @@ function QuarterNameEditor({
       }}
     >
       <textarea
-        {...iosAutoFillOffProps}
-        name="quarter-label"
         value={draft}
         rows={1}
         cols={1}
@@ -5742,8 +5731,6 @@ function BlockLabel({
   };
   return (
     <textarea
-      {...iosAutoFillOffProps}
-      name="sprint-label"
       value={draft}
       rows={1}
       onChange={(e) => {
@@ -6667,8 +6654,6 @@ function NoteEntryItem({
         onMouseLeave={() => setHoveredEntryId(null)}
       >
         <TextareaAutosize
-          {...iosAutoFillOffProps}
-          name="calendar-note"
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
           onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}
@@ -8021,8 +8006,6 @@ function NoteModal({
                               );
                             })()}
                             <TextareaAutosize
-                              {...iosAutoFillOffProps}
-                              name="daily-goal"
                               value={goalsDraft.labels?.[i] ?? ""}
                               onChange={(e) =>
                                 handleGoalLabelChange(i, e.target.value)
@@ -8545,8 +8528,6 @@ function NoteModal({
                                 }}
                               >
                                 <TextareaAutosize
-                                  {...iosAutoFillOffProps}
-                                  name="event-edit-label"
                                   value={msEditLabel}
                                   onChange={(e) =>
                                     setMsEditLabel(e.target.value)
@@ -8577,8 +8558,6 @@ function NoteModal({
                               </div>
                               <div style={{ position: "relative" }}>
                                 <TextareaAutosize
-                                  {...iosAutoFillOffProps}
-                                  name="event-edit-description"
                                   value={msEditDesc}
                                   onChange={(e) =>
                                     setMsEditDesc(e.target.value)
@@ -8938,8 +8917,6 @@ function NoteModal({
                       style={{ isolation: "isolate" }}
                     >
                       <TextareaAutosize
-                        {...iosAutoFillOffProps}
-                        name="event-label"
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
                         onKeyDown={(e) => {
@@ -8965,8 +8942,6 @@ function NoteModal({
                     </div>
                     <div style={{ position: "relative" }}>
                       <TextareaAutosize
-                        {...iosAutoFillOffProps}
-                        name="event-description"
                         value={newDesc}
                         onChange={(e) => setNewDesc(e.target.value)}
                         placeholder={t("descPlaceholder")}
@@ -10459,8 +10434,6 @@ function NotesPanel({
               <SearchIcon />
             </div>
             <input
-              {...iosAutoFillOffProps}
-              name="notes-search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("notesSearchPlaceholder")}
@@ -10564,8 +10537,6 @@ function NotesPanel({
           >
             <div style={{ position: "relative", marginBottom: 8 }}>
               <textarea
-                {...iosAutoFillOffProps}
-                name="note-draft"
                 value={draftText}
                 onChange={(e) => setDraftText(e.target.value)}
                 placeholder={t("notePlaceholder")}
@@ -10646,8 +10617,6 @@ function NotesPanel({
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input
                 type="date"
-                {...iosAutoFillOffProps}
-                name="note-date"
                 value={draftDate}
                 onChange={(e) => setDraftDate(e.target.value)}
                 lang={lang}
@@ -11287,8 +11256,6 @@ function MilestoneModal({
               <SearchIcon />
             </div>
             <input
-              {...iosAutoFillOffProps}
-              name="events-search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("eventsSearchPlaceholder")}
@@ -11435,8 +11402,6 @@ function MilestoneModal({
                   }}
                 >
                   <textarea
-                    {...iosAutoFillOffProps}
-                    name="event-draft-label"
                     value={draftLabel}
                     rows={1}
                     onChange={(e) => {
@@ -11459,8 +11424,6 @@ function MilestoneModal({
                     }}
                   />
                   <textarea
-                    {...iosAutoFillOffProps}
-                    name="event-draft-description"
                     value={draftDesc}
                     rows={2}
                     onChange={(e) => {
@@ -11485,8 +11448,6 @@ function MilestoneModal({
                   >
                     <input
                       type="date"
-                      {...iosAutoFillOffProps}
-                      name="event-draft-date"
                       value={draftDate}
                       onChange={(e) => setDraftDate(e.target.value)}
                       lang={lang}
@@ -11794,8 +11755,6 @@ function MilestoneModal({
                         }}
                       >
                         <textarea
-                          {...iosAutoFillOffProps}
-                          name="event-label-edit"
                           value={editLabel}
                           rows={1}
                           ref={(el) => {
@@ -11833,8 +11792,6 @@ function MilestoneModal({
                           }}
                         />
                         <textarea
-                          {...iosAutoFillOffProps}
-                          name="event-description-edit"
                           value={editDesc}
                           rows={2}
                           ref={(el) => {
@@ -11870,8 +11827,6 @@ function MilestoneModal({
                         >
                           <input
                             type="date"
-                            {...iosAutoFillOffProps}
-                            name="event-date-edit"
                             value={editDate}
                             onChange={(e) => setEditDate(e.target.value)}
                             lang={lang}
@@ -12624,8 +12579,6 @@ function GoalsModal({
                 {titleLabel ?? t("sprintGoals")}
               </div>
               <input
-                {...iosAutoFillOffProps}
-                name="sprint-label-edit"
                 value={label}
                 onChange={(e) => commitLabel(e.target.value)}
                 onKeyDown={(e) => {
@@ -12680,8 +12633,6 @@ function GoalsModal({
           >
             <div className="px-5 pb-3">
               <TextareaAutosize
-                {...iosAutoFillOffProps}
-                name="sprint-description"
                 value={description}
                 onChange={(e) => commitDescription(e.target.value)}
                 placeholder={descPlaceholder ?? t("sprintDescPlaceholder")}
@@ -12784,8 +12735,6 @@ function GoalsModal({
                         </span>
                         <div style={{ flex: 1, position: "relative" }}>
                           <TextareaAutosize
-                            {...iosAutoFillOffProps}
-                            name="sprint-goal"
                             value={g.text}
                             onChange={(e) =>
                               commitGoalsDraft(
@@ -13915,8 +13864,6 @@ function SprintSettingsModal({
                           }}
                         >
                           <TextareaAutosize
-                            {...iosAutoFillOffProps}
-                            name="quarter-block-label"
                             value={b.label}
                             onChange={(e) => {
                               const newBlocks = blocksRef.current.map((x) =>
@@ -14812,8 +14759,6 @@ function LifeCalendarModal({
               </label>
               <input
                 type="date"
-                {...iosAutoFillOffProps}
-                name="life-date"
                 value={settings.birthDate}
                 onChange={(e) =>
                   onSettingsChange({ ...settings, birthDate: e.target.value })
@@ -14837,8 +14782,6 @@ function LifeCalendarModal({
               </label>
               <input
                 type="number"
-                {...iosAutoFillOffProps}
-                name="life-duration"
                 value={lifespanDraft}
                 min={20}
                 max={120}
@@ -15707,8 +15650,6 @@ function DayTemplatesModal({
                   {t("newTemplate")}
                 </div>
                 <input
-                  {...iosAutoFillOffProps}
-                  name="template-label"
                   value={formName}
                   onChange={(e) => commitFormName(e.target.value)}
                   placeholder={t("templateNamePlaceholder")}
@@ -15751,8 +15692,6 @@ function DayTemplatesModal({
                       </span>
                     </div>
                     <input
-                      {...iosAutoFillOffProps}
-                      name="template-item"
                       value={item}
                       onChange={(e) => updateItem(i, e.target.value)}
                       placeholder={`${t("goal")} ${i + 1}`}
