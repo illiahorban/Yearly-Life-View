@@ -13,3 +13,4 @@
 - [iOS keyboard accessory](ios-keyboard-accessory.md) — avoid programmatic autofocus on mobile; it triggers iOS Chrome's previous/next/checkmark bar, while manual focus preserves standard AutoFill UI.
 - [Factory reset and Drive](factory-reset-drive.md) — factory reset must replace the cloud snapshot before clearing local auth/data, or the next sign-in resurrects old content.
 - [Rapid mobile modal edits](rapid-mobile-modal-edits.md) — batched taps in modal drafts need a synchronous ref so the latest action cannot overwrite an earlier one.
+- [Sync while editing](sync-while-editing.md) — a Drive response must merge against the newest local snapshot, not the state captured when the request started.

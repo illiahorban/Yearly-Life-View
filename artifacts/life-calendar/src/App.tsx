@@ -6975,6 +6975,12 @@ function NoteModal({
   onClose: () => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
+  const entriesRef = useRef(entries);
+  const commitEntries = (next: NoteEntry[]) => {
+    entriesRef.current = next;
+    setEntries(next);
+    onSave(next);
+  };
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(
     () => initDayGoals ?? { count: 0, done: [] },
   );
@@ -7370,12 +7376,19 @@ function NoteModal({
 
   const addEntry = () => {
     const id = makeId();
-    setEntries((prev) => [...prev, { id, text: "", ...newTimestamps() }]);
+    commitEntries([
+      ...entriesRef.current,
+      { id, text: "", ...newTimestamps() },
+    ]);
   };
   const updateEntry = (id: string, text: string) =>
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, text } : e)));
+    commitEntries(
+      entriesRef.current.map((e) => (e.id === id ? { ...e, text } : e)),
+    );
   const updateEntryColor = (id: string, color: string | undefined) =>
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, color } : e)));
+    commitEntries(
+      entriesRef.current.map((e) => (e.id === id ? { ...e, color } : e)),
+    );
   const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<
     string | null
   >(null);
@@ -7385,20 +7398,14 @@ function NoteModal({
   >(null);
   const [hoveredMsId, setHoveredMsId] = useState<string | null>(null);
   const deleteEntry = (id: string) => {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+    commitEntries(entriesRef.current.filter((e) => e.id !== id));
     setConfirmDeleteEntryId(null);
   };
   const handleReorderEntryIds = (newIds: string[]) => {
-    setEntries((prev) => newIds.map((id) => prev.find((e) => e.id === id)!));
+    commitEntries(
+      newIds.map((id) => entriesRef.current.find((e) => e.id === id)!),
+    );
   };
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    onSave(entries);
-  }, [entries]); // eslint-disable-line react-hooks/exhaustive-deps
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") onClose();
   };
@@ -12399,10 +12406,40 @@ function GoalsModal({
   const { t } = React.useContext(LangContext);
   const isMobile = useIsMobile();
   const [label, setLabel] = useState(blockLabel);
+  const labelRef = useRef(label);
   const [description, setDescription] = useState(initial.description);
+  const descriptionRef = useRef(description);
   const [goals, setGoals] = useState<Goal[]>(() =>
     initial.goals.filter((g) => !g.isDeleted).map((g) => ({ ...g })),
   );
+  const goalsRef = useRef(goals);
+  const commitGoalsDraft = (next: Goal[]) => {
+    goalsRef.current = next;
+    setGoals(next);
+    onSave(
+      {
+        description: descriptionRef.current.trim(),
+        goals: next,
+      },
+      labelRef.current.trim() || blockLabel,
+    );
+  };
+  const commitLabel = (next: string) => {
+    labelRef.current = next;
+    setLabel(next);
+    onSave(
+      { description: descriptionRef.current.trim(), goals: goalsRef.current },
+      next.trim() || blockLabel,
+    );
+  };
+  const commitDescription = (next: string) => {
+    descriptionRef.current = next;
+    setDescription(next);
+    onSave(
+      { description: next.trim(), goals: goalsRef.current },
+      labelRef.current.trim() || blockLabel,
+    );
+  };
   const activeGoals = goals.filter((g) => !g.isDeleted && g.text.trim());
   const canAdd = true;
 
@@ -12448,38 +12485,21 @@ function GoalsModal({
     setColorPickerGoalId(id);
   };
   const setGoalColor = (id: string, color: string | undefined) => {
-    setGoals((prev) => prev.map((x) => (x.id === id ? { ...x, color } : x)));
+    commitGoalsDraft(
+      goalsRef.current.map((x) => (x.id === id ? { ...x, color } : x)),
+    );
     setColorPickerGoalId(null);
   };
-
-  // Auto-save: persist label/description/goals as soon as they change, so no
-  // explicit Save button (or Cancel) is needed. Skip the very first render so
-  // we don't immediately re-persist the untouched `initial` data. Blank goal
-  // rows are kept blank while live-typing (they're filtered out elsewhere as
-  // inactive); the "Goal N" fallback name is only stamped in on close, so an
-  // untouched row left blank by the user still gets a sensible label.
-  const didMountRef = useRef(false);
-  useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
-    onSave(
-      { description: description.trim(), goals },
-      label.trim() || blockLabel,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label, description, goals]);
 
   const finalize = (after: () => void) => {
     onSave(
       {
-        description: description.trim(),
-        goals: goals.map((g, i) =>
+        description: descriptionRef.current.trim(),
+        goals: goalsRef.current.map((g, i) =>
           g.text.trim() ? g : { ...g, text: `${t("goal")} ${i + 1}` },
         ),
       },
-      label.trim() || blockLabel,
+      labelRef.current.trim() || blockLabel,
     );
     after();
   };
@@ -12574,7 +12594,7 @@ function GoalsModal({
                 {...iosAutoFillOffProps}
                 name="sprint-label-edit"
                 value={label}
-                onChange={(e) => setLabel(e.target.value)}
+                onChange={(e) => commitLabel(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") e.currentTarget.blur();
                 }}
@@ -12630,7 +12650,7 @@ function GoalsModal({
                 {...iosAutoFillOffProps}
                 name="sprint-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => commitDescription(e.target.value)}
                 placeholder={descPlaceholder ?? t("sprintDescPlaceholder")}
                 minRows={2}
                 style={{
@@ -12658,8 +12678,8 @@ function GoalsModal({
               <div className="px-5 py-3">
                 <button
                   onClick={() =>
-                    setGoals((prev) => [
-                      ...prev,
+                    commitGoalsDraft([
+                      ...goalsRef.current,
                       {
                         id: makeId(),
                         text: "",
@@ -12735,8 +12755,8 @@ function GoalsModal({
                             name="sprint-goal"
                             value={g.text}
                             onChange={(e) =>
-                              setGoals((prev) =>
-                                prev.map((x) =>
+                              commitGoalsDraft(
+                                goalsRef.current.map((x) =>
                                   x.id === g.id
                                     ? { ...x, text: e.target.value }
                                     : x,
@@ -12896,8 +12916,8 @@ function GoalsModal({
                 {canAdd && (
                   <button
                     onClick={() =>
-                      setGoals((prev) => [
-                        ...prev,
+                      commitGoalsDraft([
+                        ...goalsRef.current,
                         {
                           id: makeId(),
                           text: "",
@@ -12983,8 +13003,8 @@ function GoalsModal({
         onClose={() => setConfirmDeleteGoalId(null)}
         onConfirm={() => {
           if (confirmDeleteGoalId) {
-            setGoals((prev) =>
-              prev.filter((x) => x.id !== confirmDeleteGoalId),
+            commitGoalsDraft(
+              goalsRef.current.filter((x) => x.id !== confirmDeleteGoalId),
             );
             setConfirmDeleteGoalId(null);
           }
@@ -13486,15 +13506,21 @@ function SprintSettingsModal({
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initial.blocks.map((b) => ({ ...b })),
   );
+  const blocksRef = useRef(blocks);
+  const commitBlocks = (next: Block[]) => {
+    blocksRef.current = next;
+    setBlocks(next);
+    onAutoSave({ blocks: next });
+  };
   const total = blocks.reduce((a, b) => a + (Number(b.weeks) || 0), 0);
   const remaining = weeksCapacity - total;
   const valid = total === weeksCapacity && blocks.every((b) => b.weeks >= 1);
   const update = (id: string, patch: Partial<Block>) =>
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    commitBlocks(
+      blocksRef.current.map((b) => (b.id === id ? { ...b, ...patch } : b)),
     );
   const applyPreset = (parts: number[]) =>
-    setBlocks(
+    commitBlocks(
       parts.map((w, i) => ({
         id: makeId(),
         weeks: w,
@@ -13860,13 +13886,12 @@ function SprintSettingsModal({
                             name="quarter-block-label"
                             value={b.label}
                             onChange={(e) => {
-                              const newBlocks = blocks.map((x) =>
+                              const newBlocks = blocksRef.current.map((x) =>
                                 x.id === b.id
                                   ? { ...x, label: e.target.value }
                                   : x,
                               );
-                              setBlocks(newBlocks);
-                              onAutoSave({ blocks: newBlocks });
+                              commitBlocks(newBlocks);
                             }}
                             placeholder={t("sprintLabelPlaceholder")}
                             minRows={1}
@@ -14076,12 +14101,12 @@ function SprintSettingsModal({
               <button
                 type="button"
                 onClick={() =>
-                  setBlocks((prev) => [
-                    ...prev,
+                  commitBlocks([
+                    ...blocksRef.current,
                     {
                       id: makeId(),
                       weeks: Math.max(1, remaining > 0 ? remaining : 1),
-                      label: `${t("sprintLabel")} ${prev.length + 1}`,
+                      label: `${t("sprintLabel")} ${blocksRef.current.length + 1}`,
                     },
                   ])
                 }
@@ -14148,7 +14173,7 @@ function SprintSettingsModal({
             </button>
             <button
               type="button"
-              onClick={() => valid && onSave({ blocks })}
+              onClick={() => valid && onSave({ blocks: blocksRef.current })}
               disabled={!valid}
               className="text-[13px] font-semibold"
               style={{
@@ -14181,7 +14206,9 @@ function SprintSettingsModal({
         onClose={() => setConfirmDeleteId(null)}
         onConfirm={() => {
           if (confirmDeleteId)
-            setBlocks((prev) => prev.filter((x) => x.id !== confirmDeleteId));
+            commitBlocks(
+              blocksRef.current.filter((x) => x.id !== confirmDeleteId),
+            );
         }}
         message={t("deleteSprintConfirm")}
         confirmLabel={t("deleteSprintBtn")}
@@ -15403,33 +15430,51 @@ function DayTemplatesModal({
   const [draft, setDraft] = useState<DayTemplate[]>(() =>
     templates.map((t) => ({ ...t, items: [...t.items] })),
   );
+  const draftRef = useRef(draft);
+  const commitDraft = (next: DayTemplate[]) => {
+    draftRef.current = next;
+    setDraft(next);
+    onSave(next);
+  };
   const [editingId, setEditingId] = useState<string | null>(() =>
     prefillItems ? "__new__" : null,
   );
   // form state for create / edit
   const [formName, setFormName] = useState("");
+  const formNameRef = useRef(formName);
   const [formItems, setFormItems] = useState<string[]>(() => {
     if (prefillItems && prefillItems.length > 0) {
       return [...prefillItems];
     }
     return [""];
   });
+  const formItemsRef = useRef(formItems);
+  const commitFormName = (next: string) => {
+    formNameRef.current = next;
+    setFormName(next);
+  };
+  const commitFormItems = (next: string[]) => {
+    formItemsRef.current = next;
+    setFormItems(next);
+  };
   const startNew = () => {
     setEditingId("__new__");
-    setFormName("");
-    setFormItems([""]);
+    commitFormName("");
+    commitFormItems([""]);
   };
   const startEdit = (tpl: DayTemplate) => {
     setEditingId(tpl.id);
-    setFormName(tpl.name);
-    setFormItems(tpl.items.length > 0 ? [...tpl.items] : [""]);
+    commitFormName(tpl.name);
+    commitFormItems(tpl.items.length > 0 ? [...tpl.items] : [""]);
   };
   const cancelEdit = () => setEditingId(null);
 
   const saveForm = () => {
-    const name = formName.trim();
+    const name = formNameRef.current.trim();
     if (!name) return;
-    const items = formItems.map((s) => s.trim()).filter((s) => s.length > 0);
+    const items = formItemsRef.current
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
     if (items.length === 0) return;
     if (editingId === "__new__") {
       const newTpl: DayTemplate = {
@@ -15439,32 +15484,28 @@ function DayTemplatesModal({
         ...newTimestamps(),
         isDeleted: false,
       };
-      const updated = [...draft, newTpl];
-      setDraft(updated);
-      onSave(updated);
+      commitDraft([...draftRef.current, newTpl]);
     } else {
-      const updated = draft.map((tpl) =>
+      const updated = draftRef.current.map((tpl) =>
         tpl.id === editingId ? { ...tpl, name, items } : tpl,
       );
-      setDraft(updated);
-      onSave(updated);
+      commitDraft(updated);
     }
     setEditingId(null);
   };
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const deleteTpl = (id: string) => {
-    const updated = draft.filter((tpl) => tpl.id !== id);
-    setDraft(updated);
-    onSave(updated);
+    commitDraft(draftRef.current.filter((tpl) => tpl.id !== id));
     setConfirmDeleteId(null);
   };
   const addItem = () => {
-    if (formItems.length < 10) setFormItems((prev) => [...prev, ""]);
+    if (formItemsRef.current.length < 10)
+      commitFormItems([...formItemsRef.current, ""]);
   };
   const removeItem = (i: number) =>
-    setFormItems((prev) => prev.filter((_, j) => j !== i));
+    commitFormItems(formItemsRef.current.filter((_, j) => j !== i));
   const updateItem = (i: number, v: string) =>
-    setFormItems((prev) => prev.map((s, j) => (j === i ? v : s)));
+    commitFormItems(formItemsRef.current.map((s, j) => (j === i ? v : s)));
 
   const editing = editingId !== null;
 
@@ -15636,7 +15677,7 @@ function DayTemplatesModal({
                   {...iosAutoFillOffProps}
                   name="template-label"
                   value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
+                  onChange={(e) => commitFormName(e.target.value)}
                   placeholder={t("templateNamePlaceholder")}
                   style={{ ...inputStyle, fontSize: 13, fontWeight: 600 }}
                   onKeyDown={(e) => {

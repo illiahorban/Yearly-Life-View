@@ -260,12 +260,30 @@ export function useSyncEngine({
       // Pulls also include the current local snapshot. This prevents a
       // recently-created local tombstone from being replaced by an older
       // remote item during page startup.
-      const localSnapshot = snapshotAtStart ?? getLocalSnapshotRef.current?.();
+      //
+      // A user can edit the calendar while the initial Drive request is still
+      // in flight. In that case snapshotAtStart is already stale; prefer the
+      // newest queued snapshot so the response cannot briefly roll the UI back
+      // to the state from before the user's tap.
+      let localSnapshot =
+        pendingSnapshotRef.current ??
+        snapshotAtStart ??
+        getLocalSnapshotRef.current?.();
       let merged: AppSnapshot | null = localSnapshot ?? null;
       let remote: AppSnapshot | null = null;
 
       if (fileIdRef.current) {
         remote = await downloadSnapshot(token, fileIdRef.current);
+
+        // The React state/effect for a fast tap may have completed while the
+        // Drive request was in flight. Read the newest queued/rendered local
+        // snapshot immediately before merging so the response cannot roll the
+        // calendar back to the state from before that tap.
+        localSnapshot =
+          pendingSnapshotRef.current ??
+          getLocalSnapshotRef.current?.() ??
+          localSnapshot;
+
         if (remote && localSnapshot) {
           merged = mergeSnapshots(localSnapshot, remote);
         } else if (remote && !localSnapshot) {
