@@ -213,30 +213,16 @@ export function tryRestoreSession(): boolean {
 }
 
 /**
- * Restore a previous Google session, refreshing an expired access token
- * silently when the saved Google grant is still available.
+ * Restore a previous Google session without starting any Google UI.
+ *
+ * An expired token is intentionally treated as signed out here. Although GIS
+ * accepts a silent refresh request, some browsers (especially mobile WebKit)
+ * can turn that request into a visible account dialog while the calendar is
+ * opening. A new token is requested only after the user explicitly chooses
+ * Google sign-in.
  */
 export async function restoreSession(): Promise<boolean> {
-  if (tryRestoreSession()) return true;
-
-  let hasStoredSession = false;
-  try {
-    hasStoredSession = Boolean(localStorage.getItem(LS_TOKEN));
-  } catch {
-    return false;
-  }
-
-  if (!hasStoredSession) return false;
-
-  try {
-    await signInSilent();
-    return true;
-  } catch {
-    accessToken = null;
-    tokenExpiresAt = 0;
-    clearPersistedToken();
-    return false;
-  }
+  return tryRestoreSession();
 }
 
 /**
