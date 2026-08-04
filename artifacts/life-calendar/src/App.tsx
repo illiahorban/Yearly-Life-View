@@ -2340,6 +2340,8 @@ function App() {
     return {
       version: 1,
       exportedAt: now2,
+      resetAt: Number(localStorage.getItem("lifeCalendar:resetAt") ?? 0) || 0,
+      logoutAt: 0,
       milestones: snapshotMilestones,
       lifeSettings: {
         ...stamp(lifeSettings),
@@ -2395,6 +2397,18 @@ function App() {
       // Milestones — retain tombstones locally so a page reload can protect a
       // recent deletion from an older cloud snapshot. Views filter them out.
       const stateFallback = Date.now();
+      const localResetAt =
+        Number(localStorage.getItem("lifeCalendar:resetAt") ?? 0) || 0;
+      const isFactoryResetSnapshot = (snapshot.resetAt ?? 0) > localResetAt;
+
+      if (isFactoryResetSnapshot) {
+        // A factory reset is authoritative across devices. Remove local
+        // year-specific configs that are absent from the empty snapshot.
+        for (let y = 2020; y <= 2040; y++) {
+          localStorage.removeItem(`lifeCalendar:v1:${y}`);
+        }
+      }
+
       const ms = (snapshot.milestones as Milestone[]).map((item) =>
         normalizeMilestone(item, stateFallback),
       );
@@ -2473,6 +2487,11 @@ function App() {
             );
           }
         }
+      } else if (isFactoryResetSnapshot) {
+        setQuarterMeta(DEFAULT_QUARTER_META);
+        lsSet("lifeCalendar:quarterMeta", DEFAULT_QUARTER_META);
+        localStorage.removeItem("lifeCalendar:quarterMeta:createdAt");
+        localStorage.removeItem("lifeCalendar:quarterMeta:updatedAt");
       }
 
       // Calendar configs — embed updatedAt inside the stored object so buildSnapshot
@@ -2489,6 +2508,10 @@ function App() {
           );
         }
       }
+      localStorage.setItem(
+        "lifeCalendar:resetAt",
+        String(snapshot.resetAt ?? 0),
+      );
       // Reload config for current viewYear
       setConfig(loadConfig(viewYear));
     },
@@ -4767,7 +4790,7 @@ function App() {
               // Otherwise the next sign-in would merge the old cloud data
               // back into the freshly-reset local calendar.
               await resetCloudData();
-              await googleSignOut();
+              await googleSignOut(undefined, false);
 
               // 1. Все виды хранилищ браузера
               localStorage.clear();
@@ -4830,7 +4853,7 @@ function App() {
           open={confirmSignOut}
           onClose={() => setConfirmSignOut(false)}
           onConfirm={() => {
-            void googleSignOut();
+            void googleSignOut(buildSnapshot());
           }}
           message={t("signOutConfirm")}
           confirmLabel={t("signOutAccount")}

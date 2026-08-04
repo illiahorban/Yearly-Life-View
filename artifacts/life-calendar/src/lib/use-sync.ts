@@ -1,16 +1,16 @@
 // ─── useSyncEngine — React hook ───────────────────────────────────────────────
-// Manages Google auth state, debounced uploads, and on-mount pull.
+// Manages Google auth state, debounced uploads, and cross-device pulls.
 //
-// doSync is triggered by exactly TWO events:
+// doSync is triggered by local edits, mount, and lightweight background pulls:
 //   1. App mount — one pull to hydrate state from Drive.
 //   2. markDirty — debounced upload when the user edits the calendar.
+//   3. Background polling / visibility — pull remote edits made on another device.
 //
-// There is NO polling interval, NO focus/visibilitychange listener, and
-// NO self-rescheduling inside doSync.  This eliminates the class of infinite
-// loops caused by applySnapshot() → setState → useEffect → markDirty → doSync.
+// doSync itself never schedules another pull. The fingerprint guard prevents
+// a remote apply from turning into a sync loop.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SYNC_DEBOUNCE_MS } from "../config";
+import { SYNC_DEBOUNCE_MS, SYNC_INTERVAL_MS } from "../config";
 import {
   signInWithGoogle,
   signOutFromGoogle,
@@ -19,6 +19,8 @@ import {
   restoreSession,
   persistUserInfo,
   getStoredUserInfo,
+  persistSessionStartedAt,
+  getSessionStartedAt,
 } from "./google-auth";
 import { findAppFile, downloadSnapshot, uploadSnapshot } from "./google-drive";
 import { mergeSnapshots } from "./merge-engine";
@@ -29,7 +31,7 @@ export interface SyncEngine {
   syncStatus: SyncStatus;
   userInfo: UserInfo | null;
   signIn: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (snapshot?: AppSnapshot, broadcast?: boolean) => Promise<void>;
   resetCloudData: () => Promise<void>;
   triggerSync: () => Promise<void>;
   markDirty: (snapshot: AppSnapshot) => void;
@@ -64,6 +66,8 @@ function snapshotFingerprint(s: AppSnapshot): string {
   };
 
   return JSON.stringify({
+    resetAt: s.resetAt ?? 0,
+    logoutAt: s.logoutAt ?? 0,
     lifeSettings: {
       birthDate: s.lifeSettings.birthDate,
       lifespan: s.lifeSettings.lifespan,
@@ -223,6 +227,7 @@ export function useSyncEngine({
    * a new debounce while a sync is already in flight.
    */
   const isSyncingRef = useRef(false);
+  const isControlOperationRef = useRef(false);
 
   /**
    * Guards against our own localStorage writes re-triggering doSync via a
@@ -234,9 +239,9 @@ export function useSyncEngine({
   // ── Core sync ─────────────────────────────────────────────────────────────
 
   const doSync = useCallback(async (snapshotToUpload?: AppSnapshot) => {
-    console.trace("[SYNC TRIGGERED BY]:");
     if (!isSignedIn()) return;
     if (isSyncingRef.current) return;
+    if (isControlOperationRef.current) return;
 
     // Consume the snapshot that started this request. If another edit arrives
     // while the request is in flight, markDirty will replace this ref and it
@@ -271,6 +276,7 @@ export function useSyncEngine({
         getLocalSnapshotRef.current?.();
       let merged: AppSnapshot | null = localSnapshot ?? null;
       let remote: AppSnapshot | null = null;
+      let remoteRequestsLogout = false;
 
       if (fileIdRef.current) {
         remote = await downloadSnapshot(token, fileIdRef.current);
@@ -284,7 +290,32 @@ export function useSyncEngine({
           getLocalSnapshotRef.current?.() ??
           localSnapshot;
 
-        if (remote && localSnapshot) {
+        remoteRequestsLogout = Boolean(
+          remote?.logoutAt && remote.logoutAt > getSessionStartedAt(),
+        );
+
+        if (remoteRequestsLogout) {
+          await signOutFromGoogle();
+          setUserInfo(null);
+          setSyncStatus("idle");
+          fileIdRef.current = null;
+          pendingSnapshotRef.current = null;
+          lastSyncedContentRef.current = "";
+          return;
+        }
+
+        const localResetAt = localSnapshot?.resetAt ?? 0;
+        const remoteResetAt = remote?.resetAt ?? 0;
+        if (
+          remote &&
+          localSnapshot &&
+          localResetAt !== remoteResetAt &&
+          Math.max(localResetAt, remoteResetAt) > 0
+        ) {
+          // A factory reset is a global replacement, not a field-level merge.
+          // This prevents old data on another device from resurrecting.
+          merged = localResetAt > remoteResetAt ? localSnapshot : remote;
+        } else if (remote && localSnapshot) {
           merged = mergeSnapshots(localSnapshot, remote);
         } else if (remote && !localSnapshot) {
           merged = remote;
@@ -372,6 +403,7 @@ export function useSyncEngine({
 
       const stored = getStoredUserInfo();
       if (stored) setUserInfo(stored);
+      if (!getSessionStartedAt()) persistSessionStartedAt();
       void doSync(getLocalSnapshotRef.current?.());
     })();
 
@@ -381,12 +413,32 @@ export function useSyncEngine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // runs exactly once on mount
 
+  // Pull remote changes made on another device. The fingerprint guard inside
+  // doSync prevents this from causing an upload/apply loop.
+  useEffect(() => {
+    const pullRemote = () => {
+      if (isSignedIn()) void doSync();
+    };
+    const interval = window.setInterval(pullRemote, SYNC_INTERVAL_MS);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") pullRemote();
+    };
+    window.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", pullRemote);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", pullRemote);
+    };
+  }, [doSync]);
+
   // ── Public API ────────────────────────────────────────────────────────────
 
   const signIn = useCallback(async () => {
     try {
       setSyncStatus("syncing");
       const token = await signInWithGoogle();
+      persistSessionStartedAt();
 
       try {
         const infoResp = await fetch(
@@ -417,13 +469,69 @@ export function useSyncEngine({
     }
   }, [doSync]);
 
-  const signOut = useCallback(async () => {
-    await signOutFromGoogle();
-    setUserInfo(null);
-    setSyncStatus("idle");
-    fileIdRef.current = null;
-    lastSyncedContentRef.current = "";
-  }, []);
+  const signOut = useCallback(
+    async (snapshot?: AppSnapshot, broadcast = true) => {
+      if (!isSignedIn()) return;
+
+      if (broadcast) {
+        while (isControlOperationRef.current) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 25));
+        }
+        isControlOperationRef.current = true;
+        try {
+          while (isSyncingRef.current) {
+            await new Promise<void>((resolve) => setTimeout(resolve, 25));
+          }
+          if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+            debounceTimerRef.current = null;
+          }
+
+          const token = await getValidToken();
+          if (!fileIdRef.current) fileIdRef.current = await findAppFile(token);
+          if (fileIdRef.current) {
+            const local =
+              pendingSnapshotRef.current ??
+              snapshot ??
+              getLocalSnapshotRef.current?.();
+            pendingSnapshotRef.current = null;
+            const remote = await downloadSnapshot(token, fileIdRef.current);
+            const localResetAt = local?.resetAt ?? 0;
+            const remoteResetAt = remote?.resetAt ?? 0;
+            const content =
+              remote && local
+                ? localResetAt !== remoteResetAt &&
+                  Math.max(localResetAt, remoteResetAt) > 0
+                  ? localResetAt > remoteResetAt
+                    ? local
+                    : remote
+                  : mergeSnapshots(local, remote)
+                : (local ?? remote ?? emptySnapshot());
+            const now = Date.now();
+            await uploadSnapshot(token, fileIdRef.current, {
+              ...content,
+              exportedAt: now,
+              logoutAt: now,
+            });
+          }
+        } catch (error) {
+          // A local sign-out must still complete even if Drive is temporarily
+          // unavailable. The next authenticated session can retry the marker.
+          console.error("[sync] sign-out broadcast error:", error);
+          setSyncStatus("error");
+        } finally {
+          isControlOperationRef.current = false;
+        }
+      }
+
+      await signOutFromGoogle();
+      setUserInfo(null);
+      setSyncStatus("idle");
+      fileIdRef.current = null;
+      lastSyncedContentRef.current = "";
+    },
+    [],
+  );
 
   const resetCloudData = useCallback(async () => {
     if (!isSignedIn()) return;
@@ -434,6 +542,10 @@ export function useSyncEngine({
     while (isSyncingRef.current) {
       await new Promise<void>((resolve) => setTimeout(resolve, 25));
     }
+    while (isControlOperationRef.current) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 25));
+    }
+    isControlOperationRef.current = true;
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -454,9 +566,11 @@ export function useSyncEngine({
       // snapshot. This prevents a later sign-in from merging old cloud data
       // back into the freshly-reset local calendar.
       if (fileIdRef.current) {
+        const resetNow = Date.now();
         const resetSnapshot: AppSnapshot = {
           ...emptySnapshot(),
-          exportedAt: Date.now(),
+          exportedAt: resetNow,
+          resetAt: resetNow,
         };
         isWritingStorageRef.current = true;
         await uploadSnapshot(token, fileIdRef.current, resetSnapshot);
@@ -465,9 +579,12 @@ export function useSyncEngine({
       }
       setSyncStatus("synced");
     } catch (error) {
-      isWritingStorageRef.current = false;
       setSyncStatus("error");
       throw error;
+    } finally {
+      isWritingStorageRef.current = false;
+      isControlOperationRef.current = false;
+      pendingSnapshotRef.current = null;
     }
   }, []);
 
@@ -487,6 +604,7 @@ export function useSyncEngine({
     (snapshot: AppSnapshot) => {
       pendingSnapshotRef.current = snapshot;
       if (!isSignedIn()) return;
+      if (isControlOperationRef.current) return;
 
       // Guard 1 — a sync is already running; it will see the latest state via
       // pendingSnapshotRef when it completes, so no extra scheduling needed.

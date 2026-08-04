@@ -4,11 +4,11 @@
 // written to Drive has both creation and modification timestamps.
 
 export type SyncStatus =
-  | "idle"       // signed out, or synced with no pending changes
-  | "synced"     // last sync succeeded
-  | "uploading"  // uploading to Drive
-  | "syncing"    // downloading + merging
-  | "error";     // last operation failed
+  | "idle" // signed out, or synced with no pending changes
+  | "synced" // last sync succeeded
+  | "uploading" // uploading to Drive
+  | "syncing" // downloading + merging
+  | "error"; // last operation failed
 
 export interface UserInfo {
   name: string;
@@ -111,6 +111,10 @@ export interface SyncCalendarConfig {
 export interface AppSnapshot {
   version: 1;
   exportedAt: number;
+  /** Monotonic marker for a factory reset. A newer reset is authoritative. */
+  resetAt?: number;
+  /** Monotonic control marker that signs all currently open clients out. */
+  logoutAt?: number;
   milestones: SyncMilestone[];
   lifeSettings: SyncLifeSettings;
   dayGoals: Record<string, SyncDayGoals>;
@@ -129,6 +133,8 @@ export function emptySnapshot(): AppSnapshot {
   return {
     version: 1,
     exportedAt: 0,
+    resetAt: 0,
+    logoutAt: 0,
     milestones: [],
     lifeSettings: { birthDate: "", lifespan: 80, createdAt: 0, updatedAt: 0 },
     dayGoals: {},

@@ -18,13 +18,24 @@ import { emptySnapshot } from "./sync-types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function timestampOf(value: { updatedAt?: unknown; createdAt?: unknown }): number {
-  const updatedAt = typeof value.updatedAt === "number" && Number.isFinite(value.updatedAt) ? value.updatedAt : 0;
-  const createdAt = typeof value.createdAt === "number" && Number.isFinite(value.createdAt) ? value.createdAt : 0;
+function timestampOf(value: {
+  updatedAt?: unknown;
+  createdAt?: unknown;
+}): number {
+  const updatedAt =
+    typeof value.updatedAt === "number" && Number.isFinite(value.updatedAt)
+      ? value.updatedAt
+      : 0;
+  const createdAt =
+    typeof value.createdAt === "number" && Number.isFinite(value.createdAt)
+      ? value.createdAt
+      : 0;
   return Math.max(updatedAt, createdAt);
 }
 
-function newer<T extends { updatedAt?: number; createdAt?: number; isDeleted?: boolean }>(a: T, b: T): T {
+function newer<
+  T extends { updatedAt?: number; createdAt?: number; isDeleted?: boolean },
+>(a: T, b: T): T {
   const aTimestamp = timestampOf(a);
   const bTimestamp = timestampOf(b);
   if (aTimestamp !== bTimestamp) return aTimestamp > bTimestamp ? a : b;
@@ -35,10 +46,14 @@ function newer<T extends { updatedAt?: number; createdAt?: number; isDeleted?: b
 }
 
 /** Merge two arrays of items identified by `id`. Winner = higher updatedAt. */
-function mergeById<T extends { id: string; updatedAt?: number; createdAt?: number; isDeleted: boolean }>(
-  local: T[],
-  remote: T[],
-): T[] {
+function mergeById<
+  T extends {
+    id: string;
+    updatedAt?: number;
+    createdAt?: number;
+    isDeleted: boolean;
+  },
+>(local: T[], remote: T[]): T[] {
   const map = new Map<string, T>();
   for (const item of local) map.set(item.id, item);
   for (const item of remote) {
@@ -108,12 +123,17 @@ function mergeNotes(
  * Merge local and remote snapshots.
  * Neither snapshot is mutated — a new merged snapshot is returned.
  */
-export function mergeSnapshots(local: AppSnapshot, remote: AppSnapshot): AppSnapshot {
+export function mergeSnapshots(
+  local: AppSnapshot,
+  remote: AppSnapshot,
+): AppSnapshot {
   const base = emptySnapshot();
 
   return {
     ...base,
     exportedAt: Math.max(local.exportedAt, remote.exportedAt),
+    resetAt: Math.max(local.resetAt ?? 0, remote.resetAt ?? 0),
+    logoutAt: Math.max(local.logoutAt ?? 0, remote.logoutAt ?? 0),
 
     milestones: mergeById(
       local.milestones ?? [],

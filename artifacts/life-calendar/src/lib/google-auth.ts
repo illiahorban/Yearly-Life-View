@@ -45,6 +45,7 @@ export interface StoredUserInfo {
 const LS_TOKEN = "gSync:accessToken";
 const LS_EXPIRES = "gSync:expiresAt";
 const LS_USER_INFO = "gSync:userInfo";
+const LS_SESSION_STARTED = "gSync:sessionStartedAt";
 
 // ── Module-level state (singleton) ────────────────────────────────────────────
 
@@ -118,6 +119,23 @@ export function getStoredUserInfo(): StoredUserInfo | null {
     return raw ? (JSON.parse(raw) as StoredUserInfo) : null;
   } catch {
     return null;
+  }
+}
+
+/** Record when this browser session was authenticated for remote logout checks. */
+export function persistSessionStartedAt(value = Date.now()): void {
+  try {
+    localStorage.setItem(LS_SESSION_STARTED, String(value));
+  } catch {
+    /* non-fatal */
+  }
+}
+
+export function getSessionStartedAt(): number {
+  try {
+    return Number(localStorage.getItem(LS_SESSION_STARTED) ?? 0) || 0;
+  } catch {
+    return 0;
   }
 }
 
@@ -291,6 +309,7 @@ export async function signOutFromGoogle(): Promise<void> {
   clearPersistedToken();
   try {
     localStorage.removeItem(LS_USER_INFO);
+    localStorage.removeItem(LS_SESSION_STARTED);
   } catch {
     /* non-fatal */
   }

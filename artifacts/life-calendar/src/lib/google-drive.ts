@@ -43,13 +43,16 @@ export async function findAppFile(token: string): Promise<string | null> {
     `&pageSize=1`;
 
   const resp = await driveRequest("GET", url, token);
-  const data = (await resp.json()) as { files: { id: string; modifiedTime: string }[] };
+  const data = (await resp.json()) as {
+    files: { id: string; modifiedTime: string }[];
+  };
   return data.files?.[0]?.id ?? null;
 }
 
 /**
  * Download and parse the snapshot JSON from Drive.
- * Returns null if the file is missing or unreadable.
+ * Returns null if the file is missing; propagates read/parse errors so callers
+ * never mistake a temporary Drive failure for an empty calendar.
  */
 export async function downloadSnapshot(
   token: string,
@@ -59,10 +62,21 @@ export async function downloadSnapshot(
     const url = `${DRIVE_API_BASE}/files/${fileId}?alt=media`;
     const resp = await driveRequest("GET", url, token);
     const json = (await resp.json()) as AppSnapshot;
-    if (json?.version !== 1) return null;
+    if (json?.version !== 1) {
+      throw new Error("Unsupported calendar snapshot version");
+    }
     return json;
-  } catch {
-    return null;
+  } catch (error) {
+    // A deleted appDataFolder file is recoverable: the caller can create a
+    // replacement. Other Drive/network failures must propagate so local
+    // stale data is never uploaded over an unknown remote state.
+    if (
+      error instanceof Error &&
+      error.message.startsWith("Drive API error 404")
+    ) {
+      return null;
+    }
+    throw error;
   }
 }
 
