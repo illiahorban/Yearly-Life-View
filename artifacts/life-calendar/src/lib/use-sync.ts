@@ -34,8 +34,8 @@ export interface SyncEngine {
   userInfo: UserInfo | null;
   signIn: () => Promise<void>;
   signOut: (snapshot?: AppSnapshot, broadcast?: boolean) => Promise<void>;
-  resetCloudData: () => Promise<void>;
-  triggerSync: () => Promise<void>;
+  resetCloudData: () => Promise<AppSnapshot>;
+  triggerSync: (snapshot?: AppSnapshot) => Promise<void>;
   markDirty: (snapshot: AppSnapshot) => void;
 }
 
@@ -582,8 +582,17 @@ export function useSyncEngine({
     [],
   );
 
-  const resetCloudData = useCallback(async () => {
-    if (!isSignedIn()) return;
+  const resetCloudData = useCallback(async (): Promise<AppSnapshot> => {
+    const resetNow = Date.now();
+    const resetSnapshot: AppSnapshot = {
+      ...emptySnapshot(),
+      exportedAt: resetNow,
+      resetAt: resetNow,
+    };
+
+    // A signed-out calendar can still be reset locally. There is simply no
+    // Drive snapshot to replace in that case.
+    if (!isSignedIn()) return resetSnapshot;
 
     // Let an already-running upload finish before replacing Drive data with
     // the factory-reset snapshot. Otherwise the old snapshot could win the
@@ -619,20 +628,17 @@ export function useSyncEngine({
       // Keep the existing Drive file, but replace its contents with an empty
       // snapshot. This prevents a later sign-in from merging old cloud data
       // back into the freshly-reset local calendar.
-      if (fileIdRef.current) {
-        const resetNow = Date.now();
-        const resetSnapshot: AppSnapshot = {
-          ...emptySnapshot(),
-          exportedAt: resetNow,
-          resetAt: resetNow,
-        };
-        isWritingStorageRef.current = true;
-        await uploadSnapshot(token, fileIdRef.current, resetSnapshot);
-        isWritingStorageRef.current = false;
-        lastSyncedContentRef.current = snapshotFingerprint(resetSnapshot);
-        lastRemoteContentRef.current = snapshotFingerprint(resetSnapshot);
-      }
+      isWritingStorageRef.current = true;
+      fileIdRef.current = await uploadSnapshot(
+        token,
+        fileIdRef.current,
+        resetSnapshot,
+      );
+      isWritingStorageRef.current = false;
+      lastSyncedContentRef.current = snapshotFingerprint(resetSnapshot);
+      lastRemoteContentRef.current = snapshotFingerprint(resetSnapshot);
       setSyncStatus("synced");
+      return resetSnapshot;
     } catch (error) {
       setSyncStatus("error");
       throw error;
@@ -644,12 +650,12 @@ export function useSyncEngine({
     }
   }, []);
 
-  const triggerSync = useCallback(async () => {
+  const triggerSync = useCallback(async (snapshot?: AppSnapshot) => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
-    await doSync(pendingSnapshotRef.current ?? undefined);
+    await doSync(snapshot ?? pendingSnapshotRef.current ?? undefined);
   }, [doSync]);
 
   // ── markDirty (trigger #2) ────────────────────────────────────────────────

@@ -2611,6 +2611,7 @@ function App() {
     signIn: googleSignIn,
     signOut: googleSignOut,
     resetCloudData,
+    triggerSync,
     markDirty,
   } = useSyncEngine({
     applySnapshot,
@@ -4972,19 +4973,26 @@ function App() {
           open={factoryResetStep >= 1}
           onClose={() => setFactoryResetStep(0)}
           onConfirm={async () => {
-            let resetCompleted = false;
             try {
-              // Clear the Drive snapshot before clearing calendar storage.
-              // Keep the Google session so the user remains signed in after
-              // the calendar is reset.
-              await resetCloudData();
+              // Replace Drive with the empty snapshot first. This preserves
+              // the Google session and prevents stale cloud data from
+              // returning if the browser is closed during the reset.
+              const resetSnapshot = await resetCloudData();
 
               // Remove only this app's calendar data. The gSync:* auth keys
               // must survive so the Google account remains connected.
               Object.keys(localStorage)
                 .filter((key) => key.startsWith("lifeCalendar:"))
                 .forEach((key) => localStorage.removeItem(key));
-              resetCompleted = true;
+
+              // Apply factory defaults immediately without a page reload.
+              // This keeps the signed-in Google account and updates the
+              // visible calendar in the same operation.
+              setDark(false);
+              setLang("ru");
+              applySnapshot(resetSnapshot);
+              await triggerSync(resetSnapshot);
+              setFactoryResetStep(0);
             } catch (e) {
               console.error("Ошибка при сбросе данных календаря:", e);
               window.alert(
@@ -4993,13 +5001,6 @@ function App() {
                   : "The reset could not finish: Google Drive data was not changed.",
               );
               return;
-            } finally {
-              if (resetCompleted) {
-                // Hard reload so all useState initializers read the factory
-                // defaults while the Google session is restored from gSync:*.
-                window.location.href =
-                  window.location.origin + window.location.pathname;
-              }
             }
           }}
           dark={dark}
