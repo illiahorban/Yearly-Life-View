@@ -9482,7 +9482,7 @@ function AllGoalsPanel({
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflow: "hidden",
-          maxHeight: "calc(100dvh - 2rem)",
+          maxHeight: "calc(100svh - 2rem)",
         }}
       >
         {/* Header */}
@@ -10362,7 +10362,7 @@ function NotesPanel({
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
-          maxHeight: "calc(100dvh - 2rem)",
+          maxHeight: "calc(100svh - 2rem)",
         }}
       >
         {/* Header */}
@@ -11205,7 +11205,7 @@ function MilestoneModal({
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
-          maxHeight: "calc(100dvh - 2rem)",
+          maxHeight: "calc(100svh - 2rem)",
         }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
@@ -12566,7 +12566,7 @@ function GoalsModal({
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            maxHeight: "calc(100dvh - 2rem)",
+            maxHeight: "calc(100svh - 2rem)",
           }}
         >
           <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 shrink-0">
@@ -15552,7 +15552,7 @@ function DayTemplatesModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          maxHeight: "calc(100dvh - 2rem)",
+          maxHeight: "calc(100svh - 2rem)",
         }}
       >
         {/* Header */}
