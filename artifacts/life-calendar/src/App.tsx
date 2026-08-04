@@ -3021,8 +3021,12 @@ function App() {
           className="sticky top-0 z-20"
           style={{
             background: headerBg,
-            backdropFilter: "saturate(180%) blur(20px)",
-            WebkitBackdropFilter: "saturate(180%) blur(20px)",
+            ...(isMobile
+              ? {}
+              : {
+                  backdropFilter: "saturate(180%) blur(20px)",
+                  WebkitBackdropFilter: "saturate(180%) blur(20px)",
+                }),
             borderBottom: "1px solid var(--border-soft)",
           }}
         >
@@ -3292,11 +3296,15 @@ function App() {
                                 initial={{ opacity: 0, y: -8, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 380,
-                                  damping: 28,
-                                }}
+                                transition={
+                                  isMobile
+                                    ? { duration: 0.16, ease: "easeOut" }
+                                    : {
+                                        type: "spring",
+                                        stiffness: 380,
+                                        damping: 28,
+                                      }
+                                }
                                 style={{
                                   width: 228,
                                   background: modalBg,
@@ -3530,11 +3538,15 @@ function App() {
                           initial={{ opacity: 0, y: -8, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 380,
-                            damping: 28,
-                          }}
+                          transition={
+                            isMobile
+                              ? { duration: 0.16, ease: "easeOut" }
+                              : {
+                                  type: "spring",
+                                  stiffness: 380,
+                                  damping: 28,
+                                }
+                          }
                           className="lc-settings-panel"
                           style={{
                             position: "relative",
@@ -3561,13 +3573,17 @@ function App() {
                             }
                             aria-expanded={userInfo ? profileOpen : undefined}
                             onClick={() => {
-                              runMobileWindowAction(profileOpen, () => {
-                                if (userInfo) setProfileOpen((o) => !o);
-                                else {
-                                  setSettingsOpen(false);
-                                  void googleSignIn();
-                                }
-                              });
+                              // This action is already inside the settings
+                              // panel. Do not route it through the mobile
+                              // "close current window first" guard: that
+                              // would consume the first tap and close the
+                              // gear menu instead of starting Google auth.
+                              if (userInfo) {
+                                setProfileOpen((o) => !o);
+                              } else {
+                                setSettingsOpen(false);
+                                void googleSignIn();
+                              }
                             }}
                             bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
                           >
@@ -3927,7 +3943,7 @@ function App() {
                     }
                     transition={
                       isMobile
-                        ? { duration: 0.28, ease: "easeInOut" }
+                        ? { duration: 0.22, ease: "easeOut" }
                         : { duration: 0.2, ease: "easeInOut" }
                     }
                     style={{
@@ -3936,7 +3952,7 @@ function App() {
                         ? {
                             height: 46,
                             marginTop: 10,
-                            willChange: "height, opacity, transform",
+                            willChange: "opacity, transform",
                           }
                         : {}),
                     }}
@@ -5714,10 +5730,10 @@ function BlocksRenderer({
                               ? "translateY(0)"
                               : "translateY(-5px)",
                             transition: isMobile
-                              ? "max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease-out, margin-top 0.38s cubic-bezier(0.22, 1, 0.36, 1), transform 0.38s cubic-bezier(0.22, 1, 0.36, 1)"
+                              ? "opacity 0.22s ease-out, transform 0.22s ease-out"
                               : "max-height 0.3s ease-out, opacity 0.25s ease-out, margin-top 0.3s ease-out",
                             willChange: isMobile
-                              ? "max-height, opacity, margin-top, transform"
+                              ? "opacity, transform"
                               : undefined,
                             pointerEvents: isPanelOpen ? "auto" : "none",
                           }}
@@ -8497,10 +8513,10 @@ function NoteModal({
                                 ? "translateY(-4px)"
                                 : "translateY(0)",
                               transition: isMobile
-                                ? "max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease-out, transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)"
+                                ? "opacity 0.2s ease-out, transform 0.2s ease-out"
                                 : "max-height 0.3s ease-in-out, opacity 0.18s ease-in-out",
                               willChange: isMobile
-                                ? "max-height, opacity, transform"
+                                ? "opacity, transform"
                                 : undefined,
                               pointerEvents: isEditing ? "none" : "auto",
                             }}
@@ -8697,10 +8713,10 @@ function NoteModal({
                                 ? "translateY(0)"
                                 : "translateY(-4px)",
                               transition: isMobile
-                                ? "max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease-out, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)"
+                                ? "opacity 0.24s ease-out, transform 0.24s ease-out"
                                 : "max-height 0.35s ease-in-out, opacity 0.22s ease-in-out",
                               willChange: isMobile
-                                ? "max-height, opacity, transform"
+                                ? "opacity, transform"
                                 : undefined,
                               pointerEvents: isEditing ? "auto" : "none",
                             }}
@@ -9021,10 +9037,10 @@ function NoteModal({
                   ? "translateY(-4px)"
                   : "translateY(0)",
                 transition: isMobile
-                  ? "max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease-out, transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)"
+                  ? "opacity 0.2s ease-out, transform 0.2s ease-out"
                   : "max-height 0.3s ease-in-out, opacity 0.18s ease-in-out",
                 willChange: isMobile
-                  ? "max-height, opacity, transform"
+                  ? "opacity, transform"
                   : undefined,
                 pointerEvents:
                   addEventOpen || dayMilestones.length >= 10 ? "none" : "auto",
@@ -9063,10 +9079,10 @@ function NoteModal({
                   ? "translateY(0)"
                   : "translateY(-4px)",
                 transition: isMobile
-                  ? "max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease-out, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)"
+                  ? "opacity 0.24s ease-out, transform 0.24s ease-out"
                   : "max-height 0.35s ease-in-out, opacity 0.22s ease-in-out",
                 willChange: isMobile
-                  ? "max-height, opacity, transform"
+                  ? "opacity, transform"
                   : undefined,
                 pointerEvents: addEventOpen ? "auto" : "none",
               }}
