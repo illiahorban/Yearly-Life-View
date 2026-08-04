@@ -16,7 +16,7 @@ import {
   signOutFromGoogle,
   isSignedIn,
   getValidToken,
-  tryRestoreSession,
+  restoreSession,
   persistUserInfo,
   getStoredUserInfo,
 } from "./google-auth";
@@ -63,16 +63,22 @@ function snapshotFingerprint(s: AppSnapshot): string {
 
   return JSON.stringify({
     lifeSettings: {
-      birthDate:  s.lifeSettings.birthDate,
-      lifespan:   s.lifeSettings.lifespan,
-      createdAt:  s.lifeSettings.createdAt ?? 0,
-      updatedAt:  s.lifeSettings.updatedAt ?? 0,
+      birthDate: s.lifeSettings.birthDate,
+      lifespan: s.lifeSettings.lifespan,
+      createdAt: s.lifeSettings.createdAt ?? 0,
+      updatedAt: s.lifeSettings.updatedAt ?? 0,
     },
 
-    milestones: sortById(s.milestones).map(m => ({
-      id: m.id, label: m.label, date: m.date, color: m.color,
-      description: m.description ?? null, recurring: m.recurring ?? false,
-      createdAt: m.createdAt ?? 0, updatedAt: m.updatedAt ?? 0, isDeleted: m.isDeleted ?? false,
+    milestones: sortById(s.milestones).map((m) => ({
+      id: m.id,
+      label: m.label,
+      date: m.date,
+      color: m.color,
+      description: m.description ?? null,
+      recurring: m.recurring ?? false,
+      createdAt: m.createdAt ?? 0,
+      updatedAt: m.updatedAt ?? 0,
+      isDeleted: m.isDeleted ?? false,
     })),
 
     notes: sortedKeys(
@@ -80,9 +86,12 @@ function snapshotFingerprint(s: AppSnapshot): string {
         Object.entries(s.notes)
           .map(([k, entries]) => [
             k,
-            sortById(entries).map(e => ({
-              id: e.id, text: e.text, color: e.color ?? null,
-              createdAt: e.createdAt ?? 0, updatedAt: e.updatedAt ?? 0,
+            sortById(entries).map((e) => ({
+              id: e.id,
+              text: e.text,
+              color: e.color ?? null,
+              createdAt: e.createdAt ?? 0,
+              updatedAt: e.updatedAt ?? 0,
               isDeleted: e.isDeleted ?? false,
             })),
           ])
@@ -94,24 +103,39 @@ function snapshotFingerprint(s: AppSnapshot): string {
       Object.fromEntries(
         Object.entries(s.dayGoals).map(([k, v]) => [
           k,
-          { count: v.count, done: v.done, labels: v.labels ?? null,
-            colors: v.colors ?? null, createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
-            isDeleted: v.isDeleted ?? false },
+          {
+            count: v.count,
+            done: v.done,
+            labels: v.labels ?? null,
+            colors: v.colors ?? null,
+            createdAt: v.createdAt ?? 0,
+            updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false,
+          },
         ]),
       ),
     ),
 
-    dayTemplates: sortById(s.dayTemplates).map(t => ({
-      id: t.id, name: t.name, items: t.items,
-      createdAt: t.createdAt ?? 0, updatedAt: t.updatedAt ?? 0, isDeleted: t.isDeleted ?? false,
+    dayTemplates: sortById(s.dayTemplates).map((t) => ({
+      id: t.id,
+      name: t.name,
+      items: t.items,
+      createdAt: t.createdAt ?? 0,
+      updatedAt: t.updatedAt ?? 0,
+      isDeleted: t.isDeleted ?? false,
     })),
 
     blockGoals: sortedKeys(
       Object.fromEntries(
         Object.entries(s.blockGoals).map(([k, v]) => [
-          k, { description: v.description, goals: v.goals,
-            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
-            isDeleted: v.isDeleted ?? false },
+          k,
+          {
+            description: v.description,
+            goals: v.goals,
+            createdAt: v.createdAt ?? 0,
+            updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false,
+          },
         ]),
       ),
     ),
@@ -119,9 +143,14 @@ function snapshotFingerprint(s: AppSnapshot): string {
     quarterGoals: sortedKeys(
       Object.fromEntries(
         Object.entries(s.quarterGoals).map(([k, v]) => [
-          k, { description: v.description, goals: v.goals,
-            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
-            isDeleted: v.isDeleted ?? false },
+          k,
+          {
+            description: v.description,
+            goals: v.goals,
+            createdAt: v.createdAt ?? 0,
+            updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false,
+          },
         ]),
       ),
     ),
@@ -129,9 +158,14 @@ function snapshotFingerprint(s: AppSnapshot): string {
     yearGoals: sortedKeys(
       Object.fromEntries(
         Object.entries(s.yearGoals).map(([k, v]) => [
-          k, { description: v.description, goals: v.goals,
-            createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0,
-            isDeleted: v.isDeleted ?? false },
+          k,
+          {
+            description: v.description,
+            goals: v.goals,
+            createdAt: v.createdAt ?? 0,
+            updatedAt: v.updatedAt ?? 0,
+            isDeleted: v.isDeleted ?? false,
+          },
         ]),
       ),
     ),
@@ -145,7 +179,12 @@ function snapshotFingerprint(s: AppSnapshot): string {
     calendarConfigs: sortedKeys(
       Object.fromEntries(
         Object.entries(s.calendarConfigs).map(([k, v]) => [
-          k, { data: v.data, createdAt: v.createdAt ?? 0, updatedAt: v.updatedAt ?? 0 },
+          k,
+          {
+            data: v.data,
+            createdAt: v.createdAt ?? 0,
+            updatedAt: v.updatedAt ?? 0,
+          },
         ]),
       ),
     ),
@@ -154,14 +193,17 @@ function snapshotFingerprint(s: AppSnapshot): string {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): SyncEngine {
+export function useSyncEngine({
+  applySnapshot,
+  getLocalSnapshot,
+}: Options): SyncEngine {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
-  const fileIdRef          = useRef<string | null>(null);
+  const fileIdRef = useRef<string | null>(null);
   const pendingSnapshotRef = useRef<AppSnapshot | null>(null);
-  const debounceTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const applyRef           = useRef(applySnapshot);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const applyRef = useRef(applySnapshot);
   applyRef.current = applySnapshot;
   const getLocalSnapshotRef = useRef(getLocalSnapshot);
   getLocalSnapshotRef.current = getLocalSnapshot;
@@ -236,7 +278,10 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
         // If merged content is identical to the last sync, skip applyRef
         // (no setState) and skip any upload (no network).  This is the
         // primary guard against the useEffect → markDirty → doSync cycle.
-        if (lastSyncedContentRef.current !== "" && mergedFp === lastSyncedContentRef.current) {
+        if (
+          lastSyncedContentRef.current !== "" &&
+          mergedFp === lastSyncedContentRef.current
+        ) {
           setSyncStatus("synced");
           return; // finally still runs → isSyncingRef reset
         }
@@ -247,8 +292,7 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
 
         lastSyncedContentRef.current = mergedFp;
 
-        const shouldUpload =
-          !!localSnapshot || !fileIdRef.current || !remote;
+        const shouldUpload = !!localSnapshot || !fileIdRef.current || !remote;
 
         if (shouldUpload) {
           const remoteFp = remote ? snapshotFingerprint(remote) : "";
@@ -256,7 +300,11 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
             setSyncStatus("uploading");
             const toUpload = { ...merged, exportedAt: Date.now() };
             isWritingStorageRef.current = true;
-            fileIdRef.current = await uploadSnapshot(token, fileIdRef.current, toUpload);
+            fileIdRef.current = await uploadSnapshot(
+              token,
+              fileIdRef.current,
+              toUpload,
+            );
             isWritingStorageRef.current = false;
             lastSyncedContentRef.current = snapshotFingerprint(toUpload);
           }
@@ -285,7 +333,8 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (isWritingStorageRef.current) return; // our own write — ignore
-      if (!e.key?.startsWith("lifeCalendar:") && !e.key?.startsWith("gSync:")) return;
+      if (!e.key?.startsWith("lifeCalendar:") && !e.key?.startsWith("gSync:"))
+        return;
       // Another tab changed the data — pull the latest.
       if (isSignedIn()) void doSync();
     };
@@ -296,12 +345,20 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
   // ── Session restore on mount (trigger #1) ─────────────────────────────────
 
   useEffect(() => {
-    if (tryRestoreSession()) {
+    let cancelled = false;
+
+    void (async () => {
+      if (!(await restoreSession()) || cancelled) return;
+
       const stored = getStoredUserInfo();
       if (stored) setUserInfo(stored);
-       void doSync(getLocalSnapshotRef.current?.());
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      void doSync(getLocalSnapshotRef.current?.());
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // runs exactly once on mount
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -317,17 +374,21 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
         );
         if (infoResp.ok) {
           const info = (await infoResp.json()) as {
-            email?: string; name?: string; picture?: string;
+            email?: string;
+            name?: string;
+            picture?: string;
           };
           const userInfoObj: UserInfo = {
-            name:    info.name ?? info.email ?? "Google User",
-            email:   info.email ?? "",
+            name: info.name ?? info.email ?? "Google User",
+            email: info.email ?? "",
             picture: info.picture,
           };
           setUserInfo(userInfoObj);
           persistUserInfo(userInfoObj);
         }
-      } catch { /* non-fatal */ }
+      } catch {
+        /* non-fatal */
+      }
 
       await doSync(pendingSnapshotRef.current ?? undefined);
     } catch (err) {
@@ -340,7 +401,7 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
     await signOutFromGoogle();
     setUserInfo(null);
     setSyncStatus("idle");
-    fileIdRef.current            = null;
+    fileIdRef.current = null;
     lastSyncedContentRef.current = "";
   }, []);
 
@@ -356,27 +417,31 @@ export function useSyncEngine({ applySnapshot, getLocalSnapshot }: Options): Syn
   // Called by App.tsx whenever user-visible state changes.  Debounced so
   // rapid edits collapse into a single upload.
 
-  const markDirty = useCallback((snapshot: AppSnapshot) => {
-    pendingSnapshotRef.current = snapshot;
-    if (!isSignedIn()) return;
+  const markDirty = useCallback(
+    (snapshot: AppSnapshot) => {
+      pendingSnapshotRef.current = snapshot;
+      if (!isSignedIn()) return;
 
-    // Guard 1 — a sync is already running; it will see the latest state via
-    // pendingSnapshotRef when it completes, so no extra scheduling needed.
-    if (isSyncingRef.current) return;
+      // Guard 1 — a sync is already running; it will see the latest state via
+      // pendingSnapshotRef when it completes, so no extra scheduling needed.
+      if (isSyncingRef.current) return;
 
-    // Guard 2 — content fingerprint: if data hasn't changed since the last
-    // sync there is nothing to upload.
-    if (
-      lastSyncedContentRef.current !== "" &&
-      snapshotFingerprint(snapshot) === lastSyncedContentRef.current
-    ) return;
+      // Guard 2 — content fingerprint: if data hasn't changed since the last
+      // sync there is nothing to upload.
+      if (
+        lastSyncedContentRef.current !== "" &&
+        snapshotFingerprint(snapshot) === lastSyncedContentRef.current
+      )
+        return;
 
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    debounceTimerRef.current = setTimeout(() => {
-      debounceTimerRef.current = null;
-      void doSync(pendingSnapshotRef.current ?? undefined);
-    }, SYNC_DEBOUNCE_MS);
-  }, [doSync]);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
+        debounceTimerRef.current = null;
+        void doSync(pendingSnapshotRef.current ?? undefined);
+      }, SYNC_DEBOUNCE_MS);
+    },
+    [doSync],
+  );
 
   return { syncStatus, userInfo, signIn, signOut, triggerSync, markDirty };
 }

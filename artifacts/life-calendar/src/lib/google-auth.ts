@@ -42,8 +42,8 @@ export interface StoredUserInfo {
 
 // ── localStorage keys ─────────────────────────────────────────────────────────
 
-const LS_TOKEN     = "gSync:accessToken";
-const LS_EXPIRES   = "gSync:expiresAt";
+const LS_TOKEN = "gSync:accessToken";
+const LS_EXPIRES = "gSync:expiresAt";
 const LS_USER_INFO = "gSync:userInfo";
 
 // ── Module-level state (singleton) ────────────────────────────────────────────
@@ -54,6 +54,7 @@ let tokenExpiresAt = 0;
 
 let pendingResolve: ((token: string) => void) | null = null;
 let pendingReject: ((err: Error) => void) | null = null;
+let pendingTokenRequest: Promise<string> | null = null;
 
 // ── Script loading ────────────────────────────────────────────────────────────
 
@@ -70,7 +71,10 @@ function loadGisScript(): Promise<void> {
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    script.onload = () => { scriptLoaded = true; resolve(); };
+    script.onload = () => {
+      scriptLoaded = true;
+      resolve();
+    };
     script.onerror = () => reject(new Error("Failed to load GIS script"));
     document.head.appendChild(script);
   });
@@ -84,21 +88,27 @@ function persistToken(token: string, expiresAt: number): void {
   try {
     localStorage.setItem(LS_TOKEN, token);
     localStorage.setItem(LS_EXPIRES, String(expiresAt));
-  } catch { /* non-fatal: private browsing may block writes */ }
+  } catch {
+    /* non-fatal: private browsing may block writes */
+  }
 }
 
 function clearPersistedToken(): void {
   try {
     localStorage.removeItem(LS_TOKEN);
     localStorage.removeItem(LS_EXPIRES);
-  } catch { /* non-fatal */ }
+  } catch {
+    /* non-fatal */
+  }
 }
 
 /** Persist user info (name, email, picture) so it can be restored on page load. */
 export function persistUserInfo(info: StoredUserInfo): void {
   try {
     localStorage.setItem(LS_USER_INFO, JSON.stringify(info));
-  } catch { /* non-fatal */ }
+  } catch {
+    /* non-fatal */
+  }
 }
 
 /** Read stored user info. Returns null if nothing is saved or parsing fails. */
@@ -125,19 +135,34 @@ async function ensureTokenClient(): Promise<void> {
     scope: DRIVE_SCOPE,
     callback: (resp: TokenResponse) => {
       if (resp.error || !resp.access_token) {
-        const err = new Error(resp.error_description ?? resp.error ?? "Auth failed");
-        if (pendingReject) { pendingReject(err); pendingReject = null; pendingResolve = null; }
+        const err = new Error(
+          resp.error_description ?? resp.error ?? "Auth failed",
+        );
+        if (pendingReject) {
+          pendingReject(err);
+          pendingReject = null;
+          pendingResolve = null;
+        }
         return;
       }
       accessToken = resp.access_token;
-      tokenExpiresAt = Date.now() + (Number(resp.expires_in ?? 3600) - 60) * 1000;
+      tokenExpiresAt =
+        Date.now() + (Number(resp.expires_in ?? 3600) - 60) * 1000;
       // Persist so the session survives a page reload (valid for ~1 hour)
       persistToken(accessToken, tokenExpiresAt);
-      if (pendingResolve) { pendingResolve(accessToken); pendingResolve = null; pendingReject = null; }
+      if (pendingResolve) {
+        pendingResolve(accessToken);
+        pendingResolve = null;
+        pendingReject = null;
+      }
     },
     error_callback: (err) => {
       const error = new Error(err.message ?? err.type ?? "Auth error");
-      if (pendingReject) { pendingReject(error); pendingReject = null; pendingResolve = null; }
+      if (pendingReject) {
+        pendingReject(error);
+        pendingReject = null;
+        pendingResolve = null;
+      }
     },
   });
 }
@@ -154,17 +179,46 @@ async function ensureTokenClient(): Promise<void> {
  */
 export function tryRestoreSession(): boolean {
   try {
-    const storedToken   = localStorage.getItem(LS_TOKEN);
+    const storedToken = localStorage.getItem(LS_TOKEN);
     const storedExpires = Number(localStorage.getItem(LS_EXPIRES) ?? "0");
     // Require at least 30 s of remaining validity so we don't restore a token
     // that will expire before the first Drive request completes.
     if (storedToken && storedExpires > Date.now() + 30_000) {
-      accessToken    = storedToken;
+      accessToken = storedToken;
       tokenExpiresAt = storedExpires;
       return true;
     }
-  } catch { /* non-fatal */ }
+  } catch {
+    /* non-fatal */
+  }
   return false;
+}
+
+/**
+ * Restore a previous Google session, refreshing an expired access token
+ * silently when the saved Google grant is still available.
+ */
+export async function restoreSession(): Promise<boolean> {
+  if (tryRestoreSession()) return true;
+
+  let hasStoredSession = false;
+  try {
+    hasStoredSession = Boolean(localStorage.getItem(LS_TOKEN));
+  } catch {
+    return false;
+  }
+
+  if (!hasStoredSession) return false;
+
+  try {
+    await signInSilent();
+    return true;
+  } catch {
+    accessToken = null;
+    tokenExpiresAt = 0;
+    clearPersistedToken();
+    return false;
+  }
 }
 
 /**
@@ -175,12 +229,8 @@ export async function signInWithGoogle(): Promise<string> {
   await ensureTokenClient();
   if (!tokenClient) throw new Error("Token client not initialised");
 
-  return new Promise<string>((resolve, reject) => {
-    pendingResolve = resolve;
-    pendingReject = reject;
-    // prompt="" silently reuses existing grant; "consent" forces the dialog.
-    tokenClient!.requestAccessToken({ prompt: accessToken ? "" : "consent" });
-  });
+  // prompt="" silently reuses an existing grant; "consent" forces the dialog.
+  return requestToken(accessToken ? "" : "consent");
 }
 
 /**
@@ -192,11 +242,26 @@ export async function signInSilent(): Promise<string> {
   await ensureTokenClient();
   if (!tokenClient) throw new Error("Token client not initialised");
 
-  return new Promise<string>((resolve, reject) => {
+  return requestToken("");
+}
+
+function requestToken(prompt: string): Promise<string> {
+  if (pendingTokenRequest) return pendingTokenRequest;
+
+  const request = new Promise<string>((resolve, reject) => {
     pendingResolve = resolve;
     pendingReject = reject;
-    tokenClient!.requestAccessToken({ prompt: "" }); // no popup
+    tokenClient!.requestAccessToken({ prompt });
   });
+
+  let trackedRequest: Promise<string>;
+  trackedRequest = request.finally(() => {
+    if (pendingTokenRequest === trackedRequest) {
+      pendingTokenRequest = null;
+    }
+  });
+  pendingTokenRequest = trackedRequest;
+  return trackedRequest;
 }
 
 /**
@@ -205,29 +270,30 @@ export async function signInSilent(): Promise<string> {
  * to sign in again.
  */
 export async function getValidToken(): Promise<string> {
-  if (accessToken && Date.now() < tokenExpiresAt) return accessToken;
-  if (!tokenClient) throw new Error("Not signed in");
+  // Refresh one minute before the stored expiry. This avoids losing a sync
+  // request when the token expires between its first and last Drive call.
+  if (accessToken && Date.now() + 60_000 < tokenExpiresAt) return accessToken;
 
-  // Try silent refresh (prompt="")
-  return new Promise<string>((resolve, reject) => {
-    pendingResolve = resolve;
-    pendingReject = reject;
-    tokenClient!.requestAccessToken({ prompt: "" });
-  });
+  await ensureTokenClient();
+  return requestToken("");
 }
 
-/** Returns true if we currently have a non-expired access token. */
+/** Returns true while a Google session exists; getValidToken refreshes it if needed. */
 export function isSignedIn(): boolean {
-  return !!accessToken && Date.now() < tokenExpiresAt;
+  return !!accessToken;
 }
 
 /** Revoke the token and clear local state. */
 export async function signOutFromGoogle(): Promise<void> {
   const token = accessToken;
-  accessToken    = null;
+  accessToken = null;
   tokenExpiresAt = 0;
   clearPersistedToken();
-  try { localStorage.removeItem(LS_USER_INFO); } catch { /* non-fatal */ }
+  try {
+    localStorage.removeItem(LS_USER_INFO);
+  } catch {
+    /* non-fatal */
+  }
   if (token) {
     await loadGisScript();
     window.google?.accounts.oauth2.revoke(token, () => {});

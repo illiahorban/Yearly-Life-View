@@ -9,3 +9,4 @@
 - [Mobile day-modal scrolling](mobile-day-modal-scrolling.md) — use visualViewport sizing and boundary gesture handling; never fix the page body to prevent modal scroll chaining.
 - [Sync loop fix — radical simplification](sync-loop-fix.md) — Drive sync had infinite loop: polling + focus listeners kept calling doSync which called applySnapshot which triggered markDirty. Fix: removed all timers/focus listeners; doSync fires only on mount + markDirty. Also fixed calendarConfigs and quarterMeta updatedAt not preserved in localStorage.
 - [Nested goal tombstones](nested-goal-tombstones.md) — goal lists need per-goal tombstones, not only container timestamps, or deleting one goal can resurrect it during a later merge.
+- [Google GIS token lifetime](google-session-expiry.md) — localStorage preserves the token only as a hint; restore and sync must silently refresh expiring Google access tokens.
