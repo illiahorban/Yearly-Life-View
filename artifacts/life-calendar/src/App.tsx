@@ -3909,34 +3909,17 @@ function App() {
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={
-                      isMobile
-                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    animate={
-                      isMobile
-                        ? { opacity: 1, height: 44, marginTop: 10, y: 0 }
-                        : { opacity: 1, height: "auto", marginTop: 10 }
-                    }
-                    exit={
-                      isMobile
-                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    transition={
-                      isMobile
-                        ? { duration: 0.18, ease: "easeInOut" }
-                        : { duration: 0.2, ease: "easeInOut" }
-                    }
+                    initial={{ y: -15, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -15, opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 380,
+                      damping: 30,
+                    }}
+                    className="transform-gpu will-change-transform"
                     style={{
-                      overflow: "hidden",
-                      ...(isMobile
-                        ? {
-                            marginTop: 10,
-                            willChange: "height, opacity, transform",
-                          }
-                        : {}),
+                      WebkitTapHighlightColor: "transparent",
                     }}
                   >
                     <div className="relative flex items-center">
@@ -4021,9 +4004,11 @@ function App() {
                                 {searchIndex + 1} {t("of")}{" "}
                                 {matchedDatesArray.length}
                               </span>
-                              <button
+                              <motion.button
                                 type="button"
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => navigateMatch(-1)}
+                                className="transform-gpu will-change-transform"
                                 style={{
                                   width: 20,
                                   height: 20,
@@ -4037,13 +4022,16 @@ function App() {
                                   justifyContent: "center",
                                   fontSize: 12,
                                   padding: 0,
+                                  WebkitTapHighlightColor: "transparent",
                                 }}
                               >
                                 ↑
-                              </button>
-                              <button
+                              </motion.button>
+                              <motion.button
                                 type="button"
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => navigateMatch(1)}
+                                className="transform-gpu will-change-transform"
                                 style={{
                                   width: 20,
                                   height: 20,
@@ -4057,17 +4045,20 @@ function App() {
                                   justifyContent: "center",
                                   fontSize: 12,
                                   padding: 0,
+                                  WebkitTapHighlightColor: "transparent",
                                 }}
                               >
                                 ↓
-                              </button>
+                              </motion.button>
                             </>
                           ) : parsedJumpDate ? (
-                            <button
+                            <motion.button
                               type="button"
+                              whileTap={{ scale: 0.95 }}
                               onClick={() =>
                                 scrollToDateKey(dateKey(parsedJumpDate))
                               }
+                              className="transform-gpu will-change-transform"
                               style={{
                                 display: "flex",
                                 alignItems: "center",
@@ -4087,13 +4078,14 @@ function App() {
                                 fontWeight: 500,
                                 whiteSpace: "nowrap",
                                 fontFamily: "inherit",
+                                WebkitTapHighlightColor: "transparent",
                               }}
                             >
                               <span style={{ fontSize: 12 }}>↵</span>
                               {t("jumpTo")} {parsedJumpDate.getDate()}{" "}
                               {MONTHS_I18N[lang][parsedJumpDate.getMonth()]}{" "}
                               {parsedJumpDate.getFullYear()}
-                            </button>
+                            </motion.button>
                           ) : (
                             <span
                               style={{
@@ -5085,8 +5077,9 @@ function IconButton({
   "aria-expanded"?: boolean;
 }) {
   return (
-    <button
+    <motion.button
       type="button"
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
       title={title}
       aria-expanded={ariaExpanded}
@@ -5105,10 +5098,11 @@ function IconButton({
         justifyContent: "center",
         cursor: "pointer",
         flexShrink: 0,
+        WebkitTapHighlightColor: "transparent",
       }}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 

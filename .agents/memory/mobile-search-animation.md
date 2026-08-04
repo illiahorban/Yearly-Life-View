@@ -3,8 +3,8 @@ name: Mobile search animation
 description: The Life Calendar search bar needs a separate low-reflow animation on phone layouts.
 ---
 
-On mobile, avoid animating the search bar's `height` to `"auto"` inside the sticky calendar header. Use matching fixed-height open/close animations with opacity and a small transform, while keeping the desktop height animation unchanged.
+The search bar in the sticky calendar header must use Framer Motion with transform-only `y` and `opacity` animation on every viewport; do not animate height, margin, or padding.
 
-**Why:** Animating auto height on a mobile sticky header forces repeated layout recalculation across the large calendar and can look like low frame rate. An opacity-only close leaves the header's layout collapsing abruptly.
+**Why:** Layout-property animation makes the large sticky calendar reflow and causes the search row to appear or disappear with a visible jump, especially on iOS.
 
-**How to apply:** Branch the search animation using the existing mobile viewport signal; animate the same fixed height and margin in both directions, keep the duration short, and use `will-change` only for the animated properties.
+**How to apply:** Wrap the conditional search row in `AnimatePresence`; use `initial/animate/exit` values for `y` and `opacity`, add `transform-gpu will-change-transform`, and keep focus user-driven on mobile so the keyboard does not jump during the entrance animation.
