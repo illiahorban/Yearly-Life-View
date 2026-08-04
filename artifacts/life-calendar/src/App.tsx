@@ -3904,39 +3904,28 @@ function App() {
             </AnimatePresence>
 
             {/* Search bar */}
-            <div ref={searchBarRef}>
-              <AnimatePresence>
+            <motion.div
+              ref={searchBarRef}
+              layout
+              className="transform-gpu will-change-transform"
+            >
+              <AnimatePresence initial={false}>
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={
-                      isMobile
-                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    animate={
-                      isMobile
-                        ? { opacity: 1, height: 44, marginTop: 10, y: 0 }
-                        : { opacity: 1, height: "auto", marginTop: 10 }
-                    }
-                    exit={
-                      isMobile
-                        ? { opacity: 0, height: 0, marginTop: 0, y: -2 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    transition={
-                      isMobile
-                        ? { duration: 0.18, ease: "easeInOut" }
-                        : { duration: 0.2, ease: "easeInOut" }
-                    }
+                    initial={{ y: "-100%", opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: "-100%", opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 35,
+                    }}
+                    className="transform-gpu will-change-transform"
                     style={{
                       overflow: "hidden",
-                      ...(isMobile
-                        ? {
-                            marginTop: 10,
-                            willChange: "height, opacity, transform",
-                          }
-                        : {}),
+                      marginTop: 10,
+                      WebkitTapHighlightColor: "transparent",
                     }}
                   >
                     <div className="relative flex items-center">
@@ -4111,7 +4100,7 @@ function App() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
 
             {/* Sticky weekday labels */}
             <div className="mt-3 px-[13px] sm:px-[21px] flex flex-row items-center">
