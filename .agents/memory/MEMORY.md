@@ -15,3 +15,4 @@
 - [Rapid mobile modal edits](rapid-mobile-modal-edits.md) — batched taps in modal drafts need a synchronous ref so the latest action cannot overwrite an earlier one.
 - [Sync while editing](sync-while-editing.md) — a Drive response must merge against the newest local snapshot, not the state captured when the request started.
 - [Cross-device sync control markers](cross-device-sync.md) — factory reset and explicit sign-out need separate authoritative markers in the shared Drive snapshot.
+- [Mobile search animation](mobile-search-animation.md) — avoid auto-height animation in the sticky header on phones; use a short opacity/transform transition instead.

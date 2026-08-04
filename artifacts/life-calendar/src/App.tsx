@@ -3787,11 +3787,32 @@ function App() {
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: "auto", marginTop: 10 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    transition={{ duration: 0.2, ease: "easeInOut" }}
-                    style={{ overflow: "hidden" }}
+                    initial={
+                      isMobile
+                        ? { opacity: 0, y: -4 }
+                        : { opacity: 0, height: 0, marginTop: 0 }
+                    }
+                    animate={
+                      isMobile
+                        ? { opacity: 1, y: 0 }
+                        : { opacity: 1, height: "auto", marginTop: 10 }
+                    }
+                    exit={
+                      isMobile
+                        ? { opacity: 0, y: -4 }
+                        : { opacity: 0, height: 0, marginTop: 0 }
+                    }
+                    transition={
+                      isMobile
+                        ? { duration: 0.12, ease: "easeOut" }
+                        : { duration: 0.2, ease: "easeInOut" }
+                    }
+                    style={{
+                      overflow: "hidden",
+                      ...(isMobile
+                        ? { marginTop: 10, willChange: "opacity, transform" }
+                        : {}),
+                    }}
                   >
                     <div className="relative flex items-center">
                       <div
@@ -3840,7 +3861,7 @@ function App() {
                             : "rgba(0,0,0,0.05)",
                           border: "1px solid var(--border-soft)",
                           color: "var(--text)",
-                          fontSize: 13,
+                          fontSize: isMobile ? 16 : 13,
                           outline: "none",
                           fontFamily: "inherit",
                         }}
