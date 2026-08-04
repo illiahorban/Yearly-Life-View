@@ -4426,7 +4426,11 @@ function App() {
                     const goals = next[k];
                     if (!goals) return;
                     next[k] = {
-                      ...goals,
+                      count: 0,
+                      done: [],
+                      labels: [],
+                      colors: [],
+                      createdAt: goals.createdAt,
                       updatedAt: deletedAt,
                       isDeleted: true,
                     };
@@ -5586,10 +5590,12 @@ function QuarterNameEditor({
   value,
   onChange,
   color,
+  underline = true,
 }: {
   value: string;
   onChange: (v: string) => void;
   color: string;
+  underline?: boolean;
 }) {
   const [draft, setDraft] = useState(value);
   useEffect(() => {
@@ -5646,7 +5652,7 @@ function QuarterNameEditor({
           resize: "none",
           overflow: "hidden",
           width: "100%",
-          borderBottom: `1px solid ${color}`,
+          borderBottom: underline ? `1px solid ${color}` : "none",
         }}
       />
       {/* invisible sizer that mirrors the text — drives the grid row height */}
@@ -13628,6 +13634,7 @@ function SprintSettingsModal({
                   value={quarterName}
                   onChange={onQuarterNameChange}
                   color={quarter.text}
+                  underline={false}
                 />
               </div>
             </div>
