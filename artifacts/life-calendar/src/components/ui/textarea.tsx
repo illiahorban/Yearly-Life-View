@@ -15,6 +15,10 @@ const Textarea = React.forwardRef<
       ref={ref}
       {...props}
       name="field-text"
+      autoComplete="off"
+      autoCorrect="off"
+      spellCheck={false}
+      data-1p-ignore="true"
     />
   );
 });
