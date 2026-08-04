@@ -5541,8 +5541,10 @@ function BlocksRenderer({
                       return s + (g ? g.count : 0);
                     }, 0);
                     return (
-                      <div
+                      <motion.div
                         key={wi}
+                        layout="position"
+                        className="transform-gpu will-change-transform"
                         style={{ display: "flex", flexDirection: "column" }}
                       >
                         {/* Three-column week row: [left 60px] [tiles flex-1] [right 60px] */}
@@ -5692,81 +5694,99 @@ function BlocksRenderer({
                             )}
                           </div>
                         </div>
-                        {/* Reserved accordion slot — always in DOM, opens with CSS height transition */}
-                        <div
-                          style={{
-                            overflow: "hidden",
-                            maxHeight: isPanelOpen ? "72px" : "0",
-                            opacity: isPanelOpen ? 1 : 0,
-                            marginTop: isPanelOpen ? "8px" : "0",
-                            transition:
-                              "max-height 0.3s ease-out, opacity 0.25s ease-out, margin-top 0.3s ease-out",
-                            pointerEvents: isPanelOpen ? "auto" : "none",
-                          }}
-                        >
-                          <div
-                            data-week-selection-panel
-                            className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
-                            style={{
-                              background: "transparent",
-                              border: `1px solid ${quarter.border}55`,
-                            }}
-                          >
-                            <div className="flex flex-col gap-0.5 min-w-0">
-                              <span
-                                className="text-[12px] font-semibold truncate"
-                                style={{ color: quarter.text }}
-                              >
-                                {selMin === selMax
-                                  ? `${t("week")} ${selMin + startIndex + 1}`
-                                  : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
-                              </span>
-                              <span
-                                className="text-[10px]"
-                                style={{ color: "var(--text-tertiary)" }}
-                              >
-                                {pluralWeeks(selMax - selMin + 1, lang, t)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <button
-                                onClick={onCancelSel}
+                        <AnimatePresence initial={false} mode="popLayout">
+                          {isPanelOpen && (
+                            <motion.div
+                              key={`week-selection-panel-${_qi}-${qOffset}`}
+                              initial={{ y: "100%", opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: "100%", opacity: 0 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 35,
+                              }}
+                              className="transform-gpu will-change-transform"
+                              style={{
+                                overflow: "hidden",
+                                marginTop: 8,
+                                WebkitTapHighlightColor: "transparent",
+                              }}
+                            >
+                              <div
+                                data-week-selection-panel
+                                className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl transform-gpu will-change-transform"
                                 style={{
-                                  height: 28,
-                                  paddingInline: 10,
-                                  borderRadius: 8,
-                                  border: `1px solid ${quarter.border}44`,
                                   background: "transparent",
-                                  color: "var(--text-secondary)",
-                                  fontSize: 12,
-                                  cursor: "pointer",
-                                  fontFamily: "inherit",
+                                  border: `1px solid ${quarter.border}55`,
+                                  WebkitTapHighlightColor: "transparent",
                                 }}
                               >
-                                {t("cancel")}
-                              </button>
-                              <button
-                                onClick={() => onCreateSprint(selMin, selMax)}
-                                style={{
-                                  height: 28,
-                                  paddingInline: 12,
-                                  borderRadius: 8,
-                                  border: "none",
-                                  background: quarter.border,
-                                  color: "white",
-                                  fontSize: 12,
-                                  fontWeight: 600,
-                                  cursor: "pointer",
-                                  fontFamily: "inherit",
-                                  boxShadow: `0 2px 8px ${quarter.border}55`,
-                                }}
-                              >
-                                {t("createSprint")}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <span
+                                    className="text-[12px] font-semibold truncate"
+                                    style={{ color: quarter.text }}
+                                  >
+                                    {selMin === selMax
+                                      ? `${t("week")} ${selMin + startIndex + 1}`
+                                      : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
+                                  </span>
+                                  <span
+                                    className="text-[10px]"
+                                    style={{ color: "var(--text-tertiary)" }}
+                                  >
+                                    {pluralWeeks(selMax - selMin + 1, lang, t)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <motion.button
+                                    type="button"
+                                    whileTap={{ scale: 0.96 }}
+                                    onClick={onCancelSel}
+                                    className="transform-gpu will-change-transform"
+                                    style={{
+                                      height: 28,
+                                      paddingInline: 10,
+                                      borderRadius: 8,
+                                      border: `1px solid ${quarter.border}44`,
+                                      background: "transparent",
+                                      color: "var(--text-secondary)",
+                                      fontSize: 12,
+                                      cursor: "pointer",
+                                      fontFamily: "inherit",
+                                      WebkitTapHighlightColor: "transparent",
+                                    }}
+                                  >
+                                    {t("cancel")}
+                                  </motion.button>
+                                  <motion.button
+                                    type="button"
+                                    whileTap={{ scale: 0.96 }}
+                                    onClick={() => onCreateSprint(selMin, selMax)}
+                                    className="transform-gpu will-change-transform"
+                                    style={{
+                                      height: 28,
+                                      paddingInline: 12,
+                                      borderRadius: 8,
+                                      border: "none",
+                                      background: quarter.border,
+                                      color: "white",
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      cursor: "pointer",
+                                      fontFamily: "inherit",
+                                      boxShadow: `0 2px 8px ${quarter.border}55`,
+                                      WebkitTapHighlightColor: "transparent",
+                                    }}
+                                  >
+                                    {t("createSprint")}
+                                  </motion.button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
                     );
                   })}
                 </div>
