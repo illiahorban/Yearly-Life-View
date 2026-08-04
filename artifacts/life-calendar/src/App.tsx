@@ -3150,7 +3150,6 @@ function App() {
                 <div ref={searchBtnRef}>
                   <IconButton
                     title={t("search")}
-                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       runMobileWindowAction(searchOpen, () => {
                         setSearchOpen((o) => !o);
@@ -3932,13 +3931,13 @@ function App() {
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={{ y: -15, opacity: 0 }}
+                    initial={{ y: "-100%", opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    exit={{ y: "-100%", opacity: 0 }}
                     transition={{
                       type: "spring",
-                      stiffness: 380,
-                      damping: 30,
+                      stiffness: 400,
+                      damping: 35,
                     }}
                     className="transform-gpu will-change-transform"
                     style={{
@@ -5083,7 +5082,6 @@ function IconButton({
   title,
   bg,
   color,
-  whileTap,
   "aria-expanded": ariaExpanded,
 }: {
   children: React.ReactNode;
@@ -5091,16 +5089,14 @@ function IconButton({
   title: string;
   bg: string;
   color?: string;
-  whileTap?: { scale: number };
   "aria-expanded"?: boolean;
 }) {
   return (
-    <motion.button
+    <button
       type="button"
       onClick={onClick}
       title={title}
       aria-expanded={ariaExpanded}
-      whileTap={whileTap}
       className="lc-icon-btn"
       style={{
         position: "relative",
@@ -5116,11 +5112,10 @@ function IconButton({
         justifyContent: "center",
         cursor: "pointer",
         flexShrink: 0,
-         WebkitTapHighlightColor: "transparent",
       }}
     >
       {children}
-    </motion.button>
+    </button>
   );
 }
 
