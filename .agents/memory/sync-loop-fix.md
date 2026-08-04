@@ -37,3 +37,10 @@ Any syncable item that is deleted locally must remain in the local snapshot as `
 
 ## HMR hook-count mismatch after removing hooks
 Removing `useCallback`/`useEffect` hooks from `useSyncEngine` changes the total hook count React tracks in `App.tsx` during HMR. This throws "invalid hook call" and requires a **workflow restart** (not just a save) to recover.
+
+## Activity indicator
+The gear indicator must distinguish a no-op background poll from a real remote update. Track the last downloaded remote content fingerprint separately from the local sync fingerprint; only mark download activity when the remote fingerprint changes. Clear the transient activity after the request finishes.
+
+**Why:** The app polls Drive every few seconds, but showing activity for every successful poll makes the indicator flash continuously. Users still need feedback when another device actually changes the calendar.
+
+**How to apply:** Keep routine `syncing` status for sync logic, but drive the gear's transient amber state from an explicit `syncActivity` (`downloading`/`uploading`) rather than from `syncStatus` alone.

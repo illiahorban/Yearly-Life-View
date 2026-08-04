@@ -2514,6 +2514,7 @@ function App() {
   // Wire up sync engine
   const {
     syncStatus,
+    syncActivity,
     userInfo,
     signIn: googleSignIn,
     signOut: googleSignOut,
@@ -2562,15 +2563,15 @@ function App() {
     return "var(--text-secondary)";
   }, [syncStatus]);
 
-  // The gear is a calm connection indicator, not a live network activity
-  // meter. Background pulls happen every few seconds and should not make the
-  // dot flash. Only an actual Drive write gets the temporary amber state.
+  // The gear is quiet during no-op background polls, but reports real Drive
+  // activity when a remote device changed the shared calendar.
   const gearSyncColor = useMemo(() => {
     if (!userInfo) return "var(--text-secondary)";
     if (syncStatus === "error") return "#ff3b30";
-    if (syncStatus === "uploading") return "#ff9500";
+    if (syncActivity === "downloading" || syncActivity === "uploading")
+      return "#ff9500";
     return "#34c759";
-  }, [syncStatus, userInfo]);
+  }, [syncActivity, syncStatus, userInfo]);
 
   // Q4 may need 14 weeks when the year's Dec 31 falls after week 52 ends.
   const q4Weeks = useMemo(

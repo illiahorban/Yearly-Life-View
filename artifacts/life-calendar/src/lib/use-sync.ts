@@ -29,6 +29,8 @@ import type { AppSnapshot, SyncStatus, UserInfo } from "./sync-types";
 
 export interface SyncEngine {
   syncStatus: SyncStatus;
+  /** Actual Drive activity; routine background polling remains idle. */
+  syncActivity: "idle" | "downloading" | "uploading";
   userInfo: UserInfo | null;
   signIn: () => Promise<void>;
   signOut: (snapshot?: AppSnapshot, broadcast?: boolean) => Promise<void>;
@@ -204,6 +206,9 @@ export function useSyncEngine({
   getLocalSnapshot,
 }: Options): SyncEngine {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [syncActivity, setSyncActivity] = useState<
+    "idle" | "downloading" | "uploading"
+  >("idle");
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   const fileIdRef = useRef<string | null>(null);
@@ -220,6 +225,12 @@ export function useSyncEngine({
    * if the fingerprint hasn't changed.
    */
   const lastSyncedContentRef = useRef<string>("");
+  // Tracks the last Drive snapshot seen by this tab so a no-op poll does not
+  // flash the gear, while a change made on another device does.
+  const lastRemoteContentRef = useRef<string | null | undefined>(undefined);
+  const activityClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   /**
    * Mutual-exclusion flag. Set to true at the start of doSync, cleared in
@@ -254,6 +265,13 @@ export function useSyncEngine({
     isSyncingRef.current = true;
     try {
       setSyncStatus("syncing");
+      // A background poll can be a no-op. The gear is marked as downloading
+      // only after the response proves that Drive has changed.
+      if (activityClearTimerRef.current) {
+        clearTimeout(activityClearTimerRef.current);
+        activityClearTimerRef.current = null;
+      }
+      setSyncActivity("idle");
       const token = await getValidToken();
 
       if (!fileIdRef.current) {
@@ -280,6 +298,20 @@ export function useSyncEngine({
 
       if (fileIdRef.current) {
         remote = await downloadSnapshot(token, fileIdRef.current);
+        const remoteFp = remote ? snapshotFingerprint(remote) : null;
+        const remoteChanged =
+          lastRemoteContentRef.current === undefined ||
+          remoteFp !== lastRemoteContentRef.current;
+        lastRemoteContentRef.current = remoteFp;
+        if (remoteChanged && remote) {
+          setSyncActivity("downloading");
+          // Keep the state visible briefly even when the Drive response is
+          // faster than a browser paint.
+          activityClearTimerRef.current = setTimeout(() => {
+            activityClearTimerRef.current = null;
+            setSyncActivity("idle");
+          }, 700);
+        }
 
         // The React state/effect for a fast tap may have completed while the
         // Drive request was in flight. Read the newest queued/rendered local
@@ -298,9 +330,11 @@ export function useSyncEngine({
           await signOutFromGoogle();
           setUserInfo(null);
           setSyncStatus("idle");
+          setSyncActivity("idle");
           fileIdRef.current = null;
           pendingSnapshotRef.current = null;
           lastSyncedContentRef.current = "";
+          lastRemoteContentRef.current = undefined;
           return;
         }
 
@@ -349,6 +383,11 @@ export function useSyncEngine({
           const remoteFp = remote ? snapshotFingerprint(remote) : "";
           if (mergedFp !== remoteFp || !remote) {
             setSyncStatus("uploading");
+            if (activityClearTimerRef.current) {
+              clearTimeout(activityClearTimerRef.current);
+              activityClearTimerRef.current = null;
+            }
+            setSyncActivity("uploading");
             const toUpload = { ...merged, exportedAt: Date.now() };
             isWritingStorageRef.current = true;
             fileIdRef.current = await uploadSnapshot(
@@ -358,6 +397,9 @@ export function useSyncEngine({
             );
             isWritingStorageRef.current = false;
             lastSyncedContentRef.current = snapshotFingerprint(toUpload);
+            // The next poll should recognise this as our already-known remote
+            // state, not as a new download from another device.
+            lastRemoteContentRef.current = snapshotFingerprint(toUpload);
           }
         }
       }
@@ -367,6 +409,7 @@ export function useSyncEngine({
       console.error("[sync] error:", err);
       setSyncStatus("error");
     } finally {
+      if (!activityClearTimerRef.current) setSyncActivity("idle");
       isWritingStorageRef.current = false;
       isSyncingRef.current = false;
 
@@ -527,8 +570,14 @@ export function useSyncEngine({
       await signOutFromGoogle();
       setUserInfo(null);
       setSyncStatus("idle");
+      if (activityClearTimerRef.current) {
+        clearTimeout(activityClearTimerRef.current);
+        activityClearTimerRef.current = null;
+      }
+      setSyncActivity("idle");
       fileIdRef.current = null;
       lastSyncedContentRef.current = "";
+      lastRemoteContentRef.current = undefined;
     },
     [],
   );
@@ -554,6 +603,11 @@ export function useSyncEngine({
     pendingSnapshotRef.current = null;
 
     setSyncStatus("uploading");
+    if (activityClearTimerRef.current) {
+      clearTimeout(activityClearTimerRef.current);
+      activityClearTimerRef.current = null;
+    }
+    setSyncActivity("uploading");
     try {
       const token = await getValidToken();
       if (!fileIdRef.current) {
@@ -576,12 +630,14 @@ export function useSyncEngine({
         await uploadSnapshot(token, fileIdRef.current, resetSnapshot);
         isWritingStorageRef.current = false;
         lastSyncedContentRef.current = snapshotFingerprint(resetSnapshot);
+        lastRemoteContentRef.current = snapshotFingerprint(resetSnapshot);
       }
       setSyncStatus("synced");
     } catch (error) {
       setSyncStatus("error");
       throw error;
     } finally {
+      setSyncActivity("idle");
       isWritingStorageRef.current = false;
       isControlOperationRef.current = false;
       pendingSnapshotRef.current = null;
@@ -629,6 +685,7 @@ export function useSyncEngine({
 
   return {
     syncStatus,
+    syncActivity,
     userInfo,
     signIn,
     signOut,
