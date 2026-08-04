@@ -7513,7 +7513,7 @@ function NoteModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={() => {
         setColorPickerEntryId(null);
@@ -9519,7 +9519,7 @@ function AllGoalsPanel({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -10416,7 +10416,7 @@ function NotesPanel({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -10594,7 +10594,15 @@ function NotesPanel({
             borderBottom: `1px solid ${borderColor}`,
           }}
         >
-          {!showAddForm ? (
+          <div
+            style={{
+              maxHeight: showAddForm ? 0 : 40,
+              opacity: showAddForm ? 0 : 1,
+              visibility: showAddForm ? "hidden" : "visible",
+              overflow: "hidden",
+              pointerEvents: showAddForm ? "none" : "auto",
+            }}
+          >
             <button
               onClick={() => setShowAddForm(true)}
               style={{
@@ -10616,14 +10624,24 @@ function NotesPanel({
               <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>{" "}
               {t("addNote")}
             </button>
-          ) : (
-            <>
+          </div>
+          <div
+            style={{
+              maxHeight: showAddForm ? 260 : 0,
+              opacity: showAddForm ? 1 : 0,
+              visibility: showAddForm ? "visible" : "hidden",
+              overflow: "hidden",
+              pointerEvents: showAddForm ? "auto" : "none",
+            }}
+          >
               <div style={{ position: "relative", marginBottom: 8 }}>
                 <textarea
                   ref={draftTextareaRef}
                   value={draftText}
                   onChange={(e) => setDraftText(e.target.value)}
                   placeholder={t("notePlaceholder")}
+                  autoComplete="off"
+                  tabIndex={isMobile ? -1 : undefined}
                   rows={2}
                   style={{
                     width: "100%",
@@ -10705,6 +10723,8 @@ function NotesPanel({
                   value={draftDate}
                   onChange={(e) => setDraftDate(e.target.value)}
                   lang={lang}
+                  autoComplete="off"
+                  tabIndex={isMobile ? -1 : undefined}
                   style={{
                     flex: 1,
                     borderRadius: 9,
@@ -10780,8 +10800,7 @@ function NotesPanel({
                   {t("add")}
                 </button>
               </div>
-            </>
-          )}
+          </div>
         </div>
 
         {/* Body */}
@@ -11263,7 +11282,7 @@ function MilestoneModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -11411,7 +11430,15 @@ function MilestoneModal({
           className="px-6 py-3"
           style={{ borderTop: `1px solid ${borderColor}` }}
         >
-          {!showAddForm ? (
+          <div
+            style={{
+              maxHeight: showAddForm ? 0 : 38,
+              opacity: showAddForm ? 0 : 1,
+              visibility: showAddForm ? "hidden" : "visible",
+              overflow: "hidden",
+              pointerEvents: showAddForm ? "none" : "auto",
+            }}
+          >
             <button
               onClick={() => setShowAddForm(true)}
               style={{
@@ -11433,8 +11460,17 @@ function MilestoneModal({
               <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>{" "}
               {t("addEvent")}
             </button>
-          ) : (
-            (() => {
+          </div>
+          <div
+            style={{
+              maxHeight: showAddForm ? 500 : 0,
+              opacity: showAddForm ? 1 : 0,
+              visibility: showAddForm ? "visible" : "hidden",
+              overflow: "hidden",
+              pointerEvents: showAddForm ? "auto" : "none",
+            }}
+          >
+            {(() => {
               const ecDraft = getEventColors(draftColor, dark);
               const isWhite = draftColor === "#ffffff";
               const cardBg = isWhite ? "#ffffff" : ecDraft.bg;
@@ -11540,6 +11576,8 @@ function MilestoneModal({
                       value={draftDate}
                       onChange={(e) => setDraftDate(e.target.value)}
                       lang={lang}
+                      autoComplete="off"
+                      tabIndex={isMobile ? -1 : undefined}
                       style={{
                         ...draftInputStyle,
                         flex: "0 0 104px",
@@ -11744,8 +11782,8 @@ function MilestoneModal({
                     )}
                 </div>
               );
-            })()
-          )}
+            })()}
+          </div>
         </div>
 
         {/* List */}
@@ -11830,16 +11868,24 @@ function MilestoneModal({
                     onMouseEnter={() => setHoveredId(ms.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
-                    {isEditing ? (
+                    <>
                       <div
                         className="flex flex-col gap-2"
-                        style={{ isolation: "isolate" }}
+                        style={{
+                          isolation: "isolate",
+                          visibility: isEditing ? "visible" : "hidden",
+                          opacity: isEditing ? 1 : 0,
+                          pointerEvents: isEditing ? "auto" : "none",
+                          position: isEditing ? "relative" : "absolute",
+                          inset: isEditing ? undefined : 0,
+                          width: "100%",
+                        }}
                       >
                         <textarea
                           value={editLabel}
                           rows={1}
                           ref={(el) => {
-                            editLabelInputRef.current = el;
+                            if (isEditing) editLabelInputRef.current = el;
                             if (el) {
                               el.style.height = "auto";
                               el.style.height = el.scrollHeight + "px";
@@ -11916,6 +11962,8 @@ function MilestoneModal({
                             value={editDate}
                             onChange={(e) => setEditDate(e.target.value)}
                             lang={lang}
+                            autoComplete="off"
+                            tabIndex={isMobile ? -1 : undefined}
                             style={{
                               ...inputStyle,
                               flex: "0 0 104px",
@@ -12134,9 +12182,15 @@ function MilestoneModal({
                             document.body,
                           )}
                       </div>
-                    ) : (
-                      /* Card view — pure CSS Flexbox, no JS measurement, no absolute positioning */
                       <div
+                        style={{
+                          visibility: isEditing ? "hidden" : "visible",
+                          opacity: isEditing ? 0 : 1,
+                          pointerEvents: isEditing ? "none" : "auto",
+                        }}
+                      >
+                        {/* Card view — pure CSS Flexbox, no JS measurement, no absolute positioning */}
+                        <div
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -12323,7 +12377,8 @@ function MilestoneModal({
                           </button>
                         </div>
                       </div>
-                    )}
+                      </div>
+                    </>
                   </div>
                 );
               };
@@ -12564,7 +12619,7 @@ function GoalsModal({
         initial={false}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ overflowY: "auto", overscrollBehavior: "contain" }}
         onClick={() => {
           setColorPickerGoalId(null);
@@ -13588,7 +13643,7 @@ function SprintSettingsModal({
   return (
     <>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ overflowY: "auto", overscrollBehavior: "contain" }}
         initial={false}
         exit={{ opacity: 0 }}
@@ -14726,7 +14781,7 @@ function LifeCalendarModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -15548,7 +15603,7 @@ function DayTemplatesModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onCloseAll ?? onClose}
     >
@@ -15682,8 +15737,17 @@ function DayTemplatesModal({
             padding: "12px 20px 16px",
           }}
         >
-          {editing ? (
-            /* ── Edit / Create form ── */
+          <div
+            style={{
+              visibility: editing ? "visible" : "hidden",
+              opacity: editing ? 1 : 0,
+              pointerEvents: editing ? "auto" : "none",
+              position: editing ? "relative" : "absolute",
+              inset: editing ? undefined : 0,
+              width: "100%",
+            }}
+          >
+            {/* ── Edit / Create form ── */}
             <div>
               <div style={{ marginBottom: 10 }}>
                 <div
@@ -15858,8 +15922,15 @@ function DayTemplatesModal({
                 </button>
               </div>
             </div>
-          ) : (
-            /* ── Templates list ── */
+          </div>
+          <div
+            style={{
+              visibility: editing ? "hidden" : "visible",
+              opacity: editing ? 0 : 1,
+              pointerEvents: editing ? "none" : "auto",
+            }}
+          >
+            {/* ── Templates list ── */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {draft.length === 0 ? (
                 <div
@@ -16045,7 +16116,7 @@ function DayTemplatesModal({
                 </button>
               )}
             </div>
-          )}
+          </div>
         </div>
       </motion.div>
       <ConfirmDialog

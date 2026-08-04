@@ -37,6 +37,11 @@
 
 html, body, #root { height: 100%; }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -122,6 +127,40 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Touch targets: on mobile, icon buttons expand for finger comfort */
 @media (max-width: 639px) {
+  /* iOS WebKit zooms controls below 16px and rebuilds the keyboard accessory
+     while the viewport is being adjusted. Keep every editable control at the
+     native non-zooming size and explicitly restore text selection. */
+  input,
+  textarea,
+  select,
+  [contenteditable="true"] {
+    font-size: 16px !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Modal open/close and expanding form transitions can run while iOS is
+     calculating the keyboard viewport. Keep the modal geometry static. */
+  .lc-ios-modal,
+  .lc-ios-modal *,
+  .lc-ios-modal::before,
+  .lc-ios-modal::after {
+    transition: none !important;
+    animation: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+
+  /* Framer Motion writes transform/opacity inline. Override those animated
+     values only for modal children on mobile so the keyboard sees stable
+     geometry from the first frame. */
+  .lc-ios-modal > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   .lc-icon-btn {
     width: 36px !important;
     height: 36px !important;
