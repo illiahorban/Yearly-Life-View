@@ -920,16 +920,6 @@ function ColorSwatchGrid({
   );
 }
 
-/** After the virtual keyboard opens (~320 ms) scroll the element into view so it
- *  isn't hidden behind the keyboard or outside the visible area of a modal. */
-function scrollIntoViewAfterKeyboard(el: HTMLElement | null) {
-  if (!el) return;
-  setTimeout(
-    () => el.scrollIntoView({ behavior: "smooth", block: "center" }),
-    320,
-  );
-}
-
 /** Position a fixed-position popover relative to an anchor rect, flipping above
  *  the anchor and clamping to both viewport edges so it never renders off-screen. */
 function clampedPopoverPos(
@@ -1913,6 +1903,14 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchBtnRef = React.useRef<HTMLDivElement>(null);
   const searchBarRef = React.useRef<HTMLDivElement>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (isMobile || !searchOpen) return;
+    const frame = requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isMobile, searchOpen]);
   useEffect(() => {
     if (!searchOpen) return;
     const handler = (e: MouseEvent) => {
@@ -3782,7 +3780,7 @@ function App() {
                       </div>
                       <input
                         type="text"
-                        autoFocus={!isMobile}
+                        ref={searchInputRef}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => {
@@ -6605,6 +6603,7 @@ function NoteEntryItem({
   entry,
   idx,
   entriesCount,
+  isMobile,
   dark,
   inputBg,
   borderColor,
@@ -6613,8 +6612,6 @@ function NoteEntryItem({
   areaRefs,
   updateEntry,
   handleNoteHeightChange,
-  setActiveEntryId,
-  handleFocusEntry,
   handleKey,
   noteHeights,
   colorBtnRefs,
@@ -6625,6 +6622,7 @@ function NoteEntryItem({
   entry: NoteEntry;
   idx: number;
   entriesCount: number;
+  isMobile: boolean;
   dark: boolean;
   inputBg: string;
   borderColor: string;
@@ -6633,8 +6631,6 @@ function NoteEntryItem({
   areaRefs: React.MutableRefObject<Record<string, HTMLTextAreaElement | null>>;
   updateEntry: (id: string, text: string) => void;
   handleNoteHeightChange: (id: string, h: number) => void;
-  setActiveEntryId: (id: string | null) => void;
-  handleFocusEntry: (input: HTMLTextAreaElement) => void;
   handleKey: (e: React.KeyboardEvent) => void;
   noteHeights: Record<string, number>;
   colorBtnRefs: React.MutableRefObject<
@@ -6673,13 +6669,10 @@ function NoteEntryItem({
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
           onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}
-          onFocus={(e) => {
-            setActiveEntryId(entry.id);
-            handleFocusEntry(e.target);
-          }}
-          onBlur={() => setActiveEntryId(null)}
           onKeyDown={handleKey}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
+          autoComplete="off"
+          tabIndex={isMobile ? -1 : undefined}
           minRows={1}
           className={notePlaceholderClass}
           style={{
@@ -7193,37 +7186,6 @@ function NoteModal({
     _doneSlice.length === goalsDraft.count &&
     _doneSlice.every(Boolean);
   const scrollBodyRef = useRef<HTMLDivElement | null>(null);
-  const scrollFieldIntoModalView = useCallback(
-    (input: HTMLTextAreaElement | null) => {
-      const body = scrollBodyRef.current;
-      if (!input || !body) return;
-      const bodyRect = body.getBoundingClientRect();
-      const inputRect = input.getBoundingClientRect();
-      const inputCenter = inputRect.top + inputRect.height / 2;
-      const bodyCenter = bodyRect.top + bodyRect.height / 2;
-      body.scrollBy({ top: inputCenter - bodyCenter, behavior: "auto" });
-    },
-    [],
-  );
-  const focusScrollTimer = useRef<number | null>(null);
-  const scheduleFieldIntoModalView = useCallback(
-    (input: HTMLTextAreaElement | null) => {
-      if (focusScrollTimer.current !== null)
-        window.clearTimeout(focusScrollTimer.current);
-      focusScrollTimer.current = window.setTimeout(() => {
-        focusScrollTimer.current = null;
-        scrollFieldIntoModalView(input);
-      }, 320);
-    },
-    [scrollFieldIntoModalView],
-  );
-  useEffect(
-    () => () => {
-      if (focusScrollTimer.current !== null)
-        window.clearTimeout(focusScrollTimer.current);
-    },
-    [],
-  );
   useEffect(() => {
     if (isMobile) return;
     if (focusGoalIdx === null) return;
@@ -7232,10 +7194,9 @@ function NoteModal({
     const frame = requestAnimationFrame(() => {
       input.focus({ preventScroll: true });
       setFocusGoalIdx(null);
-      scheduleFieldIntoModalView(input);
     });
     return () => cancelAnimationFrame(frame);
-  }, [focusGoalIdx, goalIds, isMobile, scheduleFieldIntoModalView]);
+  }, [focusGoalIdx, goalIds, isMobile]);
   const areaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(
@@ -7266,11 +7227,10 @@ function NoteModal({
       if (el) {
         el.focus({ preventScroll: true });
         el.setSelectionRange(el.value.length, el.value.length);
-        scheduleFieldIntoModalView(el);
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [focusId, isMobile, scheduleFieldIntoModalView]);
+  }, [focusId, isMobile]);
 
   // Note height tracking is now delegated entirely to <TextareaAutosize>
   // (react-textarea-autosize), which measures scrollHeight itself and keeps
@@ -7394,25 +7354,24 @@ function NoteModal({
 
   React.useEffect(() => {
     if (isMobile || !msEditId) return;
-    const t = setTimeout(() => {
+    const frame = requestAnimationFrame(() => {
       const el = msEditInputRef.current;
       if (el) {
         el.focus({ preventScroll: true });
       }
-    }, 300);
-    return () => clearTimeout(t);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [isMobile, msEditId]);
 
   React.useEffect(() => {
     if (isMobile || !addEventOpen) return;
-    const t = setTimeout(() => {
+    const frame = requestAnimationFrame(() => {
       const el = newLabelInputRef.current;
       if (el) {
         el.focus({ preventScroll: true });
-        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
-    }, 320);
-    return () => clearTimeout(t);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [addEventOpen, isMobile]);
 
   React.useEffect(() => {
@@ -7508,7 +7467,6 @@ function NoteModal({
     string | null
   >(null);
   const [hoveredEntryId, setHoveredEntryId] = useState<string | null>(null);
-  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [confirmDeleteMsIdDay, setConfirmDeleteMsIdDay] = useState<
     string | null
   >(null);
@@ -7582,7 +7540,7 @@ function NoteModal({
         transition={{ type: "spring", stiffness: 380, damping: 30 }}
         onClick={(e) => {
           e.stopPropagation();
-          setColorPickerEntryId(null);
+          if (colorPickerEntryId !== null) setColorPickerEntryId(null);
         }}
         style={{
           position: "relative",
@@ -8126,10 +8084,9 @@ function NoteModal({
                                   setGoalColorPickerIdx(null);
                                 e.stopPropagation();
                               }}
-                              onFocus={(e) =>
-                                scheduleFieldIntoModalView(e.target)
-                              }
                               placeholder={`${t("goal")} ${i + 1}`}
+                              autoComplete="off"
+                              tabIndex={isMobile ? -1 : undefined}
                               minRows={1}
                               style={{
                                 flex: 1,
@@ -8651,10 +8608,9 @@ function NoteModal({
                                     }
                                     if (e.key === "Escape") setMsEditId(null);
                                   }}
-                                  onFocus={(e) =>
-                                    scrollIntoViewAfterKeyboard(e.target)
-                                  }
                                   placeholder={t("labelPlaceholder")}
+                                  autoComplete="off"
+                                  tabIndex={isMobile ? -1 : undefined}
                                   minRows={1}
                                   style={
                                     {
@@ -8677,10 +8633,9 @@ function NoteModal({
                                   onChange={(e) =>
                                     setMsEditDesc(e.target.value)
                                   }
-                                  onFocus={(e) =>
-                                    scrollIntoViewAfterKeyboard(e.target)
-                                  }
                                   placeholder={t("editDescPlaceholder")}
+                                  autoComplete="off"
+                                  tabIndex={isMobile ? -1 : undefined}
                                   minRows={2}
                                   style={
                                     {
@@ -9045,8 +9000,9 @@ function NoteModal({
                           }
                           if (e.key === "Escape") setAddEventOpen(false);
                         }}
-                        onFocus={(e) => scrollIntoViewAfterKeyboard(e.target)}
                         placeholder={t("labelPlaceholder")}
+                        autoComplete="off"
+                        tabIndex={isMobile ? -1 : undefined}
                         minRows={1}
                         style={
                           {
@@ -9064,8 +9020,9 @@ function NoteModal({
                       <TextareaAutosize
                         value={newDesc}
                         onChange={(e) => setNewDesc(e.target.value)}
-                        onFocus={(e) => scrollIntoViewAfterKeyboard(e.target)}
                         placeholder={t("descPlaceholder")}
+                        autoComplete="off"
+                        tabIndex={isMobile ? -1 : undefined}
                         minRows={2}
                         style={
                           {
@@ -9322,6 +9279,7 @@ function NoteModal({
                       entry={entry}
                       idx={idx}
                       entriesCount={entries.length}
+                      isMobile={isMobile}
                       dark={dark}
                       inputBg={inputBg}
                       borderColor={borderColor}
@@ -9330,8 +9288,6 @@ function NoteModal({
                       areaRefs={areaRefs}
                       updateEntry={updateEntry}
                       handleNoteHeightChange={handleNoteHeightChange}
-                      setActiveEntryId={setActiveEntryId}
-                      handleFocusEntry={scheduleFieldIntoModalView}
                       handleKey={handleKey}
                       noteHeights={noteHeights}
                       colorBtnRefs={colorBtnRefs}
@@ -10368,15 +10324,17 @@ function NotesPanel({
 
   React.useEffect(() => {
     if (isMobile) return;
-    const timer = setTimeout(() => searchRef.current?.focus(), 120);
-    return () => clearTimeout(timer);
+    const frame = requestAnimationFrame(() => searchRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
   }, [isMobile]);
 
   React.useEffect(() => {
     if (isMobile) return;
     if (!showAddForm) return;
-    const timer = setTimeout(() => draftTextareaRef.current?.focus(), 60);
-    return () => clearTimeout(timer);
+    const frame = requestAnimationFrame(() =>
+      draftTextareaRef.current?.focus(),
+    );
+    return () => cancelAnimationFrame(frame);
   }, [isMobile, showAddForm]);
 
   const q = query.trim().toLowerCase();
@@ -11193,6 +11151,7 @@ function MilestoneModal({
     left: number;
   } | null>(null);
   const draftLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const editLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const [editId, setEditId] = useState<string | null>(null);
@@ -11208,6 +11167,14 @@ function MilestoneModal({
     left: number;
   } | null>(null);
   const editColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
+
+  React.useEffect(() => {
+    if (isMobile || !editId) return;
+    const frame = requestAnimationFrame(() => {
+      editLabelInputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [editId, isMobile]);
 
   const startEdit = (ms: Milestone) => {
     setEditId(ms.id);
@@ -11241,8 +11208,10 @@ function MilestoneModal({
 
   React.useEffect(() => {
     if (isMobile || !showAddForm) return;
-    const timer = setTimeout(() => draftLabelInputRef.current?.focus(), 60);
-    return () => clearTimeout(timer);
+    const frame = requestAnimationFrame(() =>
+      draftLabelInputRef.current?.focus(),
+    );
+    return () => cancelAnimationFrame(frame);
   }, [isMobile, showAddForm]);
 
   const resetDraft = () => {
@@ -11870,6 +11839,7 @@ function MilestoneModal({
                           value={editLabel}
                           rows={1}
                           ref={(el) => {
+                            editLabelInputRef.current = el;
                             if (el) {
                               el.style.height = "auto";
                               el.style.height = el.scrollHeight + "px";
@@ -11889,7 +11859,8 @@ function MilestoneModal({
                             if (e.key === "Escape") cancelEdit();
                           }}
                           placeholder={t("labelPlaceholder")}
-                          autoFocus={!isMobile}
+                          autoComplete="off"
+                          tabIndex={isMobile ? -1 : undefined}
                           style={{
                             ...inputStyle,
                             width: "100%",
@@ -11920,6 +11891,8 @@ function MilestoneModal({
                               e.target.scrollHeight + "px";
                           }}
                           placeholder={t("editDescPlaceholder")}
+                          autoComplete="off"
+                          tabIndex={isMobile ? -1 : undefined}
                           style={{
                             ...inputStyle,
                             width: "100%",
@@ -12495,6 +12468,7 @@ function GoalsModal({
   onBack?: () => void;
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const [label, setLabel] = useState(blockLabel);
   const [description, setDescription] = useState(initial.description);
   const [goals, setGoals] = useState<Goal[]>(() =>
@@ -12670,6 +12644,8 @@ function GoalsModal({
               <input
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
+                autoComplete="off"
+                tabIndex={isMobile ? -1 : undefined}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") e.currentTarget.blur();
                 }}
@@ -12724,8 +12700,9 @@ function GoalsModal({
               <TextareaAutosize
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                onFocus={(e) => scrollIntoViewAfterKeyboard(e.target)}
                 placeholder={descPlaceholder ?? t("sprintDescPlaceholder")}
+                autoComplete="off"
+                tabIndex={isMobile ? -1 : undefined}
                 minRows={2}
                 style={{
                   width: "100%",
@@ -12838,10 +12815,9 @@ function GoalsModal({
                             onHeightChange={(h) =>
                               handleGoalInputHeightChange(g.id, h)
                             }
-                            onFocus={(e) =>
-                              scrollIntoViewAfterKeyboard(e.target)
-                            }
                             placeholder={`${t("goalPlaceholder")} ${idx + 1}`}
+                            autoComplete="off"
+                            tabIndex={isMobile ? -1 : undefined}
                             className={placeholderClass}
                             minRows={1}
                             style={{
@@ -15503,6 +15479,15 @@ function DayTemplatesModal({
     }
     return [""];
   });
+  const formNameInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  React.useEffect(() => {
+    if (isMobile || !editingId) return;
+    const frame = requestAnimationFrame(() => {
+      formNameInputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [editingId, isMobile]);
 
   const startNew = () => {
     setEditingId("__new__");
@@ -15714,11 +15699,13 @@ function DayTemplatesModal({
                   {t("newTemplate")}
                 </div>
                 <input
+                  ref={formNameInputRef}
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder={t("templateNamePlaceholder")}
                   style={{ ...inputStyle, fontSize: 13, fontWeight: 600 }}
-                  autoFocus={!isMobile}
+                  autoComplete="off"
+                  tabIndex={isMobile ? -1 : undefined}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -15761,6 +15748,8 @@ function DayTemplatesModal({
                       onChange={(e) => updateItem(i, e.target.value)}
                       placeholder={`${t("goal")} ${i + 1}`}
                       style={{ ...inputStyle, flex: 1 }}
+                      autoComplete="off"
+                      tabIndex={isMobile ? -1 : undefined}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
