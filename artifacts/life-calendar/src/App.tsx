@@ -1882,25 +1882,6 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchBtnRef = React.useRef<HTMLDivElement>(null);
   const searchBarRef = React.useRef<HTMLDivElement>(null);
-  const headerRef = React.useRef<HTMLElement>(null);
-  const [mobileHeaderHeight, setMobileHeaderHeight] = useState(0);
-  const mobileSearchHeaderFixed = isMobile && searchOpen;
-
-  React.useLayoutEffect(() => {
-    if (!isMobile || !headerRef.current) return;
-
-    const header = headerRef.current;
-    const updateHeight = () => {
-      setMobileHeaderHeight(Math.ceil(header.getBoundingClientRect().height));
-    };
-
-    updateHeight();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(header);
-    return () => observer.disconnect();
-  }, [isMobile, searchOpen]);
-
   useEffect(() => {
     if (!searchOpen || isMobile) return;
     const handler = (e: MouseEvent) => {
@@ -3037,28 +3018,15 @@ function App() {
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
       <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
         {/* ── Header ─────────────────────────────────────────────────── */}
-        <div
-          style={
-            mobileSearchHeaderFixed && mobileHeaderHeight > 0
-              ? { height: mobileHeaderHeight }
-              : undefined
-          }
+        <header
+          className="sticky top-0 z-20"
+          style={{
+            background: headerBg,
+            backdropFilter: "saturate(180%) blur(20px)",
+            WebkitBackdropFilter: "saturate(180%) blur(20px)",
+            borderBottom: "1px solid var(--border-soft)",
+          }}
         >
-          <header
-            ref={headerRef}
-            className="sticky top-0 z-20"
-            style={{
-              position: mobileSearchHeaderFixed ? "fixed" : "sticky",
-              top: 0,
-              left: mobileSearchHeaderFixed ? 0 : undefined,
-              right: mobileSearchHeaderFixed ? 0 : undefined,
-              width: mobileSearchHeaderFixed ? "100%" : undefined,
-              background: headerBg,
-              backdropFilter: "saturate(180%) blur(20px)",
-              WebkitBackdropFilter: "saturate(180%) blur(20px)",
-              borderBottom: "1px solid var(--border-soft)",
-            }}
-          >
           <div className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div
@@ -4187,8 +4155,7 @@ function App() {
               <div className="lc-side-col" />
             </div>
           </div>
-          </header>
-        </div>
+        </header>
 
         <main className="mx-auto max-w-3xl px-3 sm:px-8 py-4 sm:py-8">
           <LayoutGroup>
