@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @theme inline {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 :root {
@@ -26,20 +32,19 @@
   --bg: #000000;
   --surface: #1c1c1e;
   --text: #f5f5f7;
-  --text-secondary: rgba(235,235,245,0.75);
-  --text-tertiary: rgba(235,235,245,0.50);
-  --border: rgba(255,255,255,0.18);
-  --border-soft: rgba(255,255,255,0.12);
+  --text-secondary: rgba(235, 235, 245, 0.75);
+  --text-tertiary: rgba(235, 235, 245, 0.5);
+  --border: rgba(255, 255, 255, 0.18);
+  --border-soft: rgba(255, 255, 255, 0.12);
   --apple-green: #30d158;
   --apple-green-soft: #34c759;
   --apple-green-deep: #30d158;
 }
 
-html, body, #root { height: 100%; }
-
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
@@ -60,10 +65,14 @@ body {
   flex-shrink: 0;
 }
 @media (min-width: 640px) {
-  .lc-side-col { width: 60px; }
+  .lc-side-col {
+    width: 60px;
+  }
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* ─── iOS / Safari: suppress native dotted underline on [title] elements ─────
    WebKit (iOS Safari, Chrome iOS) automatically applies `text-decoration:
@@ -82,24 +91,46 @@ abbr,
   border-bottom: none !important;
 }
 
-.placeholder-dark::placeholder { color: rgba(0,0,0,0.40); }
+.placeholder-dark::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
 
 /* Goal-input placeholder tones — follow the inverted text colour direction. */
-.placeholder-goal-black::placeholder { color: #71717a; }  /* light mode: dark text → medium hint */
-.placeholder-goal-grey::placeholder  { color: #71717a; }
-.placeholder-goal-white::placeholder { color: #71717a; }  /* light mode: dark text → medium hint */
+.placeholder-goal-black::placeholder {
+  color: #71717a;
+} /* light mode: dark text → medium hint */
+.placeholder-goal-grey::placeholder {
+  color: #71717a;
+}
+.placeholder-goal-white::placeholder {
+  color: #71717a;
+} /* light mode: dark text → medium hint */
 
 /* Dark-mode overrides: black/white text inverts to light, so hints go lighter. */
-:root.dark .placeholder-goal-black::placeholder { color: #d4d4d8; }
-:root.dark .placeholder-goal-white::placeholder { color: #d4d4d8; }
+:root.dark .placeholder-goal-black::placeholder {
+  color: #d4d4d8;
+}
+:root.dark .placeholder-goal-white::placeholder {
+  color: #d4d4d8;
+}
 
 /* Note-textarea placeholder tones. */
-.placeholder-note-white::placeholder { color: #71717a; }
-.placeholder-note-black::placeholder { color: #71717a; }  /* light mode: dark text → medium hint */
-.placeholder-note-grey::placeholder  { color: #71717a; }
+.placeholder-note-white::placeholder {
+  color: #71717a;
+}
+.placeholder-note-black::placeholder {
+  color: #71717a;
+} /* light mode: dark text → medium hint */
+.placeholder-note-grey::placeholder {
+  color: #71717a;
+}
 
-:root.dark .placeholder-note-black::placeholder { color: #d4d4d8; }
-:root.dark .placeholder-note-white::placeholder { color: #d4d4d8; }
+:root.dark .placeholder-note-black::placeholder {
+  color: #d4d4d8;
+}
+:root.dark .placeholder-note-white::placeholder {
+  color: #d4d4d8;
+}
 
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
@@ -110,57 +141,44 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 @keyframes spin-cw {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
-.recur-spin-once { animation: spin-cw 0.45s ease-out 1; }
+.recur-spin-once {
+  animation: spin-cw 0.45s ease-out 1;
+}
 
 /* Scrollbar — thumb only, no track */
-::-webkit-scrollbar { width: 4px; height: 4px; background: transparent; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
-[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.20); }
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.32); }
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  background: transparent;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
 
 /* ─── Mobile responsive improvements ────────────────────────────────────────── */
 
 /* Touch targets: on mobile, icon buttons expand for finger comfort */
 @media (max-width: 639px) {
-  /* iOS WebKit zooms controls below 16px and rebuilds the keyboard accessory
-     while the viewport is being adjusted. Keep every editable control at the
-     native non-zooming size and explicitly restore text selection. */
-  input,
-  textarea,
-  select,
-  [contenteditable="true"] {
-    font-size: 16px !important;
-    -webkit-user-select: text !important;
-    user-select: text !important;
-    transition: none !important;
-    animation: none !important;
-  }
-
-  /* Modal open/close and expanding form transitions can run while iOS is
-     calculating the keyboard viewport. Keep the modal geometry static. */
-  .lc-ios-modal,
-  .lc-ios-modal *,
-  .lc-ios-modal::before,
-  .lc-ios-modal::after {
-    transition: none !important;
-    animation: none !important;
-    animation-duration: 0s !important;
-    animation-delay: 0s !important;
-  }
-
-  /* Framer Motion writes transform/opacity inline. Override those animated
-     values only for modal children on mobile so the keyboard sees stable
-     geometry from the first frame. */
-  .lc-ios-modal > * {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
   .lc-icon-btn {
     width: 36px !important;
     height: 36px !important;

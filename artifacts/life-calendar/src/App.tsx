@@ -1903,14 +1903,6 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchBtnRef = React.useRef<HTMLDivElement>(null);
   const searchBarRef = React.useRef<HTMLDivElement>(null);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (isMobile || !searchOpen) return;
-    const frame = requestAnimationFrame(() => {
-      searchInputRef.current?.focus();
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [isMobile, searchOpen]);
   useEffect(() => {
     if (!searchOpen) return;
     const handler = (e: MouseEvent) => {
@@ -3780,7 +3772,6 @@ function App() {
                       </div>
                       <input
                         type="text"
-                        ref={searchInputRef}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => {
@@ -5591,22 +5582,12 @@ function QuarterNameEditor({
   onChange: (v: string) => void;
   color: string;
 }) {
-  const { t } = React.useContext(LangContext);
-  const isMobile = useIsMobile();
-  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const ref = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
     setDraft(value);
   }, [value]);
-  useEffect(() => {
-    if (isMobile || !editing || !ref.current) return;
-    ref.current.focus();
-    ref.current.select();
-  }, [editing, isMobile]);
   const commit = () => {
     onChange(draft.trim() || value);
-    setEditing(false);
   };
   // CSS grid trick: sizer span drives grid cell height; textarea fills it — no layout shift on mode switch
   const sharedTextStyle: React.CSSProperties = {
@@ -5626,34 +5607,25 @@ function QuarterNameEditor({
       style={{
         display: "inline-grid",
         maxWidth: "100%",
-        cursor: editing ? "text" : "pointer",
       }}
-      onClick={() => {
-        if (!editing) setEditing(true);
-      }}
-      title={editing ? undefined : t("clickToRename")}
     >
       <textarea
-        ref={ref}
         value={draft}
         rows={1}
         cols={1}
-        readOnly={!editing}
         onChange={(e) => {
-          if (editing) setDraft(e.target.value);
+          setDraft(e.target.value);
         }}
         onBlur={() => {
-          if (editing) commit();
+          commit();
         }}
         onKeyDown={(e) => {
-          if (!editing) return;
           if (e.key === "Enter") {
             e.preventDefault();
             commit();
           }
           if (e.key === "Escape") {
             setDraft(value);
-            setEditing(false);
           }
         }}
         className="bg-transparent outline-none"
@@ -5663,11 +5635,7 @@ function QuarterNameEditor({
           resize: "none",
           overflow: "hidden",
           width: "100%",
-          borderBottom: editing
-            ? `1px solid ${color}`
-            : "1px solid transparent",
-          cursor: "inherit",
-          userSelect: editing ? "auto" : "none",
+          borderBottom: `1px solid ${color}`,
         }}
       />
       {/* invisible sizer that mirrors the text — drives the grid row height */}
@@ -5696,75 +5664,48 @@ function BlockLabel({
   onChange: (v: string) => void;
   color: string;
 }) {
-  const { t } = React.useContext(LangContext);
-  const isMobile = useIsMobile();
-  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const ref = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
     setDraft(value);
   }, [value]);
-  useEffect(() => {
-    if (isMobile || !editing || !ref.current) return;
-    ref.current.focus();
-    ref.current.select();
-    ref.current.style.height = "auto";
-    ref.current.style.height = ref.current.scrollHeight + "px";
-  }, [editing, isMobile]);
   const autoResize = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
     el.style.height = el.scrollHeight + "px";
   };
   const commit = () => {
     onChange(draft.trim() || "Untitled sprint");
-    setEditing(false);
   };
-  if (editing) {
-    return (
-      <textarea
-        ref={ref}
-        value={draft}
-        rows={1}
-        onChange={(e) => {
-          setDraft(e.target.value);
-          autoResize(e.target);
-        }}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            commit();
-          }
-          if (e.key === "Escape") {
-            setDraft(value);
-            setEditing(false);
-          }
-        }}
-        className="text-[12px] font-semibold bg-transparent outline-none"
-        style={{
-          color,
-          borderBottom: `1px solid ${color}`,
-          padding: "1px 2px",
-          width: "100%",
-          resize: "none",
-          overflow: "hidden",
-          lineHeight: 1.35,
-          fontFamily: "inherit",
-          display: "block",
-        }}
-      />
-    );
-  }
   return (
-    <button
-      type="button"
-      onClick={() => setEditing(true)}
-      className="text-[12px] font-semibold tracking-tight text-left break-words"
-      style={{ color, letterSpacing: "-0.01em", maxWidth: "100%" }}
-      title={t("clickToRename")}
-    >
-      {value}
-    </button>
+    <textarea
+      value={draft}
+      rows={1}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        autoResize(e.target);
+      }}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          commit();
+        }
+        if (e.key === "Escape") {
+          setDraft(value);
+        }
+      }}
+      className="text-[12px] font-semibold bg-transparent outline-none"
+      style={{
+        color,
+        borderBottom: `1px solid ${color}`,
+        padding: "1px 2px",
+        width: "100%",
+        resize: "none",
+        overflow: "hidden",
+        lineHeight: 1.35,
+        fontFamily: "inherit",
+        display: "block",
+      }}
+    />
   );
 }
 
@@ -6603,13 +6544,11 @@ function NoteEntryItem({
   entry,
   idx,
   entriesCount,
-  isMobile,
   dark,
   inputBg,
   borderColor,
   hoveredEntryId,
   setHoveredEntryId,
-  areaRefs,
   updateEntry,
   handleNoteHeightChange,
   handleKey,
@@ -6622,13 +6561,11 @@ function NoteEntryItem({
   entry: NoteEntry;
   idx: number;
   entriesCount: number;
-  isMobile: boolean;
   dark: boolean;
   inputBg: string;
   borderColor: string;
   hoveredEntryId: string | null;
   setHoveredEntryId: (id: string | null) => void;
-  areaRefs: React.MutableRefObject<Record<string, HTMLTextAreaElement | null>>;
   updateEntry: (id: string, text: string) => void;
   handleNoteHeightChange: (id: string, h: number) => void;
   handleKey: (e: React.KeyboardEvent) => void;
@@ -6663,16 +6600,11 @@ function NoteEntryItem({
         onMouseLeave={() => setHoveredEntryId(null)}
       >
         <TextareaAutosize
-          ref={(el) => {
-            areaRefs.current[entry.id] = el;
-          }}
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
           onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}
           onKeyDown={handleKey}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
-          autoComplete="off"
-          tabIndex={isMobile ? -1 : undefined}
           minRows={1}
           className={notePlaceholderClass}
           style={{
@@ -7006,9 +6938,7 @@ function NoteModal({
   onSave: (entries: NoteEntry[]) => void;
   onClose: () => void;
 }) {
-  const isMobile = useIsMobile();
   const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
-  const [focusId, setFocusId] = useState<string | null>(null);
   const [goalsDraft, setGoalsDraft] = useState<DayGoals>(
     () => initDayGoals ?? { count: 0, done: [] },
   );
@@ -7019,8 +6949,6 @@ function NoteModal({
   const [goalIds, setGoalIds] = useState<string[]>(() =>
     Array.from({ length: initDayGoals?.count ?? 0 }, () => makeId()),
   );
-  const [focusGoalIdx, setFocusGoalIdx] = useState<number | null>(null);
-  const goalInputRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const handleGoalAdd = () => {
     const n = goalsDraft.count + 1;
     const newDone = [...goalsDraft.done, false];
@@ -7041,7 +6969,6 @@ function NoteModal({
     setGoalsDraft(g);
     onDayGoalsChange(g);
     setGoalIds((prev) => [...prev, makeId()]);
-    if (!isMobile) setFocusGoalIdx(n - 1);
   };
   const handleGoalReorder = (newIds: string[]) => {
     const perm = newIds.map((id) => goalIds.indexOf(id));
@@ -7185,19 +7112,6 @@ function NoteModal({
     goalsDraft.count > 0 &&
     _doneSlice.length === goalsDraft.count &&
     _doneSlice.every(Boolean);
-  const scrollBodyRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (isMobile) return;
-    if (focusGoalIdx === null) return;
-    const input = goalInputRefs.current[focusGoalIdx];
-    if (!input) return;
-    const frame = requestAnimationFrame(() => {
-      input.focus({ preventScroll: true });
-      setFocusGoalIdx(null);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [focusGoalIdx, goalIds, isMobile]);
-  const areaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(
     null,
@@ -7218,19 +7132,6 @@ function NoteModal({
     }
     setColorPickerEntryId(id);
   };
-
-  useEffect(() => {
-    if (isMobile) return;
-    if (!focusId) return;
-    const frame = requestAnimationFrame(() => {
-      const el = areaRefs.current[focusId];
-      if (el) {
-        el.focus({ preventScroll: true });
-        el.setSelectionRange(el.value.length, el.value.length);
-      }
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [focusId, isMobile]);
 
   // Note height tracking is now delegated entirely to <TextareaAutosize>
   // (react-textarea-autosize), which measures scrollHeight itself and keeps
@@ -7257,7 +7158,6 @@ function NoteModal({
 
   // Milestone inline edit state
   const msEditRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
-  const msEditInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [msEditId, setMsEditId] = useState<string | null>(null);
   const [msEditLabel, setMsEditLabel] = useState("");
   const [msEditDate, setMsEditDate] = useState("");
@@ -7276,7 +7176,6 @@ function NoteModal({
   } | null>(null);
 
   // New event form state
-  const newLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const addEventFormRef = React.useRef<HTMLDivElement | null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -7351,28 +7250,6 @@ function NoteModal({
   React.useEffect(() => {
     if (!msEditId) setMsEditColorPickerOpen(false);
   }, [msEditId]);
-
-  React.useEffect(() => {
-    if (isMobile || !msEditId) return;
-    const frame = requestAnimationFrame(() => {
-      const el = msEditInputRef.current;
-      if (el) {
-        el.focus({ preventScroll: true });
-      }
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [isMobile, msEditId]);
-
-  React.useEffect(() => {
-    if (isMobile || !addEventOpen) return;
-    const frame = requestAnimationFrame(() => {
-      const el = newLabelInputRef.current;
-      if (el) {
-        el.focus({ preventScroll: true });
-      }
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [addEventOpen, isMobile]);
 
   React.useEffect(() => {
     if (!addEventOpen) return;
@@ -7457,7 +7334,6 @@ function NoteModal({
   const addEntry = () => {
     const id = makeId();
     setEntries((prev) => [...prev, { id, text: "", ...newTimestamps() }]);
-    if (!isMobile) setFocusId(id);
   };
   const updateEntry = (id: string, text: string) =>
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, text } : e)));
@@ -7513,7 +7389,7 @@ function NoteModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={() => {
         setColorPickerEntryId(null);
@@ -7591,7 +7467,6 @@ function NoteModal({
 
         {/* Scrollable body */}
         <div
-          ref={scrollBodyRef}
           style={{
             flex: 1,
             overflowY: "auto",
@@ -8069,9 +7944,6 @@ function NoteModal({
                               );
                             })()}
                             <TextareaAutosize
-                              ref={(el) => {
-                                goalInputRefs.current[i] = el;
-                              }}
                               value={goalsDraft.labels?.[i] ?? ""}
                               onChange={(e) =>
                                 handleGoalLabelChange(i, e.target.value)
@@ -8085,8 +7957,6 @@ function NoteModal({
                                 e.stopPropagation();
                               }}
                               placeholder={`${t("goal")} ${i + 1}`}
-                              autoComplete="off"
-                              tabIndex={isMobile ? -1 : undefined}
                               minRows={1}
                               style={{
                                 flex: 1,
@@ -8596,7 +8466,6 @@ function NoteModal({
                                 }}
                               >
                                 <TextareaAutosize
-                                  ref={msEditInputRef}
                                   value={msEditLabel}
                                   onChange={(e) =>
                                     setMsEditLabel(e.target.value)
@@ -8609,8 +8478,6 @@ function NoteModal({
                                     if (e.key === "Escape") setMsEditId(null);
                                   }}
                                   placeholder={t("labelPlaceholder")}
-                                  autoComplete="off"
-                                  tabIndex={isMobile ? -1 : undefined}
                                   minRows={1}
                                   style={
                                     {
@@ -8634,8 +8501,6 @@ function NoteModal({
                                     setMsEditDesc(e.target.value)
                                   }
                                   placeholder={t("editDescPlaceholder")}
-                                  autoComplete="off"
-                                  tabIndex={isMobile ? -1 : undefined}
                                   minRows={2}
                                   style={
                                     {
@@ -8990,7 +8855,6 @@ function NoteModal({
                       style={{ isolation: "isolate" }}
                     >
                       <TextareaAutosize
-                        ref={newLabelInputRef}
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
                         onKeyDown={(e) => {
@@ -9001,8 +8865,6 @@ function NoteModal({
                           if (e.key === "Escape") setAddEventOpen(false);
                         }}
                         placeholder={t("labelPlaceholder")}
-                        autoComplete="off"
-                        tabIndex={isMobile ? -1 : undefined}
                         minRows={1}
                         style={
                           {
@@ -9021,8 +8883,6 @@ function NoteModal({
                         value={newDesc}
                         onChange={(e) => setNewDesc(e.target.value)}
                         placeholder={t("descPlaceholder")}
-                        autoComplete="off"
-                        tabIndex={isMobile ? -1 : undefined}
                         minRows={2}
                         style={
                           {
@@ -9279,13 +9139,11 @@ function NoteModal({
                       entry={entry}
                       idx={idx}
                       entriesCount={entries.length}
-                      isMobile={isMobile}
                       dark={dark}
                       inputBg={inputBg}
                       borderColor={borderColor}
                       hoveredEntryId={hoveredEntryId}
                       setHoveredEntryId={setHoveredEntryId}
-                      areaRefs={areaRefs}
                       updateEntry={updateEntry}
                       handleNoteHeightChange={handleNoteHeightChange}
                       handleKey={handleKey}
@@ -9519,7 +9377,7 @@ function AllGoalsPanel({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -10305,7 +10163,6 @@ function NotesPanel({
   onClose: () => void;
 }) {
   const { t, months, lang } = React.useContext(LangContext);
-  const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
   const [draftText, setDraftText] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
@@ -10316,26 +10173,9 @@ function NotesPanel({
     left: number;
   } | null>(null);
   const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
-  const draftTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [hoveredDk, setHoveredDk] = useState<string | null>(null);
   const [confirmDeleteDk, setConfirmDeleteDk] = useState<string | null>(null);
-  const searchRef = React.useRef<HTMLInputElement>(null);
-
-  React.useEffect(() => {
-    if (isMobile) return;
-    const frame = requestAnimationFrame(() => searchRef.current?.focus());
-    return () => cancelAnimationFrame(frame);
-  }, [isMobile]);
-
-  React.useEffect(() => {
-    if (isMobile) return;
-    if (!showAddForm) return;
-    const frame = requestAnimationFrame(() =>
-      draftTextareaRef.current?.focus(),
-    );
-    return () => cancelAnimationFrame(frame);
-  }, [isMobile, showAddForm]);
 
   const q = query.trim().toLowerCase();
 
@@ -10416,7 +10256,7 @@ function NotesPanel({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -10532,7 +10372,6 @@ function NotesPanel({
               <SearchIcon />
             </div>
             <input
-              ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("notesSearchPlaceholder")}
@@ -10634,137 +10473,39 @@ function NotesPanel({
               pointerEvents: showAddForm ? "auto" : "none",
             }}
           >
-              <div style={{ position: "relative", marginBottom: 8 }}>
-                <textarea
-                  ref={draftTextareaRef}
-                  value={draftText}
-                  onChange={(e) => setDraftText(e.target.value)}
-                  placeholder={t("notePlaceholder")}
-                  autoComplete="off"
-                  tabIndex={isMobile ? -1 : undefined}
-                  rows={2}
-                  style={{
-                    width: "100%",
-                    borderRadius: 10,
-                    border: `${draftColor ? "1.5px" : "1px"} solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`,
-                    background: draftColor
-                      ? getEventColors(resolveNoteHex(draftColor), dark).bg
-                      : inputBg,
-                    color: draftColor
-                      ? getEventColors(resolveNoteHex(draftColor), dark)
-                          .textTitle
-                      : "var(--text)",
-                    fontSize: 13,
-                    padding: "8px 32px 8px 10px",
-                    fontFamily: "inherit",
-                    outline: "none",
-                    resize: "none",
-                    lineHeight: 1.5,
-                    boxSizing: "border-box",
-                    display: "block",
-                    transition: "background 200ms ease",
-                  }}
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === "Enter" &&
-                      (e.metaKey || e.ctrlKey) &&
-                      draftText.trim()
-                    ) {
-                      e.preventDefault();
-                      onAddNote(draftDate, {
-                        id: makeId(),
-                        text: draftText.trim(),
-                        ...newTimestamps(),
-                        color: draftColor ?? undefined,
-                      });
-                      setDraftText("");
-                      setDraftColor(null);
-                      setDraftDate(dateKey(new Date()));
-                      setDraftColorPickerOpen(false);
-                      setShowAddForm(false);
-                    }
-                    if (e.key === "Escape") {
-                      setShowAddForm(false);
-                      setDraftText("");
-                      setDraftColor(null);
-                      setDraftColorPickerOpen(false);
-                    }
-                  }}
-                />
-                <button
-                  ref={draftColorBtnRef}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleDraftColorPicker();
-                  }}
-                  title={t("chooseColor")}
-                  style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 10,
-                    width: 13,
-                    height: 13,
-                    borderRadius: 999,
-                    background:
-                      draftColor ??
-                      (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"),
-                    border: "none",
-                    boxShadow:
-                      "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",
-                    cursor: "pointer",
-                    display: "block",
-                    padding: 0,
-                  }}
-                />
-              </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <input
-                  type="date"
-                  value={draftDate}
-                  onChange={(e) => setDraftDate(e.target.value)}
-                  lang={lang}
-                  autoComplete="off"
-                  tabIndex={isMobile ? -1 : undefined}
-                  style={{
-                    flex: 1,
-                    borderRadius: 9,
-                    border: `1px solid ${borderColor}`,
-                    background: inputBg,
-                    color: "var(--text)",
-                    fontSize: 13,
-                    padding: "7px 10px",
-                    fontFamily: "inherit",
-                    outline: "none",
-                    boxSizing: "border-box" as const,
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setDraftText("");
-                    setDraftColor(null);
-                    setDraftDate(dateKey(new Date()));
-                    setDraftColorPickerOpen(false);
-                  }}
-                  style={{
-                    height: 34,
-                    paddingInline: 12,
-                    borderRadius: 9,
-                    border: `1px solid ${borderColor}`,
-                    background: "transparent",
-                    color: "var(--text-secondary)",
-                    fontWeight: 500,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    whiteSpace: "nowrap" as const,
-                  }}
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  onClick={() => {
-                    if (!draftText.trim()) return;
+            <div style={{ position: "relative", marginBottom: 8 }}>
+              <textarea
+                value={draftText}
+                onChange={(e) => setDraftText(e.target.value)}
+                placeholder={t("notePlaceholder")}
+                rows={2}
+                style={{
+                  width: "100%",
+                  borderRadius: 10,
+                  border: `${draftColor ? "1.5px" : "1px"} solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`,
+                  background: draftColor
+                    ? getEventColors(resolveNoteHex(draftColor), dark).bg
+                    : inputBg,
+                  color: draftColor
+                    ? getEventColors(resolveNoteHex(draftColor), dark).textTitle
+                    : "var(--text)",
+                  fontSize: 13,
+                  padding: "8px 32px 8px 10px",
+                  fontFamily: "inherit",
+                  outline: "none",
+                  resize: "none",
+                  lineHeight: 1.5,
+                  boxSizing: "border-box",
+                  display: "block",
+                  transition: "background 200ms ease",
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" &&
+                    (e.metaKey || e.ctrlKey) &&
+                    draftText.trim()
+                  ) {
+                    e.preventDefault();
                     onAddNote(draftDate, {
                       id: makeId(),
                       text: draftText.trim(),
@@ -10776,30 +10517,122 @@ function NotesPanel({
                     setDraftDate(dateKey(new Date()));
                     setDraftColorPickerOpen(false);
                     setShowAddForm(false);
-                  }}
-                  disabled={!draftText.trim()}
-                  style={{
-                    height: 34,
-                    paddingInline: 16,
-                    borderRadius: 9,
-                    border: "none",
-                    background: draftText.trim()
-                      ? "#34c759"
-                      : dark
-                        ? "rgba(255,255,255,0.08)"
-                        : "rgba(0,0,0,0.06)",
-                    color: draftText.trim() ? "white" : "var(--text-tertiary)",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: draftText.trim() ? "pointer" : "default",
-                    fontFamily: "inherit",
-                    whiteSpace: "nowrap" as const,
-                    transition: "background 150ms, color 150ms",
-                  }}
-                >
-                  {t("add")}
-                </button>
-              </div>
+                  }
+                  if (e.key === "Escape") {
+                    setShowAddForm(false);
+                    setDraftText("");
+                    setDraftColor(null);
+                    setDraftColorPickerOpen(false);
+                  }
+                }}
+              />
+              <button
+                ref={draftColorBtnRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleDraftColorPicker();
+                }}
+                title={t("chooseColor")}
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  width: 13,
+                  height: 13,
+                  borderRadius: 999,
+                  background:
+                    draftColor ??
+                    (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"),
+                  border: "none",
+                  boxShadow:
+                    "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",
+                  cursor: "pointer",
+                  display: "block",
+                  padding: 0,
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="date"
+                value={draftDate}
+                onChange={(e) => setDraftDate(e.target.value)}
+                lang={lang}
+                style={{
+                  flex: 1,
+                  borderRadius: 9,
+                  border: `1px solid ${borderColor}`,
+                  background: inputBg,
+                  color: "var(--text)",
+                  fontSize: 13,
+                  padding: "7px 10px",
+                  fontFamily: "inherit",
+                  outline: "none",
+                  boxSizing: "border-box" as const,
+                }}
+              />
+              <button
+                onClick={() => {
+                  setShowAddForm(false);
+                  setDraftText("");
+                  setDraftColor(null);
+                  setDraftDate(dateKey(new Date()));
+                  setDraftColorPickerOpen(false);
+                }}
+                style={{
+                  height: 34,
+                  paddingInline: 12,
+                  borderRadius: 9,
+                  border: `1px solid ${borderColor}`,
+                  background: "transparent",
+                  color: "var(--text-secondary)",
+                  fontWeight: 500,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  whiteSpace: "nowrap" as const,
+                }}
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  if (!draftText.trim()) return;
+                  onAddNote(draftDate, {
+                    id: makeId(),
+                    text: draftText.trim(),
+                    ...newTimestamps(),
+                    color: draftColor ?? undefined,
+                  });
+                  setDraftText("");
+                  setDraftColor(null);
+                  setDraftDate(dateKey(new Date()));
+                  setDraftColorPickerOpen(false);
+                  setShowAddForm(false);
+                }}
+                disabled={!draftText.trim()}
+                style={{
+                  height: 34,
+                  paddingInline: 16,
+                  borderRadius: 9,
+                  border: "none",
+                  background: draftText.trim()
+                    ? "#34c759"
+                    : dark
+                      ? "rgba(255,255,255,0.08)"
+                      : "rgba(0,0,0,0.06)",
+                  color: draftText.trim() ? "white" : "var(--text-tertiary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: draftText.trim() ? "pointer" : "default",
+                  fontFamily: "inherit",
+                  whiteSpace: "nowrap" as const,
+                  transition: "background 150ms, color 150ms",
+                }}
+              >
+                {t("add")}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -11116,7 +10949,6 @@ function MilestoneModal({
   onChange: (m: Milestone[]) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
-  const isMobile = useIsMobile();
   const [items, setItems] = useState<Milestone[]>(() =>
     [...milestones].sort((a, b) => a.date.localeCompare(b.date)),
   );
@@ -11169,8 +11001,6 @@ function MilestoneModal({
     top: number;
     left: number;
   } | null>(null);
-  const draftLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
-  const editLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const [editId, setEditId] = useState<string | null>(null);
@@ -11186,14 +11016,6 @@ function MilestoneModal({
     left: number;
   } | null>(null);
   const editColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
-
-  React.useEffect(() => {
-    if (isMobile || !editId) return;
-    const frame = requestAnimationFrame(() => {
-      editLabelInputRef.current?.focus();
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [editId, isMobile]);
 
   const startEdit = (ms: Milestone) => {
     setEditId(ms.id);
@@ -11224,14 +11046,6 @@ function MilestoneModal({
     onChange(newItems);
     setEditId(null);
   };
-
-  React.useEffect(() => {
-    if (isMobile || !showAddForm) return;
-    const frame = requestAnimationFrame(() =>
-      draftLabelInputRef.current?.focus(),
-    );
-    return () => cancelAnimationFrame(frame);
-  }, [isMobile, showAddForm]);
 
   const resetDraft = () => {
     setDraftLabel("");
@@ -11282,7 +11096,7 @@ function MilestoneModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -11526,7 +11340,6 @@ function MilestoneModal({
                   }}
                 >
                   <textarea
-                    ref={draftLabelInputRef}
                     value={draftLabel}
                     rows={1}
                     onChange={(e) => {
@@ -11576,8 +11389,6 @@ function MilestoneModal({
                       value={draftDate}
                       onChange={(e) => setDraftDate(e.target.value)}
                       lang={lang}
-                      autoComplete="off"
-                      tabIndex={isMobile ? -1 : undefined}
                       style={{
                         ...draftInputStyle,
                         flex: "0 0 104px",
@@ -11885,7 +11696,6 @@ function MilestoneModal({
                           value={editLabel}
                           rows={1}
                           ref={(el) => {
-                            if (isEditing) editLabelInputRef.current = el;
                             if (el) {
                               el.style.height = "auto";
                               el.style.height = el.scrollHeight + "px";
@@ -11905,8 +11715,6 @@ function MilestoneModal({
                             if (e.key === "Escape") cancelEdit();
                           }}
                           placeholder={t("labelPlaceholder")}
-                          autoComplete="off"
-                          tabIndex={isMobile ? -1 : undefined}
                           style={{
                             ...inputStyle,
                             width: "100%",
@@ -11937,8 +11745,6 @@ function MilestoneModal({
                               e.target.scrollHeight + "px";
                           }}
                           placeholder={t("editDescPlaceholder")}
-                          autoComplete="off"
-                          tabIndex={isMobile ? -1 : undefined}
                           style={{
                             ...inputStyle,
                             width: "100%",
@@ -11962,8 +11768,6 @@ function MilestoneModal({
                             value={editDate}
                             onChange={(e) => setEditDate(e.target.value)}
                             lang={lang}
-                            autoComplete="off"
-                            tabIndex={isMobile ? -1 : undefined}
                             style={{
                               ...inputStyle,
                               flex: "0 0 104px",
@@ -12191,192 +11995,195 @@ function MilestoneModal({
                       >
                         {/* Card view — pure CSS Flexbox, no JS measurement, no absolute positioning */}
                         <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          {showDate && (
-                            <div
-                              className="text-[11px] tabular-nums"
-                              style={{
-                                color: "var(--text-tertiary)",
-                                marginBottom: 2,
-                              }}
-                            >
-                              {
-                                dateGroups.find((g) =>
-                                  g.items.some((x) => x.id === ms.id),
-                                )?.lbl
-                              }
-                            </div>
-                          )}
-                          <span
-                            className="text-[13px] font-semibold"
-                            style={{
-                              color: rcTxt,
-                              wordBreak: "break-all",
-                              overflowWrap: "anywhere",
-                              display: "block",
-                            }}
-                          >
-                            <HighlightText text={ms.label} query={q} />
-                          </span>
-                          {ms.description && (
-                            <div
-                              className="text-[11px] leading-snug"
-                              style={{
-                                marginTop: 3,
-                                color: rcSecTxt,
-                                wordBreak: "break-all",
-                                overflowWrap: "anywhere",
-                              }}
-                            >
-                              <HighlightText text={ms.description} query={q} />
-                            </div>
-                          )}
-                          {ms.recurring && (
-                            <div
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 3,
-                                marginTop: 5,
-                                padding: "2px 6px 2px 4px",
-                                borderRadius: 5,
-                                background: dark
-                                  ? "rgba(255,255,255,0.06)"
-                                  : "rgba(0,0,0,0.05)",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  lineHeight: 1,
-                                  color: rcSecTxt,
-                                  opacity: 0.7,
-                                }}
-                              >
-                                ↻
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  lineHeight: 1,
-                                  color: rcSecTxt,
-                                  opacity: 0.65,
-                                }}
-                              >
-                                {t("repeatYearly")}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {/* Buttons in document flow — flex-wrap + row-reverse: × first in DOM = always top-right */}
-                        <div
                           style={{
                             display: "flex",
-                            flexDirection: "row-reverse",
-                            flexWrap: "wrap",
-                            gap: 6,
-                            maxWidth: 70,
-                            flexShrink: 0,
-                            alignSelf: "flex-start",
-                            opacity: hovering ? 1 : 0,
-                            pointerEvents: hovering ? "auto" : "none",
-                            transition: "opacity 0.15s ease-in-out",
+                            alignItems: "center",
+                            gap: 8,
                           }}
                         >
-                          <button
-                            onClick={() => setConfirmDeleteMsId(ms.id)}
-                            title={t("delete")}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            {showDate && (
+                              <div
+                                className="text-[11px] tabular-nums"
+                                style={{
+                                  color: "var(--text-tertiary)",
+                                  marginBottom: 2,
+                                }}
+                              >
+                                {
+                                  dateGroups.find((g) =>
+                                    g.items.some((x) => x.id === ms.id),
+                                  )?.lbl
+                                }
+                              </div>
+                            )}
+                            <span
+                              className="text-[13px] font-semibold"
+                              style={{
+                                color: rcTxt,
+                                wordBreak: "break-all",
+                                overflowWrap: "anywhere",
+                                display: "block",
+                              }}
+                            >
+                              <HighlightText text={ms.label} query={q} />
+                            </span>
+                            {ms.description && (
+                              <div
+                                className="text-[11px] leading-snug"
+                                style={{
+                                  marginTop: 3,
+                                  color: rcSecTxt,
+                                  wordBreak: "break-all",
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
+                                <HighlightText
+                                  text={ms.description}
+                                  query={q}
+                                />
+                              </div>
+                            )}
+                            {ms.recurring && (
+                              <div
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 3,
+                                  marginTop: 5,
+                                  padding: "2px 6px 2px 4px",
+                                  borderRadius: 5,
+                                  background: dark
+                                    ? "rgba(255,255,255,0.06)"
+                                    : "rgba(0,0,0,0.05)",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    lineHeight: 1,
+                                    color: rcSecTxt,
+                                    opacity: 0.7,
+                                  }}
+                                >
+                                  ↻
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    lineHeight: 1,
+                                    color: rcSecTxt,
+                                    opacity: 0.65,
+                                  }}
+                                >
+                                  {t("repeatYearly")}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {/* Buttons in document flow — flex-wrap + row-reverse: × first in DOM = always top-right */}
+                          <div
                             style={{
-                              width: 26,
-                              height: 26,
-                              borderRadius: 999,
-                              border: "none",
-                              background: dark
-                                ? "rgba(255,59,48,0.15)"
-                                : "rgba(255,59,48,0.1)",
-                              color: "#ff3b30",
-                              cursor: "pointer",
                               display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              transition: "background 0.1s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = dark
-                                ? "rgba(255,59,48,0.28)"
-                                : "rgba(255,59,48,0.22)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = dark
-                                ? "rgba(255,59,48,0.15)"
-                                : "rgba(255,59,48,0.1)";
+                              flexDirection: "row-reverse",
+                              flexWrap: "wrap",
+                              gap: 6,
+                              maxWidth: 70,
+                              flexShrink: 0,
+                              alignSelf: "flex-start",
+                              opacity: hovering ? 1 : 0,
+                              pointerEvents: hovering ? "auto" : "none",
+                              transition: "opacity 0.15s ease-in-out",
                             }}
                           >
-                            <svg
-                              width="9"
-                              height="9"
-                              viewBox="0 0 10 10"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
+                            <button
+                              onClick={() => setConfirmDeleteMsId(ms.id)}
+                              title={t("delete")}
+                              style={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: 999,
+                                border: "none",
+                                background: dark
+                                  ? "rgba(255,59,48,0.15)"
+                                  : "rgba(255,59,48,0.1)",
+                                color: "#ff3b30",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "background 0.1s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = dark
+                                  ? "rgba(255,59,48,0.28)"
+                                  : "rgba(255,59,48,0.22)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = dark
+                                  ? "rgba(255,59,48,0.15)"
+                                  : "rgba(255,59,48,0.1)";
+                              }}
                             >
-                              <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
-                              <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => startEdit(ms)}
-                            title={t("edit")}
-                            style={{
-                              width: 26,
-                              height: 26,
-                              borderRadius: 999,
-                              border: "none",
-                              background: dark
-                                ? "rgba(255,255,255,0.1)"
-                                : "rgba(0,0,0,0.07)",
-                              color: dark
-                                ? "rgba(255,255,255,0.8)"
-                                : "rgba(0,0,0,0.65)",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              transition: "background 0.1s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = dark
-                                ? "rgba(255,255,255,0.18)"
-                                : "rgba(0,0,0,0.13)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = dark
-                                ? "rgba(255,255,255,0.1)"
-                                : "rgba(0,0,0,0.07)";
-                            }}
-                          >
-                            <svg
-                              width="11"
-                              height="11"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.7"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                              <svg
+                                width="9"
+                                height="9"
+                                viewBox="0 0 10 10"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                              >
+                                <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
+                                <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => startEdit(ms)}
+                              title={t("edit")}
+                              style={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: 999,
+                                border: "none",
+                                background: dark
+                                  ? "rgba(255,255,255,0.1)"
+                                  : "rgba(0,0,0,0.07)",
+                                color: dark
+                                  ? "rgba(255,255,255,0.8)"
+                                  : "rgba(0,0,0,0.65)",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "background 0.1s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = dark
+                                  ? "rgba(255,255,255,0.18)"
+                                  : "rgba(0,0,0,0.13)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = dark
+                                  ? "rgba(255,255,255,0.1)"
+                                  : "rgba(0,0,0,0.07)";
+                              }}
                             >
-                              <path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z" />
-                            </svg>
-                          </button>
+                              <svg
+                                width="11"
+                                height="11"
+                                viewBox="0 0 12 12"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
-                      </div>
                       </div>
                     </>
                   </div>
@@ -12619,7 +12426,7 @@ function GoalsModal({
         initial={false}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ overflowY: "auto", overscrollBehavior: "contain" }}
         onClick={() => {
           setColorPickerGoalId(null);
@@ -12699,8 +12506,6 @@ function GoalsModal({
               <input
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                autoComplete="off"
-                tabIndex={isMobile ? -1 : undefined}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") e.currentTarget.blur();
                 }}
@@ -12756,8 +12561,6 @@ function GoalsModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={descPlaceholder ?? t("sprintDescPlaceholder")}
-                autoComplete="off"
-                tabIndex={isMobile ? -1 : undefined}
                 minRows={2}
                 style={{
                   width: "100%",
@@ -12871,8 +12674,6 @@ function GoalsModal({
                               handleGoalInputHeightChange(g.id, h)
                             }
                             placeholder={`${t("goalPlaceholder")} ${idx + 1}`}
-                            autoComplete="off"
-                            tabIndex={isMobile ? -1 : undefined}
                             className={placeholderClass}
                             minRows={1}
                             style={{
@@ -13643,7 +13444,7 @@ function SprintSettingsModal({
   return (
     <>
       <motion.div
-        className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ overflowY: "auto", overscrollBehavior: "contain" }}
         initial={false}
         exit={{ opacity: 0 }}
@@ -14781,7 +14582,7 @@ function LifeCalendarModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onClose}
     >
@@ -15503,7 +15304,6 @@ function DayTemplatesModal({
   prefillItems?: string[];
 }) {
   const { t } = React.useContext(LangContext);
-  const isMobile = useIsMobile();
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
   const inputStyle: React.CSSProperties = {
@@ -15534,16 +15334,6 @@ function DayTemplatesModal({
     }
     return [""];
   });
-  const formNameInputRef = React.useRef<HTMLInputElement | null>(null);
-
-  React.useEffect(() => {
-    if (isMobile || !editingId) return;
-    const frame = requestAnimationFrame(() => {
-      formNameInputRef.current?.focus();
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [editingId, isMobile]);
-
   const startNew = () => {
     setEditingId("__new__");
     setFormName("");
@@ -15603,7 +15393,7 @@ function DayTemplatesModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="lc-ios-modal fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ overflowY: "auto", overscrollBehavior: "contain" }}
       onClick={onCloseAll ?? onClose}
     >
@@ -15763,13 +15553,10 @@ function DayTemplatesModal({
                   {t("newTemplate")}
                 </div>
                 <input
-                  ref={formNameInputRef}
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder={t("templateNamePlaceholder")}
                   style={{ ...inputStyle, fontSize: 13, fontWeight: 600 }}
-                  autoComplete="off"
-                  tabIndex={isMobile ? -1 : undefined}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -15812,8 +15599,6 @@ function DayTemplatesModal({
                       onChange={(e) => updateItem(i, e.target.value)}
                       placeholder={`${t("goal")} ${i + 1}`}
                       style={{ ...inputStyle, flex: 1 }}
-                      autoComplete="off"
-                      tabIndex={isMobile ? -1 : undefined}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
