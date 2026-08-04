@@ -37,11 +37,9 @@
 
 html, body, #root { height: 100%; }
 
-#root { background: var(--bg); }
-
 body {
   margin: 0;
-  background: transparent;
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
