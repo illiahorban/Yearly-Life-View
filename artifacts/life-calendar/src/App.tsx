@@ -4811,51 +4811,19 @@ function App() {
           open={factoryResetStep >= 1}
           onClose={() => setFactoryResetStep(0)}
           onConfirm={async () => {
+            let resetCompleted = false;
             try {
-              // Clear the Drive snapshot before clearing auth/local storage.
-              // Otherwise the next sign-in would merge the old cloud data
-              // back into the freshly-reset local calendar.
+              // Clear the Drive snapshot before clearing calendar storage.
+              // Keep the Google session so the user remains signed in after
+              // the calendar is reset.
               await resetCloudData();
-              await googleSignOut(undefined, false);
 
-              // 1. Все виды хранилищ браузера
-              localStorage.clear();
-              sessionStorage.clear();
-
-              // 2. IndexedDB (если используется)
-              if (
-                window.indexedDB &&
-                (
-                  indexedDB as {
-                    databases?: () => Promise<{ name?: string }[]>;
-                  }
-                ).databases
-              ) {
-                const dbs = await (
-                  indexedDB as { databases: () => Promise<{ name?: string }[]> }
-                ).databases();
-                dbs.forEach((db) => {
-                  if (db.name) indexedDB.deleteDatabase(db.name);
-                });
-              }
-
-              // 3. Cache Storage (кэш PWA / ресурсов)
-              if ("caches" in window) {
-                const cacheNames = await caches.keys();
-                await Promise.all(
-                  cacheNames.map((name) => caches.delete(name)),
-                );
-              }
-
-              // 4. Cookies
-              document.cookie.split(";").forEach((c) => {
-                document.cookie = c
-                  .replace(/^ +/, "")
-                  .replace(
-                    /=.*/,
-                    "=;expires=" + new Date().toUTCString() + ";path=/",
-                  );
-              });
+              // Remove only this app's calendar data. The gSync:* auth keys
+              // must survive so the Google account remains connected.
+              Object.keys(localStorage)
+                .filter((key) => key.startsWith("lifeCalendar:"))
+                .forEach((key) => localStorage.removeItem(key));
+              resetCompleted = true;
             } catch (e) {
               console.error("Ошибка при сбросе данных календаря:", e);
               window.alert(
@@ -4865,8 +4833,9 @@ function App() {
               );
               return;
             } finally {
-              if (localStorage.length === 0) {
-                // 5. Жёсткая перезагрузка — useState(() => ls(...)) вернутся к дефолтам
+              if (resetCompleted) {
+                // Hard reload so all useState initializers read the factory
+                // defaults while the Google session is restored from gSync:*.
                 window.location.href =
                   window.location.origin + window.location.pathname;
               }
@@ -5454,13 +5423,17 @@ function BlocksRenderer({
                                 borderRadius: 4,
                                 padding: "2px 6px",
                                 border: "none",
+                                 display: "flex",
+                                 alignItems: "center",
+                                 justifyContent: "center",
+                                 lineHeight: 1,
                                 boxShadow: isSel
                                   ? `inset 0 0 0 1.5px ${quarter.border}66`
                                   : "inset 0 0 0 1.5px transparent",
                                 cursor: "pointer",
                                 fontFamily: "inherit",
                                 outline: "none",
-                                transition: "color 120ms, border 120ms",
+                                 transition: "color 120ms, box-shadow 120ms",
                                 opacity: hasSelection && !isSel ? 0.4 : 1,
                               }}
                             >
