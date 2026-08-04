@@ -3932,18 +3932,13 @@ function App() {
                 {searchOpen && (
                   <motion.div
                     key="search-bar"
-                    initial={{ y: isMobile ? -15 : "-100%", opacity: 0 }}
+                    initial={{ y: -15, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={
-                      isMobile
-                        ? { opacity: 0 }
-                        : { y: "-100%", opacity: 0 }
-                    }
+                    exit={{ opacity: 0 }}
                     transition={{
-                      type: isMobile ? "tween" : "spring",
-                      stiffness: isMobile ? 380 : 400,
-                      damping: isMobile ? 30 : 35,
-                      duration: isMobile ? 0.08 : undefined,
+                      type: "spring",
+                      stiffness: 380,
+                      damping: 30,
                     }}
                     className="transform-gpu will-change-transform"
                     style={{
