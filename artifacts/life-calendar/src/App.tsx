@@ -3934,11 +3934,16 @@ function App() {
                     key="search-bar"
                     initial={{ y: isMobile ? -15 : "-100%", opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: isMobile ? -15 : "-100%", opacity: 0 }}
+                    exit={
+                      isMobile
+                        ? { opacity: 0 }
+                        : { y: "-100%", opacity: 0 }
+                    }
                     transition={{
-                      type: "spring",
+                      type: isMobile ? "tween" : "spring",
                       stiffness: isMobile ? 380 : 400,
                       damping: isMobile ? 30 : 35,
+                      duration: isMobile ? 0.08 : undefined,
                     }}
                     className="transform-gpu will-change-transform"
                     style={{
