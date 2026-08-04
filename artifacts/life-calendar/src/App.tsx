@@ -2832,6 +2832,7 @@ function App() {
   }, []);
 
   const weekRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const calendarScrollRef = useRef<HTMLElement | null>(null);
   const didScrollRef = useRef(false);
   useEffect(() => {
     didScrollRef.current = false;
@@ -2841,7 +2842,7 @@ function App() {
   // keeping whatever scroll offset the previous year was left at.
   useEffect(() => {
     if (viewYear !== now.getFullYear())
-      window.scrollTo({ top: 0, behavior: "auto" });
+      calendarScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, [viewYear]);
 
   useEffect(() => {
@@ -2885,7 +2886,7 @@ function App() {
     }
     const obs = new IntersectionObserver(
       ([e]) => setShowTodayBtn(!e!.isIntersecting),
-      { threshold: 0.5 },
+      { root: calendarScrollRef.current, threshold: 0.5 },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -3016,10 +3017,13 @@ function App() {
 
   return (
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
-      <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
+      <div
+        className="fixed inset-0 flex h-screen h-[100dvh] w-full flex-col overflow-hidden"
+        style={{ background: "var(--bg)" }}
+      >
         {/* ── Header ─────────────────────────────────────────────────── */}
         <header
-          className="sticky top-0 z-20"
+          className="sticky top-0 z-50 w-full shrink-0 touch-none"
           style={{
             background: headerBg,
             backdropFilter: "saturate(180%) blur(20px)",
@@ -4157,9 +4161,14 @@ function App() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-3xl px-3 sm:px-8 py-4 sm:py-8">
-          <LayoutGroup>
-            <div className="flex flex-col gap-3 sm:gap-6">
+        <main
+          ref={calendarScrollRef}
+          className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8">
+            <LayoutGroup>
+              <div className="flex flex-col gap-3 sm:gap-6">
               {[0, 1, 2, 3].map((qi) => {
                 const quarter = resolvedQuarters[qi]!;
                 const meta = quarterMeta[qi]!;
@@ -4554,15 +4563,16 @@ function App() {
                   </motion.section>
                 );
               })}
-            </div>
-          </LayoutGroup>
+              </div>
+            </LayoutGroup>
 
-          <footer
-            className="mt-12 pb-8 text-center text-xs"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            {t("footerBase")} · {viewYear}
-          </footer>
+            <footer
+              className="mt-12 pb-8 text-center text-xs"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              {t("footerBase")} · {viewYear}
+            </footer>
+          </div>
         </main>
 
         {/* ── Modals ─────────────────────────────────────────────────── */}
