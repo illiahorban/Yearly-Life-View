@@ -5545,9 +5545,7 @@ function BlocksRenderer({
                           <div
                             className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
                             style={{
-                              background: dark
-                                ? quarter.darkSoft
-                                : quarter.soft,
+                              background: "transparent",
                               border: `1px solid ${quarter.border}55`,
                             }}
                           >
