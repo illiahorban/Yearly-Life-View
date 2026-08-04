@@ -14,7 +14,6 @@ import {
   useDragControls,
 } from "framer-motion";
 import confetti from "canvas-confetti";
-import TextareaAutosize from "react-textarea-autosize";
 import { useSyncEngine } from "./lib/use-sync";
 import type {
   AppSnapshot,
@@ -2919,10 +2918,27 @@ function App() {
   const cardBg = dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)";
   const modalBg = dark ? "rgba(30,30,32,0.96)" : "rgba(255,255,255,0.93)";
   const overlayBg = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
+  const modalOpen =
+    settingsQuarter !== null ||
+    openNote !== null ||
+    goalsOpen ||
+    notesPanelOpen ||
+    milestonePanelOpen ||
+    editGoalsBlockId !== null ||
+    editGoalsQi !== null ||
+    editYearGoals ||
+    lifeCalendarOpen ||
+    factoryResetStep >= 1 ||
+    confirmSignOut;
 
   return (
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
       <div className="min-h-screen w-full" style={{ background: "var(--bg)" }}>
+        <div
+          aria-hidden={modalOpen}
+          inert={modalOpen}
+          style={{ minHeight: "100%" }}
+        >
         {/* ── Header ─────────────────────────────────────────────────── */}
         <header
           className="sticky top-0 z-20"
@@ -4367,6 +4383,7 @@ function App() {
             {t("footerBase")} · {viewYear}
           </footer>
         </main>
+        </div>
 
         {/* ── Modals ─────────────────────────────────────────────────── */}
         <AnimatePresence>
@@ -5724,10 +5741,6 @@ function BlockLabel({
   useEffect(() => {
     setDraft(value);
   }, [value]);
-  const autoResize = (el: HTMLTextAreaElement) => {
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
-  };
   const commit = () => {
     onChange(draft.trim() || "Untitled sprint");
   };
@@ -5738,7 +5751,6 @@ function BlockLabel({
       rows={1}
       onChange={(e) => {
         setDraft(e.target.value);
-        autoResize(e.target);
       }}
       onBlur={commit}
       onKeyDown={(e) => {
@@ -5756,8 +5768,10 @@ function BlockLabel({
         borderBottom: `1px solid ${color}`,
         padding: "1px 2px",
         width: "100%",
+        height: 28,
+        minHeight: 28,
         resize: "none",
-        overflow: "hidden",
+        overflowY: "auto",
         lineHeight: 1.35,
         fontFamily: "inherit",
         display: "block",
@@ -6607,9 +6621,7 @@ function NoteEntryItem({
   hoveredEntryId,
   setHoveredEntryId,
   updateEntry,
-  handleNoteHeightChange,
   handleKey,
-  noteHeights,
   colorBtnRefs,
   toggleColorPicker,
   colorPickerEntryId,
@@ -6624,9 +6636,7 @@ function NoteEntryItem({
   hoveredEntryId: string | null;
   setHoveredEntryId: (id: string | null) => void;
   updateEntry: (id: string, text: string) => void;
-  handleNoteHeightChange: (id: string, h: number) => void;
   handleKey: (e: React.KeyboardEvent) => void;
-  noteHeights: Record<string, number>;
   colorBtnRefs: React.MutableRefObject<
     Record<string, HTMLButtonElement | null>
   >;
@@ -6656,14 +6666,13 @@ function NoteEntryItem({
         onMouseEnter={() => setHoveredEntryId(entry.id)}
         onMouseLeave={() => setHoveredEntryId(null)}
       >
-        <TextareaAutosize
+        <textarea
           name="calendar-note"
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
-          onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}
           onKeyDown={handleKey}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
-          minRows={1}
+          rows={2}
           className={notePlaceholderClass}
           style={{
             width: "100%",
@@ -6672,6 +6681,8 @@ function NoteEntryItem({
             border: `1.5px solid ${tintedBorder}`,
             borderRadius: 12,
             padding: "10px 60px 10px 16px",
+            height: 48,
+            minHeight: 48,
             fontSize: 14,
             lineHeight: 1.55,
             fontFamily: "inherit",
@@ -6687,14 +6698,12 @@ function NoteEntryItem({
         <div
           style={{
             position: "absolute",
-            top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%",
-            transform:
-              (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)",
+            top: 8,
+            transform: "none",
             right: 8,
             display: "flex",
             alignItems: "center",
             gap: 6,
-            transition: "top 150ms",
             opacity:
               hoveredEntryId === entry.id || colorPickerEntryId === entry.id
                 ? 1
@@ -7196,24 +7205,6 @@ function NoteModal({
       setColorPickerPos({ top: rect.bottom + 7, left: rect.right - 152 });
     }
     setColorPickerEntryId(id);
-  };
-
-  // Note height tracking is now delegated entirely to <TextareaAutosize>
-  // (react-textarea-autosize), which measures scrollHeight itself and keeps
-  // it in sync via a ResizeObserver — no manual rAF/height-hack juggling.
-  // We only keep the resulting heights around to position the hover-overlay
-  // buttons (color/delete) below the placeholder-height threshold.
-  const [noteHeights, setNoteHeights] = useState<Record<string, number>>({});
-  const handleNoteHeightChange = (id: string, h: number) => {
-    setNoteHeights((prev) => (prev[id] === h ? prev : { ...prev, [id]: h }));
-  };
-
-  // Same idea as noteHeights above, but for day-goal rows: lets the hover
-  // overlay (color/delete buttons) pin to the top-right corner once the goal
-  // label wraps onto 2+ lines, instead of overlapping the wrapped text.
-  const [goalHeights, setGoalHeights] = useState<Record<number, number>>({});
-  const handleGoalHeightChange = (i: number, h: number) => {
-    setGoalHeights((prev) => (prev[i] === h ? prev : { ...prev, [i]: h }));
   };
 
   // Track whether a day-event's title wraps onto 2+ lines, so the edit/delete
@@ -8009,14 +8000,11 @@ function NoteModal({
                                 </div>
                               );
                             })()}
-                            <TextareaAutosize
+                            <textarea
                               name="daily-goal"
                               value={goalsDraft.labels?.[i] ?? ""}
                               onChange={(e) =>
                                 handleGoalLabelChange(i, e.target.value)
-                              }
-                              onHeightChange={(h) =>
-                                handleGoalHeightChange(i, h)
                               }
                               onMouseDown={(e) => {
                                 if (goalColorPickerIdx !== null)
@@ -8024,7 +8012,7 @@ function NoteModal({
                                 e.stopPropagation();
                               }}
                               placeholder={`${t("goal")} ${i + 1}`}
-                              minRows={1}
+                              rows={1}
                               style={{
                                 flex: 1,
                                 background: "transparent",
@@ -8042,6 +8030,8 @@ function NoteModal({
                                 lineHeight: 1.35,
                                 fontFamily: "inherit",
                                 padding: 0,
+                                height: 24,
+                                minHeight: 24,
                                 cursor: "text",
                                 minWidth: 0,
                                 display: "block",
@@ -8051,11 +8041,8 @@ function NoteModal({
                             <div
                               style={{
                                 position: "absolute",
-                                top: (goalHeights[i] ?? 18) > 20 ? 8 : "50%",
-                                transform:
-                                  (goalHeights[i] ?? 18) > 20
-                                    ? "none"
-                                    : "translateY(-50%)",
+                                top: 8,
+                                transform: "none",
                                 right: 8,
                                 display: "flex",
                                 alignItems: "center",
@@ -8512,6 +8499,8 @@ function NoteModal({
                               if (el) msEditRefs.current.set(ms.id, el);
                               else msEditRefs.current.delete(ms.id);
                             }}
+                            inert={!isEditing}
+                            aria-hidden={!isEditing}
                             style={{
                               maxHeight: isEditing ? "2000px" : 0,
                               opacity: isEditing ? 1 : 0,
@@ -8865,6 +8854,8 @@ function NoteModal({
             </div>
             {/* Form — expands when open */}
             <div
+              inert={!addEventOpen}
+              aria-hidden={!addEventOpen}
               ref={addEventFormRef}
               style={{
                 maxHeight: addEventOpen ? "2000px" : 0,
@@ -9218,9 +9209,7 @@ function NoteModal({
                       hoveredEntryId={hoveredEntryId}
                       setHoveredEntryId={setHoveredEntryId}
                       updateEntry={updateEntry}
-                      handleNoteHeightChange={handleNoteHeightChange}
                       handleKey={handleKey}
-                      noteHeights={noteHeights}
                       colorBtnRefs={colorBtnRefs}
                       toggleColorPicker={toggleColorPicker}
                       colorPickerEntryId={colorPickerEntryId}
@@ -10539,6 +10528,8 @@ function NotesPanel({
             </button>
           </div>
           <div
+            inert={!showAddForm}
+            aria-hidden={!showAddForm}
             style={{
               maxHeight: showAddForm ? 260 : 0,
               opacity: showAddForm ? 1 : 0,
@@ -11353,6 +11344,8 @@ function MilestoneModal({
             </button>
           </div>
           <div
+            inert={!showAddForm}
+            aria-hidden={!showAddForm}
             style={{
               maxHeight: showAddForm ? 500 : 0,
               opacity: showAddForm ? 1 : 0,
@@ -11420,11 +11413,7 @@ function MilestoneModal({
                     name="event-draft-label"
                     value={draftLabel}
                     rows={1}
-                    onChange={(e) => {
-                      setDraftLabel(e.target.value);
-                      e.target.style.height = "auto";
-                      e.target.style.height = e.target.scrollHeight + "px";
-                    }}
+                    onChange={(e) => setDraftLabel(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Escape") resetDraft();
                     }}
@@ -11433,8 +11422,10 @@ function MilestoneModal({
                     style={{
                       ...draftInputStyle,
                       width: "100%",
+                      height: 34,
+                      minHeight: 34,
                       resize: "none",
-                      overflow: "hidden",
+                      overflowY: "auto",
                       lineHeight: 1.5,
                       display: "block",
                     }}
@@ -11443,18 +11434,16 @@ function MilestoneModal({
                     name="event-draft-description"
                     value={draftDesc}
                     rows={2}
-                    onChange={(e) => {
-                      setDraftDesc(e.target.value);
-                      e.target.style.height = "auto";
-                      e.target.style.height = e.target.scrollHeight + "px";
-                    }}
+                    onChange={(e) => setDraftDesc(e.target.value)}
                     placeholder={t("descPlaceholder")}
                     className={isWhite ? "placeholder-dark" : undefined}
                     style={{
                       ...draftInputStyle,
                       width: "100%",
+                      height: 62,
+                      minHeight: 62,
                       resize: "none",
-                      overflow: "hidden",
+                      overflowY: "auto",
                       lineHeight: 1.5,
                       display: "block",
                     }}
@@ -11776,18 +11765,7 @@ function MilestoneModal({
                           name="event-label-edit"
                           value={editLabel}
                           rows={1}
-                          ref={(el) => {
-                            if (el) {
-                              el.style.height = "auto";
-                              el.style.height = el.scrollHeight + "px";
-                            }
-                          }}
-                          onChange={(e) => {
-                            setEditLabel(e.target.value);
-                            e.target.style.height = "auto";
-                            e.target.style.height =
-                              e.target.scrollHeight + "px";
-                          }}
+                          onChange={(e) => setEditLabel(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
@@ -11799,8 +11777,10 @@ function MilestoneModal({
                           style={{
                             ...inputStyle,
                             width: "100%",
+                            height: 34,
+                            minHeight: 34,
                             resize: "none",
-                            overflow: "hidden",
+                            overflowY: "auto",
                             fontSize: 13,
                             fontWeight: 600,
                             lineHeight: 1.35,
@@ -11814,24 +11794,15 @@ function MilestoneModal({
                           name="event-description-edit"
                           value={editDesc}
                           rows={2}
-                          ref={(el) => {
-                            if (el) {
-                              el.style.height = "auto";
-                              el.style.height = el.scrollHeight + "px";
-                            }
-                          }}
-                          onChange={(e) => {
-                            setEditDesc(e.target.value);
-                            e.target.style.height = "auto";
-                            e.target.style.height =
-                              e.target.scrollHeight + "px";
-                          }}
+                          onChange={(e) => setEditDesc(e.target.value)}
                           placeholder={t("editDescPlaceholder")}
                           style={{
                             ...inputStyle,
                             width: "100%",
+                            height: 62,
+                            minHeight: 62,
                             resize: "none",
-                            overflow: "hidden",
+                            overflowY: "auto",
                             fontSize: 11,
                             fontWeight: 400,
                             lineHeight: 1.375,
@@ -12457,18 +12428,6 @@ function GoalsModal({
   );
   const [hoveredGoalId, setHoveredGoalId] = useState<string | null>(null);
 
-  // Tracks each goal-text field's rendered height so the row can grow as text
-  // wraps onto multiple lines, and so the color/delete overlay buttons can pin
-  // to the top-right corner instead of overlapping the wrapped text.
-  const [goalInputHeights, setGoalInputHeights] = useState<
-    Record<string, number>
-  >({});
-  const handleGoalInputHeightChange = (id: string, h: number) => {
-    setGoalInputHeights((prev) =>
-      prev[id] === h ? prev : { ...prev, [id]: h },
-    );
-  };
-
   // Color picker state
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [colorPickerGoalId, setColorPickerGoalId] = useState<string | null>(
@@ -12654,12 +12613,12 @@ function GoalsModal({
             }}
           >
             <div className="px-5 pb-3">
-              <TextareaAutosize
+              <textarea
                 name="sprint-description"
                 value={description}
                 onChange={(e) => commitDescription(e.target.value)}
                 placeholder={descPlaceholder ?? t("sprintDescPlaceholder")}
-                minRows={2}
+                rows={2}
                 style={{
                   width: "100%",
                   resize: "none",
@@ -12668,6 +12627,8 @@ function GoalsModal({
                   border: `1px solid ${borderColor}`,
                   borderRadius: 10,
                   padding: "8px 10px",
+                  height: 62,
+                  minHeight: 62,
                   fontSize: 13,
                   lineHeight: 1.5,
                   fontFamily: "inherit",
@@ -12757,7 +12718,7 @@ function GoalsModal({
                           {idx + 1}.
                         </span>
                         <div style={{ flex: 1, position: "relative" }}>
-                          <TextareaAutosize
+                          <textarea
                             name="sprint-goal"
                             value={g.text}
                             onChange={(e) =>
@@ -12769,12 +12730,9 @@ function GoalsModal({
                                 ),
                               )
                             }
-                            onHeightChange={(h) =>
-                              handleGoalInputHeightChange(g.id, h)
-                            }
                             placeholder={`${t("goalPlaceholder")} ${idx + 1}`}
                             className={placeholderClass}
-                            minRows={1}
+                            rows={1}
                             style={{
                               width: "100%",
                               resize: "none",
@@ -12785,6 +12743,8 @@ function GoalsModal({
                               border: `1.5px solid ${inputBorderColor}`,
                               borderRadius: 12,
                               padding: "8px 59px 8px 10px",
+                              height: 38,
+                              minHeight: 38,
                               fontSize: 13,
                               lineHeight: 1.4,
                               color: inputTextColor,
@@ -12800,12 +12760,8 @@ function GoalsModal({
                           <div
                             style={{
                               position: "absolute",
-                              top:
-                                (goalInputHeights[g.id] ?? 20) > 24 ? 8 : "50%",
-                              transform:
-                                (goalInputHeights[g.id] ?? 20) > 24
-                                  ? "none"
-                                  : "translateY(-50%)",
+                              top: 8,
+                              transform: "none",
                               right: 8,
                               display: "flex",
                               alignItems: "center",
@@ -13887,7 +13843,7 @@ function SprintSettingsModal({
                             minWidth: 0,
                           }}
                         >
-                          <TextareaAutosize
+                          <textarea
                             name="quarter-block-label"
                             value={b.label}
                             onChange={(e) => {
@@ -13899,7 +13855,7 @@ function SprintSettingsModal({
                               commitBlocks(newBlocks);
                             }}
                             placeholder={t("sprintLabelPlaceholder")}
-                            minRows={1}
+                            rows={1}
                             className="bg-transparent outline-none w-full resize-none"
                             style={{
                               color: bDotHex,
@@ -13908,6 +13864,8 @@ function SprintSettingsModal({
                               lineHeight: 1.45,
                               fontFamily: "inherit",
                               padding: 0,
+                              height: 28,
+                              minHeight: 28,
                               border: "none",
                               display: "block",
                               minWidth: 0,
@@ -15652,6 +15610,8 @@ function DayTemplatesModal({
           }}
         >
           <div
+            inert={!editing}
+            aria-hidden={!editing}
             style={{
               visibility: editing ? "visible" : "hidden",
               opacity: editing ? 1 : 0,
@@ -15835,6 +15795,8 @@ function DayTemplatesModal({
             </div>
           </div>
           <div
+            inert={editing}
+            aria-hidden={editing}
             style={{
               visibility: editing ? "hidden" : "visible",
               opacity: editing ? 0 : 1,
