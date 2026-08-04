@@ -2170,6 +2170,25 @@ function App() {
       return { ...prev, focus: qOffset };
     });
   };
+  useEffect(() => {
+    if (!weekSel) return;
+
+    const handleOutsideWeekSelection = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (
+        target.closest(".lc-week-label") ||
+        target.closest("[data-week-selection-panel]")
+      ) {
+        return;
+      }
+      setWeekSel(null);
+    };
+
+    document.addEventListener("pointerdown", handleOutsideWeekSelection);
+    return () =>
+      document.removeEventListener("pointerdown", handleOutsideWeekSelection);
+  }, [weekSel]);
 
   // Quarter meta (names + colors)
   const [quarterMeta, setQuarterMeta] = useState<QuarterMeta[]>(() =>
@@ -5543,6 +5562,7 @@ function BlocksRenderer({
                           }}
                         >
                           <div
+                            data-week-selection-panel
                             className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl"
                             style={{
                               background: "transparent",
