@@ -10336,7 +10336,6 @@ function NotesPanel({
         }}
       />
       <motion.div
-        layout
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -11181,7 +11180,6 @@ function MilestoneModal({
         }}
       />
       <motion.div
-        layout
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -11751,6 +11749,8 @@ function MilestoneModal({
                     <>
                       <div
                         className="flex flex-col gap-2"
+                        inert={!isEditing}
+                        aria-hidden={!isEditing}
                         style={{
                           isolation: "isolate",
                           visibility: isEditing ? "visible" : "hidden",
@@ -12502,7 +12502,6 @@ function GoalsModal({
           }}
         />
         <motion.div
-          layout
           initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -14667,7 +14666,6 @@ function LifeCalendarModal({
         }}
       />
       <motion.div
-        layout
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -15493,7 +15491,6 @@ function DayTemplatesModal({
         }}
       />
       <motion.div
-        layout
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
