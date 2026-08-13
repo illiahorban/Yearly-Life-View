@@ -1784,10 +1784,28 @@ function saveConfig(year: number, cfg: CalendarConfig) {
   } catch {}
 }
 
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const updateMatches = () => setMatches(mediaQuery.matches);
+    updateMatches();
+    mediaQuery.addEventListener("change", updateMatches);
+    return () => mediaQuery.removeEventListener("change", updateMatches);
+  }, [query]);
+
+  return matches;
+}
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 function App() {
   const isMobile = useIsMobile();
+  const isCompactViewport = useMediaQuery("(max-width: 639px)");
   const [now, setNow] = useState<Date>(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -4522,6 +4540,7 @@ function App() {
                         blockGoals={blockGoals}
                         dayGoalsMap={dayGoals}
                         dark={dark}
+                        isCompactViewport={isCompactViewport}
                         cardBg={cardBg}
                         overlayBg={overlayBg}
                         weekSel={weekSel}
@@ -5161,6 +5180,7 @@ function BlocksRenderer({
   blockGoals,
   dayGoalsMap,
   dark,
+  isCompactViewport,
   cardBg,
   overlayBg,
   weekSel,
@@ -5190,6 +5210,7 @@ function BlocksRenderer({
   blockGoals: Record<string, BlockGoals>;
   dayGoalsMap: Record<string, DayGoals>;
   dark: boolean;
+  isCompactViewport: boolean;
   cardBg: string;
   overlayBg: string;
   weekSel: { qi: number; anchor: number; focus: number } | null;
@@ -5665,6 +5686,7 @@ function BlocksRenderer({
                                 }
                                 isActiveMatch={activeMatchKey === dateKey(d)}
                                 dark={dark}
+                                isCompactViewport={isCompactViewport}
                                 onOpen={() => {
                                   if (dayState(d) !== "out")
                                     onNoteOpen(dateKey(d));
@@ -5983,15 +6005,13 @@ if (
     0%,100%{opacity:0.55;}
     50%{opacity:1;}
   }.lc-fire-glow{position:absolute;inset:0;border-radius:12px;pointer-events:none;box-shadow:0 0 0 2px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);animation:lc-fire-pulse 5s ease-in-out infinite;will-change:opacity;}
-  .lc-goal-dot-extra{display:none;}
   .lc-goal-markers{padding:3px 0;}
   @media(max-width:639px){
-    .lc-goal-markers{padding:0;margin-bottom:0;overflow:hidden;max-width:100%;}
+    .lc-goal-markers{padding:0;margin-bottom:0;max-width:100%;}
     .lc-fire-glow{box-shadow:0 0 0 1.5px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);}
   }
   @media(min-width:640px){
     .lc-goal-dot{width:6px!important;height:6px!important;}
-    .lc-goal-dot-extra{display:block;}
   }`;
   document.head.appendChild(s);
 }
@@ -6009,6 +6029,7 @@ function DayTile({
   highlighted,
   isActiveMatch,
   dark,
+  isCompactViewport,
   onOpen,
 }: {
   date: Date;
@@ -6021,6 +6042,7 @@ function DayTile({
   highlighted?: boolean;
   isActiveMatch?: boolean;
   dark: boolean;
+  isCompactViewport: boolean;
   onOpen: () => void;
 }) {
   const isOut = state === "out";
@@ -6079,8 +6101,9 @@ function DayTile({
     dayGoals && dayGoals.count > 0
       ? (() => {
           const onFill = isPast || isToday;
-          const showPlus = dayGoals.count > 8;
-          const dotCount = showPlus ? 7 : dayGoals.count;
+          const indicatorLimit = isCompactViewport ? 6 : 8;
+          const showPlus = dayGoals.count > indicatorLimit;
+          const dotCount = showPlus ? indicatorLimit - 1 : dayGoals.count;
           const allDone = showPlus
             ? Array.from(
                 { length: dayGoals.count },
@@ -6089,7 +6112,6 @@ function DayTile({
             : false;
           const dots = Array.from({ length: dotCount }, (_, i) => {
             const done = dayGoals.done[i] ?? false;
-            const isExtra = i >= 7;
             return done ? (
               <svg
                 key={i}
@@ -6097,7 +6119,7 @@ function DayTile({
                 height="5"
                 viewBox="0 0 6 6"
                 fill="none"
-                className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`}
+                className="lc-goal-dot"
                 style={{ flexShrink: 0, overflow: "hidden" }}
               >
                 <rect
@@ -6131,7 +6153,7 @@ function DayTile({
                 height="5"
                 viewBox="0 0 6 6"
                 fill="none"
-                className={`lc-goal-dot${isExtra ? " lc-goal-dot-extra" : ""}`}
+                className="lc-goal-dot"
                 style={{ flexShrink: 0, opacity: 0.5, overflow: "hidden" }}
               >
                 <rect
@@ -6170,7 +6192,7 @@ function DayTile({
               height="5"
               viewBox="-0.5 -0.5 7 7"
               fill="none"
-              className="lc-goal-dot lc-goal-dot-extra"
+              className="lc-goal-dot"
               style={{
                 flexShrink: 0,
                 overflow: "hidden",
@@ -6533,7 +6555,7 @@ function DayTile({
             />
           )}
           <div
-            className="flex flex-col items-center"
+            className="flex flex-col items-center pb-2"
             style={{
               position: "absolute",
               inset: 0,
@@ -6553,7 +6575,12 @@ function DayTile({
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
             <div
               className="flex items-center justify-center"
-              style={{ flex: 1, width: "100%", overflow: "hidden" }}
+              style={{
+                flex: 1,
+                width: "100%",
+                overflow: "visible",
+                transform: "translateY(-2px)",
+              }}
             >
               {microMarkers}
             </div>
@@ -6614,12 +6641,17 @@ function DayTile({
                 above is enough to sit visually on top — no z-index needed, and adding one
                 here would re-introduce the bug (a new isolated context that hides the fill
                 from `mix-blend-mode: difference`). */}
-            <div className="absolute inset-0 flex flex-col items-center">
+            <div className="absolute inset-0 flex flex-col items-center pb-2">
               <div style={{ flex: 1 }} />
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
               <div
                 className="flex items-center justify-center"
-                style={{ flex: 1, width: "100%", overflow: "hidden" }}
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  overflow: "visible",
+                  transform: "translateY(-2px)",
+                }}
               >
                 {microMarkers}
               </div>
@@ -6658,7 +6690,7 @@ function DayTile({
           />
         )}
         <div
-          className="flex flex-col items-center"
+          className="flex flex-col items-center pb-2"
           style={{
             position: "absolute",
             inset: 0,
@@ -6678,7 +6710,12 @@ function DayTile({
           <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
           <div
             className="flex items-center justify-center"
-            style={{ flex: 1, width: "100%", overflow: "hidden" }}
+            style={{
+              flex: 1,
+              width: "100%",
+              overflow: "visible",
+              transform: "translateY(-2px)",
+            }}
           >
             {microMarkers}
           </div>
