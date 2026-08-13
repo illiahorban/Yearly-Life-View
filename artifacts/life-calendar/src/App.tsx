@@ -6555,7 +6555,7 @@ function DayTile({
             />
           )}
           <div
-            className="flex flex-col items-center pb-2"
+            className="flex flex-col items-center"
             style={{
               position: "absolute",
               inset: 0,
@@ -6641,7 +6641,7 @@ function DayTile({
                 above is enough to sit visually on top — no z-index needed, and adding one
                 here would re-introduce the bug (a new isolated context that hides the fill
                 from `mix-blend-mode: difference`). */}
-            <div className="absolute inset-0 flex flex-col items-center pb-2">
+            <div className="absolute inset-0 flex flex-col items-center">
               <div style={{ flex: 1 }} />
               <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
               <div
@@ -6690,7 +6690,7 @@ function DayTile({
           />
         )}
         <div
-          className="flex flex-col items-center pb-2"
+          className="flex flex-col items-center"
           style={{
             position: "absolute",
             inset: 0,
