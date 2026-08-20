@@ -5720,7 +5720,7 @@ function BlocksRenderer({
                               >
                                 {/* Верхний этаж: остаток невыполненных целей (серый) */}
                                 <span
-                                  className="text-[8.5px] sm:text-[13px] tabular-nums"
+                                  className="text-[11px] sm:text-[13px] tabular-nums"
                                   style={{
                                     fontWeight: 500,
                                     color: "var(--text-tertiary)",
@@ -5733,7 +5733,7 @@ function BlocksRenderer({
                                 </span>
                                 {/* Разделительная горизонтальная черта дроби */}
                                 <div
-                                  className="w-[11px] sm:w-[15px]"
+                                  className="w-[12px] sm:w-[15px]"
                                   style={{
                                     height: 1,
                                     backgroundColor: "var(--border-subtle, rgba(255,255,255,0.15))",
@@ -5742,7 +5742,7 @@ function BlocksRenderer({
                                 />
                                 {/* Нижний этаж: выполненные цели (зеленый при > 0, серый при 0) */}
                                 <span
-                                  className="text-[8.5px] sm:text-[13px] tabular-nums"
+                                  className="text-[11px] sm:text-[13px] tabular-nums"
                                   style={{
                                     fontWeight: weekDone > 0 ? 600 : 500,
                                     color: weekDone > 0 ? "#34c759" : "var(--text-tertiary)",
@@ -6003,27 +6003,7 @@ function BlockLabel({
 }
 
 // ─── Fire animation ───────────────────────────────────────────────────────────
-const FIRE_EPOCH = Date.now(); // fixed reference point — all tiles sync to this
-if (
-  typeof document !== "undefined" &&
-  !document.getElementById("lc-fire-style")
-) {
-  const s = document.createElement("style");
-  s.id = "lc-fire-style";
-  s.textContent = `@keyframes lc-fire-pulse {
-    0%,100%{opacity:0.55;}
-    50%{opacity:1;}
-  }.lc-fire-glow{position:absolute;inset:0;border-radius:12px;pointer-events:none;box-shadow:0 0 0 2px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);animation:lc-fire-pulse 5s ease-in-out infinite;will-change:opacity;}
-  .lc-goal-markers{padding:0;margin:0;display:flex;align-items:center;justify-content:center;line-height:1;}
-  @media(max-width:639px){
-    .lc-goal-markers{padding:0;margin-bottom:0;max-width:100%;}
-    .lc-fire-glow{box-shadow:0 0 0 1.5px #ff7722,0 0 10px 3px rgba(255,110,0,0.45),0 0 24px 7px rgba(255,80,0,0.25);}
-  }
-  @media(min-width:640px){
-    .lc-goal-dot{width:6px!important;height:6px!important;}
-  }`;
-  document.head.appendChild(s);
-}
+const FIRE_ANIM_DURATION_MS = 4000; // 4.0s keyframe cycle in index.css
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
@@ -6232,7 +6212,7 @@ function DayTile({
         : undefined;
   const fireDelayRef = useRef<string | undefined>(undefined);
   if (isAllDone && fireDelayRef.current === undefined) {
-    fireDelayRef.current = `${-(((Date.now() - FIRE_EPOCH) % 4000) / 1000).toFixed(3)}s`;
+    fireDelayRef.current = `${-((Date.now() % FIRE_ANIM_DURATION_MS) / 1000).toFixed(3)}s`;
   } else if (!isAllDone) {
     fireDelayRef.current = undefined;
   }
