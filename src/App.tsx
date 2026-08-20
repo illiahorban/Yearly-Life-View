@@ -5632,8 +5632,9 @@ function BlocksRenderer({
                                   : t("clickStartSprintSelection")
                               }
                               style={{
-                                color:
-                                  isSel || isCurrent
+                                color: isCurrent
+                                  ? "var(--text)"
+                                  : isSel
                                     ? mt.secondary
                                     : mt.tertiary,
                                 fontWeight: isCurrent ? 600 : 400,
@@ -5719,7 +5720,7 @@ function BlocksRenderer({
                               >
                                 {/* Верхний этаж: остаток невыполненных целей (серый) */}
                                 <span
-                                  className="text-[8.5px] sm:text-[10px] tabular-nums"
+                                  className="text-[8.5px] sm:text-[13px] tabular-nums"
                                   style={{
                                     fontWeight: 500,
                                     color: "var(--text-tertiary)",
@@ -5732,8 +5733,8 @@ function BlocksRenderer({
                                 </span>
                                 {/* Разделительная горизонтальная черта дроби */}
                                 <div
+                                  className="w-[11px] sm:w-[15px]"
                                   style={{
-                                    width: 11,
                                     height: 1,
                                     backgroundColor: "var(--border-subtle, rgba(255,255,255,0.15))",
                                     borderRadius: 0.5,
@@ -5741,7 +5742,7 @@ function BlocksRenderer({
                                 />
                                 {/* Нижний этаж: выполненные цели (зеленый при > 0, серый при 0) */}
                                 <span
-                                  className="text-[8.5px] sm:text-[10px] tabular-nums"
+                                  className="text-[8.5px] sm:text-[13px] tabular-nums"
                                   style={{
                                     fontWeight: weekDone > 0 ? 600 : 500,
                                     color: weekDone > 0 ? "#34c759" : "var(--text-tertiary)",
