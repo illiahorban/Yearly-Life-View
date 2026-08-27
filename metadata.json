@@ -1,0 +1,6 @@
+{
+  "name": "Yearly Life View",
+  "description": "Personal life-planning and life calendar app that visualizes your year and life as weekly grids with goals, notes, and progress tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

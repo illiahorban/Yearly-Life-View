@@ -1,0 +1,287 @@
+@import "tailwindcss";
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@theme inline {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+:root {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-tertiary: #86868b;
+  --border: #d2d2d7;
+  --border-soft: #e5e5ea;
+  --apple-green: #34c759;
+  --apple-green-soft: #30d158;
+  --apple-green-deep: #28a745;
+}
+
+[data-theme="dark"] {
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --text: #f5f5f7;
+  --text-secondary: rgba(235, 235, 245, 0.75);
+  --text-tertiary: rgba(235, 235, 245, 0.5);
+  --border: rgba(255, 255, 255, 0.18);
+  --border-soft: rgba(255, 255, 255, 0.12);
+  --apple-green: #30d158;
+  --apple-green-soft: #34c759;
+  --apple-green-deep: #30d158;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overscroll-behavior-y: none;
+}
+
+html,
+body {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.01em;
+  overflow-x: hidden;
+}
+
+/* Responsive side columns for week-number and goals counter */
+.lc-side-col {
+  width: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.lc-week-label {
+  width: 20px;
+  height: 20px;
+}
+@media (max-width: 639px) {
+  .lc-week-label {
+    text-align: center;
+  }
+  .lc-week-label > span {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+@media (min-width: 640px) {
+  .lc-side-col {
+    width: 60px;
+  }
+  .lc-week-label {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ─── iOS / Safari: suppress native dotted underline on [title] elements ─────
+   WebKit (iOS Safari, Chrome iOS) automatically applies `text-decoration:
+   underline dotted` to any element that carries a `title` attribute — the same
+   way it styles <abbr>. This bleeds visually onto nearby text in the same row.
+   Override it globally for every element in the calendar that could be affected. */
+abbr,
+[title],
+.lc-label,
+.lc-label *,
+.lc-week-counter,
+.lc-week-counter * {
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  text-decoration-style: unset !important;
+  border-bottom: none !important;
+}
+
+.placeholder-dark::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* Goal-input placeholder tones — follow the inverted text colour direction. */
+.placeholder-goal-black::placeholder {
+  color: #71717a;
+} /* light mode: dark text → medium hint */
+.placeholder-goal-grey::placeholder {
+  color: #71717a;
+}
+.placeholder-goal-white::placeholder {
+  color: #71717a;
+} /* light mode: dark text → medium hint */
+
+/* Dark-mode overrides: black/white text inverts to light, so hints go lighter. */
+:root.dark .placeholder-goal-black::placeholder {
+  color: #d4d4d8;
+}
+:root.dark .placeholder-goal-white::placeholder {
+  color: #d4d4d8;
+}
+
+/* Note-textarea placeholder tones. */
+.placeholder-note-white::placeholder {
+  color: #71717a;
+}
+.placeholder-note-black::placeholder {
+  color: #71717a;
+} /* light mode: dark text → medium hint */
+.placeholder-note-grey::placeholder {
+  color: #71717a;
+}
+
+:root.dark .placeholder-note-black::placeholder {
+  color: #d4d4d8;
+}
+:root.dark .placeholder-note-white::placeholder {
+  color: #d4d4d8;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  filter: invert(var(--date-invert, 0));
+}
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+}
+
+@keyframes spin-cw {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.recur-spin-once {
+  animation: spin-cw 0.45s ease-out 1;
+}
+
+/* ─── Fire / Goal Completion Glow ─────────────────────────────────────────── */
+@keyframes lc-fire-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.lc-fire-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px #ff7722, 0 0 10px 3px rgba(255, 110, 0, 0.45), 0 0 24px 7px rgba(255, 80, 0, 0.25);
+  animation: lc-fire-pulse 4s ease-in-out infinite;
+  will-change: opacity;
+}
+
+.lc-goal-markers {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+@media (max-width: 639px) {
+  .lc-goal-markers {
+    padding: 0;
+    margin-bottom: 0;
+    max-width: 100%;
+  }
+  .lc-fire-glow {
+    box-shadow: 0 0 0 1.5px #ff7722, 0 0 10px 3px rgba(255, 110, 0, 0.45), 0 0 24px 7px rgba(255, 80, 0, 0.25);
+  }
+}
+
+@media (min-width: 640px) {
+  .lc-goal-dot {
+    width: 6px !important;
+    height: 6px !important;
+  }
+}
+
+/* Scrollbar — thumb only, no track */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  background: transparent;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* ─── Mobile responsive improvements ────────────────────────────────────────── */
+
+/* Touch targets: on mobile, icon buttons expand for finger comfort */
+@media (max-width: 639px) {
+  .lc-icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+  /* Inside the compact settings panel, keep buttons at their original 30px size */
+  .lc-settings-panel .lc-icon-btn {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* Modal outer wrappers: tighter side padding on very narrow screens */
+@media (max-width: 639px) {
+  .lc-modal-outer {
+    padding: 12px !important;
+  }
+}
+
+/* Prevent any fixed-position popup from overflowing the viewport horizontally */
+@media (max-width: 639px) {
+  .lc-dropdown-safe {
+    max-width: calc(100vw - 24px);
+  }
+}
