@@ -595,29 +595,24 @@ export function DayTile({
             }}
           >
             {msBar}
-            {/* Fill layer: a plain sibling (no position/z-index tricks) so it paints into
-                the SAME stacking context as the text below — `isolation: isolate` on the
-                outer tile is what scopes mix-blend-mode, and any nested element that sets
-                its own z-index would create a second, isolated stacking context and cut
-                the text off from seeing this layer entirely.
-                borderRadius matches the container (12px) so no corner gaps appear between
-                the fill and the ring overlay that renders on top. */}
+            {/* Fill layer: background bar rising from bottom */}
             <div
-              className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out"
+              className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out pointer-events-none"
               style={{
                 height: `${todayProgress}%`,
                 background: accentColor,
                 borderRadius: "0 0 12px 12px",
               }}
             />
-            {/* Text layer: position:absolute WITHOUT an explicit z-index. Paint order inside
-                a stacking context follows DOM order, so being declared after the fill layer
-                above is enough to sit visually on top — no z-index needed, and adding one
-                here would re-introduce the bug (a new isolated context that hides the fill
-                from `mix-blend-mode: difference`). */}
-            <div className="absolute inset-0 flex flex-col items-center">
+
+            {/* Layer 1: Base text (unfilled area tone — contrast against var(--surface)) */}
+            <div className="absolute inset-0 flex flex-col items-center pointer-events-none">
               <div style={{ flex: 1 }} />
-              <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
+              <Label
+                number={dayNumber}
+                month={monthAbbr}
+                tone={dark ? "onGreen" : "darkOnLight"}
+              />
               <div
                 className="flex items-center justify-center -translate-y-0.5 sm:translate-y-0"
                 style={{
@@ -629,6 +624,37 @@ export function DayTile({
                 {microMarkers}
               </div>
             </div>
+
+            {/* Layer 2: Filled text overlay (clipped to progress fill height from bottom, contrast against accentColor) */}
+            {todayProgress > 0 && (
+              <div
+                className="absolute inset-0 flex flex-col items-center pointer-events-none"
+                style={{
+                  clipPath: `inset(${Math.max(0, 100 - todayProgress)}% 0 0 0)`,
+                }}
+              >
+                <div style={{ flex: 1 }} />
+                <Label
+                  number={dayNumber}
+                  month={monthAbbr}
+                  tone={
+                    luminanceOf(accentColor) > 0.55
+                      ? "darkOnLight"
+                      : "onGreen"
+                  }
+                />
+                <div
+                  className="flex items-center justify-center -translate-y-0.5 sm:translate-y-0"
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    overflow: "visible",
+                  }}
+                >
+                  {microMarkers}
+                </div>
+              </div>
+            )}
             {noteDot}
             {/* Ring overlay — last in DOM so it paints above the fill and text layers,
                 keeping the outline fully visible at every fill level including 100%. */}
