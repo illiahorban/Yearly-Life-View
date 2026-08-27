@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import ReactDOM from "react-dom";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import type { QuarterConfig, Quarter, QuarterMeta, DayState, Milestone, NoteEntry, DayGoals, BlockGoals, AppleColorKey } from "../../types/calendar";
-import { startOfYear, startOfWeekMonday, addDays, sameDay, dateKey } from "../../utils/date-utils";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, mutedTextColors, readableGoalTextColor, goalCheckboxAchromaticStyle } from "../../constants/colors";
+import { startOfYear, startOfWeekMonday, startOfDay, addDays, sameDay, dateKey } from "../../utils/date-utils";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuarter, mutedTextColors, readableGoalTextColor, goalCheckboxAchromaticStyle, goalCheckboxColors } from "../../constants/colors";
 import { WEEKS_PER_QUARTER, LangContext } from "../../constants/i18n";
-import { pluralWeeks } from "../../utils/plural";
+import { pluralWeeks, pluralDayStreak } from "../../utils/plural";
 import { QuarterNameEditor } from "./QuarterNameEditor";
 import { BlockLabel } from "./BlockLabel";
 import { DayTile } from "./DayTile";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
-import { GoalsIcon, FlagIcon } from "../icons/Icons";
+import { GoalsIcon, FlagIcon, CheckIcon } from "../icons/Icons";
 
 export function BlocksRenderer({
   qi: _qi,

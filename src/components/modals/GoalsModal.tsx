@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import TextareaAutosize from "react-textarea-autosize";
 import type { BlockGoals, Goal, AppleColorKey } from "../../types/calendar";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, goalCheckboxAchromaticStyle } from "../../constants/colors";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { makeId, newTimestamps } from "../../utils/storage";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, goalCheckboxAchromaticStyle, getEventColors, normaliseGrey } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { GripIcon, TrashIcon, GoalsIcon, CheckIcon, ChevronLeftIcon } from "../icons/Icons";
 
 export function GoalsModal({
@@ -20,6 +24,7 @@ export function GoalsModal({
   onClose,
   onBack,
 }: {
+  key?: React.Key;
   blockId: string;
   blockLabel: string;
   initial: BlockGoals;

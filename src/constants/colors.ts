@@ -85,9 +85,6 @@ export function clampedPopoverPos(
   return { top, left };
 }
 
-type AppleColorKey = (typeof APPLE_COLORS)[number]["key"];
-type QuarterMeta = { name: string; colorKey: AppleColorKey };
-
 export const DEFAULT_QUARTER_META: QuarterMeta[] = [
   { name: "Q1", colorKey: "white" },
   { name: "Q2", colorKey: "white" },
@@ -338,15 +335,6 @@ export function adaptColor(hex: string, dark: boolean): string {
 
 /** Returns adaptive styles for achromatic colours (white/grey/black) that stay legible in both themes.
  *  Returns null for any chromatic (saturated) colour so callers fall back to adaptColor. */
-type AchromaticStyle = {
-  bg: string;
-  border: string;
-  text: string;
-  marker: string;
-  markerBorder?: string;
-  ring?: string;
-  tier: "black" | "grey" | "white";
-};
 export function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | null {
   const h = hex.replace("#", "").toLowerCase();
   if (h.length !== 6) return null;
@@ -435,7 +423,6 @@ export function normaliseGrey(hex: string | undefined): string | undefined {
  *  color indicators) instead of a translucent overlay, and white keeps a matching
  *  zinc-700/zinc-200 outline so its footprint lines up exactly with black's.
  *  Returns null for chromatic colours so callers fall back to the raw hex. */
-type GoalCheckboxStyle = { bg: string; border: string; icon: string };
 export function goalCheckboxAchromaticStyle(
   hex: string,
   dark: boolean,
@@ -600,3 +587,5 @@ export function getEventColors(hex: string, dark: boolean): EventColors {
 }
 
 export const LIFE_ACCENT = "#007aff";
+export const getQuarterColors = resolveQuarter;
+export type { EventColors };

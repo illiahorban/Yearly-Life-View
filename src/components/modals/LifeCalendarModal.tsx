@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LifeSettings, LifeView } from "../../types/calendar";
-import { startOfDay, addDays, sameDay, daysBetween, monthsBetween, addYears, dayOfYear } from "../../utils/date-utils";
+import { startOfDay, startOfYear, addDays, sameDay, daysBetween, monthsBetween, addYears, dayOfYear } from "../../utils/date-utils";
 import { LIFE_ACCENT } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
-import { pluralUnits } from "../../utils/plural";
+import { pluralUnits, pluralCount } from "../../utils/plural";
 import { LifeGridCanvas } from "../calendar/LifeGridCanvas";
 import { LifeIcon } from "../icons/Icons";
 

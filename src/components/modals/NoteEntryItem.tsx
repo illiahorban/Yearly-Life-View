@@ -3,7 +3,9 @@ import TextareaAutosize from "react-textarea-autosize";
 import type { NoteEntry } from "../../types/calendar";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex } from "../../constants/colors";
+import { DraggableCard } from "./DraggableCard";
+import { LangContext } from "../../constants/i18n";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
 
 const NOTE_LONG_PRESS_MS = 350;
 const NOTE_LONG_PRESS_MOVE_TOLERANCE = 8;
@@ -26,6 +28,7 @@ export function NoteEntryItem({
   colorPickerEntryId,
   setConfirmDeleteEntryId,
 }: {
+  key?: React.Key;
   entry: NoteEntry;
   idx: number;
   entriesCount: number;

@@ -1,11 +1,15 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import type { CalendarConfig, QuarterConfig, Block, QuarterMeta, AppleColorKey } from "../../types/calendar";
+import TextareaAutosize from "react-textarea-autosize";
+import type { CalendarConfig, QuarterConfig, Block, QuarterMeta, AppleColorKey, Quarter } from "../../types/calendar";
 import { WEEKS_PER_QUARTER, LangContext } from "../../constants/i18n";
-import { APPLE_COLORS, getQuarterColors, adaptColor, achromaticStyle } from "../../constants/colors";
+import { APPLE_COLORS, getQuarterColors, adaptColor, achromaticStyle, getEventColors, readableGoalTextColor } from "../../constants/colors";
 import { pluralWeeks } from "../../utils/plural";
 import { makeId } from "../../utils/storage";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ConfirmDialog } from "../common/ConfirmDialog";
+import { QuarterNameEditor } from "../calendar/QuarterNameEditor";
 import { TrashIcon, CheckIcon } from "../icons/Icons";
 
 export function SprintSettingsModal({
@@ -24,6 +28,7 @@ export function SprintSettingsModal({
   onQuarterNameChange,
   weeksCapacity,
 }: {
+  key?: React.Key;
   quarterIndex: number;
   quarter: Quarter;
   initial: QuarterConfig;

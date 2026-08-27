@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { LangContext } from "../../constants/i18n";
 
 export function FactoryResetDialog({
   open,

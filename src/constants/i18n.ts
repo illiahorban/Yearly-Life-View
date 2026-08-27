@@ -17,7 +17,6 @@ export const MONTHS = [
 ];
 export const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
-type Lang = "en" | "ru";
 export const MONTHS_I18N: Record<Lang, string[]> = {
   en: [
     "JAN",
@@ -444,12 +443,6 @@ export const I18N: Record<Lang, Record<string, string>> = {
     syncError: "Ошибка синхронизации",
     syncStatus: "Статус синхронизации",
   },
-};
-type LangCtx = {
-  t: (k: string) => string;
-  months: string[];
-  weekdays: string[];
-  lang: Lang;
 };
 export const LangContext = React.createContext<LangCtx>({
   t: (k) => I18N.en[k] ?? k,

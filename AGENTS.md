@@ -34,3 +34,9 @@ When an element does not match an expected/reference element:
 - Keep files cleanly formatted and type-safe.
 - Maintain build stability (`npm run build` / `vite build`).
 - Do not introduce redundant CSS classes or conflicting utility styles.
+
+---
+
+## 5. Git & GitHub Push Policy (STRICT)
+- **STRICT PROHIBITION**: NEVER push changes to GitHub (`git push`) automatically, autonomously, or on your own initiative.
+- **Explicit Instruction Only**: Pushing to GitHub is ONLY allowed when the user explicitly gives a direct command to push.

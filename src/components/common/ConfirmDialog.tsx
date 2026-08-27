@@ -1,5 +1,7 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { LangContext } from "../../constants/i18n";
 
 export function ConfirmDialog({
   open,

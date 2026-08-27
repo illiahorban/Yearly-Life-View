@@ -1,11 +1,16 @@
-import React from "react";
-import { motion, useDragControls } from "framer-motion";
+import React, { useRef, useState, useEffect } from "react";
+import { motion, useDragControls, Reorder } from "framer-motion";
+import { LangContext } from "../../constants/i18n";
+
+const NOTE_LONG_PRESS_MS = 350;
+const NOTE_LONG_PRESS_MOVE_TOLERANCE = 8;
 
 export function DraggableCard({
   id,
   dark,
   children,
 }: {
+  key?: React.Key;
   id: string;
   dark: boolean;
   children: React.ReactNode;

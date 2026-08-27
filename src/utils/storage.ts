@@ -267,4 +267,5 @@ export function saveConfig(year: number, cfg: CalendarConfig) {
     );
   } catch {}
 }
+export const normalizeNoteEntry = normalizeNote;
 

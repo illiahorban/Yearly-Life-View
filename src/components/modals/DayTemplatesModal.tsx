@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DayTemplate } from "../../types/calendar";
 import { LangContext } from "../../constants/i18n";
-import { makeId } from "../../utils/storage";
+import { makeId, newTimestamps } from "../../utils/storage";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
 
 export function DayTemplatesModal({

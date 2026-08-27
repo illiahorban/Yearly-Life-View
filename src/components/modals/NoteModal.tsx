@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence, LayoutGroup, Reorder } from "framer-motion";
 import TextareaAutosize from "react-textarea-autosize";
 import type { DayState, Milestone, NoteEntry, DayGoals, DayTemplate, AppleColorKey } from "../../types/calendar";
 import { dateKey, addDays, sameDay, startOfDay } from "../../utils/date-utils";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey } from "../../constants/colors";
+import { makeId, newTimestamps } from "../../utils/storage";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, clampedPopoverPos, fireConfettiCannons, goalCheckboxAchromaticStyle, swatchCheckColor } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { NoteEntryItem } from "./NoteEntryItem";
 import { DraggableCard } from "./DraggableCard";
+import { DayTemplatesModal } from "./DayTemplatesModal";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { TrashIcon, ChevronLeftIcon, ChevronRightIcon, GripIcon } from "../icons/Icons";
 
 export function NoteModal({
@@ -29,6 +33,7 @@ export function NoteModal({
   onSave,
   onClose,
 }: {
+  key?: React.Key;
   dateKey: string;
   initial: NoteEntry[];
   dark: boolean;

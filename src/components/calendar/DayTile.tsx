@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import ReactDOM from "react-dom";
 import type { DayState, Milestone, NoteEntry, DayGoals, AppleColorKey } from "../../types/calendar";
 import { dateKey, sameDay, parseDateQuery } from "../../utils/date-utils";
-import { FIRE_ANIM_DURATION_MS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey } from "../../constants/colors";
+import { adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, luminanceOf } from "../../constants/colors";
+import { LangContext } from "../../constants/i18n";
 import { GripIcon } from "../icons/Icons";
 
 const FIRE_ANIM_DURATION_MS = 4000; // 4.0s keyframe cycle in index.css
@@ -23,6 +24,7 @@ export function DayTile({
   isCompactViewport,
   onOpen,
 }: {
+  key?: React.Key;
   date: Date;
   state: DayState;
   todayProgress: number;

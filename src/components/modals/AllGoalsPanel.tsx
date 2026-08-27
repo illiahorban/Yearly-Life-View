@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import type { CalendarConfig, QuarterMeta, BlockGoals, DayGoals, AppleColorKey } from "../../types/calendar";
+import type { CalendarConfig, QuarterMeta, BlockGoals, DayGoals, AppleColorKey, Quarter } from "../../types/calendar";
 import { startOfYear, startOfWeekMonday, addDays, sameDay, dateKey } from "../../utils/date-utils";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, goalCheckboxAchromaticStyle } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuarter, goalCheckboxAchromaticStyle, normaliseGrey, readableGoalTextColor, goalCheckboxColors } from "../../constants/colors";
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { pluralCount } from "../../utils/plural";
 import { HighlightText } from "../common/HighlightText";
-import { SearchIcon } from "../icons/Icons";
+import { SearchIcon, CheckIcon, GoalsIcon } from "../icons/Icons";
 
 export function AllGoalsPanel({
   config,
@@ -25,6 +26,7 @@ export function AllGoalsPanel({
   onEditYearGoals,
   onClose,
 }: {
+  key?: React.Key;
   config: CalendarConfig;
   blockGoals: Record<string, BlockGoals>;
   quarterGoals: Record<number, BlockGoals>;

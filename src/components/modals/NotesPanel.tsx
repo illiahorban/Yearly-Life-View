@@ -1,10 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import type { NoteEntry, Milestone, DayGoals, AppleColorKey } from "../../types/calendar";
+import type { NoteEntry, Milestone, DayGoals, AppleColorKey, Quarter } from "../../types/calendar";
 import { parseDateQuery, dateKey } from "../../utils/date-utils";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex } from "../../constants/colors";
-import { LangContext } from "../../constants/i18n";
+import { makeId, newTimestamps } from "../../utils/storage";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors } from "../../constants/colors";
+import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { HighlightText } from "../common/HighlightText";
+import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { SearchIcon, TrashIcon } from "../icons/Icons";
 
 export function NotesPanel({
@@ -18,6 +22,7 @@ export function NotesPanel({
   onDeleteDayNotes,
   onClose,
 }: {
+  key?: React.Key;
   notes: Record<string, NoteEntry[]>;
   weeks: { weekStart: Date; days: Date[] }[];
   resolvedQuarters: Quarter[];

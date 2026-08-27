@@ -1,11 +1,15 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Milestone, DayGoals } from "../../types/calendar";
+import type { Milestone, DayGoals, Quarter } from "../../types/calendar";
 import { dateKey } from "../../utils/date-utils";
-import { MILESTONE_COLORS, adaptColor, achromaticStyle, resolveNoteHex } from "../../constants/colors";
-import { LangContext } from "../../constants/i18n";
+import { makeId, newTimestamps } from "../../utils/storage";
+import { MILESTONE_COLORS, APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, clampedPopoverPos } from "../../constants/colors";
+import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
-import { FlagIcon, TrashIcon, CheckIcon } from "../icons/Icons";
+import { ConfirmDialog } from "../common/ConfirmDialog";
+import { HighlightText } from "../common/HighlightText";
+import { FlagIcon, TrashIcon, CheckIcon, SearchIcon } from "../icons/Icons";
 
 export function MilestoneModal({
   milestones,
@@ -16,6 +20,7 @@ export function MilestoneModal({
   onClose,
   onChange,
 }: {
+  key?: React.Key;
   milestones: Milestone[];
   resolvedQuarters: Quarter[];
   weeks: { weekStart: Date; days: Date[] }[];

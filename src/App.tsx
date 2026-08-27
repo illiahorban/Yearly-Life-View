@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import ReactDOM from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, LayoutGroup } from "framer-motion";
 import { useSyncEngine } from "./lib/use-sync";
 import type {
   AppSnapshot,
@@ -36,27 +36,34 @@ import type {
   AppleColorKey,
   QuarterMeta,
   QuarterMetaForSync,
+  TimestampFields,
 } from "./types/calendar";
 
 import {
   dateKey,
   startOfDay,
   startOfYear,
+  startOfNextYear,
   startOfWeekMonday,
   addDays,
   sameDay,
   daysBetween,
   gridWeeksForYear,
+  dayOfYear,
+  parseDateQuery,
 } from "./utils/date-utils";
 
 import {
   ls,
   lsSet,
   makeId,
+  validTimestamp,
   withTimestamps,
   newTimestamps,
+  normalizeGoals,
   normalizeBlockGoals,
   normalizeMilestone,
+  normalizeNote,
   normalizeNoteEntry,
   normalizeDayTemplate,
   normalizeDayGoals,
@@ -89,12 +96,19 @@ import {
   swatchCheckColor,
   clampedPopoverPos,
   getQuarterColors,
+  resolveQuarter,
+  getEventColors,
   adaptColor,
   achromaticStyle,
   resolveNoteHex,
   normaliseGrey,
   fireConfettiCannons,
+  mutedTextColors,
+  goalCheckboxColors,
+  readableGoalTextColor,
 } from "./constants/colors";
+
+import { QuarterNameEditor } from "./components/calendar/QuarterNameEditor";
 
 import {
   pluralWeeks,
