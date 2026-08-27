@@ -195,7 +195,8 @@ export function LifeCalendarModal({
     currentCell = Math.max(0, Math.min(currentCell, totalUnits - 1));
     displayCurr = Math.max(0, Math.min(displayCurr, displayTotal));
 
-    const availW = Math.max(80, modalW - (isMobile ? 28 : 48) - labelW);
+    const padRight = (view === "months" || view === "weeks") ? 12 : 4;
+    const availW = Math.max(80, modalW - (isMobile ? 28 : 48) - labelW - padRight);
 
     let cellPx = 4;
 

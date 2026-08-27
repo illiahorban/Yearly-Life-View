@@ -49,11 +49,8 @@ export const LifeGridCanvas = React.memo(function LifeGridCanvas({
   const gridW = numCols * pitch - gapPx;
 
   const showColHeaders = (viewType === "months" || viewType === "weeks") && numCols > 1;
-  const colHeaderHeight = showColHeaders ? (viewType === "months" ? 18 : 16) : 0;
-  const colFontSize =
-    viewType === "months"
-      ? Math.max(8, Math.min(10, Math.floor(cellPx * 0.45 + 5)))
-      : Math.max(7, Math.min(9, Math.floor(cellPx * 0.6 + 3)));
+  const colHeaderHeight = showColHeaders ? 18 : 0;
+  const colFontSize = Math.max(8, Math.min(10, Math.floor(cellPx * 0.45 + 5)));
 
   const fontSize =
     showYearLabels && labelWidth > 0
@@ -65,8 +62,9 @@ export const LifeGridCanvas = React.memo(function LifeGridCanvas({
     : showYearLabels && labelWidth > 0
       ? Math.max(8, Math.ceil(fontSize / 2 - cellPx / 2 + 4))
       : 2;
+  const padRight = showColHeaders ? 12 : 4;
   const padBottom = Math.max(8, Math.ceil(fontSize / 2 - cellPx / 2 + 4));
-  const cw = labelWidth + gridW;
+  const cw = labelWidth + gridW + padRight;
   const ch = padTop + (rows * pitch - gapPx) + padBottom;
   const radius = Math.max(0, Math.floor(cellPx / 5));
 
@@ -91,12 +89,24 @@ export const LifeGridCanvas = React.memo(function LifeGridCanvas({
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = dark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.48)";
-      const headerY = padTop - (viewType === "months" ? 10 : 9);
+      const headerY = padTop - 10;
 
       if (viewType === "months") {
+        // If pitch is very narrow (e.g. on small screens), show 1, 3, 6, 9, 12 or step by 2 to prevent double-digit collision
+        const step = pitch < 9 ? 3 : pitch < 12 ? 2 : 1;
         for (let c = 0; c < 12 && c < numCols; c++) {
-          const cx = offsetX + c * pitch + cellPx / 2;
-          ctx.fillText(String(c + 1), cx, headerY);
+          const monthNum = c + 1;
+          const shouldDraw =
+            step === 1 ||
+            monthNum === 1 ||
+            monthNum === 12 ||
+            (step === 2 && monthNum % 2 === 0) ||
+            (step === 3 && monthNum % 3 === 0);
+
+          if (shouldDraw) {
+            const cx = offsetX + c * pitch + cellPx / 2;
+            ctx.fillText(String(monthNum), cx, headerY);
+          }
         }
       } else if (viewType === "weeks") {
         const step = pitch >= 12 ? 1 : pitch >= 8 ? 2 : pitch >= 4.5 ? 5 : 10;
