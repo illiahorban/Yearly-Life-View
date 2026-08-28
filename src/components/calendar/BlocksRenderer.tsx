@@ -372,24 +372,43 @@ export function BlocksRenderer({
 
                 {/* Sprint description */}
                 {bg?.description && (
-                  <div className="px-2 sm:px-3.5 pb-2">
-                    <p
-                      className="text-[11px] leading-snug"
-                      style={{
-                        color: mt.tertiary,
-                        borderLeft: `2px solid ${softColor}`,
-                        paddingLeft: 8,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {bg.description}
-                    </p>
+                  <div
+                    className="pb-2"
+                    style={{
+                      paddingLeft: 14,
+                      paddingRight: 14,
+                      paddingBottom: 4,
+                    }}
+                  >
+                    <div className="flex items-stretch gap-1.5">
+                      <span
+                        className="w-[2px] rounded-full flex-shrink-0 self-stretch my-0.5"
+                        style={{ background: effectiveQ.fill }}
+                      />
+                      <p
+                        className="text-[11px] leading-snug"
+                        style={{
+                          color: mt.tertiary,
+                          paddingLeft: 0,
+                          paddingTop: 0,
+                          paddingBottom: 0,
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {bg.description}
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {/* Checklist */}
                 {activeGoals.length > 0 && (
-                  <div className="px-2 sm:px-3.5 pb-2">
+                  <div
+                    className="px-2 sm:px-3.5 pb-2"
+                    style={{
+                      paddingTop: bg?.description ? 5 : undefined,
+                    }}
+                  >
                     <div className="flex flex-col gap-1">
                       {activeGoals.map((goal) => {
                         const cb = goalCheckboxColors(

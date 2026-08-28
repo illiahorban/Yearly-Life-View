@@ -2605,12 +2605,39 @@ function App() {
                   >
                     {/* Sticky quarter header — sticks just below main app header */}
                     <div style={{ borderRadius: 16 }}>
+                      {/* Centered quarter weeks & days info */}
+                      <div className="flex justify-center">
+                        <span
+                          className="text-[10px] tabular-nums inline-block"
+                          style={{
+                            color: mt.tertiary,
+                            paddingTop: 12,
+                            paddingLeft: 0,
+                          }}
+                        >
+                          {t("weeks")} {startIndex + 1}–
+                          {startIndex + qWeeksCount}
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 3,
+                              height: 3,
+                              borderRadius: "50%",
+                              background: mt.tertiary,
+                              margin: "0 4px",
+                              verticalAlign: "middle",
+                            }}
+                          />
+                          {t("days")} {qDayStart}–{qDayEnd}
+                        </span>
+                      </div>
+
                       {/* Quarter header row */}
                       <div
-                        className="flex items-center justify-between px-3 sm:px-5 pb-0"
-                        style={{ paddingTop: 18 }}
+                        className="flex items-center justify-between px-5 pb-0"
+                        style={{ paddingTop: 0 }}
                       >
-                        <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0 mr-2">
+                        <div className="flex-1 min-w-0 mr-2">
                           {/* Editable quarter name */}
                           <QuarterNameEditor
                             value={meta.name}
@@ -2618,25 +2645,6 @@ function App() {
                             color={quarter.nameColor}
                             underline={false}
                           />
-                          <span
-                            className="text-[10px] tabular-nums"
-                            style={{ color: mt.tertiary }}
-                          >
-                            {t("weeks")} {startIndex + 1}–
-                            {startIndex + qWeeksCount}
-                            <span
-                              style={{
-                                display: "inline-block",
-                                width: 3,
-                                height: 3,
-                                borderRadius: "50%",
-                                background: mt.tertiary,
-                                margin: "0 4px",
-                                verticalAlign: "middle",
-                              }}
-                            />
-                            {t("days")} {qDayStart}–{qDayEnd}
-                          </span>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button
@@ -2820,18 +2828,28 @@ function App() {
                         return (
                           <div className="px-3 sm:px-5 pb-3">
                             {qg?.description ? (
-                              <p
-                                className="text-[11px] leading-snug mb-2"
-                                style={{
-                                  color: mt.tertiary,
-                                  borderLeft: `2px solid ${quarter.fill}`,
-                                  paddingLeft: 8,
-                                  opacity: 0.8,
-                                  whiteSpace: "pre-wrap",
-                                }}
-                              >
-                                {qg.description}
-                              </p>
+                              <div className="flex items-stretch gap-1.5 mb-2">
+                                <span
+                                  className="w-[2px] rounded-full flex-shrink-0 self-stretch my-0.5"
+                                  style={{ background: quarter.fill }}
+                                />
+                                <p
+                                  className="leading-snug"
+                                  style={{
+                                    fontSize: 13,
+                                    color: mt.tertiary,
+                                    paddingLeft: 0,
+                                    paddingTop: 0,
+                                    paddingRight: 0,
+                                    paddingBottom: 0,
+                                    marginLeft: 0,
+                                    opacity: 0.8,
+                                    whiteSpace: "pre-wrap",
+                                  }}
+                                >
+                                  {qg.description}
+                                </p>
+                              </div>
                             ) : null}
                             <div className="flex flex-col gap-1">
                               {activeQGoals.map((goal) => {
