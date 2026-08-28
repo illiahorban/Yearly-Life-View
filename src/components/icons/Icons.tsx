@@ -131,7 +131,13 @@ export function SunIcon() {
     </svg>
   );
 }
-export function GoalsIcon() {
+export function GoalsIcon({
+  style,
+  className,
+}: {
+  style?: React.CSSProperties;
+  className?: string;
+} = {}) {
   return (
     <svg
       width="15"
@@ -142,6 +148,8 @@ export function GoalsIcon() {
       strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      style={style}
+      className={className}
     >
       <polyline points="9 11 12 14 22 4" />
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />

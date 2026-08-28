@@ -246,7 +246,17 @@ export function BlocksRenderer({
                         justifyContent: "center",
                       }}
                     >
-                      <GoalsIcon />
+                      <GoalsIcon
+                        style={{
+                          paddingTop: 0,
+                          paddingLeft: 0,
+                          paddingRight: 0,
+                          marginLeft: 6,
+                          marginTop: 0,
+                          marginBottom: 0,
+                          marginRight: -6,
+                        }}
+                      />
                     </button>
                     <span
                       className="text-[10px] tabular-nums"
@@ -265,6 +275,10 @@ export function BlocksRenderer({
                       fontSize: 11,
                       fontWeight: 700,
                       marginBottom: 3,
+                      paddingLeft: 0,
+                      paddingTop: 0,
+                      marginLeft: 0,
+                      marginTop: -6,
                       color: isFuture
                         ? mt.tertiary
                         : !dark &&
@@ -373,14 +387,14 @@ export function BlocksRenderer({
                 {/* Sprint description */}
                 {bg?.description && (
                   <div
-                    className="pb-2"
+                    className="px-2 sm:px-3.5 pb-2"
                     style={{
-                      paddingLeft: 14,
-                      paddingRight: 14,
                       paddingBottom: 4,
                     }}
                   >
-                    <div className="flex items-stretch gap-1.5">
+                    <div
+                      className="flex items-stretch gap-1.5"
+                    >
                       <span
                         className="w-[2px] rounded-full flex-shrink-0 self-stretch my-0.5"
                         style={{ background: effectiveQ.fill }}
