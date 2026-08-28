@@ -34,9 +34,18 @@ When an element does not match an expected/reference element:
 - Keep files cleanly formatted and type-safe.
 - Maintain build stability (`npm run build` / `vite build`).
 - Do not introduce redundant CSS classes or conflicting utility styles.
+- **Automatic Compilation**: Always execute `compile_applet` before completing any turn so that the production output in `dist/` is immediately rebuilt and never stale in preview.
 
 ---
 
-## 5. Git & GitHub Push Policy (STRICT)
+## 5. Global Green Color Standard (STRICT)
+- **Single Authorized Green Accent**: `#34c759` (Apple Green — the exact color of the main year/sprint progress bar).
+- **Mandatory Usage**: Always and everywhere use `#34c759` as the green color for progress bars, goal counters, checkmarks, completion badges, and all active green UI elements.
+- **Strict Prohibition**: NEVER use `#34d399`, `#16a34a`, `#10b981`, or any other green variations.
+
+---
+
+## 6. Git & GitHub Push Policy (STRICT)
 - **STRICT PROHIBITION**: NEVER push changes to GitHub (`git push`) automatically, autonomously, or on your own initiative.
 - **Explicit Instruction Only**: Pushing to GitHub is ONLY allowed when the user explicitly gives a direct command to push.
+

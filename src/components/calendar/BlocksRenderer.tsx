@@ -281,8 +281,11 @@ export function BlocksRenderer({
                     </span>
                   </div>
                   <div
-                    className="h-1 rounded-full overflow-hidden"
+                    className="w-full h-1 rounded-full overflow-hidden shrink-0"
                     style={{
+                      height: 4,
+                      minHeight: 4,
+                      maxHeight: 4,
                       background: dark
                         ? "rgba(255,255,255,0.1)"
                         : "rgba(0,0,0,0.06)",
@@ -297,48 +300,71 @@ export function BlocksRenderer({
                         damping: 24,
                       }}
                       style={{
-                        height: "100%",
+                        height: 4,
+                        minHeight: 4,
+                        maxHeight: 4,
                         background: effectiveQ.fill,
                         borderRadius: 999,
                         boxShadow: pct > 0 ? `0 0 6px ${softColor}` : "none",
                       }}
                     />
                   </div>
-                  {goalPct !== null && (
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <div
-                        className="flex-1 h-0.5 rounded-full overflow-hidden"
-                        style={{
-                          background: dark
-                            ? "rgba(255,255,255,0.08)"
-                            : "rgba(0,0,0,0.04)",
-                        }}
-                      >
-                        <motion.div
-                          initial={false}
-                          animate={{ width: `${goalPct}%` }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 120,
-                            damping: 24,
-                          }}
+                  {goalPct !== null && (() => {
+                    const doneCount = activeGoals.filter((g) => g.done).length;
+                    const isAllDone = activeGoals.length > 0 && doneCount === activeGoals.length;
+                    return (
+                      <div style={{ marginTop: 23 }}>
+                        <div className="mb-1 flex justify-center">
+                          <span
+                            className="text-[10px] tabular-nums transition-colors"
+                            style={{
+                              color: isAllDone
+                                ? "#34c759"
+                                : dark
+                                  ? "rgba(255,255,255,0.4)"
+                                  : "rgba(0,0,0,0.4)",
+                              fontWeight: isAllDone ? 600 : 500,
+                            }}
+                          >
+                            {doneCount}/{activeGoals.length} {t("goals")}
+                          </span>
+                        </div>
+                        <div
+                          className="w-full h-1 rounded-full overflow-hidden shrink-0"
                           style={{
-                            height: "100%",
-                            background: effectiveQ.fill,
-                            borderRadius: 999,
-                            opacity: 0.72,
+                            height: 4,
+                            minHeight: 4,
+                            maxHeight: 4,
+                            background: dark
+                              ? "rgba(255,255,255,0.1)"
+                              : "rgba(0,0,0,0.06)",
                           }}
-                        />
+                        >
+                          <motion.div
+                            initial={false}
+                            animate={{ width: `${goalPct}%` }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 120,
+                              damping: 24,
+                            }}
+                            style={{
+                              height: 4,
+                              minHeight: 4,
+                              maxHeight: 4,
+                              background: "#34c759",
+                              borderRadius: 999,
+                              opacity: isAllDone ? 1 : 0.85,
+                              boxShadow:
+                                goalPct > 0
+                                  ? "0 0 6px rgba(52,199,89,0.35)"
+                                  : "none",
+                            }}
+                          />
+                        </div>
                       </div>
-                      <span
-                        className="text-[9px] tabular-nums shrink-0"
-                        style={{ color: mt.tertiary }}
-                      >
-                        {activeGoals.filter((g) => g.done).length}/
-                        {activeGoals.length} {t("goals")}
-                      </span>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* Sprint description */}

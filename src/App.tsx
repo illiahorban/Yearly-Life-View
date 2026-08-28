@@ -2673,107 +2673,132 @@ function App() {
                         </div>
                       </div>
                       {/* Quarter progress */}
-                      <div
-                        className="px-3 sm:px-5"
-                        style={{ paddingTop: 0, paddingBottom: 18 }}
-                      >
-                        <div
-                          className="text-center tabular-nums"
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            marginBottom: 4,
-                            color:
-                              !dark && quarter.key === "green"
-                                ? "var(--apple-green-deep)"
-                                : quarter.text,
-                          }}
-                        >
-                          {qPct.toFixed(0)}%
-                        </div>
-                        <div
-                          className="h-1 rounded-full overflow-hidden"
-                          style={{
-                            background: dark
-                              ? "rgba(255,255,255,0.1)"
-                              : "rgba(0,0,0,0.06)",
-                          }}
-                        >
-                          <motion.div
-                            initial={false}
-                            animate={{ width: `${qPct}%` }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 120,
-                              damping: 24,
-                            }}
-                            style={{
-                              height: "100%",
-                              background: quarter.fill,
-                              borderRadius: 999,
-                              opacity: 0.88,
-                            }}
-                          />
-                        </div>
-                        <div className="mt-1.5 flex items-center justify-between text-[10px] tabular-nums">
-                          <span style={{ color: mt.tertiary }}>
-                            {qPastDays} {t("of")} {qTotalDays} {t("daysOf")}
-                          </span>
-                          <span style={{ color: mt.tertiary }}>
-                            {qIsComplete
-                              ? t("elapsed")
-                              : `${qRemainingDays} ${t("daysRemaining")}`}
-                          </span>
-                        </div>
-                        {/* Quarter goal progress bar */}
-                        {(() => {
-                          const qg = quarterGoals[qi];
-                          const activeQGoals =
-                            qg?.goals.filter(
-                              (g) => !g.isDeleted && g.text.trim(),
-                            ) ?? [];
-                          if (activeQGoals.length === 0) return null;
-                          const goalPct =
-                            (activeQGoals.filter((g) => g.done).length /
-                              activeQGoals.length) *
-                            100;
-                          return (
-                            <div className="mt-1.5 flex items-center gap-2">
-                              <div
-                                className="flex-1 h-0.5 rounded-full overflow-hidden"
-                                style={{
-                                  background: dark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.04)",
+                      {(() => {
+                        const qg = quarterGoals[qi];
+                        const activeQGoals =
+                          qg?.goals.filter(
+                            (g) => !g.isDeleted && g.text.trim(),
+                          ) ?? [];
+                        const hasGoalsOrDesc = activeQGoals.length > 0 || Boolean(qg?.description);
+                        return (
+                          <div
+                            className="px-3 sm:px-5"
+                            style={{ paddingTop: 0, paddingBottom: hasGoalsOrDesc ? 8 : 18 }}
+                          >
+                            <div
+                              className="text-center tabular-nums"
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                marginBottom: 4,
+                                color:
+                                  !dark && quarter.key === "green"
+                                    ? "var(--apple-green-deep)"
+                                    : quarter.text,
+                              }}
+                            >
+                              {qPct.toFixed(0)}%
+                            </div>
+                            <div
+                              className="w-full h-1 rounded-full overflow-hidden shrink-0"
+                              style={{
+                                height: 4,
+                                minHeight: 4,
+                                maxHeight: 4,
+                                background: dark
+                                  ? "rgba(255,255,255,0.1)"
+                                  : "rgba(0,0,0,0.06)",
+                              }}
+                            >
+                              <motion.div
+                                initial={false}
+                                animate={{ width: `${qPct}%` }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 120,
+                                  damping: 24,
                                 }}
-                              >
-                                <motion.div
-                                  initial={false}
-                                  animate={{ width: `${goalPct}%` }}
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 120,
-                                    damping: 24,
-                                  }}
-                                  style={{
-                                    height: "100%",
-                                    background: quarter.fill,
-                                    borderRadius: 999,
-                                    opacity: 0.72,
-                                  }}
-                                />
-                              </div>
-                              <span
-                                className="text-[9px] tabular-nums shrink-0"
-                                style={{ color: mt.tertiary }}
-                              >
-                                {activeQGoals.filter((g) => g.done).length}/
-                                {activeQGoals.length} {t("goals")}
+                                style={{
+                                  height: 4,
+                                  minHeight: 4,
+                                  maxHeight: 4,
+                                  background: quarter.fill,
+                                  borderRadius: 999,
+                                  opacity: 0.88,
+                                }}
+                              />
+                            </div>
+                            <div className="mt-1.5 flex items-center justify-between text-[10px] tabular-nums">
+                              <span style={{ color: mt.tertiary }}>
+                                {qPastDays} {t("of")} {qTotalDays} {t("daysOf")}
+                              </span>
+                              <span style={{ color: mt.tertiary }}>
+                                {qIsComplete
+                                  ? t("elapsed")
+                                  : `${qRemainingDays} ${t("daysRemaining")}`}
                               </span>
                             </div>
-                          );
-                        })()}
-                      </div>
+                            {/* Quarter goal progress bar */}
+                            {activeQGoals.length > 0 && (() => {
+                              const doneQCount = activeQGoals.filter((g) => g.done).length;
+                              const isAllQDone = activeQGoals.length > 0 && doneQCount === activeQGoals.length;
+                              const goalPct = (doneQCount / activeQGoals.length) * 100;
+                              return (
+                                <div style={{ marginTop: 23 }}>
+                                  <div className="mb-1 flex justify-center">
+                                    <span
+                                      className="text-[10px] tabular-nums transition-colors"
+                                      style={{
+                                        color: isAllQDone
+                                          ? "#34c759"
+                                          : dark
+                                            ? "rgba(255,255,255,0.4)"
+                                            : "rgba(0,0,0,0.4)",
+                                        fontWeight: isAllQDone ? 600 : 500,
+                                      }}
+                                    >
+                                      {doneQCount}/{activeQGoals.length} {t("goals")}
+                                    </span>
+                                  </div>
+                                  <div
+                                    className="w-full h-1 rounded-full overflow-hidden shrink-0"
+                                    style={{
+                                      height: 4,
+                                      minHeight: 4,
+                                      maxHeight: 4,
+                                      background: dark
+                                        ? "rgba(255,255,255,0.1)"
+                                        : "rgba(0,0,0,0.06)",
+                                    }}
+                                  >
+                                    <motion.div
+                                      initial={false}
+                                      animate={{ width: `${goalPct}%` }}
+                                      transition={{
+                                        type: "spring",
+                                        stiffness: 120,
+                                        damping: 24,
+                                      }}
+                                      style={{
+                                        height: 4,
+                                        minHeight: 4,
+                                        maxHeight: 4,
+                                        background: "#34c759",
+                                        borderRadius: 999,
+                                        opacity: isAllQDone ? 1 : 0.85,
+                                        boxShadow:
+                                          goalPct > 0
+                                            ? "0 0 6px rgba(52,199,89,0.35)"
+                                            : "none",
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        );
+                      })()}
                       {/* Quarter goal checklist */}
                       {(() => {
                         const qg = quarterGoals[qi];
@@ -2781,7 +2806,7 @@ function App() {
                           qg?.goals.filter(
                             (g) => !g.isDeleted && g.text.trim(),
                           ) ?? [];
-                        if (activeQGoals.length === 0) return null;
+                        if (activeQGoals.length === 0 && !qg?.description) return null;
                         return (
                           <div className="px-3 sm:px-5 pb-3">
                             {qg?.description ? (
