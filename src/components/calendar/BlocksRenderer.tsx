@@ -185,7 +185,7 @@ export function BlocksRenderer({
               >
                 {/* Header */}
                 <div
-                  className="flex items-center justify-between px-2 sm:px-3.5 pt-2.5 pb-1.5"
+                  className="flex items-center justify-between px-2 sm:px-3.5 pt-1.5 pb-0"
                   style={{ position: "relative" }}
                 >
                   <div className="flex-1 min-w-0 mr-2">
@@ -260,25 +260,23 @@ export function BlocksRenderer({
                 </div>
 
                 {/* Progress strip */}
-                <div className="px-2 sm:px-3.5 pb-2">
-                  <div className="relative flex items-center justify-between text-[10px] tabular-nums mb-1">
-                    <span style={{ color: mt.tertiary }}>
-                      {pastDays} {t("of")} {totalDays} {t("daysOf")}
-                    </span>
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        color: isFuture ? mt.tertiary : effectiveQ.text,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {pct.toFixed(0)}%
-                    </span>
-                    <span style={{ color: mt.tertiary }}>
-                      {isComplete ? t("done") : `${daysLeft} ${t("left")}`}
-                    </span>
+                <div className="px-2 sm:px-3.5 pt-0.5 pb-2">
+                  <div
+                    className="text-center tabular-nums"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      marginBottom: 3,
+                      color: isFuture
+                        ? mt.tertiary
+                        : !dark &&
+                            (block.color === "green" ||
+                              (!block.color && quarter.key === "green"))
+                          ? "var(--apple-green-deep)"
+                          : effectiveQ.text,
+                    }}
+                  >
+                    {pct.toFixed(0)}%
                   </div>
                   <div
                     className="w-full h-1 rounded-full overflow-hidden shrink-0"
@@ -309,11 +307,19 @@ export function BlocksRenderer({
                       }}
                     />
                   </div>
+                  <div className="mt-1.5 flex items-center justify-between text-[10px] tabular-nums">
+                    <span style={{ color: mt.tertiary }}>
+                      {pastDays} {t("of")} {totalDays} {t("daysOf")}
+                    </span>
+                    <span style={{ color: mt.tertiary }}>
+                      {isComplete ? t("done") : `${daysLeft} ${t("left")}`}
+                    </span>
+                  </div>
                   {goalPct !== null && (() => {
                     const doneCount = activeGoals.filter((g) => g.done).length;
                     const isAllDone = activeGoals.length > 0 && doneCount === activeGoals.length;
                     return (
-                      <div style={{ marginTop: 23 }}>
+                      <div style={{ marginTop: 12 }}>
                         <div className="mb-1 flex justify-center">
                           <span
                             className="text-[10px] tabular-nums transition-colors"
@@ -330,11 +336,11 @@ export function BlocksRenderer({
                           </span>
                         </div>
                         <div
-                          className="w-full h-1 rounded-full overflow-hidden shrink-0"
+                          className="w-full rounded-full overflow-hidden shrink-0"
                           style={{
-                            height: 4,
-                            minHeight: 4,
-                            maxHeight: 4,
+                            height: 3,
+                            minHeight: 3,
+                            maxHeight: 3,
                             background: dark
                               ? "rgba(255,255,255,0.1)"
                               : "rgba(0,0,0,0.06)",
@@ -349,9 +355,9 @@ export function BlocksRenderer({
                               damping: 24,
                             }}
                             style={{
-                              height: 4,
-                              minHeight: 4,
-                              maxHeight: 4,
+                              height: 3,
+                              minHeight: 3,
+                              maxHeight: 3,
                               background: "#34c759",
                               borderRadius: 999,
                               boxShadow:

@@ -2772,11 +2772,11 @@ function App() {
                                     </span>
                                   </div>
                                   <div
-                                    className="w-full h-1 rounded-full overflow-hidden shrink-0"
+                                    className="w-full rounded-full overflow-hidden shrink-0"
                                     style={{
-                                      height: 4,
-                                      minHeight: 4,
-                                      maxHeight: 4,
+                                      height: 3,
+                                      minHeight: 3,
+                                      maxHeight: 3,
                                       background: dark
                                         ? "rgba(255,255,255,0.1)"
                                         : "rgba(0,0,0,0.06)",
@@ -2791,9 +2791,9 @@ function App() {
                                         damping: 24,
                                       }}
                                       style={{
-                                        height: 4,
-                                        minHeight: 4,
-                                        maxHeight: 4,
+                                        height: 3,
+                                        minHeight: 3,
+                                        maxHeight: 3,
                                         background: "#34c759",
                                         borderRadius: 999,
                                         boxShadow:
