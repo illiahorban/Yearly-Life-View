@@ -2785,7 +2785,6 @@ function App() {
                                         maxHeight: 4,
                                         background: "#34c759",
                                         borderRadius: 999,
-                                        opacity: isAllQDone ? 1 : 0.85,
                                         boxShadow:
                                           goalPct > 0
                                             ? "0 0 6px rgba(52,199,89,0.35)"
