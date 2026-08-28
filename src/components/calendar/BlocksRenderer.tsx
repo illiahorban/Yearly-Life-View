@@ -707,9 +707,15 @@ export function BlocksRenderer({
                                       height: 28,
                                       paddingInline: 12,
                                       borderRadius: 8,
-                                      border: "none",
+                                      border:
+                                        quarter.key === "white" && !dark
+                                          ? "1px solid rgba(0,0,0,0.15)"
+                                          : "none",
                                       background: quarter.border,
-                                      color: "white",
+                                      color:
+                                        quarter.key === "white"
+                                          ? "#000000"
+                                          : "white",
                                       fontSize: 12,
                                       fontWeight: 600,
                                       cursor: "pointer",
