@@ -175,17 +175,15 @@ export function BlocksRenderer({
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ type: "spring", stiffness: 320, damping: 30 }}
                 style={{
-                  background: cardBg,
+                  background: "transparent",
                   borderRadius: 14,
                   border: `2px solid ${effectiveQ.border}`,
-                  backdropFilter: "blur(8px)",
-                  WebkitBackdropFilter: "blur(8px)",
                   overflow: "visible",
                 }}
               >
                 {/* Header */}
                 <div
-                  className="flex items-center justify-between px-2 sm:px-3.5 pt-1.5 pb-0"
+                  className="flex items-center justify-between px-2 sm:px-3.5 pt-3 pb-1"
                   style={{ position: "relative" }}
                 >
                   <div className="flex-1 min-w-0 mr-2">
@@ -319,7 +317,7 @@ export function BlocksRenderer({
                     const doneCount = activeGoals.filter((g) => g.done).length;
                     const isAllDone = activeGoals.length > 0 && doneCount === activeGoals.length;
                     return (
-                      <div style={{ marginTop: 12 }}>
+                      <div style={{ marginTop: 6 }}>
                         <div className="mb-1 flex justify-center">
                           <span
                             className="text-[10px] tabular-nums transition-colors"

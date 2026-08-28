@@ -2755,7 +2755,7 @@ function App() {
                               const isAllQDone = activeQGoals.length > 0 && doneQCount === activeQGoals.length;
                               const goalPct = (doneQCount / activeQGoals.length) * 100;
                               return (
-                                <div style={{ marginTop: 23 }}>
+                                <div style={{ marginTop: 6 }}>
                                   <div className="mb-1 flex justify-center">
                                     <span
                                       className="text-[10px] tabular-nums transition-colors"
