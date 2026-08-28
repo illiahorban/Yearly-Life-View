@@ -119,7 +119,7 @@ export function updateBlockGoals(
   const changedAt = Date.now();
   const prior = previous ? normalizeBlockGoals(previous, changedAt) : undefined;
   const base = normalizeBlockGoals(next, changedAt);
-  const previousById = new Map(
+  const previousById = new Map<string, Goal>(
     (prior?.goals ?? []).map((goal) => [goal.id, goal]),
   );
   const incomingIds = new Set(base.goals.map((goal) => goal.id));
@@ -136,8 +136,8 @@ export function updateBlockGoals(
     updatedAt: changedAt,
     goals: [
       ...base.goals.map((goal) => {
-  const old = previousById.get(goal.id);
-  const changed =
+        const old = previousById.get(goal.id);
+        const changed =
           !old ||
           old.text !== goal.text ||
           old.done !== goal.done ||
@@ -146,7 +146,7 @@ export function updateBlockGoals(
         return {
           ...goal,
           createdAt: old?.createdAt ?? goal.createdAt,
-          updatedAt: changed ? changedAt : old.updatedAt,
+          updatedAt: changed ? changedAt : (old?.updatedAt ?? changedAt),
           isDeleted: goal.isDeleted ?? false,
         };
       }),

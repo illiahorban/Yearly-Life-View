@@ -430,8 +430,10 @@ function App() {
   const upsertNotes = (key: string, entries: NoteEntry[]) => {
     setNotes((prev) => {
       const next = { ...prev };
-      const previous = prev[key] ?? [];
-      const previousById = new Map(previous.map((entry) => [entry.id, entry]));
+      const previous: NoteEntry[] = prev[key] ?? [];
+      const previousById = new Map<string, NoteEntry>(
+        previous.map((entry) => [entry.id, entry]),
+      );
       const changedAt = Date.now();
       const incomingIds = new Set(entries.map((entry) => entry.id));
       const valid = entries
@@ -657,7 +659,10 @@ function App() {
       string,
       import("./lib/sync-types").SyncNoteEntry[]
     > = {};
-    for (const [k, entries] of Object.entries(notes)) {
+    for (const [k, entries] of Object.entries(notes) as [
+      string,
+      NoteEntry[],
+    ][]) {
       snapshotNotes[k] = entries.map((e) => {
         const timestamps = stamp(e);
         return {
@@ -671,7 +676,7 @@ function App() {
     }
 
     const snapshotDayGoals: Record<string, SyncDayGoals> = {};
-    for (const [k, g] of Object.entries(dayGoals)) {
+    for (const [k, g] of Object.entries(dayGoals) as [string, DayGoals][]) {
       snapshotDayGoals[k] = {
         ...stamp(g),
         count: g.count,
@@ -692,7 +697,7 @@ function App() {
       }));
 
     const snapshotBlockGoals: Record<string, SyncBlockGoals> = {};
-    for (const [k, v] of Object.entries(blockGoals)) {
+    for (const [k, v] of Object.entries(blockGoals) as [string, BlockGoals][]) {
       const block = normalizeBlockGoals(v, now2);
       snapshotBlockGoals[k] = {
         ...stamp(block),
@@ -710,7 +715,10 @@ function App() {
     }
 
     const snapshotQuarterGoals: Record<string, SyncBlockGoals> = {};
-    for (const [k, v] of Object.entries(quarterGoals)) {
+    for (const [k, v] of Object.entries(quarterGoals) as [
+      string,
+      BlockGoals,
+    ][]) {
       const block = normalizeBlockGoals(v, now2);
       snapshotQuarterGoals[String(k)] = {
         ...stamp(block),
@@ -728,7 +736,7 @@ function App() {
     }
 
     const snapshotYearGoals: Record<string, SyncBlockGoals> = {};
-    for (const [k, v] of Object.entries(yearGoals)) {
+    for (const [k, v] of Object.entries(yearGoals) as [string, BlockGoals][]) {
       const block = normalizeBlockGoals(v, now2);
       snapshotYearGoals[String(k)] = {
         ...stamp(block),
@@ -950,7 +958,7 @@ function App() {
           localStorage.setItem(
             `lifeCalendar:v1:${yr}`,
             JSON.stringify({
-              ...cfg.data,
+              ...(cfg.data as Record<string, unknown>),
               createdAt: cfg.createdAt,
               updatedAt: cfg.updatedAt,
             }),
@@ -1120,7 +1128,10 @@ function App() {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return new Set();
     const result = new Set<string>();
-    for (const [key, entries] of Object.entries(notes)) {
+    for (const [key, entries] of Object.entries(notes) as [
+      string,
+      NoteEntry[],
+    ][]) {
       if (entries.some((e) => e.text.toLowerCase().includes(q)))
         result.add(key);
     }
@@ -3007,12 +3018,12 @@ function App() {
                 }
                 const si = qi * WEEKS_PER_QUARTER;
                 const blockWeeks = weeks.slice(si + blockStart, si + blockEnd);
-                const keys = new Set(
+                const keys = new Set<string>(
                   blockWeeks.flatMap((w) => w.days).map((d) => dateKey(d)),
                 );
                 const deletedAt = Date.now();
                 setNotes((prev) => {
-                  const next = { ...prev };
+                  const next: Record<string, NoteEntry[]> = { ...prev };
                   keys.forEach((k) => {
                     const entries = next[k];
                     if (!entries) return;
@@ -3030,7 +3041,7 @@ function App() {
                     ? {
                         ...prev,
                         [blockId]: {
-                          ...block,
+                           ...block,
                           updatedAt: deletedAt,
                           isDeleted: true,
                           goals: block.goals.map((goal) => ({
@@ -3043,7 +3054,7 @@ function App() {
                     : prev;
                 });
                 setDayGoals((prev) => {
-                  const next = { ...prev };
+                  const next: Record<string, DayGoals> = { ...prev };
                   keys.forEach((k) => {
                     const goals = next[k];
                     if (!goals) return;
@@ -3093,7 +3104,7 @@ function App() {
               )}
               onSaveTemplates={(templates) =>
                 setDayTemplates((prev) => {
-                  const previousById = new Map(
+                  const previousById = new Map<string, DayTemplate>(
                     prev.map((template) => [template.id, template]),
                   );
                   const changedAt = Date.now();
