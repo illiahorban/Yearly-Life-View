@@ -30,6 +30,7 @@ export function NoteEntryItem({
   toggleColorPicker,
   colorPickerEntryId,
   setConfirmDeleteEntryId,
+  autoFocus,
 }: {
   key?: React.Key;
   entry: NoteEntry;
@@ -52,9 +53,18 @@ export function NoteEntryItem({
   toggleColorPicker: (id: string) => void;
   colorPickerEntryId: string | null;
   setConfirmDeleteEntryId: (id: string | null) => void;
+  autoFocus?: boolean;
 }) {
   const { t } = React.useContext(LangContext);
   const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (autoFocus && textareaRef.current) {
+      textareaRef.current.focus({ preventScroll: true });
+    }
+  }, [autoFocus]);
+
   const entryColor = entry.color;
   const ec = entryColor
     ? getEventColors(resolveNoteHex(entryColor), dark)
@@ -72,11 +82,13 @@ export function NoteEntryItem({
   return (
     <DraggableCard id={entry.id} dark={dark}>
       <div
+        data-note-card="true"
         style={{ position: "relative" }}
         onMouseEnter={() => setHoveredEntryId(entry.id)}
         onMouseLeave={() => setHoveredEntryId(null)}
       >
         <TextareaAutosize
+          ref={textareaRef}
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
           onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}

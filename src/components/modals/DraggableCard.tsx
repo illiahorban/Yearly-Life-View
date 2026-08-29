@@ -74,19 +74,30 @@ export function DraggableCard({
     <Reorder.Item
       value={id}
       as="div"
+      data-draggable-card="true"
       dragListener={false}
       dragControls={dragControls}
-      layout={false}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      layout="position"
+      initial={{ opacity: 0, height: 0, scale: 0.98 }}
+      animate={{
+        opacity: 1,
+        height: "auto",
+        scale: 1,
+        transitionEnd: { overflow: "visible" },
+      }}
+      exit={{
+        opacity: 0,
+        height: 0,
+        scale: 0.98,
+        overflow: "hidden",
+      }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
       whileDrag={{
         scale: 1.02,
         boxShadow: "0 10px 28px rgba(0,0,0,0.22)",
-        zIndex: 5,
+        zIndex: 50,
       }}
-      style={{ overflow: "visible", listStyle: "none" }}
+      style={{ overflow: "hidden", listStyle: "none" }}
       // Dragging the handle moves the pointer across sibling textareas/inputs
       // while the mouse button is held — the browser's default is to treat
       // that as a text selection. Suspend selection app-wide for the drag.

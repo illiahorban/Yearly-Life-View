@@ -91,7 +91,27 @@ export function NoteModal({
   const [goalIds, setGoalIds] = useState<string[]>(() =>
     Array.from({ length: initDayGoals?.count ?? 0 }, () => makeId()),
   );
+  const goalInputRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+  const [newlyAddedGoalIdx, setNewlyAddedGoalIdx] = useState<number | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (newlyAddedGoalIdx !== null) {
+      const idx = newlyAddedGoalIdx;
+      requestAnimationFrame(() => {
+        const el = goalInputRefs.current[idx];
+        if (el) {
+          el.focus({ preventScroll: true });
+        }
+      });
+      setNewlyAddedGoalIdx(null);
+    }
+  }, [newlyAddedGoalIdx]);
+
   const handleGoalAdd = () => {
+    setNewlyAddedEntryId(null);
+    setAddEventOpen(false);
     const current = goalsDraftRef.current;
     const n = current.count + 1;
     const newDone = [...current.done, false];
@@ -109,6 +129,7 @@ export function NoteModal({
       labels: newLabels,
       colors: newColors,
     };
+    setNewlyAddedGoalIdx(n - 1);
     commitGoalsDraft(g);
     setGoalIds((prev) => [...prev, makeId()]);
   };
@@ -287,6 +308,7 @@ export function NoteModal({
 
   // New event form state
   const addEventFormRef = React.useRef<HTMLDivElement | null>(null);
+  const newLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newDate, setNewDate] = useState(dk);
@@ -296,6 +318,129 @@ export function NoteModal({
   const [newRecurSpinKey, setNewRecurSpinKey] = useState(0);
   const [newColorPickerOpen, setNewColorPickerOpen] = useState(false);
   const [newColorPlacement, setNewColorPlacement] = useState<"top" | "bottom">("bottom");
+
+  // Scroll and focus helpers
+  const scrollTimerRef = React.useRef<number | null>(null);
+
+  const scrollToTarget = React.useCallback(
+    (targetEl: HTMLElement | null, mode: "center" | "bottom" = "center") => {
+      if (!scrollBodyRef.current) return;
+      const container = scrollBodyRef.current;
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      if (maxScroll <= 0) return;
+
+      if (mode === "bottom" || !targetEl) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "smooth",
+        });
+        return;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = targetEl.getBoundingClientRect();
+
+      // Position of target element relative to top of container's scroll content
+      const targetRelativeTop =
+        targetRect.top - containerRect.top + container.scrollTop;
+
+      // Position to center element vertically in visible container
+      const centeredScrollTop =
+        targetRelativeTop - container.clientHeight / 2 + targetRect.height / 2;
+
+      container.scrollTo({
+        top: Math.max(
+          0,
+          Math.min(
+            centeredScrollTop,
+            maxScroll,
+          ),
+        ),
+        behavior: "smooth",
+      });
+    },
+    [],
+  );
+
+  const triggerSmartScroll = React.useCallback(
+    (targetEl: HTMLElement | null, mode: "center" | "bottom" = "center") => {
+      if (scrollTimerRef.current !== null) {
+        window.clearTimeout(scrollTimerRef.current);
+      }
+      scrollTimerRef.current = window.setTimeout(() => {
+        scrollToTarget(targetEl, mode);
+        scrollTimerRef.current = null;
+      }, 70);
+    },
+    [scrollToTarget],
+  );
+
+  const handleScrollBodyFocus = React.useCallback(
+    (e: React.FocusEvent<HTMLDivElement>) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return;
+
+      // Check if target is inside the last note
+      const allNotes = scrollBodyRef.current?.querySelectorAll(
+        "[data-note-card='true']",
+      );
+      const isLastNote =
+        allNotes &&
+        allNotes.length > 0 &&
+        allNotes[allNotes.length - 1].contains(target);
+
+      const mode = isLastNote ? "bottom" : "center";
+      const cardEl = (target.closest("[data-draggable-card='true']") ||
+        target.closest("[data-event-form='true']") ||
+        target) as HTMLElement;
+
+      triggerSmartScroll(cardEl, mode);
+    },
+    [triggerSmartScroll],
+  );
+
+  // Auto-scroll/focus when opening Add Event form
+  React.useEffect(() => {
+    if (addEventOpen) {
+      newLabelInputRef.current?.focus();
+      triggerSmartScroll(addEventFormRef.current, "center");
+    }
+  }, [addEventOpen, triggerSmartScroll]);
+
+  // Auto-scroll/focus when editing an event
+  React.useEffect(() => {
+    if (msEditId) {
+      const el = msEditRefs.current.get(msEditId);
+      const textarea = el?.querySelector("textarea");
+      textarea?.focus();
+      triggerSmartScroll(el ?? null, "center");
+    }
+  }, [msEditId, triggerSmartScroll]);
+
+  // Readjust scroll position when virtual keyboard pops up
+  React.useEffect(() => {
+    if (isKeyboardOpen && scrollBodyRef.current) {
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLElement &&
+        scrollBodyRef.current.contains(active)
+      ) {
+        const allNotes = scrollBodyRef.current.querySelectorAll(
+          "[data-note-card='true']",
+        );
+        const isLastNote =
+          allNotes &&
+          allNotes.length > 0 &&
+          allNotes[allNotes.length - 1].contains(active);
+        const mode = isLastNote ? "bottom" : "center";
+        const cardEl = (active.closest("[data-draggable-card='true']") ||
+          active.closest("[data-event-form='true']") ||
+          active) as HTMLElement;
+        triggerSmartScroll(cardEl, mode);
+      }
+    }
+  }, [isKeyboardOpen, triggerSmartScroll]);
 
   const submitNewEvent = () => {
     if (!newLabel.trim()) return;
@@ -316,6 +461,9 @@ export function NoteModal({
   };
 
   const startMsEdit = (ms: Milestone) => {
+    setNewlyAddedGoalIdx(null);
+    setNewlyAddedEntryId(null);
+    setAddEventOpen(false);
     setMsEditId(ms.id);
     setMsEditLabel(ms.label);
     setMsEditDate(ms.date);
@@ -356,6 +504,9 @@ export function NoteModal({
 
   React.useEffect(() => {
     if (!addEventOpen) return;
+    requestAnimationFrame(() => {
+      newLabelInputRef.current?.focus({ preventScroll: true });
+    });
     const handler = (e: MouseEvent) => {
       if (
         addEventFormRef.current &&
@@ -391,20 +542,28 @@ export function NoteModal({
     boxSizing: "border-box",
   };
 
+  const [newlyAddedEntryId, setNewlyAddedEntryId] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (newlyAddedEntryId) {
+      const timer = setTimeout(() => {
+        setNewlyAddedEntryId(null);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [newlyAddedEntryId]);
+
   const addEntry = () => {
     const id = makeId();
+    setNewlyAddedGoalIdx(null);
+    setAddEventOpen(false);
+    setNewlyAddedEntryId(id);
     commitEntries([
       ...entriesRef.current,
       { id, text: "", ...newTimestamps() },
     ]);
-    setTimeout(() => {
-      if (scrollBodyRef.current) {
-        scrollBodyRef.current.scrollTo({
-          top: scrollBodyRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }, 60);
   };
   const updateEntry = (id: string, text: string) =>
     commitEntries(
@@ -551,6 +710,7 @@ export function NoteModal({
         <div
           ref={scrollBodyRef}
           data-modal-scroll="true"
+          onFocusCapture={handleScrollBodyFocus}
           style={{
             flex: 1,
             overflowY: "auto",
@@ -570,258 +730,267 @@ export function NoteModal({
               paddingBottom: 12,
             }}
           >
-            {/* Header row — only appears once goals exist */}
-            {goalsDraft.count > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "nowrap",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  gap: 6,
-                  marginBottom: 8,
-                  userSelect: "none",
-                }}
-              >
-                <span
-                  className="text-[10px] font-semibold tracking-widest uppercase"
-                  style={{
-                    color: "var(--text-tertiary)",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                  }}
+            {/* Header row + progress bar — only appears once goals exist */}
+            <AnimatePresence initial={false}>
+              {goalsDraft.count > 0 && (
+                <motion.div
+                  key="goals-header-and-bar"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: "hidden" }}
                 >
-                  {t("dailyGoals")}
-                </span>
-                {!confirmReset && !confirmCopyTomorrow && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTemplateMgrOpen(true);
-                    }}
-                    title={t("applyTemplateBtn")}
+                  <div
                     style={{
-                      width: 14,
-                      height: 14,
-                      flexShrink: 0,
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      color: "var(--text-tertiary)",
                       display: "flex",
+                      flexWrap: "nowrap",
                       alignItems: "center",
-                      justifyContent: "center",
-                      padding: 0,
-                    }}
-                  >
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="3" width="18" height="4" rx="1" />
-                      <rect x="3" y="10" width="18" height="4" rx="1" />
-                      <rect x="3" y="17" width="11" height="4" rx="1" />
-                    </svg>
-                  </button>
-                )}
-                {goalsDraft.count > 0 &&
-                  !confirmReset &&
-                  !confirmCopyTomorrow &&
-                  dayTemplates.length < 20 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const labels = (goalsDraft.labels ?? [])
-                          .slice(0, goalsDraft.count)
-                          .map((s) => s.trim())
-                          .filter(Boolean);
-                        const items =
-                          labels.length > 0
-                            ? labels
-                            : Array.from(
-                                { length: goalsDraft.count },
-                                (_, i) => `${t("goal")} ${i + 1}`,
-                              );
-                        setSaveTplPrefill(items);
-                        setTemplateMgrOpen(true);
-                      }}
-                      title={t("saveAsTemplate")}
-                      style={{
-                        width: 14,
-                        height: 14,
-                        flexShrink: 0,
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
-                        color: "var(--text-tertiary)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: 0,
-                      }}
-                    >
-                      <svg
-                        width="10"
-                        height="10"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                        <polyline points="17 21 17 13 7 13 7 21" />
-                        <polyline points="7 3 7 8 15 8" />
-                      </svg>
-                    </button>
-                  )}
-                {goalsDraft.count > 0 && !confirmReset && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyToTomorrow();
-                    }}
-                    title={t("copyToTomorrow")}
-                    style={{
-                      width: 14,
-                      height: 14,
-                      flexShrink: 0,
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      color: copiedTomorrow
-                        ? "#34c759"
-                        : "var(--text-tertiary)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 0,
-                      transition: "color 200ms",
-                    }}
-                  >
-                    {copiedTomorrow ? (
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path
-                          d="M1 4l3 3 5-6"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        width="10"
-                        height="9"
-                        viewBox="0 0 11 10"
-                        fill="none"
-                      >
-                        <rect
-                          x="0.5"
-                          y="0.5"
-                          width="7"
-                          height="7"
-                          rx="1.5"
-                          stroke="currentColor"
-                          strokeWidth="1"
-                        />
-                        <path
-                          d="M3 3h7v7H3z"
-                          stroke="currentColor"
-                          strokeWidth="1"
-                          strokeLinejoin="round"
-                          fill="none"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                )}
-                {goalsDraft.count > 0 && !confirmReset && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmReset(true);
-                    }}
-                    title={t("resetGoals")}
-                    style={{
-                      width: 14,
-                      height: 14,
-                      flexShrink: 0,
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      color: "#ff3b30",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 0,
+                      justifyContent: "flex-start",
+                      gap: 6,
+                      marginBottom: 8,
+                      userSelect: "none",
                     }}
                   >
                     <span
-                      style={{ fontSize: 12, lineHeight: 1, fontWeight: 400 }}
+                      className="text-[10px] font-semibold tracking-widest uppercase"
+                      style={{
+                        color: "var(--text-tertiary)",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0,
+                      }}
                     >
-                      ↺
+                      {t("dailyGoals")}
                     </span>
-                  </button>
-                )}
-                {/* Spacer */}
-                <div style={{ flex: 1 }} />
-                {/* Progress pill */}
-                {goalsDraft.count > 0 && (
-                  <span
+                    {!confirmReset && !confirmCopyTomorrow && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTemplateMgrOpen(true);
+                        }}
+                        title={t("applyTemplateBtn")}
+                        style={{
+                          width: 14,
+                          height: 14,
+                          flexShrink: 0,
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          color: "var(--text-tertiary)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: 0,
+                        }}
+                      >
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="3" y="3" width="18" height="4" rx="1" />
+                          <rect x="3" y="10" width="18" height="4" rx="1" />
+                          <rect x="3" y="17" width="11" height="4" rx="1" />
+                        </svg>
+                      </button>
+                    )}
+                    {goalsDraft.count > 0 &&
+                      !confirmReset &&
+                      !confirmCopyTomorrow &&
+                      dayTemplates.length < 20 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const labels = (goalsDraft.labels ?? [])
+                              .slice(0, goalsDraft.count)
+                              .map((s) => s.trim())
+                              .filter(Boolean);
+                            const items =
+                              labels.length > 0
+                                ? labels
+                                : Array.from(
+                                    { length: goalsDraft.count },
+                                    (_, i) => `${t("goal")} ${i + 1}`,
+                                  );
+                            setSaveTplPrefill(items);
+                            setTemplateMgrOpen(true);
+                          }}
+                          title={t("saveAsTemplate")}
+                          style={{
+                            width: 14,
+                            height: 14,
+                            flexShrink: 0,
+                            border: "none",
+                            background: "transparent",
+                            cursor: "pointer",
+                            color: "var(--text-tertiary)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: 0,
+                          }}
+                        >
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                          </svg>
+                        </button>
+                      )}
+                    {goalsDraft.count > 0 && !confirmReset && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyToTomorrow();
+                        }}
+                        title={t("copyToTomorrow")}
+                        style={{
+                          width: 14,
+                          height: 14,
+                          flexShrink: 0,
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          color: copiedTomorrow
+                            ? "#34c759"
+                            : "var(--text-tertiary)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: 0,
+                          transition: "color 200ms",
+                        }}
+                      >
+                        {copiedTomorrow ? (
+                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                            <path
+                              d="M1 4l3 3 5-6"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="10"
+                            height="9"
+                            viewBox="0 0 11 10"
+                            fill="none"
+                          >
+                            <rect
+                              x="0.5"
+                              y="0.5"
+                              width="7"
+                              height="7"
+                              rx="1.5"
+                              stroke="currentColor"
+                              strokeWidth="1"
+                            />
+                            <path
+                              d="M3 3h7v7H3z"
+                              stroke="currentColor"
+                              strokeWidth="1"
+                              strokeLinejoin="round"
+                              fill="none"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    )}
+                    {goalsDraft.count > 0 && !confirmReset && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmReset(true);
+                        }}
+                        title={t("resetGoals")}
+                        style={{
+                          width: 14,
+                          height: 14,
+                          flexShrink: 0,
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          color: "#ff3b30",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: 0,
+                        }}
+                      >
+                        <span
+                          style={{ fontSize: 12, lineHeight: 1, fontWeight: 400 }}
+                        >
+                          ↺
+                        </span>
+                      </button>
+                    )}
+                    {/* Spacer */}
+                    <div style={{ flex: 1 }} />
+                    {/* Progress pill */}
+                    {goalsDraft.count > 0 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: allGoalsDone ? "#34c759" : "var(--text-tertiary)",
+                          background: allGoalsDone
+                            ? dark
+                              ? "rgba(52,199,89,0.18)"
+                              : "rgba(52,199,89,0.12)"
+                            : dark
+                              ? "rgba(255,255,255,0.08)"
+                              : "rgba(0,0,0,0.06)",
+                          borderRadius: 99,
+                          padding: "1px 7px",
+                          flexShrink: 0,
+                          transition: "color 200ms, background 200ms",
+                        }}
+                      >
+                        {goalsDraft.done.filter(Boolean).length}/{goalsDraft.count}
+                      </span>
+                    )}
+                  </div>
+                  {/* Progress bar */}
+                  <div
+                    className="h-1 rounded-full overflow-hidden mb-2"
                     style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: allGoalsDone ? "#34c759" : "var(--text-tertiary)",
-                      background: allGoalsDone
-                        ? dark
-                          ? "rgba(52,199,89,0.18)"
-                          : "rgba(52,199,89,0.12)"
-                        : dark
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(0,0,0,0.06)",
-                      borderRadius: 99,
-                      padding: "1px 7px",
-                      flexShrink: 0,
-                      transition: "color 200ms, background 200ms",
+                      background: dark
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.07)",
                     }}
                   >
-                    {goalsDraft.done.filter(Boolean).length}/{goalsDraft.count}
-                  </span>
-                )}
-              </div>
-            )}
-            {/* Progress bar */}
-            {goalsDraft.count > 0 && (
-              <div
-                className="h-1 rounded-full overflow-hidden mb-2"
-                style={{
-                  background: dark
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.07)",
-                }}
-              >
-                <motion.div
-                  initial={false}
-                  animate={{
-                    width: `${(goalsDraft.done.filter(Boolean).length / goalsDraft.count) * 100}%`,
-                  }}
-                  transition={{ type: "spring", stiffness: 120, damping: 24 }}
-                  style={{
-                    height: "100%",
-                    borderRadius: 999,
-                    background: "#34c759",
-                  }}
-                />
-              </div>
-            )}
+                    <motion.div
+                      initial={false}
+                      animate={{
+                        width: `${(goalsDraft.done.filter(Boolean).length / goalsDraft.count) * 100}%`,
+                      }}
+                      transition={{ type: "spring", stiffness: 120, damping: 24 }}
+                      style={{
+                        height: "100%",
+                        borderRadius: 999,
+                        background: "#34c759",
+                      }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             {/* Body — always shown */}
             <div style={{ overflow: "visible" }}>
               {/* Confirm dialogs (copy-to-tomorrow / reset) */}
@@ -937,7 +1106,7 @@ export function NoteModal({
                   className="flex flex-col gap-1.5"
                   style={{ listStyle: "none", margin: 0, padding: 0 }}
                 >
-                  <AnimatePresence initial={false}>
+                  <AnimatePresence>
                     {Array.from({ length: goalsDraft.count }, (_, i) => {
                       const done = goalsDraft.done[i] ?? false;
                       const goalColor = goalsDraft.colors?.[i];
@@ -1028,6 +1197,9 @@ export function NoteModal({
                               );
                             })()}
                             <TextareaAutosize
+                              ref={(el) => {
+                                goalInputRefs.current[i] = el;
+                              }}
                               value={goalsDraft.labels?.[i] ?? ""}
                               onChange={(e) =>
                                 handleGoalLabelChange(i, e.target.value)
@@ -1271,7 +1443,9 @@ export function NoteModal({
                 </div>
               )}
               {!confirmCopyTomorrow && !confirmReset && (
-                <button
+                <motion.button
+                  layout
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleGoalAdd();
@@ -1295,28 +1469,37 @@ export function NoteModal({
                 >
                   <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>{" "}
                   {t("addGoal")}
-                </button>
+                </motion.button>
               )}
             </div>
           </div>
 
           {/* Milestones for this day */}
-          {dayMilestones.length > 0 && (
-            <div className="px-5 pt-3 pb-0 shrink-0">
-              <div
-                className="text-[10px] font-semibold tracking-widest uppercase mb-1.5"
-                style={{ color: "var(--text-tertiary)" }}
+          <AnimatePresence initial={false}>
+            {dayMilestones.length > 0 && (
+              <motion.div
+                key="milestones-section-header"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="px-5 pt-3 pb-0 shrink-0"
+                style={{ overflow: "hidden" }}
               >
-                {t("events")}
-              </div>
-              <Reorder.Group
-                as="div"
-                axis="y"
-                values={dayMilestones.map((ms) => ms.id)}
-                onReorder={onMilestoneReorder}
-                className="flex flex-col gap-1.5"
-                style={{ listStyle: "none", margin: 0, padding: 0 }}
-              >
+                <div
+                  className="text-[10px] font-semibold tracking-widest uppercase mb-1.5"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  {t("events")}
+                </div>
+                <Reorder.Group
+                  as="div"
+                  axis="y"
+                  values={dayMilestones.map((ms) => ms.id)}
+                  onReorder={onMilestoneReorder}
+                  className="flex flex-col gap-1.5"
+                  style={{ listStyle: "none", margin: 0, padding: 0 }}
+                >
                 <AnimatePresence initial={false}>
                   {dayMilestones.map((ms) => {
                     const isEditing = msEditId === ms.id;
@@ -1564,6 +1747,7 @@ export function NoteModal({
                                 }}
                               >
                                 <TextareaAutosize
+                                  autoFocus={isEditing}
                                   value={msEditLabel}
                                   onChange={(e) =>
                                     setMsEditLabel(e.target.value)
@@ -1843,60 +2027,63 @@ export function NoteModal({
                   })}
                 </AnimatePresence>
               </Reorder.Group>
-            </div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
           {/* Add event form */}
           <div
             className={`px-5 ${dayMilestones.length > 0 ? "pt-1.5" : "pt-3"} pb-0 shrink-0`}
           >
-            {/* Button — collapses when form open or limit reached */}
-            <div
-              style={{
-                maxHeight:
-                  addEventOpen || dayMilestones.length >= 10 ? 0 : "40px",
-                opacity: addEventOpen || dayMilestones.length >= 10 ? 0 : 1,
-                overflow: "hidden",
-                transition:
-                  "max-height 0.3s ease-in-out, opacity 0.18s ease-in-out",
-                pointerEvents:
-                  addEventOpen || dayMilestones.length >= 10 ? "none" : "auto",
-              }}
-            >
-              <button
-                onClick={() => setAddEventOpen(true)}
-                style={{
-                  width: "100%",
-                  height: 32,
-                  borderRadius: 9,
-                  border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
-                  background: "transparent",
-                  color: "var(--text-secondary)",
-                  fontSize: 12,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 5,
-                }}
-              >
-                <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>{" "}
-                {t("addEvent")}
-              </button>
-            </div>
-            {/* Form — expands when open */}
-            <div
-              ref={addEventFormRef}
-              style={{
-                maxHeight: addEventOpen ? "2000px" : 0,
-                opacity: addEventOpen ? 1 : 0,
-                overflow: "hidden",
-                transition:
-                  "max-height 0.35s ease-in-out, opacity 0.22s ease-in-out",
-                pointerEvents: addEventOpen ? "auto" : "none",
-              }}
-            >
+            <AnimatePresence initial={false} mode="wait">
+              {!addEventOpen && dayMilestones.length < 10 ? (
+                <motion.div
+                  key="add-event-btn-wrap"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <button
+                    onClick={() => {
+                      setAddEventOpen(true);
+                      setTimeout(() => {
+                        newLabelInputRef.current?.focus();
+                        triggerSmartScroll(addEventFormRef.current, "center");
+                      }, 10);
+                    }}
+                    style={{
+                      width: "100%",
+                      height: 32,
+                      borderRadius: 9,
+                      border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                      background: "transparent",
+                      color: "var(--text-secondary)",
+                      fontSize: 12,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 5,
+                    }}
+                  >
+                    <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>{" "}
+                    {t("addEvent")}
+                  </button>
+                </motion.div>
+              ) : addEventOpen ? (
+                <motion.div
+                  key="add-event-form-wrap"
+                  ref={addEventFormRef}
+                  data-event-form="true"
+                  initial={{ opacity: 0, height: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, height: "auto", scale: 1 }}
+                  exit={{ opacity: 0, height: 0, scale: 0.98 }}
+                  transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: "hidden" }}
+                >
               {(() => {
                 const ecNew = getEventColors(newColor, dark);
                 const cardBg = ecNew.bg;
@@ -1946,6 +2133,8 @@ export function NoteModal({
                       style={{ isolation: "isolate" }}
                     >
                       <TextareaAutosize
+                        ref={newLabelInputRef}
+                        autoFocus={addEventOpen}
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
                         onKeyDown={(e) => {
@@ -2191,7 +2380,9 @@ export function NoteModal({
                   </div>
                 );
               })()}
-            </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           </div>
 
           {/* Divider between events/add-event and notes */}
@@ -2201,16 +2392,26 @@ export function NoteModal({
           />
 
           {/* Notes section label — only appears once notes exist */}
-          {entries.length > 0 && (
-            <div className="px-5 pt-3 shrink-0">
-              <div
-                className="text-[10px] font-semibold tracking-widest uppercase mb-1.5"
-                style={{ color: "var(--text-tertiary)" }}
+          <AnimatePresence initial={false}>
+            {entries.length > 0 && (
+              <motion.div
+                key="notes-section-header"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="px-5 pt-3 shrink-0"
+                style={{ overflow: "hidden" }}
               >
-                {t("notes")}
-              </div>
-            </div>
-          )}
+                <div
+                  className="text-[10px] font-semibold tracking-widest uppercase mb-1.5"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  {t("notes")}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Notes list — drag the card itself to reorder (press-and-hold first on touch) */}
           {entries.length > 0 && (
@@ -2226,13 +2427,14 @@ export function NoteModal({
                 className="flex flex-col gap-1.5"
                 style={{ listStyle: "none", margin: 0, padding: 0 }}
               >
-                <AnimatePresence initial={false}>
+                <AnimatePresence>
                   {entries.map((entry, idx) => (
                     <NoteEntryItem
                       key={entry.id}
                       entry={entry}
                       idx={idx}
                       entriesCount={entries.length}
+                      autoFocus={entry.id === newlyAddedEntryId}
                       dark={dark}
                       modalBg={modalBg}
                       inputBg={inputBg}
@@ -2256,7 +2458,11 @@ export function NoteModal({
           )}
 
           {/* Add note button */}
-          <div className={`px-5 pb-3 ${entries.length === 0 ? "pt-3" : ""}`}>
+          <motion.div
+            layout
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className={`px-5 pb-3 ${entries.length === 0 ? "pt-3" : "pt-0.5"}`}
+          >
             <button
               onClick={addEntry}
               style={{
@@ -2278,7 +2484,7 @@ export function NoteModal({
               <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>{" "}
               {t("addNote")}
             </button>
-          </div>
+          </motion.div>
         </div>
         {/* end scrollable body */}
       </motion.div>
