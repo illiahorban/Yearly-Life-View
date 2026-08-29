@@ -81,12 +81,6 @@ export function NoteEntryItem({
           onChange={(e) => updateEntry(entry.id, e.target.value)}
           onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}
           onKeyDown={handleKey}
-          onFocus={(e) => {
-            const el = e.currentTarget;
-            setTimeout(() => {
-              el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-            }, 100);
-          }}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
           minRows={1}
           className={notePlaceholderClass}

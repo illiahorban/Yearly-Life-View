@@ -182,13 +182,13 @@ export function MilestoneModal({
       transition={{ duration: 0.22, ease: "easeOut" }}
       className="fixed z-50 flex items-center justify-center pointer-events-auto"
       style={{
-        top: vvOffsetTop || 0,
+        top: isMobile ? vvOffsetTop : 0,
         left: 0,
         right: 0,
-        height: vvHeight || "100svh",
+        height: isMobile ? vvHeight : "100svh",
         overflow: "hidden",
         overscrollBehavior: "contain",
-        padding: isMobile ? (isKeyboardOpen ? "8px 12px" : "12px 16px") : "16px",
+        padding: "16px",
       }}
       onClick={onClose}
     >
@@ -199,35 +199,33 @@ export function MilestoneModal({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          top: -100,
-          bottom: -100,
-          left: -100,
-          right: -100,
-          background: "rgba(0,0,0,0.34)",
+          top: -200,
+          bottom: -200,
+          left: -200,
+          right: -200,
+          background: "rgba(0,0,0,0.36)",
           backdropFilter: "blur(5px)",
           WebkitBackdropFilter: "blur(5px)",
         }}
       />
       <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
         transition={{ type: "spring", stiffness: 360, damping: 30 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md"
         style={{
           position: "relative",
+          width: "min(92vw,440px)",
           background: modalBg,
           backdropFilter: "saturate(180%) blur(28px)",
           WebkitBackdropFilter: "saturate(180%) blur(28px)",
           borderRadius: 22,
-          boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+          boxShadow: `0 20px 60px rgba(0,0,0,0.28), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
           maxHeight: isMobile
-            ? `${Math.max(220, vvHeight - (isKeyboardOpen ? 16 : 24))}px`
+            ? `${Math.max(220, vvHeight - 32)}px`
             : "calc(100svh - 2rem)",
-          transition: "max-height 150ms ease",
         }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">

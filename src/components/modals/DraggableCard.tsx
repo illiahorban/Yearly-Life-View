@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { motion, useDragControls, Reorder } from "framer-motion";
+import { useDragControls, Reorder } from "framer-motion";
 import { LangContext } from "../../constants/i18n";
 
 const NOTE_LONG_PRESS_MS = 350;
@@ -76,7 +76,7 @@ export function DraggableCard({
       as="div"
       dragListener={false}
       dragControls={dragControls}
-      layout="position"
+      layout={false}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
@@ -155,5 +155,3 @@ export function DraggableCard({
     </Reorder.Item>
   );
 }
-
-// ─── NoteModal ────────────────────────────────────────────────────────────────
