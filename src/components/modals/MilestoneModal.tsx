@@ -78,11 +78,6 @@ export function MilestoneModal({
   const [draftRecurSpinKey, setDraftRecurSpinKey] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
   const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
-  const [draftColorPickerPos, setDraftColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const [editId, setEditId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -92,11 +87,6 @@ export function MilestoneModal({
   const [editRecurring, setEditRecurring] = useState(false);
   const [editRecurSpinKey, setEditRecurSpinKey] = useState(0);
   const [editColorPickerOpen, setEditColorPickerOpen] = useState(false);
-  const [editColorPickerPos, setEditColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const editColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const startEdit = (ms: Milestone) => {
     setEditId(ms.id);
@@ -478,63 +468,102 @@ export function MilestoneModal({
                         padding: "0 6px",
                       }}
                     />
-                    <button
-                      ref={draftColorBtnRef}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (draftColorPickerOpen) {
-                          setDraftColorPickerOpen(false);
-                          return;
-                        }
-                        const btn = draftColorBtnRef.current;
-                        if (btn) {
-                          setDraftColorPickerPos(
-                            clampedPopoverPos(
-                              btn.getBoundingClientRect(),
-                              136,
-                              100,
-                            ),
-                          );
-                        }
-                        setDraftColorPickerOpen(true);
-                      }}
-                      title={t("chooseColor")}
-                      style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: 999,
-                        flexShrink: 0,
-                        background: draftColor || "transparent",
-                        border: "none",
-                        boxShadow: draftColor
-                          ? `0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)`
-                          : `0 0 0 1.5px ${isWhite ? "#a1a1aa" : "var(--border-soft)"}`,
-                        boxSizing: "border-box",
-                        cursor: "pointer",
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        mixBlendMode: "normal",
-                        isolation: "isolate",
-                      }}
-                    >
-                      {!draftColor && (
-                        <span
+                    <div style={{ position: "relative", display: "inline-flex" }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDraftColorPickerOpen((v) => !v);
+                        }}
+                        title={t("chooseColor")}
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 999,
+                          flexShrink: 0,
+                          background: draftColor || "transparent",
+                          border: "none",
+                          boxShadow: draftColor
+                            ? `0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)`
+                            : `0 0 0 1.5px ${isWhite ? "#a1a1aa" : "var(--border-soft)"}`,
+                          boxSizing: "border-box",
+                          cursor: "pointer",
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mixBlendMode: "normal",
+                          isolation: "isolate",
+                        }}
+                      >
+                        {!draftColor && (
+                          <span
+                            style={{
+                              position: "absolute",
+                              width: "55%",
+                              height: "1.5px",
+                              background: isWhite
+                                ? "rgba(0,0,0,0.35)"
+                                : dark
+                                  ? "rgba(255,255,255,0.55)"
+                                  : "rgba(0,0,0,0.35)",
+                              transform: "rotate(-45deg)",
+                            }}
+                          />
+                        )}
+                      </button>
+                      {draftColorPickerOpen && (
+                        <motion.div
+                          key="ms-draft-color-popover"
+                          initial={{ opacity: 0, scale: 0.94, y: -4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.94, y: -4 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 420,
+                            damping: 28,
+                          }}
+                          onClick={(e) => e.stopPropagation()}
                           style={{
                             position: "absolute",
-                            width: "55%",
-                            height: "1.5px",
-                            background: isWhite
-                              ? "rgba(0,0,0,0.35)"
-                              : dark
-                                ? "rgba(255,255,255,0.55)"
-                                : "rgba(0,0,0,0.35)",
-                            transform: "rotate(-45deg)",
+                            top: "calc(100% + 6px)",
+                            right: 0,
+                            zIndex: 300,
+                            background: modalBg,
+                            backdropFilter: "blur(20px)",
+                            WebkitBackdropFilter: "blur(20px)",
+                            borderRadius: 12,
+                            padding: 8,
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                            border: "1px solid var(--border-soft)",
+                            width: 136,
+                            isolation: "isolate",
                           }}
-                        />
+                        >
+                          <div
+                            style={{ position: "fixed", inset: 0, zIndex: -1 }}
+                            onClick={() => setDraftColorPickerOpen(false)}
+                          />
+                          <ColorSwatchGrid
+                            colors={APPLE_COLORS.map((ac) => ({
+                              key: ac.key,
+                              hex: ac.light,
+                              label: ac.label,
+                            }))}
+                            selected={draftColor || null}
+                            onSelect={(hex) => {
+                              setDraftColor(draftColor === hex ? "" : hex);
+                              setDraftColorPickerOpen(false);
+                            }}
+                            onClear={() => {
+                              setDraftColor("");
+                              setDraftColorPickerOpen(false);
+                            }}
+                            clearLabel={t("noColor")}
+                            dark={dark}
+                          />
+                        </motion.div>
                       )}
-                    </button>
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -618,60 +647,6 @@ export function MilestoneModal({
                       </button>
                     </div>
                   </div>
-                  {draftColorPickerOpen &&
-                    draftColorPickerPos &&
-                    ReactDOM.createPortal(
-                      <motion.div
-                        key="ms-draft-color-popover"
-                        initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 420,
-                          damping: 28,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          position: "fixed",
-                          top: draftColorPickerPos.top,
-                          left: draftColorPickerPos.left,
-                          zIndex: 300,
-                          background: modalBg,
-                          backdropFilter: "blur(20px)",
-                          WebkitBackdropFilter: "blur(20px)",
-                          borderRadius: 12,
-                          padding: 8,
-                          boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                          border: "1px solid var(--border-soft)",
-                          width: 136,
-                          isolation: "isolate",
-                        }}
-                      >
-                        <div
-                          style={{ position: "fixed", inset: 0, zIndex: -1 }}
-                          onClick={() => setDraftColorPickerOpen(false)}
-                        />
-                        <ColorSwatchGrid
-                          colors={APPLE_COLORS.map((ac) => ({
-                            key: ac.key,
-                            hex: ac.light,
-                            label: ac.label,
-                          }))}
-                          selected={draftColor || null}
-                          onSelect={(hex) => {
-                            setDraftColor(draftColor === hex ? "" : hex);
-                            setDraftColorPickerOpen(false);
-                          }}
-                          onClear={() => {
-                            setDraftColor("");
-                            setDraftColorPickerOpen(false);
-                          }}
-                          clearLabel={t("noColor")}
-                          dark={dark}
-                        />
-                      </motion.div>,
-                      document.body,
-                    )}
                 </div>
               );
             })()}
@@ -860,61 +835,104 @@ export function MilestoneModal({
                               border: `1px solid ${rcBdrForm}`,
                             }}
                           />
-                          <button
-                            ref={editColorBtnRef}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (editColorPickerOpen) {
-                                setEditColorPickerOpen(false);
-                                return;
-                              }
-                              const btn = editColorBtnRef.current;
-                              if (btn) {
-                                setEditColorPickerPos(
-                                  clampedPopoverPos(
-                                    btn.getBoundingClientRect(),
-                                    136,
-                                    100,
-                                  ),
-                                );
-                              }
-                              setEditColorPickerOpen(true);
-                            }}
-                            title={t("chooseColor")}
-                            style={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: 999,
-                              flexShrink: 0,
-                              background: editColor || "transparent",
-                              border: "none",
-                              boxShadow: editColor
-                                ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                                : "0 0 0 1.5px var(--border-soft)",
-                              boxSizing: "border-box",
-                              cursor: "pointer",
-                              position: "relative",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              mixBlendMode: "normal",
-                              isolation: "isolate",
-                            }}
-                          >
-                            {!editColor && (
-                              <span
+                          <div style={{ position: "relative", display: "inline-flex" }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditColorPickerOpen((v) => !v);
+                              }}
+                              title={t("chooseColor")}
+                              style={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: 999,
+                                flexShrink: 0,
+                                background: editColor || "transparent",
+                                border: "none",
+                                boxShadow: editColor
+                                  ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
+                                  : "0 0 0 1.5px var(--border-soft)",
+                                boxSizing: "border-box",
+                                cursor: "pointer",
+                                position: "relative",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                mixBlendMode: "normal",
+                                isolation: "isolate",
+                              }}
+                            >
+                              {!editColor && (
+                                <span
+                                  style={{
+                                    position: "absolute",
+                                    width: "55%",
+                                    height: "1.5px",
+                                    background: dark
+                                      ? "rgba(255,255,255,0.55)"
+                                      : "rgba(0,0,0,0.35)",
+                                    transform: "rotate(-45deg)",
+                                  }}
+                                />
+                              )}
+                            </button>
+                            {editColorPickerOpen && (
+                              <motion.div
+                                key="ms-edit-color-popover"
+                                initial={{ opacity: 0, scale: 0.94, y: -4 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.94, y: -4 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 420,
+                                  damping: 28,
+                                }}
+                                onClick={(e) => e.stopPropagation()}
                                 style={{
                                   position: "absolute",
-                                  width: "55%",
-                                  height: "1.5px",
-                                  background: dark
-                                    ? "rgba(255,255,255,0.55)"
-                                    : "rgba(0,0,0,0.35)",
-                                  transform: "rotate(-45deg)",
+                                  top: "calc(100% + 6px)",
+                                  right: 0,
+                                  zIndex: 300,
+                                  background: modalBg,
+                                  backdropFilter: "blur(20px)",
+                                  WebkitBackdropFilter: "blur(20px)",
+                                  borderRadius: 12,
+                                  padding: 8,
+                                  boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                                  border: "1px solid var(--border-soft)",
+                                  width: 136,
+                                  isolation: "isolate",
                                 }}
-                              />
+                              >
+                                <div
+                                  style={{
+                                    position: "fixed",
+                                    inset: 0,
+                                    zIndex: -1,
+                                  }}
+                                  onClick={() => setEditColorPickerOpen(false)}
+                                />
+                                <ColorSwatchGrid
+                                  colors={APPLE_COLORS.map((ac) => ({
+                                    key: ac.key,
+                                    hex: ac.light,
+                                    label: ac.label,
+                                  }))}
+                                  selected={editColor || null}
+                                  onSelect={(hex) => {
+                                    setEditColor(editColor === hex ? "" : hex);
+                                    setEditColorPickerOpen(false);
+                                  }}
+                                  onClear={() => {
+                                    setEditColor("");
+                                    setEditColorPickerOpen(false);
+                                  }}
+                                  clearLabel={t("noColor")}
+                                  dark={dark}
+                                />
+                              </motion.div>
                             )}
-                          </button>
+                          </div>
                           <button
                             type="button"
                             onClick={() => {
@@ -1008,64 +1026,6 @@ export function MilestoneModal({
                             </button>
                           </div>
                         </div>
-                        {editColorPickerOpen &&
-                          editColorPickerPos &&
-                          ReactDOM.createPortal(
-                            <motion.div
-                              key="ms-edit-color-popover"
-                              initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              transition={{
-                                type: "spring",
-                                stiffness: 420,
-                                damping: 28,
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              style={{
-                                position: "fixed",
-                                top: editColorPickerPos.top,
-                                left: editColorPickerPos.left,
-                                zIndex: 300,
-                                background: modalBg,
-                                backdropFilter: "blur(20px)",
-                                WebkitBackdropFilter: "blur(20px)",
-                                borderRadius: 12,
-                                padding: 8,
-                                boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                                border: "1px solid var(--border-soft)",
-                                width: 136,
-                                isolation: "isolate",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  position: "fixed",
-                                  inset: 0,
-                                  zIndex: -1,
-                                }}
-                                onClick={() => setEditColorPickerOpen(false)}
-                              />
-                              <ColorSwatchGrid
-                                colors={APPLE_COLORS.map((ac) => ({
-                                  key: ac.key,
-                                  hex: ac.light,
-                                  label: ac.label,
-                                }))}
-                                selected={editColor || null}
-                                onSelect={(hex) => {
-                                  setEditColor(editColor === hex ? "" : hex);
-                                  setEditColorPickerOpen(false);
-                                }}
-                                onClear={() => {
-                                  setEditColor("");
-                                  setEditColorPickerOpen(false);
-                                }}
-                                clearLabel={t("noColor")}
-                                dark={dark}
-                              />
-                            </motion.div>,
-                            document.body,
-                          )}
                       </div>
                       <div
                         style={{

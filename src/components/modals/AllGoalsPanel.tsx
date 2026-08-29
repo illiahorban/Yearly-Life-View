@@ -136,22 +136,29 @@ export function AllGoalsPanel({
               >
                 {t("allGoals")}
               </h2>
-              {totalGoals > 0 && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: "var(--text-tertiary)",
-                    background: dark
-                      ? "rgba(255,255,255,0.08)"
-                      : "rgba(0,0,0,0.06)",
-                    borderRadius: 8,
-                    padding: "2px 7px",
-                  }}
-                >
-                  {doneGoals}/{totalGoals}
-                </span>
-              )}
+              {totalGoals > 0 && (() => {
+                const isAllDone = doneGoals === totalGoals;
+                return (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: isAllDone ? 700 : 600,
+                      color: isAllDone ? "#34c759" : "var(--text-tertiary)",
+                      background: isAllDone
+                        ? dark
+                          ? "rgba(52, 199, 89, 0.18)"
+                          : "rgba(52, 199, 89, 0.12)"
+                        : dark
+                          ? "rgba(255,255,255,0.08)"
+                          : "rgba(0,0,0,0.06)",
+                      borderRadius: 8,
+                      padding: "2px 7px",
+                    }}
+                  >
+                    {doneGoals}/{totalGoals}
+                  </span>
+                );
+              })()}
             </div>
             <button
               onClick={onClose}
@@ -233,18 +240,23 @@ export function AllGoalsPanel({
                   >
                     {viewYear}
                   </span>
-                  {activeYearGoals.length > 0 && (
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: "var(--text-tertiary)",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {activeYearGoals.filter((g) => g.done).length}/
-                      {activeYearGoals.length}
-                    </span>
-                  )}
+                  {activeYearGoals.length > 0 && (() => {
+                    const doneY = activeYearGoals.filter((g) => g.done).length;
+                    const totalY = activeYearGoals.length;
+                    const isAllDone = doneY === totalY;
+                    return (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: isAllDone ? 600 : 400,
+                          color: isAllDone ? "#34c759" : "var(--text-tertiary)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {doneY}/{totalY}
+                      </span>
+                    );
+                  })()}
                   {activeYearGoals.length > 0 && (
                     <div
                       style={{
@@ -470,16 +482,22 @@ export function AllGoalsPanel({
                           >
                             {qr.label ?? t(`q${qi + 1}` as keyof typeof t)}
                           </span>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              color: qHeaderText,
-                              opacity: 0.6,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {qTotal}/{qAllTotal}
-                          </span>
+                          {(() => {
+                            const isQuarterAllDone = qAllTotal > 0 && qTotal === qAllTotal;
+                            return (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: isQuarterAllDone ? 600 : 400,
+                                  color: isQuarterAllDone ? "#34c759" : qHeaderText,
+                                  opacity: isQuarterAllDone ? 1 : 0.6,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {qTotal}/{qAllTotal}
+                              </span>
+                            );
+                          })()}
                           {qAllTotal > 0 && (
                             <div
                               style={{
@@ -497,7 +515,7 @@ export function AllGoalsPanel({
                                 style={{
                                   height: "100%",
                                   borderRadius: 999,
-                                  background: qr.fill,
+                                  background: "#34c759",
                                   width: `${(qTotal / qAllTotal) * 100}%`,
                                   transition: "width 0.4s ease",
                                 }}
@@ -673,17 +691,24 @@ export function AllGoalsPanel({
                                 >
                                   {block.label}
                                 </span>
-                                <span
-                                  style={{
-                                    fontSize: 10,
-                                    color: sprintHeaderText,
-                                    opacity: 0.6,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {goals.filter((g) => g.done).length}/
-                                  {goals.length}
-                                </span>
+                                {(() => {
+                                  const doneSprintCount = goals.filter((g) => g.done).length;
+                                  const totalSprintCount = goals.length;
+                                  const isSprintAllDone = totalSprintCount > 0 && doneSprintCount === totalSprintCount;
+                                  return (
+                                    <span
+                                      style={{
+                                        fontSize: 10,
+                                        fontWeight: isSprintAllDone ? 600 : 400,
+                                        color: isSprintAllDone ? "#34c759" : sprintHeaderText,
+                                        opacity: isSprintAllDone ? 1 : 0.6,
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      {doneSprintCount}/{totalSprintCount}
+                                    </span>
+                                  );
+                                })()}
                                 <div
                                   style={{
                                     width: 36,
@@ -700,7 +725,7 @@ export function AllGoalsPanel({
                                     style={{
                                       height: "100%",
                                       borderRadius: 999,
-                                      background: effectiveQ.fill,
+                                      background: "#34c759",
                                       width: `${goals.length > 0 ? (goals.filter((g) => g.done).length / goals.length) * 100 : 0}%`,
                                       transition: "width 0.4s ease",
                                     }}

@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
 import TextareaAutosize from "react-textarea-autosize";
+import { motion, AnimatePresence } from "framer-motion";
 import type { NoteEntry } from "../../types/calendar";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
 import { DraggableCard } from "./DraggableCard";
 import { LangContext } from "../../constants/i18n";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey, getPopoverPlacement } from "../../constants/colors";
 
 const NOTE_LONG_PRESS_MS = 350;
 const NOTE_LONG_PRESS_MOVE_TOLERANCE = 8;
@@ -15,11 +16,13 @@ export function NoteEntryItem({
   idx,
   entriesCount,
   dark,
+  modalBg,
   inputBg,
   borderColor,
   hoveredEntryId,
   setHoveredEntryId,
   updateEntry,
+  updateEntryColor,
   handleNoteHeightChange,
   handleKey,
   noteHeights,
@@ -33,11 +36,13 @@ export function NoteEntryItem({
   idx: number;
   entriesCount: number;
   dark: boolean;
+  modalBg?: string;
   inputBg: string;
   borderColor: string;
   hoveredEntryId: string | null;
   setHoveredEntryId: (id: string | null) => void;
   updateEntry: (id: string, text: string) => void;
+  updateEntryColor: (id: string, color: string | undefined) => void;
   handleNoteHeightChange: (id: string, h: number) => void;
   handleKey: (e: React.KeyboardEvent) => void;
   noteHeights: Record<string, number>;
@@ -49,6 +54,7 @@ export function NoteEntryItem({
   setConfirmDeleteEntryId: (id: string | null) => void;
 }) {
   const { t } = React.useContext(LangContext);
+  const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
   const entryColor = entry.color;
   const ec = entryColor
     ? getEventColors(resolveNoteHex(entryColor), dark)
@@ -119,53 +125,119 @@ export function NoteEntryItem({
             isolation: "isolate",
           }}
         >
-          <button
-            ref={(el) => {
-              colorBtnRefs.current[entry.id] = el;
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleColorPicker(entry.id);
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-            aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
-            data-testid={`note-color-btn-${idx}`}
-            style={{
-              width: 19,
-              height: 19,
-              borderRadius: 999,
-              flexShrink: 0,
-              background: normaliseGrey(entryColor) || "transparent",
-              border: "none",
-              boxShadow: entryColor
-                ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                : "0 0 0 1.5px var(--border-soft)",
-              boxSizing: "border-box",
-              cursor: "pointer",
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mixBlendMode: "normal",
-              isolation: "isolate",
-              marginRight: 1,
-            }}
-          >
-            {!entryColor && (
-              <span
+          <div style={{ position: "relative", display: "inline-flex" }}>
+            <button
+              ref={(el) => {
+                colorBtnRefs.current[entry.id] = el;
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const btn = colorBtnRefs.current[entry.id];
+                setPlacement(getPopoverPlacement(btn));
+                toggleColorPicker(entry.id);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+              aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
+              data-testid={`note-color-btn-${idx}`}
+              style={{
+                width: 19,
+                height: 19,
+                borderRadius: 999,
+                flexShrink: 0,
+                background: normaliseGrey(entryColor) || "transparent",
+                border: "none",
+                boxShadow: entryColor
+                  ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
+                  : "0 0 0 1.5px var(--border-soft)",
+                boxSizing: "border-box",
+                cursor: "pointer",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mixBlendMode: "normal",
+                isolation: "isolate",
+                marginRight: 1,
+              }}
+            >
+              {!entryColor && (
+                <span
+                  style={{
+                    position: "absolute",
+                    width: "55%",
+                    height: "1.5px",
+                    background: dark
+                      ? "rgba(255,255,255,0.55)"
+                      : "rgba(0,0,0,0.35)",
+                    transform: "rotate(-45deg)",
+                  }}
+                />
+              )}
+            </button>
+            {colorPickerEntryId === entry.id && (
+              <motion.div
+                key="color-popover"
+                initial={{
+                  opacity: 0,
+                  scale: 0.94,
+                  y: placement === "top" ? 4 : -4,
+                }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.94,
+                  y: placement === "top" ? 4 : -4,
+                }}
+                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                onClick={(e) => e.stopPropagation()}
                 style={{
                   position: "absolute",
-                  width: "55%",
-                  height: "1.5px",
-                  background: dark
-                    ? "rgba(255,255,255,0.55)"
-                    : "rgba(0,0,0,0.35)",
-                  transform: "rotate(-45deg)",
+                  ...(placement === "top"
+                    ? { bottom: "calc(100% + 6px)" }
+                    : { top: "calc(100% + 6px)" }),
+                  right: 0,
+                  zIndex: 200,
+                  background:
+                    modalBg ||
+                    (dark
+                      ? "rgba(30,30,30,0.95)"
+                      : "rgba(255,255,255,0.95)"),
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  borderRadius: 12,
+                  padding: 8,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                  border: "1px solid var(--border-soft)",
+                  width: 136,
+                  isolation: "isolate",
                 }}
-              />
+              >
+                <div
+                  style={{ position: "fixed", inset: 0, zIndex: -1 }}
+                  onClick={() => toggleColorPicker(entry.id)}
+                />
+                <ColorSwatchGrid
+                  colors={APPLE_COLORS.map((ac) => ({
+                    key: ac.key,
+                    hex: dark ? ac.dark : ac.light,
+                    label: ac.label,
+                  }))}
+                  selected={entry.color ?? null}
+                  onSelect={(hex) => {
+                    updateEntryColor(entry.id, hex);
+                    toggleColorPicker(entry.id);
+                  }}
+                  onClear={() => {
+                    updateEntryColor(entry.id, undefined);
+                    toggleColorPicker(entry.id);
+                  }}
+                  clearLabel={t("noColor")}
+                  dark={dark}
+                />
+              </motion.div>
             )}
-          </button>
+          </div>
           <button
             onClick={() => setConfirmDeleteEntryId(entry.id)}
             onPointerDown={(e) => e.stopPropagation()}

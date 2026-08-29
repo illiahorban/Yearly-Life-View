@@ -95,28 +95,11 @@ export function GoalsModal({
   };
 
   // Color picker state
-  const colorBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [colorPickerGoalId, setColorPickerGoalId] = useState<string | null>(
     null,
   );
-  const [colorPickerPos, setColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
   const toggleColorPicker = (id: string) => {
-    if (colorPickerGoalId === id) {
-      setColorPickerGoalId(null);
-      return;
-    }
-    const btn = colorBtnRefs.current[id];
-    if (btn) {
-      const rect = btn.getBoundingClientRect();
-      setColorPickerPos({
-        top: rect.bottom + 7,
-        left: Math.min(rect.right - 152, window.innerWidth - 164),
-      });
-    }
-    setColorPickerGoalId(id);
+    setColorPickerGoalId(colorPickerGoalId === id ? null : id);
   };
   const setGoalColor = (id: string, color: string | undefined) => {
     commitGoalsDraft(
@@ -447,9 +430,6 @@ export function GoalsModal({
                             }}
                           >
                             <button
-                              ref={(el) => {
-                                colorBtnRefs.current[g.id] = el;
-                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleColorPicker(g.id);
@@ -491,6 +471,64 @@ export function GoalsModal({
                                 />
                               )}
                             </button>
+                            {colorPickerGoalId === g.id && (
+                              <motion.div
+                                key="goal-color-popover"
+                                initial={{ opacity: 0, scale: 0.94, y: -4 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.94, y: -4 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 420,
+                                  damping: 28,
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  position: "absolute",
+                                  top: "calc(100% + 6px)",
+                                  right: 0,
+                                  zIndex: 200,
+                                  background: modalBg,
+                                  backdropFilter: "blur(20px)",
+                                  WebkitBackdropFilter: "blur(20px)",
+                                  borderRadius: 12,
+                                  padding: 8,
+                                  boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                                  border: "1px solid var(--border-soft)",
+                                  width: 136,
+                                  isolation: "isolate",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    position: "fixed",
+                                    inset: 0,
+                                    zIndex: -1,
+                                  }}
+                                  onClick={() => setColorPickerGoalId(null)}
+                                />
+                                <ColorSwatchGrid
+                                  colors={APPLE_COLORS.map((ac) => ({
+                                    key: ac.key,
+                                    hex: dark ? ac.dark : ac.light,
+                                    label: ac.label,
+                                  }))}
+                                  selected={
+                                    goals.find(
+                                      (x) => x.id === colorPickerGoalId,
+                                    )?.color ?? null
+                                  }
+                                  onSelect={(hex) =>
+                                    setGoalColor(colorPickerGoalId, hex)
+                                  }
+                                  onClear={() =>
+                                    setGoalColor(colorPickerGoalId, undefined)
+                                  }
+                                  clearLabel={t("noColor")}
+                                  dark={dark}
+                                />
+                              </motion.div>
+                            )}
                             <button
                               onClick={() => setConfirmDeleteGoalId(g.id)}
                               onPointerDown={(e) => e.stopPropagation()}
@@ -581,51 +619,6 @@ export function GoalsModal({
           {/* end scrollable body */}
         </motion.div>
       </motion.div>
-      {colorPickerGoalId !== null &&
-        colorPickerPos &&
-        ReactDOM.createPortal(
-          <AnimatePresence>
-            <motion.div
-              key="goal-color-popover"
-              initial={{ opacity: 0, scale: 0.94, y: -4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: -4 }}
-              transition={{ type: "spring", stiffness: 420, damping: 28 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: "fixed",
-                top: colorPickerPos.top,
-                left: colorPickerPos.left,
-                zIndex: 200,
-                background: modalBg,
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                borderRadius: 12,
-                padding: 8,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                border: "1px solid var(--border-soft)",
-                width: 136,
-                isolation: "isolate",
-              }}
-            >
-              <ColorSwatchGrid
-                colors={APPLE_COLORS.map((ac) => ({
-                  key: ac.key,
-                  hex: dark ? ac.dark : ac.light,
-                  label: ac.label,
-                }))}
-                selected={
-                  goals.find((g) => g.id === colorPickerGoalId)?.color ?? null
-                }
-                onSelect={(hex) => setGoalColor(colorPickerGoalId, hex)}
-                onClear={() => setGoalColor(colorPickerGoalId, undefined)}
-                clearLabel={t("noColor")}
-                dark={dark}
-              />
-            </motion.div>
-          </AnimatePresence>,
-          document.body,
-        )}
       <ConfirmDialog
         open={confirmDeleteGoalId !== null}
         onClose={() => setConfirmDeleteGoalId(null)}

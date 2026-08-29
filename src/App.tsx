@@ -3215,22 +3215,16 @@ function App() {
               onToggleQuarterGoal={toggleQuarterGoal}
               onToggleYearGoal={(goalId) => toggleYearGoal(viewYear, goalId)}
               onEditGoals={(id) => {
-                runMobileWindowAction(editGoalsBlockId === id, () => {
-                  setEditGoalsBlockId(id);
-                  setGoalsOpen(false);
-                });
+                setEditGoalsBlockId(id);
+                setGoalsOpen(false);
               }}
               onEditQuarterGoals={(qi) => {
-                runMobileWindowAction(editGoalsQi === qi, () => {
-                  setEditGoalsQi(qi);
-                  setGoalsOpen(false);
-                });
+                setEditGoalsQi(qi);
+                setGoalsOpen(false);
               }}
               onEditYearGoals={() => {
-                runMobileWindowAction(editYearGoals, () => {
-                  setEditYearGoals(true);
-                  setGoalsOpen(false);
-                });
+                setEditYearGoals(true);
+                setGoalsOpen(false);
               }}
               onClose={() => setGoalsOpen(false)}
             />
@@ -3246,12 +3240,7 @@ function App() {
               resolvedQuarters={resolvedQuarters}
               dark={dark}
               modalBg={modalBg}
-              onOpenNote={(key) =>
-                runMobileWindowAction(
-                  openNote === key,
-                  () => setOpenNote(key),
-                )
-              }
+              onOpenNote={(key) => setOpenNote(key)}
               onAddNote={(dk, entry) =>
                 upsertNotes(dk, [...(notes[dk] ?? []), entry])
               }

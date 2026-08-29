@@ -39,11 +39,6 @@ export function NotesPanel({
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState<string | null>(null);
   const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
-  const [draftColorPickerPos, setDraftColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const draftColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [hoveredDk, setHoveredDk] = useState<string | null>(null);
   const [confirmDeleteDk, setConfirmDeleteDk] = useState<string | null>(null);
@@ -107,16 +102,7 @@ export function NotesPanel({
   };
 
   const toggleDraftColorPicker = () => {
-    if (draftColorPickerOpen) {
-      setDraftColorPickerOpen(false);
-      return;
-    }
-    const btn = draftColorBtnRef.current;
-    if (btn) {
-      const rect = btn.getBoundingClientRect();
-      setDraftColorPickerPos({ top: rect.bottom + 7, left: rect.right - 152 });
-    }
-    setDraftColorPickerOpen(true);
+    setDraftColorPickerOpen((prev) => !prev);
   };
 
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
@@ -398,7 +384,6 @@ export function NotesPanel({
                 }}
               />
               <button
-                ref={draftColorBtnRef}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleDraftColorPicker();
@@ -422,6 +407,54 @@ export function NotesPanel({
                   padding: 0,
                 }}
               />
+              {draftColorPickerOpen && (
+                <motion.div
+                  key="draft-color-popover"
+                  initial={{ opacity: 0, scale: 0.94, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.94, y: -4 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    right: 0,
+                    zIndex: 200,
+                    background: modalBg,
+                    backdropFilter: "blur(20px)",
+                    WebkitBackdropFilter: "blur(20px)",
+                    borderRadius: 12,
+                    padding: 8,
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                    border: "1px solid var(--border-soft)",
+                    width: 136,
+                    isolation: "isolate",
+                  }}
+                >
+                  <div
+                    style={{ position: "fixed", inset: 0, zIndex: -1 }}
+                    onClick={() => setDraftColorPickerOpen(false)}
+                  />
+                  <ColorSwatchGrid
+                    colors={APPLE_COLORS.map((ac) => ({
+                      key: ac.key,
+                      hex: dark ? ac.dark : ac.light,
+                      label: ac.label,
+                    }))}
+                    selected={draftColor}
+                    onSelect={(hex) => {
+                      setDraftColor(draftColor === hex ? null : hex);
+                      setDraftColorPickerOpen(false);
+                    }}
+                    onClear={() => {
+                      setDraftColor(null);
+                      setDraftColorPickerOpen(false);
+                    }}
+                    clearLabel={t("noColor")}
+                    dark={dark}
+                  />
+                </motion.div>
+              )}
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input
@@ -736,56 +769,6 @@ export function NotesPanel({
           )}
         </div>
       </motion.div>
-      {draftColorPickerOpen &&
-        draftColorPickerPos &&
-        ReactDOM.createPortal(
-          <motion.div
-            key="draft-color-popover"
-            initial={{ opacity: 0, scale: 0.94, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 28 }}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: "fixed",
-              top: draftColorPickerPos.top,
-              left: draftColorPickerPos.left,
-              zIndex: 200,
-              background: modalBg,
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: 12,
-              padding: 8,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-              border: "1px solid var(--border-soft)",
-              width: 136,
-              isolation: "isolate",
-            }}
-          >
-            <div
-              style={{ position: "fixed", inset: 0, zIndex: -1 }}
-              onClick={() => setDraftColorPickerOpen(false)}
-            />
-            <ColorSwatchGrid
-              colors={APPLE_COLORS.map((ac) => ({
-                key: ac.key,
-                hex: dark ? ac.dark : ac.light,
-                label: ac.label,
-              }))}
-              selected={draftColor}
-              onSelect={(hex) => {
-                setDraftColor(draftColor === hex ? null : hex);
-                setDraftColorPickerOpen(false);
-              }}
-              onClear={() => {
-                setDraftColor(null);
-                setDraftColorPickerOpen(false);
-              }}
-              clearLabel={t("noColor")}
-              dark={dark}
-            />
-          </motion.div>,
-          document.body,
-        )}
       <ConfirmDialog
         open={confirmDeleteDk !== null}
         onClose={() => setConfirmDeleteDk(null)}

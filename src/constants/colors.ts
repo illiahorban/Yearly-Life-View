@@ -85,6 +85,30 @@ export function clampedPopoverPos(
   return { top, left };
 }
 
+/** Determines whether a popover should open upwards or downwards based on available space in the container/viewport */
+export function getPopoverPlacement(
+  buttonEl: HTMLElement | null,
+  popoverHeight = 145,
+): "top" | "bottom" {
+  if (!buttonEl) return "bottom";
+  const rect = buttonEl.getBoundingClientRect();
+  const modalEl =
+    buttonEl.closest("[data-modal-scroll]") ||
+    buttonEl.closest("[data-modal-body]") ||
+    buttonEl.closest(".modal-container") ||
+    buttonEl.closest('[role="dialog"]');
+  const bottomLimit = modalEl
+    ? modalEl.getBoundingClientRect().bottom
+    : window.innerHeight;
+  const topLimit = modalEl ? modalEl.getBoundingClientRect().top : 0;
+  const spaceBelow = bottomLimit - rect.bottom;
+  const spaceAbove = rect.top - topLimit;
+  if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+    return "top";
+  }
+  return "bottom";
+}
+
 export const DEFAULT_QUARTER_META: QuarterMeta[] = [
   { name: "Q1", colorKey: "white" },
   { name: "Q2", colorKey: "white" },

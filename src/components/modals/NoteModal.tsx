@@ -5,7 +5,7 @@ import TextareaAutosize from "react-textarea-autosize";
 import type { DayState, Milestone, NoteEntry, DayGoals, DayTemplate, AppleColorKey } from "../../types/calendar";
 import { dateKey, addDays, sameDay, startOfDay } from "../../utils/date-utils";
 import { makeId, newTimestamps } from "../../utils/storage";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, clampedPopoverPos, fireConfettiCannons, goalCheckboxAchromaticStyle, swatchCheckColor } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, clampedPopoverPos, fireConfettiCannons, goalCheckboxAchromaticStyle, swatchCheckColor, getPopoverPlacement } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { NoteEntryItem } from "./NoteEntryItem";
 import { DraggableCard } from "./DraggableCard";
@@ -171,12 +171,7 @@ export function NoteModal({
   const [goalColorPickerIdx, setGoalColorPickerIdx] = useState<number | null>(
     null,
   );
-  const [goalColorPickerPos, setGoalColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const goalColorBtnRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const goalColorPopoverRef = useRef<HTMLDivElement | null>(null);
+  const [goalColorPlacement, setGoalColorPlacement] = useState<"top" | "bottom">("bottom");
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmDeleteGoalIdx, setConfirmDeleteGoalIdx] = useState<
     number | null
@@ -237,21 +232,8 @@ export function NoteModal({
   const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(
     null,
   );
-  const [colorPickerPos, setColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
   const toggleColorPicker = (id: string) => {
-    if (colorPickerEntryId === id) {
-      setColorPickerEntryId(null);
-      return;
-    }
-    const btn = colorBtnRefs.current[id];
-    if (btn) {
-      const rect = btn.getBoundingClientRect();
-      setColorPickerPos({ top: rect.bottom + 7, left: rect.right - 152 });
-    }
-    setColorPickerEntryId(id);
+    setColorPickerEntryId((prev) => (prev === id ? null : id));
   };
 
   // Note height tracking is now delegated entirely to <TextareaAutosize>
@@ -286,15 +268,8 @@ export function NoteModal({
   const [msEditDesc, setMsEditDesc] = useState("");
   const [msEditRecurring, setMsEditRecurring] = useState(false);
   const [msEditRecurSpinKey, setMsEditRecurSpinKey] = useState(0);
-  const msEditColorBtnRefs = React.useRef<Map<string, HTMLButtonElement>>(
-    new Map(),
-  );
-  const msEditColorPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const [msEditColorPickerOpen, setMsEditColorPickerOpen] = useState(false);
-  const [msEditColorPickerPos, setMsEditColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
+  const [msEditColorPlacement, setMsEditColorPlacement] = useState<"top" | "bottom">("bottom");
 
   // New event form state
   const addEventFormRef = React.useRef<HTMLDivElement | null>(null);
@@ -305,13 +280,8 @@ export function NoteModal({
   const [newDesc, setNewDesc] = useState("");
   const [newRecurring, setNewRecurring] = useState(false);
   const [newRecurSpinKey, setNewRecurSpinKey] = useState(0);
-  const newColorBtnRef = React.useRef<HTMLButtonElement | null>(null);
-  const newColorPopoverRef = React.useRef<HTMLDivElement | null>(null);
   const [newColorPickerOpen, setNewColorPickerOpen] = useState(false);
-  const [newColorPickerPos, setNewColorPickerPos] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
+  const [newColorPlacement, setNewColorPlacement] = useState<"top" | "bottom">("bottom");
 
   const submitNewEvent = () => {
     if (!newLabel.trim()) return;
@@ -358,8 +328,6 @@ export function NoteModal({
     if (!msEditId) return;
     const handler = (e: MouseEvent) => {
       const el = msEditRefs.current.get(msEditId);
-      const popover = msEditColorPopoverRef.current;
-      if (popover && popover.contains(e.target as Node)) return;
       if (el && !el.contains(e.target as Node)) {
         setMsEditId(null);
       }
@@ -375,8 +343,6 @@ export function NoteModal({
   React.useEffect(() => {
     if (!addEventOpen) return;
     const handler = (e: MouseEvent) => {
-      const popover = newColorPopoverRef.current;
-      if (popover && popover.contains(e.target as Node)) return;
       if (
         addEventFormRef.current &&
         !addEventFormRef.current.contains(e.target as Node)
@@ -391,47 +357,6 @@ export function NoteModal({
   React.useEffect(() => {
     if (!addEventOpen) setNewColorPickerOpen(false);
   }, [addEventOpen]);
-
-  React.useEffect(() => {
-    if (!newColorPickerOpen) return;
-    const handler = (e: MouseEvent) => {
-      const popover = newColorPopoverRef.current;
-      const btn = newColorBtnRef.current;
-      if (popover && popover.contains(e.target as Node)) return;
-      if (btn && btn.contains(e.target as Node)) return;
-      setNewColorPickerOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [newColorPickerOpen]);
-
-  React.useEffect(() => {
-    if (!msEditColorPickerOpen) return;
-    const handler = (e: MouseEvent) => {
-      const popover = msEditColorPopoverRef.current;
-      const btn = msEditId
-        ? (msEditColorBtnRefs.current.get(msEditId) ?? null)
-        : null;
-      if (popover && popover.contains(e.target as Node)) return;
-      if (btn && btn.contains(e.target as Node)) return;
-      setMsEditColorPickerOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [msEditColorPickerOpen]);
-
-  React.useEffect(() => {
-    if (goalColorPickerIdx === null) return;
-    const handler = (e: MouseEvent) => {
-      const popover = goalColorPopoverRef.current;
-      const btn = goalColorBtnRefs.current[goalColorPickerIdx];
-      if (popover && popover.contains(e.target as Node)) return;
-      if (btn && btn.contains(e.target as Node)) return;
-      setGoalColorPickerIdx(null);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [goalColorPickerIdx]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number, number, number];
   const label = new Date(y, m - 1, d).toLocaleDateString(
@@ -589,6 +514,7 @@ export function NoteModal({
 
         {/* Scrollable body */}
         <div
+          data-modal-scroll="true"
           style={{
             flex: 1,
             overflowY: "auto",
@@ -1122,67 +1048,130 @@ export function NoteModal({
                                 isolation: "isolate",
                               }}
                             >
-                              <button
-                                ref={(el) => {
-                                  goalColorBtnRefs.current[i] = el;
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (goalColorPickerIdx === i) {
-                                    setGoalColorPickerIdx(null);
-                                    return;
-                                  }
-                                  const btn = goalColorBtnRefs.current[i];
-                                  if (btn) {
-                                    setGoalColorPickerPos(
-                                      clampedPopoverPos(
-                                        btn.getBoundingClientRect(),
-                                        136,
-                                        100,
-                                      ),
-                                    );
-                                  }
-                                  setGoalColorPickerIdx(i);
-                                }}
-                                onPointerDown={(e) => e.stopPropagation()}
-                                title={t("chooseColor")}
-                                aria-label={t("chooseColor")}
+                              <div
                                 style={{
-                                  width: 19,
-                                  height: 19,
-                                  borderRadius: 999,
-                                  flexShrink: 0,
-                                  background:
-                                    normaliseGrey(goalColor) || "transparent",
-                                  border: "none",
-                                  boxShadow: goalColor
-                                    ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                                    : "0 0 0 1.5px var(--border-soft)",
-                                  boxSizing: "border-box",
-                                  cursor: "pointer",
                                   position: "relative",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  mixBlendMode: "normal",
-                                  isolation: "isolate",
-                                  marginRight: 1,
+                                  display: "inline-flex",
                                 }}
                               >
-                                {!goalColor && (
-                                  <span
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setGoalColorPlacement(
+                                      getPopoverPlacement(e.currentTarget),
+                                    );
+                                    setGoalColorPickerIdx((prev) =>
+                                      prev === i ? null : i,
+                                    );
+                                  }}
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  title={t("chooseColor")}
+                                  aria-label={t("chooseColor")}
+                                  style={{
+                                    width: 19,
+                                    height: 19,
+                                    borderRadius: 999,
+                                    flexShrink: 0,
+                                    background:
+                                      normaliseGrey(goalColor) || "transparent",
+                                    border: "none",
+                                    boxShadow: goalColor
+                                      ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
+                                      : "0 0 0 1.5px var(--border-soft)",
+                                    boxSizing: "border-box",
+                                    cursor: "pointer",
+                                    position: "relative",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    mixBlendMode: "normal",
+                                    isolation: "isolate",
+                                    marginRight: 1,
+                                  }}
+                                >
+                                  {!goalColor && (
+                                    <span
+                                      style={{
+                                        position: "absolute",
+                                        width: "55%",
+                                        height: "1.5px",
+                                        background: dark
+                                          ? "rgba(255,255,255,0.55)"
+                                          : "rgba(0,0,0,0.35)",
+                                        transform: "rotate(-45deg)",
+                                      }}
+                                    />
+                                  )}
+                                </button>
+                                {goalColorPickerIdx === i && (
+                                  <motion.div
+                                    key="goal-color-popover"
+                                    initial={{
+                                      opacity: 0,
+                                      scale: 0.94,
+                                      y: goalColorPlacement === "top" ? 4 : -4,
+                                    }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{
+                                      opacity: 0,
+                                      scale: 0.94,
+                                      y: goalColorPlacement === "top" ? 4 : -4,
+                                    }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 420,
+                                      damping: 28,
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
                                     style={{
                                       position: "absolute",
-                                      width: "55%",
-                                      height: "1.5px",
-                                      background: dark
-                                        ? "rgba(255,255,255,0.55)"
-                                        : "rgba(0,0,0,0.35)",
-                                      transform: "rotate(-45deg)",
+                                      ...(goalColorPlacement === "top"
+                                        ? { bottom: "calc(100% + 6px)" }
+                                        : { top: "calc(100% + 6px)" }),
+                                      right: 0,
+                                      zIndex: 100,
+                                      background: modalBg,
+                                      backdropFilter: "blur(20px)",
+                                      WebkitBackdropFilter: "blur(20px)",
+                                      borderRadius: 12,
+                                      padding: 8,
+                                      boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                                      border: "1px solid var(--border-soft)",
+                                      width: 136,
+                                      isolation: "isolate",
                                     }}
-                                  />
+                                  >
+                                    <div
+                                      style={{
+                                        position: "fixed",
+                                        inset: 0,
+                                        zIndex: -1,
+                                      }}
+                                      onClick={() =>
+                                        setGoalColorPickerIdx(null)
+                                      }
+                                    />
+                                    <ColorSwatchGrid
+                                      colors={APPLE_COLORS.map((ac) => ({
+                                        key: ac.key,
+                                        hex: dark ? ac.dark : ac.light,
+                                        label: ac.label,
+                                      }))}
+                                      selected={goalsDraft.colors?.[i] ?? null}
+                                      onSelect={(hex) => {
+                                        handleGoalColorChange(i, hex);
+                                        setGoalColorPickerIdx(null);
+                                      }}
+                                      onClear={() => {
+                                        handleGoalColorChange(i, undefined);
+                                        setGoalColorPickerIdx(null);
+                                      }}
+                                      clearLabel={t("noColor")}
+                                      dark={dark}
+                                    />
+                                  </motion.div>
                                 )}
-                              </button>
+                              </div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1272,55 +1261,6 @@ export function NoteModal({
                   {t("addGoal")}
                 </button>
               )}
-              {goalColorPickerIdx !== null &&
-                goalColorPickerPos &&
-                ReactDOM.createPortal(
-                  <motion.div
-                    key="goal-color-popover"
-                    ref={goalColorPopoverRef}
-                    initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      position: "fixed",
-                      top: goalColorPickerPos.top,
-                      left: goalColorPickerPos.left,
-                      zIndex: 300,
-                      background: modalBg,
-                      backdropFilter: "blur(20px)",
-                      WebkitBackdropFilter: "blur(20px)",
-                      borderRadius: 12,
-                      padding: 8,
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                      border: "1px solid var(--border-soft)",
-                      width: 136,
-                      isolation: "isolate",
-                    }}
-                  >
-                    <div
-                      style={{ position: "fixed", inset: 0, zIndex: -1 }}
-                      onClick={() => setGoalColorPickerIdx(null)}
-                    />
-                    <ColorSwatchGrid
-                      colors={APPLE_COLORS.map((ac) => ({
-                        key: ac.key,
-                        hex: dark ? ac.dark : ac.light,
-                        label: ac.label,
-                      }))}
-                      selected={goalsDraft.colors?.[goalColorPickerIdx] ?? null}
-                      onSelect={(hex) =>
-                        handleGoalColorChange(goalColorPickerIdx, hex)
-                      }
-                      onClear={() =>
-                        handleGoalColorChange(goalColorPickerIdx, undefined)
-                      }
-                      clearLabel={t("noColor")}
-                      dark={dark}
-                    />
-                  </motion.div>,
-                  document.body,
-                )}
             </div>
           </div>
 
@@ -1641,143 +1581,136 @@ export function NoteModal({
                                   }
                                 />
                               </div>
-                              {msEditColorPickerOpen &&
-                                msEditColorPickerPos &&
-                                ReactDOM.createPortal(
-                                  <motion.div
-                                    key="ms-edit-color-popover"
-                                    ref={msEditColorPopoverRef}
-                                    initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    transition={{
-                                      type: "spring",
-                                      stiffness: 420,
-                                      damping: 28,
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
+                                <div className="flex items-center justify-between gap-2">
+                                  <div
+                                    className="flex items-center gap-1.5"
                                     style={{
-                                      position: "fixed",
-                                      top: msEditColorPickerPos.top,
-                                      left: msEditColorPickerPos.left,
-                                      zIndex: 300,
-                                      background: modalBg,
-                                      backdropFilter: "blur(20px)",
-                                      WebkitBackdropFilter: "blur(20px)",
-                                      borderRadius: 12,
-                                      padding: 8,
-                                      boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                                      border: "1px solid var(--border-soft)",
-                                      width: 136,
-                                      isolation: "isolate",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        position: "fixed",
-                                        inset: 0,
-                                        zIndex: -1,
-                                      }}
-                                      onClick={() =>
-                                        setMsEditColorPickerOpen(false)
-                                      }
-                                    />
-                                    <ColorSwatchGrid
-                                      colors={APPLE_COLORS.map((ac) => ({
-                                        key: ac.key,
-                                        hex: ac.light,
-                                        label: ac.label,
-                                      }))}
-                                      selected={msEditColor || null}
-                                      onSelect={(hex) => {
-                                        setMsEditColor(
-                                          msEditColor === hex ? "" : hex,
-                                        );
-                                        setMsEditColorPickerOpen(false);
-                                      }}
-                                      onClear={() => {
-                                        setMsEditColor("");
-                                        setMsEditColorPickerOpen(false);
-                                      }}
-                                      clearLabel={t("noColor")}
-                                      dark={dark}
-                                    />
-                                  </motion.div>,
-                                  document.body,
-                                )}
-                              <div className="flex items-center justify-between gap-2">
-                                <div
-                                  className="flex items-center gap-1.5"
-                                  style={{
-                                    isolation: "isolate",
-                                    marginLeft: 2,
-                                  }}
-                                >
-                                  <button
-                                    ref={(el) => {
-                                      if (el)
-                                        msEditColorBtnRefs.current.set(
-                                          ms.id,
-                                          el,
-                                        );
-                                      else
-                                        msEditColorBtnRefs.current.delete(
-                                          ms.id,
-                                        );
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (msEditColorPickerOpen) {
-                                        setMsEditColorPickerOpen(false);
-                                        return;
-                                      }
-                                      const btn =
-                                        msEditColorBtnRefs.current.get(ms.id);
-                                      if (btn) {
-                                        setMsEditColorPickerPos(
-                                          clampedPopoverPos(
-                                            btn.getBoundingClientRect(),
-                                            136,
-                                            100,
-                                          ),
-                                        );
-                                      }
-                                      setMsEditColorPickerOpen(true);
-                                    }}
-                                    title={t("chooseColor")}
-                                    style={{
-                                      width: 19,
-                                      height: 19,
-                                      borderRadius: 999,
-                                      flexShrink: 0,
-                                      background:
-                                        normaliseGrey(msEditColor) ||
-                                        "transparent",
-                                      border: "none",
-                                      boxShadow: msEditColor
-                                        ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                                        : "0 0 0 1.5px var(--border-soft)",
-                                      boxSizing: "border-box",
-                                      cursor: "pointer",
                                       position: "relative",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
+                                      isolation: "isolate",
+                                      marginLeft: 2,
                                     }}
                                   >
-                                    {!msEditColor && (
-                                      <span
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMsEditColorPlacement(
+                                          getPopoverPlacement(e.currentTarget),
+                                        );
+                                        setMsEditColorPickerOpen(
+                                          (prev) => !prev,
+                                        );
+                                      }}
+                                      title={t("chooseColor")}
+                                      style={{
+                                        width: 19,
+                                        height: 19,
+                                        borderRadius: 999,
+                                        flexShrink: 0,
+                                        background:
+                                          normaliseGrey(msEditColor) ||
+                                          "transparent",
+                                        border: "none",
+                                        boxShadow: msEditColor
+                                          ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
+                                          : "0 0 0 1.5px var(--border-soft)",
+                                        boxSizing: "border-box",
+                                        cursor: "pointer",
+                                        position: "relative",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      {!msEditColor && (
+                                        <span
+                                          style={{
+                                            position: "absolute",
+                                            width: "55%",
+                                            height: "1.5px",
+                                            background: dark
+                                              ? "rgba(255,255,255,0.55)"
+                                              : "rgba(0,0,0,0.35)",
+                                            transform: "rotate(-45deg)",
+                                          }}
+                                        />
+                                      )}
+                                    </button>
+                                    {msEditColorPickerOpen && (
+                                      <motion.div
+                                        key="ms-edit-color-popover"
+                                        initial={{
+                                          opacity: 0,
+                                          scale: 0.94,
+                                          y:
+                                            msEditColorPlacement === "top"
+                                              ? 4
+                                              : -4,
+                                        }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{
+                                          opacity: 0,
+                                          scale: 0.94,
+                                          y:
+                                            msEditColorPlacement === "top"
+                                              ? 4
+                                              : -4,
+                                        }}
+                                        transition={{
+                                          type: "spring",
+                                          stiffness: 420,
+                                          damping: 28,
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                         style={{
                                           position: "absolute",
-                                          width: "55%",
-                                          height: "1.5px",
-                                          background: dark
-                                            ? "rgba(255,255,255,0.55)"
-                                            : "rgba(0,0,0,0.35)",
-                                          transform: "rotate(-45deg)",
+                                          ...(msEditColorPlacement === "top"
+                                            ? { bottom: "calc(100% + 6px)" }
+                                            : { top: "calc(100% + 6px)" }),
+                                          left: 0,
+                                          zIndex: 300,
+                                          background: modalBg,
+                                          backdropFilter: "blur(20px)",
+                                          WebkitBackdropFilter: "blur(20px)",
+                                          borderRadius: 12,
+                                          padding: 8,
+                                          boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                                          border: "1px solid var(--border-soft)",
+                                          width: 136,
+                                          isolation: "isolate",
                                         }}
-                                      />
+                                      >
+                                        <div
+                                          style={{
+                                            position: "fixed",
+                                            inset: 0,
+                                            zIndex: -1,
+                                          }}
+                                          onClick={() =>
+                                            setMsEditColorPickerOpen(false)
+                                          }
+                                        />
+                                        <ColorSwatchGrid
+                                          colors={APPLE_COLORS.map((ac) => ({
+                                            key: ac.key,
+                                            hex: ac.light,
+                                            label: ac.label,
+                                          }))}
+                                          selected={msEditColor || null}
+                                          onSelect={(hex) => {
+                                            setMsEditColor(
+                                              msEditColor === hex ? "" : hex,
+                                            );
+                                            setMsEditColorPickerOpen(false);
+                                          }}
+                                          onClear={() => {
+                                            setMsEditColor("");
+                                            setMsEditColorPickerOpen(false);
+                                          }}
+                                          clearLabel={t("noColor")}
+                                          dark={dark}
+                                        />
+                                      </motion.div>
                                     )}
-                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -2018,85 +1951,22 @@ export function NoteModal({
                         }
                       />
                     </div>
-                    {newColorPickerOpen &&
-                      newColorPickerPos &&
-                      ReactDOM.createPortal(
-                        <motion.div
-                          key="new-event-color-popover"
-                          ref={newColorPopoverRef}
-                          initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 420,
-                            damping: 28,
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            position: "fixed",
-                            top: newColorPickerPos.top,
-                            left: newColorPickerPos.left,
-                            zIndex: 300,
-                            background: modalBg,
-                            backdropFilter: "blur(20px)",
-                            WebkitBackdropFilter: "blur(20px)",
-                            borderRadius: 12,
-                            padding: 8,
-                            boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                            border: "1px solid var(--border-soft)",
-                            width: 136,
-                            isolation: "isolate",
-                          }}
-                        >
-                          <div
-                            style={{ position: "fixed", inset: 0, zIndex: -1 }}
-                            onClick={() => setNewColorPickerOpen(false)}
-                          />
-                          <ColorSwatchGrid
-                            colors={APPLE_COLORS.map((ac) => ({
-                              key: ac.key,
-                              hex: ac.light,
-                              label: ac.label,
-                            }))}
-                            selected={newColor || null}
-                            onSelect={(hex) => {
-                              setNewColor(newColor === hex ? "" : hex);
-                              setNewColorPickerOpen(false);
-                            }}
-                            onClear={() => {
-                              setNewColor("");
-                              setNewColorPickerOpen(false);
-                            }}
-                            clearLabel={t("noColor")}
-                            dark={dark}
-                          />
-                        </motion.div>,
-                        document.body,
-                      )}
                     <div className="flex flex-wrap items-center gap-1.5">
                       <div
                         className="flex items-center gap-1.5"
-                        style={{ isolation: "isolate", marginLeft: 2 }}
+                        style={{
+                          position: "relative",
+                          isolation: "isolate",
+                          marginLeft: 2,
+                        }}
                       >
                         <button
-                          ref={newColorBtnRef}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (newColorPickerOpen) {
-                              setNewColorPickerOpen(false);
-                              return;
-                            }
-                            const btn = newColorBtnRef.current;
-                            if (btn) {
-                              setNewColorPickerPos(
-                                clampedPopoverPos(
-                                  btn.getBoundingClientRect(),
-                                  136,
-                                  100,
-                                ),
-                              );
-                            }
-                            setNewColorPickerOpen(true);
+                            setNewColorPlacement(
+                              getPopoverPlacement(e.currentTarget),
+                            );
+                            setNewColorPickerOpen((prev) => !prev);
                           }}
                           title={t("chooseColor")}
                           style={{
@@ -2134,6 +2004,72 @@ export function NoteModal({
                             />
                           )}
                         </button>
+                        {newColorPickerOpen && (
+                          <motion.div
+                            key="new-event-color-popover"
+                            initial={{
+                              opacity: 0,
+                              scale: 0.94,
+                              y: newColorPlacement === "top" ? 4 : -4,
+                            }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{
+                              opacity: 0,
+                              scale: 0.94,
+                              y: newColorPlacement === "top" ? 4 : -4,
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 420,
+                              damping: 28,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              position: "absolute",
+                              ...(newColorPlacement === "top"
+                                ? { bottom: "calc(100% + 6px)" }
+                                : { top: "calc(100% + 6px)" }),
+                              left: 0,
+                              zIndex: 300,
+                              background: modalBg,
+                              backdropFilter: "blur(20px)",
+                              WebkitBackdropFilter: "blur(20px)",
+                              borderRadius: 12,
+                              padding: 8,
+                              boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                              border: "1px solid var(--border-soft)",
+                              width: 136,
+                              isolation: "isolate",
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: "fixed",
+                                inset: 0,
+                                zIndex: -1,
+                              }}
+                              onClick={() => setNewColorPickerOpen(false)}
+                            />
+                            <ColorSwatchGrid
+                              colors={APPLE_COLORS.map((ac) => ({
+                                key: ac.key,
+                                hex: ac.light,
+                                label: ac.label,
+                              }))}
+                              selected={newColor || null}
+                              onSelect={(hex) => {
+                                setNewColor(newColor === hex ? "" : hex);
+                                setNewColorPickerOpen(false);
+                              }}
+                              onClear={() => {
+                                setNewColor("");
+                                setNewColorPickerOpen(false);
+                              }}
+                              clearLabel={t("noColor")}
+                              dark={dark}
+                            />
+                          </motion.div>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
@@ -2262,11 +2198,13 @@ export function NoteModal({
                       idx={idx}
                       entriesCount={entries.length}
                       dark={dark}
+                      modalBg={modalBg}
                       inputBg={inputBg}
                       borderColor={borderColor}
                       hoveredEntryId={hoveredEntryId}
                       setHoveredEntryId={setHoveredEntryId}
                       updateEntry={updateEntry}
+                      updateEntryColor={updateEntryColor}
                       handleNoteHeightChange={handleNoteHeightChange}
                       handleKey={handleKey}
                       noteHeights={noteHeights}
@@ -2308,54 +2246,6 @@ export function NoteModal({
         </div>
         {/* end scrollable body */}
       </motion.div>
-      {colorPickerEntryId !== null &&
-        colorPickerPos &&
-        ReactDOM.createPortal(
-          <motion.div
-            key="color-popover"
-            initial={{ opacity: 0, scale: 0.94, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 28 }}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: "fixed",
-              top: colorPickerPos.top,
-              left: colorPickerPos.left,
-              zIndex: 200,
-              background: modalBg,
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: 12,
-              padding: 8,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-              border: "1px solid var(--border-soft)",
-              width: 136,
-              isolation: "isolate",
-            }}
-          >
-            <ColorSwatchGrid
-              colors={APPLE_COLORS.map((ac) => ({
-                key: ac.key,
-                hex: dark ? ac.dark : ac.light,
-                label: ac.label,
-              }))}
-              selected={
-                entries.find((e) => e.id === colorPickerEntryId)?.color ?? null
-              }
-              onSelect={(hex) => {
-                updateEntryColor(colorPickerEntryId, hex);
-                setColorPickerEntryId(null);
-              }}
-              onClear={() => {
-                updateEntryColor(colorPickerEntryId, undefined);
-                setColorPickerEntryId(null);
-              }}
-              clearLabel={t("noColor")}
-              dark={dark}
-            />
-          </motion.div>,
-          document.body,
-        )}
       <ConfirmDialog
         open={confirmDeleteEntryId !== null}
         onClose={() => setConfirmDeleteEntryId(null)}
