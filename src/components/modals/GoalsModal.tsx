@@ -4,6 +4,7 @@ import { motion, AnimatePresence, Reorder } from "framer-motion";
 import TextareaAutosize from "react-textarea-autosize";
 import type { BlockGoals, Goal, AppleColorKey } from "../../types/calendar";
 import { useIsMobile } from "../../hooks/use-mobile";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { makeId, newTimestamps } from "../../utils/storage";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, goalCheckboxAchromaticStyle, getEventColors, normaliseGrey } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
@@ -39,6 +40,16 @@ export function GoalsModal({
 }) {
   const { t } = React.useContext(LangContext);
   const isMobile = useIsMobile();
+  const { height: vvHeight, offsetTop: vvOffsetTop, isKeyboardOpen } = useVisualViewport();
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   const [label, setLabel] = useState(blockLabel);
   const labelRef = useRef(label);
   const [description, setDescription] = useState(initial.description);
@@ -130,8 +141,16 @@ export function GoalsModal({
         initial={false}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ overflowY: "auto", overscrollBehavior: "contain" }}
+        className="fixed z-50 flex items-center justify-center pointer-events-auto"
+        style={{
+          top: vvOffsetTop || 0,
+          left: 0,
+          right: 0,
+          height: vvHeight || "100svh",
+          overflow: "hidden",
+          overscrollBehavior: "contain",
+          padding: isMobile ? (isKeyboardOpen ? "8px 12px" : "12px 16px") : "16px",
+        }}
         onClick={() => {
           setColorPickerGoalId(null);
           finalize(onClose);
@@ -144,7 +163,10 @@ export function GoalsModal({
           transition={{ duration: 0.22, ease: "easeOut" }}
           style={{
             position: "fixed",
-            inset: 0,
+            top: -100,
+            bottom: -100,
+            left: -100,
+            right: -100,
             background: "rgba(0,0,0,0.32)",
             backdropFilter: "blur(5px)",
             WebkitBackdropFilter: "blur(5px)",
@@ -174,7 +196,10 @@ export function GoalsModal({
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            maxHeight: "calc(100dvh - 2rem)",
+            maxHeight: isMobile
+              ? `${Math.max(220, vvHeight - (isKeyboardOpen ? 16 : 24))}px`
+              : "calc(100svh - 2rem)",
+            transition: "max-height 150ms ease",
           }}
         >
           <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 shrink-0">

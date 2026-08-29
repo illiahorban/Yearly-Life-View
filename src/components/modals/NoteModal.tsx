@@ -7,6 +7,8 @@ import { dateKey, addDays, sameDay, startOfDay } from "../../utils/date-utils";
 import { makeId, newTimestamps } from "../../utils/storage";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, clampedPopoverPos, fireConfettiCannons, goalCheckboxAchromaticStyle, swatchCheckColor, getPopoverPlacement } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { NoteEntryItem } from "./NoteEntryItem";
 import { DraggableCard } from "./DraggableCard";
 import { DayTemplatesModal } from "./DayTemplatesModal";
@@ -52,6 +54,18 @@ export function NoteModal({
   onSave: (entries: NoteEntry[]) => void;
   onClose: () => void;
 }) {
+  const isMobile = useIsMobile();
+  const { height: vvHeight, offsetTop: vvOffsetTop, isKeyboardOpen } = useVisualViewport();
+  const scrollBodyRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   const [entries, setEntries] = useState<NoteEntry[]>(() => initial);
   const entriesRef = useRef(entries);
   const commitEntries = (next: NoteEntry[]) => {
@@ -383,6 +397,14 @@ export function NoteModal({
       ...entriesRef.current,
       { id, text: "", ...newTimestamps() },
     ]);
+    setTimeout(() => {
+      if (scrollBodyRef.current) {
+        scrollBodyRef.current.scrollTo({
+          top: scrollBodyRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 60);
   };
   const updateEntry = (id: string, text: string) =>
     commitEntries(
@@ -436,8 +458,16 @@ export function NoteModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY: "auto", overscrollBehavior: "contain" }}
+      className="fixed z-50 flex items-center justify-center pointer-events-auto"
+      style={{
+        top: vvOffsetTop || 0,
+        left: 0,
+        right: 0,
+        height: vvHeight || "100svh",
+        overflow: "hidden",
+        overscrollBehavior: "contain",
+        padding: isMobile ? (isKeyboardOpen ? "8px 12px" : "12px 16px") : "16px",
+      }}
       onClick={() => {
         setColorPickerEntryId(null);
         onClose();
@@ -450,7 +480,10 @@ export function NoteModal({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          inset: 0,
+          top: -100,
+          bottom: -100,
+          left: -100,
+          right: -100,
           background: "rgba(0,0,0,0.32)",
           backdropFilter: "blur(4px)",
           WebkitBackdropFilter: "blur(4px)",
@@ -476,7 +509,10 @@ export function NoteModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          maxHeight: "calc(100svh - 2rem)",
+          maxHeight: isMobile
+            ? `${Math.max(220, vvHeight - (isKeyboardOpen ? 16 : 24))}px`
+            : "calc(100svh - 2rem)",
+          transition: "max-height 150ms ease",
         }}
       >
         {/* Header */}
@@ -514,6 +550,7 @@ export function NoteModal({
 
         {/* Scrollable body */}
         <div
+          ref={scrollBodyRef}
           data-modal-scroll="true"
           style={{
             flex: 1,

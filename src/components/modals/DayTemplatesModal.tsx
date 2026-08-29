@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DayTemplate } from "../../types/calendar";
 import { LangContext } from "../../constants/i18n";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { makeId, newTimestamps } from "../../utils/storage";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
@@ -26,6 +28,17 @@ export function DayTemplatesModal({
   prefillItems?: string[];
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
+  const { height: vvHeight, offsetTop: vvOffsetTop, isKeyboardOpen } = useVisualViewport();
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
   const inputStyle: React.CSSProperties = {

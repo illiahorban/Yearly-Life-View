@@ -6,6 +6,8 @@ import { dateKey } from "../../utils/date-utils";
 import { makeId, newTimestamps } from "../../utils/storage";
 import { MILESTONE_COLORS, APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, clampedPopoverPos } from "../../constants/colors";
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { HighlightText } from "../common/HighlightText";
@@ -30,6 +32,17 @@ export function MilestoneModal({
   onChange: (m: Milestone[]) => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
+  const { height: vvHeight, offsetTop: vvOffsetTop, isKeyboardOpen } = useVisualViewport();
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   const [items, setItems] = useState<Milestone[]>(() =>
     [...milestones].sort((a, b) => a.date.localeCompare(b.date)),
   );
@@ -167,8 +180,16 @@ export function MilestoneModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY: "auto", overscrollBehavior: "contain" }}
+      className="fixed z-50 flex items-center justify-center pointer-events-auto"
+      style={{
+        top: vvOffsetTop || 0,
+        left: 0,
+        right: 0,
+        height: vvHeight || "100svh",
+        overflow: "hidden",
+        overscrollBehavior: "contain",
+        padding: isMobile ? (isKeyboardOpen ? "8px 12px" : "12px 16px") : "16px",
+      }}
       onClick={onClose}
     >
       <motion.div
@@ -178,7 +199,10 @@ export function MilestoneModal({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          inset: 0,
+          top: -100,
+          bottom: -100,
+          left: -100,
+          right: -100,
           background: "rgba(0,0,0,0.34)",
           backdropFilter: "blur(5px)",
           WebkitBackdropFilter: "blur(5px)",
@@ -200,7 +224,10 @@ export function MilestoneModal({
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
-          maxHeight: "calc(100dvh - 2rem)",
+          maxHeight: isMobile
+            ? `${Math.max(220, vvHeight - (isKeyboardOpen ? 16 : 24))}px`
+            : "calc(100svh - 2rem)",
+          transition: "max-height 150ms ease",
         }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
