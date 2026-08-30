@@ -141,10 +141,16 @@ export function GoalsModal({
         initial={false}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
+        className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
         style={{
+          position: "fixed",
+          top: `${vvOffsetTop}px`,
+          left: 0,
+          right: 0,
+          height: `${vvHeight}px`,
           overflow: "hidden",
           overscrollBehavior: "contain",
+          transition: "top 0.15s ease-out, height 0.15s ease-out",
         }}
         onClick={() => {
           setColorPickerGoalId(null);
@@ -158,7 +164,9 @@ export function GoalsModal({
           transition={{ duration: 0.22, ease: "easeOut" }}
           style={{
             position: "fixed",
-            inset: 0,
+            inset: "-100vh -100vw",
+            width: "300vw",
+            height: "300vh",
             background: "rgba(0,0,0,0.36)",
             backdropFilter: "blur(5px)",
             WebkitBackdropFilter: "blur(5px)",
@@ -187,7 +195,8 @@ export function GoalsModal({
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            maxHeight: "calc(100dvh - 2rem)",
+            maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
+            transition: "max-height 0.15s ease-out",
           }}
         >
           <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 shrink-0">

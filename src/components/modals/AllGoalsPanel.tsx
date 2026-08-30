@@ -8,6 +8,8 @@ import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { pluralCount } from "../../utils/plural";
 import { HighlightText } from "../common/HighlightText";
 import { SearchIcon, CheckIcon, GoalsIcon } from "../icons/Icons";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 
 export function AllGoalsPanel({
   config,
@@ -44,6 +46,8 @@ export function AllGoalsPanel({
   onClose: () => void;
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
+  const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
 
   const activeYearGoals = yearGoals.isDeleted
@@ -73,8 +77,17 @@ export function AllGoalsPanel({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ overflowY: "auto", overscrollBehavior: "contain" }}
+      className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
+      style={{
+        position: "fixed",
+        top: `${vvOffsetTop}px`,
+        left: 0,
+        right: 0,
+        height: `${vvHeight}px`,
+        overflow: "hidden",
+        overscrollBehavior: "contain",
+        transition: "top 0.15s ease-out, height 0.15s ease-out",
+      }}
       onClick={onClose}
     >
       <motion.div
@@ -84,7 +97,9 @@ export function AllGoalsPanel({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          inset: 0,
+          inset: "-100vh -100vw",
+          width: "300vw",
+          height: "300vh",
           background: "rgba(0,0,0,0.34)",
           backdropFilter: "blur(5px)",
           WebkitBackdropFilter: "blur(5px)",
@@ -105,7 +120,8 @@ export function AllGoalsPanel({
           borderRadius: 22,
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflow: "hidden",
-          maxHeight: "calc(100dvh - 2rem)",
+          maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
+          transition: "max-height 0.15s ease-out",
         }}
       >
         {/* Header */}

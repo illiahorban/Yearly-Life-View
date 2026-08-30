@@ -7,6 +7,8 @@ import { LangContext } from "../../constants/i18n";
 import { pluralUnits, pluralCount } from "../../utils/plural";
 import { LifeGridCanvas } from "../calendar/LifeGridCanvas";
 import { LifeIcon } from "../icons/Icons";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 
 export function LifeCalendarModal({
   dark,
@@ -23,6 +25,8 @@ export function LifeCalendarModal({
   onClose: () => void;
 }) {
   const { t, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
+  const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const [view, setView] = useState<LifeView>("years");
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
 
@@ -294,8 +298,17 @@ export function LifeCalendarModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
-      style={{ overflow: "hidden" }}
+      className="z-50 flex items-center justify-center p-2 sm:p-4 pointer-events-auto"
+      style={{
+        position: "fixed",
+        top: `${vvOffsetTop}px`,
+        left: 0,
+        right: 0,
+        height: `${vvHeight}px`,
+        overflow: "hidden",
+        overscrollBehavior: "contain",
+        transition: "top 0.15s ease-out, height 0.15s ease-out",
+      }}
       onClick={onClose}
     >
       <motion.div
@@ -305,7 +318,9 @@ export function LifeCalendarModal({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          inset: 0,
+          inset: "-100vh -100vw",
+          width: "300vw",
+          height: "300vh",
           background: "rgba(0,0,0,0.40)",
           backdropFilter: "blur(6px)",
           WebkitBackdropFilter: "blur(6px)",
@@ -321,7 +336,7 @@ export function LifeCalendarModal({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: `min(96vw, ${layout.modalW}px)`,
-          maxHeight: "min(96dvh, calc(100svh - 1rem))",
+          maxHeight: `${Math.max(160, vvHeight - (isMobile ? 12 : 24))}px`,
           borderRadius: 22,
           background: modalBg,
           backdropFilter: "saturate(180%) blur(28px)",
@@ -330,7 +345,7 @@ export function LifeCalendarModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          transition: "width 0.25s ease-in-out, max-height 0.25s ease-in-out",
+          transition: "width 0.25s ease-in-out, max-height 0.15s ease-out",
         }}
       >
         {/* Fixed Header */}

@@ -11,6 +11,8 @@ import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { QuarterNameEditor } from "../calendar/QuarterNameEditor";
 import { TrashIcon, CheckIcon } from "../icons/Icons";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 
 export function SprintSettingsModal({
   quarterIndex: _qi,
@@ -45,6 +47,8 @@ export function SprintSettingsModal({
   weeksCapacity: number;
 }) {
   const { t, lang } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
+  const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initial.blocks.map((b) => ({ ...b })),
   );
@@ -85,8 +89,17 @@ export function SprintSettingsModal({
   return (
     <>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ overflowY: "auto", overscrollBehavior: "contain" }}
+        className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
+        style={{
+          position: "fixed",
+          top: `${vvOffsetTop}px`,
+          left: 0,
+          right: 0,
+          height: `${vvHeight}px`,
+          overflow: "hidden",
+          overscrollBehavior: "contain",
+          transition: "top 0.15s ease-out, height 0.15s ease-out",
+        }}
         initial={false}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
@@ -99,7 +112,9 @@ export function SprintSettingsModal({
           transition={{ duration: 0.22, ease: "easeOut" }}
           style={{
             position: "fixed",
-            inset: 0,
+            inset: "-100vh -100vw",
+            width: "300vw",
+            height: "300vh",
             background: "rgba(20,20,25,0.38)",
             backdropFilter: "blur(14px) saturate(160%)",
             WebkitBackdropFilter: "blur(14px) saturate(160%)",
@@ -120,6 +135,9 @@ export function SprintSettingsModal({
             borderRadius: 22,
             boxShadow: `0 30px 80px rgba(0,0,0,0.22), 0 0 0 2px ${quarter.border}`,
             border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.6)"}`,
+            overflowY: "auto",
+            maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
+            transition: "max-height 0.15s ease-out",
           }}
         >
           <div className="px-6 pt-6 pb-3">
