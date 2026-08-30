@@ -58,6 +58,70 @@ export function NoteModal({
   const { height: vvHeight, offsetTop: vvOffsetTop, isKeyboardOpen } = useVisualViewport();
   const scrollBodyRef = useRef<HTMLDivElement | null>(null);
 
+  // Scroll and focus helpers
+  const scrollTimerRef = React.useRef<number | null>(null);
+
+  const scrollToTarget = React.useCallback(
+    (targetEl: HTMLElement | null, mode: "center" | "bottom" | "nearest" = "nearest") => {
+      if (!scrollBodyRef.current || !targetEl) return;
+      const container = scrollBodyRef.current;
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      if (maxScroll <= 0) return;
+
+      if (mode === "bottom") {
+        const remaining = maxScroll - container.scrollTop;
+        if (remaining > 8) {
+          container.scrollTo({
+            top: maxScroll,
+            behavior: "smooth",
+          });
+        }
+        return;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = targetEl.getBoundingClientRect();
+
+      const elementTop = targetRect.top - containerRect.top;
+      const elementBottom = targetRect.bottom - containerRect.top;
+      const pad = 16;
+
+      // If already comfortably visible, do not scroll
+      if (elementTop >= pad && elementBottom <= container.clientHeight - pad) {
+        return;
+      }
+
+      if (mode === "center") {
+        const targetRelativeTop =
+          targetRect.top - containerRect.top + container.scrollTop;
+        const centeredScrollTop =
+          targetRelativeTop - container.clientHeight / 2 + targetRect.height / 2;
+        container.scrollTo({
+          top: Math.max(0, Math.min(centeredScrollTop, maxScroll)),
+          behavior: "smooth",
+        });
+        return;
+      }
+
+      // "nearest" mode
+      if (elementTop < pad) {
+        container.scrollTo({
+          top: Math.max(0, container.scrollTop + elementTop - pad),
+          behavior: "smooth",
+        });
+      } else if (elementBottom > container.clientHeight - pad) {
+        container.scrollTo({
+          top: Math.min(
+            maxScroll,
+            container.scrollTop + (elementBottom - container.clientHeight + pad),
+          ),
+          behavior: "smooth",
+        });
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -99,19 +163,19 @@ export function NoteModal({
   useEffect(() => {
     if (newlyAddedGoalIdx !== null) {
       const idx = newlyAddedGoalIdx;
-      requestAnimationFrame(() => {
-        const el = goalInputRefs.current[idx];
-        if (el) {
-          el.focus({ preventScroll: true });
-        }
-      });
+      const el = goalInputRefs.current[idx];
+      if (el) {
+        el.focus({ preventScroll: true });
+        scrollToTarget(el, "nearest");
+      }
       setNewlyAddedGoalIdx(null);
     }
-  }, [newlyAddedGoalIdx]);
+  }, [newlyAddedGoalIdx, scrollToTarget]);
 
   const handleGoalAdd = () => {
     setNewlyAddedEntryId(null);
     setAddEventOpen(false);
+    setMsEditId(null);
     const current = goalsDraftRef.current;
     const n = current.count + 1;
     const newDone = [...current.done, false];
@@ -319,105 +383,6 @@ export function NoteModal({
   const [newColorPickerOpen, setNewColorPickerOpen] = useState(false);
   const [newColorPlacement, setNewColorPlacement] = useState<"top" | "bottom">("bottom");
 
-  // Scroll and focus helpers
-  const scrollTimerRef = React.useRef<number | null>(null);
-
-  const scrollToTarget = React.useCallback(
-    (targetEl: HTMLElement | null, mode: "center" | "bottom" = "center") => {
-      if (!scrollBodyRef.current) return;
-      const container = scrollBodyRef.current;
-      const maxScroll = container.scrollHeight - container.clientHeight;
-      if (maxScroll <= 0) return;
-
-      if (mode === "bottom" || !targetEl) {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: "smooth",
-        });
-        return;
-      }
-
-      const containerRect = container.getBoundingClientRect();
-      const targetRect = targetEl.getBoundingClientRect();
-
-      // Position of target element relative to top of container's scroll content
-      const targetRelativeTop =
-        targetRect.top - containerRect.top + container.scrollTop;
-
-      // Position to center element vertically in visible container
-      const centeredScrollTop =
-        targetRelativeTop - container.clientHeight / 2 + targetRect.height / 2;
-
-      container.scrollTo({
-        top: Math.max(
-          0,
-          Math.min(
-            centeredScrollTop,
-            maxScroll,
-          ),
-        ),
-        behavior: "smooth",
-      });
-    },
-    [],
-  );
-
-  const triggerSmartScroll = React.useCallback(
-    (targetEl: HTMLElement | null, mode: "center" | "bottom" = "center") => {
-      if (scrollTimerRef.current !== null) {
-        window.clearTimeout(scrollTimerRef.current);
-      }
-      scrollTimerRef.current = window.setTimeout(() => {
-        scrollToTarget(targetEl, mode);
-        scrollTimerRef.current = null;
-      }, 70);
-    },
-    [scrollToTarget],
-  );
-
-  const handleScrollBodyFocus = React.useCallback(
-    (e: React.FocusEvent<HTMLDivElement>) => {
-      const target = e.target;
-      if (!(target instanceof HTMLElement)) return;
-      if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return;
-
-      // Check if target is inside the last note
-      const allNotes = scrollBodyRef.current?.querySelectorAll(
-        "[data-note-card='true']",
-      );
-      const isLastNote =
-        allNotes &&
-        allNotes.length > 0 &&
-        allNotes[allNotes.length - 1].contains(target);
-
-      const mode = isLastNote ? "bottom" : "center";
-      const cardEl = (target.closest("[data-draggable-card='true']") ||
-        target.closest("[data-event-form='true']") ||
-        target) as HTMLElement;
-
-      triggerSmartScroll(cardEl, mode);
-    },
-    [triggerSmartScroll],
-  );
-
-  // Auto-scroll/focus when opening Add Event form
-  React.useEffect(() => {
-    if (addEventOpen) {
-      newLabelInputRef.current?.focus();
-      triggerSmartScroll(addEventFormRef.current, "center");
-    }
-  }, [addEventOpen, triggerSmartScroll]);
-
-  // Auto-scroll/focus when editing an event
-  React.useEffect(() => {
-    if (msEditId) {
-      const el = msEditRefs.current.get(msEditId);
-      const textarea = el?.querySelector("textarea");
-      textarea?.focus();
-      triggerSmartScroll(el ?? null, "center");
-    }
-  }, [msEditId, triggerSmartScroll]);
-
   // Readjust scroll position when virtual keyboard pops up
   React.useEffect(() => {
     if (isKeyboardOpen && scrollBodyRef.current) {
@@ -433,14 +398,14 @@ export function NoteModal({
           allNotes &&
           allNotes.length > 0 &&
           allNotes[allNotes.length - 1].contains(active);
-        const mode = isLastNote ? "bottom" : "center";
+        const mode = isLastNote ? "bottom" : "nearest";
         const cardEl = (active.closest("[data-draggable-card='true']") ||
           active.closest("[data-event-form='true']") ||
           active) as HTMLElement;
-        triggerSmartScroll(cardEl, mode);
+        scrollToTarget(cardEl, mode);
       }
     }
-  }, [isKeyboardOpen, triggerSmartScroll]);
+  }, [isKeyboardOpen, scrollToTarget]);
 
   const submitNewEvent = () => {
     if (!newLabel.trim()) return;
@@ -471,6 +436,18 @@ export function NoteModal({
     setMsEditDesc(ms.description ?? "");
     setMsEditRecurring(ms.recurring ?? false);
   };
+  const msEditLabelInputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  React.useEffect(() => {
+    if (!msEditId) return;
+    const el = msEditLabelInputRef.current;
+    if (el) {
+      el.focus({ preventScroll: true });
+      const card = el.closest("[data-draggable-card='true']") as HTMLElement | null;
+      scrollToTarget(card ?? el, "nearest");
+    }
+  }, [msEditId, scrollToTarget]);
+
   const saveMsEdit = () => {
     if (!msEditLabel.trim() || !msEditId) return;
     const orig = dayMilestones.find((m) => m.id === msEditId);
@@ -504,9 +481,8 @@ export function NoteModal({
 
   React.useEffect(() => {
     if (!addEventOpen) return;
-    requestAnimationFrame(() => {
-      newLabelInputRef.current?.focus({ preventScroll: true });
-    });
+    newLabelInputRef.current?.focus({ preventScroll: true });
+    scrollToTarget(addEventFormRef.current, "nearest");
     const handler = (e: MouseEvent) => {
       if (
         addEventFormRef.current &&
@@ -516,8 +492,10 @@ export function NoteModal({
       }
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [addEventOpen]);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+    };
+  }, [addEventOpen, scrollToTarget]);
 
   React.useEffect(() => {
     if (!addEventOpen) setNewColorPickerOpen(false);
@@ -547,18 +525,23 @@ export function NoteModal({
   );
 
   useEffect(() => {
-    if (newlyAddedEntryId) {
-      const timer = setTimeout(() => {
-        setNewlyAddedEntryId(null);
-      }, 150);
-      return () => clearTimeout(timer);
+    if (newlyAddedEntryId && scrollBodyRef.current) {
+      const allNotes = scrollBodyRef.current.querySelectorAll(
+        "[data-note-card='true']",
+      );
+      if (allNotes.length > 0) {
+        const last = allNotes[allNotes.length - 1] as HTMLElement;
+        scrollToTarget(last, "nearest");
+      }
+      setNewlyAddedEntryId(null);
     }
-  }, [newlyAddedEntryId]);
+  }, [newlyAddedEntryId, scrollToTarget]);
 
   const addEntry = () => {
     const id = makeId();
     setNewlyAddedGoalIdx(null);
     setAddEventOpen(false);
+    setMsEditId(null);
     setNewlyAddedEntryId(id);
     commitEntries([
       ...entriesRef.current,
@@ -617,15 +600,10 @@ export function NoteModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed z-50 flex items-center justify-center pointer-events-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
-        top: isMobile ? vvOffsetTop : 0,
-        left: 0,
-        right: 0,
-        height: isMobile ? vvHeight : "100svh",
         overflow: "hidden",
         overscrollBehavior: "contain",
-        padding: "16px",
       }}
       onClick={() => {
         setColorPickerEntryId(null);
@@ -639,10 +617,7 @@ export function NoteModal({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          top: -200,
-          bottom: -200,
-          left: -200,
-          right: -200,
+          inset: 0,
           background: "rgba(0,0,0,0.36)",
           backdropFilter: "blur(4px)",
           WebkitBackdropFilter: "blur(4px)",
@@ -668,9 +643,7 @@ export function NoteModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          maxHeight: isMobile
-            ? `${Math.max(220, vvHeight - 32)}px`
-            : "calc(100svh - 2rem)",
+          maxHeight: "calc(100dvh - 2rem)",
         }}
       >
         {/* Header */}
@@ -710,7 +683,6 @@ export function NoteModal({
         <div
           ref={scrollBodyRef}
           data-modal-scroll="true"
-          onFocusCapture={handleScrollBodyFocus}
           style={{
             flex: 1,
             overflowY: "auto",
@@ -1747,7 +1719,7 @@ export function NoteModal({
                                 }}
                               >
                                 <TextareaAutosize
-                                  autoFocus={isEditing}
+                                  ref={msEditLabelInputRef}
                                   value={msEditLabel}
                                   onChange={(e) =>
                                     setMsEditLabel(e.target.value)
@@ -2035,7 +2007,7 @@ export function NoteModal({
           <div
             className={`px-5 ${dayMilestones.length > 0 ? "pt-1.5" : "pt-3"} pb-0 shrink-0`}
           >
-            <AnimatePresence initial={false} mode="wait">
+            <AnimatePresence initial={false}>
               {!addEventOpen && dayMilestones.length < 10 ? (
                 <motion.div
                   key="add-event-btn-wrap"
@@ -2047,11 +2019,10 @@ export function NoteModal({
                 >
                   <button
                     onClick={() => {
+                      setNewlyAddedGoalIdx(null);
+                      setNewlyAddedEntryId(null);
+                      setMsEditId(null);
                       setAddEventOpen(true);
-                      setTimeout(() => {
-                        newLabelInputRef.current?.focus();
-                        triggerSmartScroll(addEventFormRef.current, "center");
-                      }, 10);
                     }}
                     style={{
                       width: "100%",
@@ -2134,7 +2105,6 @@ export function NoteModal({
                     >
                       <TextareaAutosize
                         ref={newLabelInputRef}
-                        autoFocus={addEventOpen}
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
                         onKeyDown={(e) => {

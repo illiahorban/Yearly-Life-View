@@ -65,6 +65,10 @@ export function NoteEntryItem({
     }
   }, [autoFocus]);
 
+  const setInputRef = React.useCallback((el: HTMLTextAreaElement | null) => {
+    textareaRef.current = el;
+  }, []);
+
   const entryColor = entry.color;
   const ec = entryColor
     ? getEventColors(resolveNoteHex(entryColor), dark)
@@ -88,7 +92,7 @@ export function NoteEntryItem({
         onMouseLeave={() => setHoveredEntryId(null)}
       >
         <TextareaAutosize
-          ref={textareaRef}
+          ref={setInputRef}
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
           onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}

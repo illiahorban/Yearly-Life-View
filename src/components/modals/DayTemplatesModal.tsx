@@ -142,15 +142,10 @@ export function DayTemplatesModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed z-50 flex items-center justify-center pointer-events-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
-        top: isMobile ? vvOffsetTop : 0,
-        left: 0,
-        right: 0,
-        height: isMobile ? vvHeight : "100svh",
         overflow: "hidden",
         overscrollBehavior: "contain",
-        padding: "16px",
       }}
       onClick={onCloseAll ?? onClose}
     >
@@ -161,10 +156,7 @@ export function DayTemplatesModal({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          top: -200,
-          bottom: -200,
-          left: -200,
-          right: -200,
+          inset: 0,
           background: "rgba(0,0,0,0.36)",
           backdropFilter: "blur(4px)",
           WebkitBackdropFilter: "blur(4px)",
@@ -187,9 +179,7 @@ export function DayTemplatesModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          maxHeight: isMobile
-            ? `${Math.max(220, vvHeight - 32)}px`
-            : "calc(100svh - 2rem)",
+          maxHeight: "calc(100dvh - 2rem)",
         }}
       >
         {/* Header */}

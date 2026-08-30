@@ -180,15 +180,10 @@ export function MilestoneModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="fixed z-50 flex items-center justify-center pointer-events-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
-        top: isMobile ? vvOffsetTop : 0,
-        left: 0,
-        right: 0,
-        height: isMobile ? vvHeight : "100svh",
         overflow: "hidden",
         overscrollBehavior: "contain",
-        padding: "16px",
       }}
       onClick={onClose}
     >
@@ -199,10 +194,7 @@ export function MilestoneModal({
         transition={{ duration: 0.22, ease: "easeOut" }}
         style={{
           position: "fixed",
-          top: -200,
-          bottom: -200,
-          left: -200,
-          right: -200,
+          inset: 0,
           background: "rgba(0,0,0,0.36)",
           backdropFilter: "blur(5px)",
           WebkitBackdropFilter: "blur(5px)",
@@ -223,9 +215,7 @@ export function MilestoneModal({
           borderRadius: 22,
           boxShadow: `0 20px 60px rgba(0,0,0,0.28), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
-          maxHeight: isMobile
-            ? `${Math.max(220, vvHeight - 32)}px`
-            : "calc(100svh - 2rem)",
+          maxHeight: "calc(100dvh - 2rem)",
         }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
