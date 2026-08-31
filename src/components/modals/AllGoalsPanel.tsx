@@ -514,8 +514,7 @@ export function AllGoalsPanel({
                                 style={{
                                   fontSize: 11,
                                   fontWeight: isQuarterAllDone ? 600 : 400,
-                                  color: isQuarterAllDone ? "#34c759" : qHeaderText,
-                                  opacity: isQuarterAllDone ? 1 : 0.6,
+                                  color: isQuarterAllDone ? "#34c759" : "var(--text-tertiary)",
                                   flexShrink: 0,
                                 }}
                               >
@@ -725,8 +724,7 @@ export function AllGoalsPanel({
                                       style={{
                                         fontSize: 10,
                                         fontWeight: isSprintAllDone ? 600 : 400,
-                                        color: isSprintAllDone ? "#34c759" : sprintHeaderText,
-                                        opacity: isSprintAllDone ? 1 : 0.6,
+                                        color: isSprintAllDone ? "#34c759" : "var(--text-tertiary)",
                                         flexShrink: 0,
                                       }}
                                     >

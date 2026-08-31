@@ -96,6 +96,39 @@ export function GoalsModal({
   );
   const [hoveredGoalId, setHoveredGoalId] = useState<string | null>(null);
 
+  const goalInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const scrollBodyRef = useRef<HTMLDivElement | null>(null);
+  const [newlyAddedGoalId, setNewlyAddedGoalId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (newlyAddedGoalId !== null) {
+      const id = newlyAddedGoalId;
+      const el = goalInputRefs.current[id];
+      if (el) {
+        el.focus({ preventScroll: true });
+        if (scrollBodyRef.current) {
+          const container = scrollBodyRef.current;
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+      setNewlyAddedGoalId(null);
+    }
+  }, [newlyAddedGoalId]);
+
+  const handleAddGoal = () => {
+    const newId = makeId();
+    commitGoalsDraft([
+      ...goalsRef.current,
+      {
+        id: newId,
+        text: "",
+        done: false,
+        ...newTimestamps(),
+      },
+    ]);
+    setNewlyAddedGoalId(newId);
+  };
+
   // Tracks each goal-text field's rendered height so the row can grow as text
   // wraps onto multiple lines, and so the color/delete overlay buttons can pin
   // to the top-right corner instead of overlapping the wrapped text.
@@ -272,6 +305,7 @@ export function GoalsModal({
           </div>
 
           <div
+            ref={scrollBodyRef}
             style={{
               flex: 1,
               overflowY: "auto",
@@ -313,17 +347,7 @@ export function GoalsModal({
             {goals.length === 0 ? (
               <div className="px-5 py-3">
                 <button
-                  onClick={() =>
-                    commitGoalsDraft([
-                      ...goalsRef.current,
-                      {
-                        id: makeId(),
-                        text: "",
-                        done: false,
-                        ...newTimestamps(),
-                      },
-                    ])
-                  }
+                  onClick={handleAddGoal}
                   style={{
                     width: "100%",
                     height: 34,
@@ -387,6 +411,9 @@ export function GoalsModal({
                         </span>
                         <div style={{ flex: 1, position: "relative" }}>
                           <TextareaAutosize
+                            ref={(el) => {
+                              goalInputRefs.current[g.id] = el;
+                            }}
                             value={g.text}
                             onChange={(e) =>
                               commitGoalsDraft(
@@ -604,17 +631,7 @@ export function GoalsModal({
                 </div>
                 {canAdd && (
                   <button
-                    onClick={() =>
-                      commitGoalsDraft([
-                        ...goalsRef.current,
-                        {
-                          id: makeId(),
-                          text: "",
-                          done: false,
-                          ...newTimestamps(),
-                        },
-                      ])
-                    }
+                    onClick={handleAddGoal}
                     className="mt-2"
                     style={{
                       width: "100%",
