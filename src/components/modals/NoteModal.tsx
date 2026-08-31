@@ -69,10 +69,7 @@ export function NoteModal({
       if (maxScroll <= 0) return;
 
       if (mode === "bottom") {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: "smooth",
-        });
+        container.scrollTop = container.scrollHeight;
         return;
       }
 
@@ -419,16 +416,33 @@ export function NoteModal({
     }
   }, [isKeyboardOpen, scrollToTarget]);
 
+  const [newlyAddedMsId, setNewlyAddedMsId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (newlyAddedMsId && scrollBodyRef.current) {
+      const id = newlyAddedMsId;
+      const el = scrollBodyRef.current.querySelector(
+        `[data-draggable-card="true"]`,
+      ) as HTMLElement | null;
+      if (el) {
+        scrollToTarget(el, "nearest");
+      }
+      setNewlyAddedMsId(null);
+    }
+  }, [newlyAddedMsId, scrollToTarget]);
+
   const submitNewEvent = () => {
     if (!newLabel.trim()) return;
+    const newId = makeId();
     onMilestoneAdd({
-      id: makeId(),
+      id: newId,
       label: newLabel.trim(),
       date: newDate,
       color: newColor,
       description: newDesc.trim() || undefined,
       recurring: newRecurring || undefined,
     });
+    setNewlyAddedMsId(newId);
     setNewLabel("");
     setNewDesc("");
     setNewRecurring(false);
@@ -539,31 +553,25 @@ export function NoteModal({
   useEffect(() => {
     if (newlyAddedEntryId && scrollBodyRef.current) {
       const container = scrollBodyRef.current;
-      const scrollBottom = () => {
+      const startTime = performance.now();
+      let animId: number;
+
+      const step = (now: number) => {
         if (container) {
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: "smooth",
-          });
+          container.scrollTop = container.scrollHeight;
+        }
+        if (now - startTime < 320) {
+          animId = requestAnimationFrame(step);
         }
       };
 
-      scrollBottom();
-      const t1 = setTimeout(scrollBottom, 50);
-      const t2 = setTimeout(scrollBottom, 120);
-      const t3 = setTimeout(scrollBottom, 220);
-      const t4 = setTimeout(scrollBottom, 320);
-      const t5 = setTimeout(scrollBottom, 420);
+      animId = requestAnimationFrame(step);
       const tReset = setTimeout(() => {
         setNewlyAddedEntryId(null);
-      }, 450);
+      }, 340);
 
       return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-        clearTimeout(t4);
-        clearTimeout(t5);
+        cancelAnimationFrame(animId);
         clearTimeout(tReset);
       };
     }
@@ -1484,7 +1492,7 @@ export function NoteModal({
           </div>
 
           {/* Milestones for this day */}
-          <AnimatePresence initial={false}>
+          <AnimatePresence>
             {dayMilestones.length > 0 && (
               <motion.div
                 key="milestones-section-header"
@@ -1509,7 +1517,7 @@ export function NoteModal({
                   className="flex flex-col gap-1.5"
                   style={{ listStyle: "none", margin: 0, padding: 0 }}
                 >
-                <AnimatePresence initial={false}>
+                <AnimatePresence>
                   {dayMilestones.map((ms) => {
                     const isEditing = msEditId === ms.id;
                     const ec2 = getEventColors(
@@ -2466,7 +2474,8 @@ export function NoteModal({
 
           {/* Add note button */}
           <div
-            className={`px-5 pb-3 ${entries.length === 0 ? "pt-3" : "pt-0.5"}`}
+            className={`px-5 pb-4.5 ${entries.length === 0 ? "pt-3" : "pt-1"}`}
+            style={{ paddingBottom: 18 }}
           >
             <button
               onClick={addEntry}
