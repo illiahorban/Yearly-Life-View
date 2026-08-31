@@ -77,7 +77,6 @@ export function DraggableCard({
       data-draggable-card="true"
       dragListener={false}
       dragControls={dragControls}
-      layout="position"
       initial={{ opacity: 0, height: 0, scale: 0.98 }}
       animate={{
         opacity: 1,
@@ -91,7 +90,7 @@ export function DraggableCard({
         scale: 0.98,
         overflow: "hidden",
       }}
-      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       whileDrag={{
         scale: 1.02,
         boxShadow: "0 10px 28px rgba(0,0,0,0.22)",

@@ -37,9 +37,12 @@ export function MilestoneModal({
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, []);
 
@@ -183,13 +186,12 @@ export function MilestoneModal({
       className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
         position: "fixed",
-        top: `${vvOffsetTop}px`,
+        top: 0,
         left: 0,
         right: 0,
         height: `${vvHeight}px`,
         overflow: "hidden",
         overscrollBehavior: "contain",
-        transition: "top 0.15s ease-out, height 0.15s ease-out",
       }}
       onClick={onClose}
     >
@@ -224,7 +226,6 @@ export function MilestoneModal({
           boxShadow: `0 20px 60px rgba(0,0,0,0.28), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
           maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
-          transition: "max-height 0.15s ease-out",
         }}
       >
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">

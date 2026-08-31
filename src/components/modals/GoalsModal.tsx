@@ -44,9 +44,12 @@ export function GoalsModal({
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, []);
 
@@ -144,13 +147,12 @@ export function GoalsModal({
         className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
         style={{
           position: "fixed",
-          top: `${vvOffsetTop}px`,
+          top: 0,
           left: 0,
           right: 0,
           height: `${vvHeight}px`,
           overflow: "hidden",
           overscrollBehavior: "contain",
-          transition: "top 0.15s ease-out, height 0.15s ease-out",
         }}
         onClick={() => {
           setColorPickerGoalId(null);
@@ -196,7 +198,6 @@ export function GoalsModal({
             display: "flex",
             flexDirection: "column",
             maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
-            transition: "max-height 0.15s ease-out",
           }}
         >
           <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 shrink-0">

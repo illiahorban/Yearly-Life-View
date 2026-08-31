@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import TextareaAutosize from "react-textarea-autosize";
@@ -49,6 +49,17 @@ export function SprintSettingsModal({
   const { t, lang } = React.useContext(LangContext);
   const isMobile = useIsMobile();
   const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, []);
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initial.blocks.map((b) => ({ ...b })),
   );
@@ -92,13 +103,12 @@ export function SprintSettingsModal({
         className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
         style={{
           position: "fixed",
-          top: `${vvOffsetTop}px`,
+          top: 0,
           left: 0,
           right: 0,
           height: `${vvHeight}px`,
           overflow: "hidden",
           overscrollBehavior: "contain",
-          transition: "top 0.15s ease-out, height 0.15s ease-out",
         }}
         initial={false}
         exit={{ opacity: 0 }}
@@ -137,7 +147,6 @@ export function SprintSettingsModal({
             border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.6)"}`,
             overflowY: "auto",
             maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
-            transition: "max-height 0.15s ease-out",
           }}
         >
           <div className="px-6 pt-6 pb-3">

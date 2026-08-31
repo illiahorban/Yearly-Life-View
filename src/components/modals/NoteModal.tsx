@@ -63,21 +63,20 @@ export function NoteModal({
 
   const scrollToTarget = React.useCallback(
     (targetEl: HTMLElement | null, mode: "center" | "bottom" | "nearest" = "nearest") => {
-      if (!scrollBodyRef.current || !targetEl) return;
+      if (!scrollBodyRef.current) return;
       const container = scrollBodyRef.current;
       const maxScroll = container.scrollHeight - container.clientHeight;
       if (maxScroll <= 0) return;
 
       if (mode === "bottom") {
-        const remaining = maxScroll - container.scrollTop;
-        if (remaining > 8) {
-          container.scrollTo({
-            top: maxScroll,
-            behavior: "smooth",
-          });
-        }
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "smooth",
+        });
         return;
       }
+
+      if (!targetEl) return;
 
       const containerRect = container.getBoundingClientRect();
       const targetRect = targetEl.getBoundingClientRect();
@@ -124,9 +123,12 @@ export function NoteModal({
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, []);
 
@@ -383,27 +385,37 @@ export function NoteModal({
   const [newColorPickerOpen, setNewColorPickerOpen] = useState(false);
   const [newColorPlacement, setNewColorPlacement] = useState<"top" | "bottom">("bottom");
 
-  // Readjust scroll position when virtual keyboard pops up
+  // Readjust scroll position only when virtual keyboard initially pops up
+  const prevKeyboardOpenRef = useRef(false);
   React.useEffect(() => {
-    if (isKeyboardOpen && scrollBodyRef.current) {
-      const active = document.activeElement;
-      if (
-        active instanceof HTMLElement &&
-        scrollBodyRef.current.contains(active)
-      ) {
-        const allNotes = scrollBodyRef.current.querySelectorAll(
-          "[data-note-card='true']",
-        );
-        const isLastNote =
-          allNotes &&
-          allNotes.length > 0 &&
-          allNotes[allNotes.length - 1].contains(active);
-        const mode = isLastNote ? "bottom" : "nearest";
-        const cardEl = (active.closest("[data-draggable-card='true']") ||
-          active.closest("[data-event-form='true']") ||
-          active) as HTMLElement;
-        scrollToTarget(cardEl, mode);
-      }
+    const wasOpen = prevKeyboardOpenRef.current;
+    prevKeyboardOpenRef.current = isKeyboardOpen;
+    if (!wasOpen && isKeyboardOpen && scrollBodyRef.current) {
+      const handleScroll = () => {
+        const active = document.activeElement;
+        if (
+          active instanceof HTMLElement &&
+          scrollBodyRef.current?.contains(active)
+        ) {
+          const allNotes = scrollBodyRef.current.querySelectorAll(
+            "[data-note-card='true']",
+          );
+          const isLastNote =
+            allNotes &&
+            allNotes.length > 0 &&
+            allNotes[allNotes.length - 1].contains(active);
+          const mode = isLastNote ? "bottom" : "nearest";
+          const cardEl = (active.closest("[data-draggable-card='true']") ||
+            active.closest("[data-event-form='true']") ||
+            active) as HTMLElement;
+          scrollToTarget(cardEl, mode);
+        }
+      };
+
+      const t1 = setTimeout(handleScroll, 120);
+      return () => {
+        clearTimeout(t1);
+      };
     }
   }, [isKeyboardOpen, scrollToTarget]);
 
@@ -526,16 +538,36 @@ export function NoteModal({
 
   useEffect(() => {
     if (newlyAddedEntryId && scrollBodyRef.current) {
-      const allNotes = scrollBodyRef.current.querySelectorAll(
-        "[data-note-card='true']",
-      );
-      if (allNotes.length > 0) {
-        const last = allNotes[allNotes.length - 1] as HTMLElement;
-        scrollToTarget(last, "nearest");
-      }
-      setNewlyAddedEntryId(null);
+      const container = scrollBodyRef.current;
+      const scrollBottom = () => {
+        if (container) {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+      };
+
+      scrollBottom();
+      const t1 = setTimeout(scrollBottom, 50);
+      const t2 = setTimeout(scrollBottom, 120);
+      const t3 = setTimeout(scrollBottom, 220);
+      const t4 = setTimeout(scrollBottom, 320);
+      const t5 = setTimeout(scrollBottom, 420);
+      const tReset = setTimeout(() => {
+        setNewlyAddedEntryId(null);
+      }, 450);
+
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        clearTimeout(t4);
+        clearTimeout(t5);
+        clearTimeout(tReset);
+      };
     }
-  }, [newlyAddedEntryId, scrollToTarget]);
+  }, [newlyAddedEntryId]);
 
   const addEntry = () => {
     const id = makeId();
@@ -603,13 +635,12 @@ export function NoteModal({
       className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
         position: "fixed",
-        top: `${vvOffsetTop}px`,
+        top: 0,
         left: 0,
         right: 0,
         height: `${vvHeight}px`,
         overflow: "hidden",
         overscrollBehavior: "contain",
-        transition: "top 0.15s ease-out, height 0.15s ease-out",
       }}
       onClick={() => {
         setColorPickerEntryId(null);
@@ -652,7 +683,6 @@ export function NoteModal({
           display: "flex",
           flexDirection: "column",
           maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
-          transition: "max-height 0.15s ease-out",
         }}
       >
         {/* Header */}
@@ -1424,9 +1454,7 @@ export function NoteModal({
                 </div>
               )}
               {!confirmCopyTomorrow && !confirmReset && (
-                <motion.button
-                  layout
-                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleGoalAdd();
@@ -1450,7 +1478,7 @@ export function NoteModal({
                 >
                   <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>{" "}
                   {t("addGoal")}
-                </motion.button>
+                </button>
               )}
             </div>
           </div>
@@ -2437,9 +2465,7 @@ export function NoteModal({
           )}
 
           {/* Add note button */}
-          <motion.div
-            layout
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          <div
             className={`px-5 pb-3 ${entries.length === 0 ? "pt-3" : "pt-0.5"}`}
           >
             <button
@@ -2463,7 +2489,7 @@ export function NoteModal({
               <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>{" "}
               {t("addNote")}
             </button>
-          </motion.div>
+          </div>
         </div>
         {/* end scrollable body */}
       </motion.div>

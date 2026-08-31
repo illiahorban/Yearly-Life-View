@@ -30,6 +30,17 @@ export function LifeCalendarModal({
   const [view, setView] = useState<LifeView>("years");
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
 
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, []);
+
   const [today, setToday] = useState<Date>(() => startOfDay(new Date()));
   useEffect(() => {
     const timer = window.setInterval(
@@ -301,13 +312,12 @@ export function LifeCalendarModal({
       className="z-50 flex items-center justify-center p-2 sm:p-4 pointer-events-auto"
       style={{
         position: "fixed",
-        top: `${vvOffsetTop}px`,
+        top: 0,
         left: 0,
         right: 0,
         height: `${vvHeight}px`,
         overflow: "hidden",
         overscrollBehavior: "contain",
-        transition: "top 0.15s ease-out, height 0.15s ease-out",
       }}
       onClick={onClose}
     >
@@ -328,7 +338,6 @@ export function LifeCalendarModal({
         }}
       />
       <motion.div
-        layout
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -345,7 +354,7 @@ export function LifeCalendarModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          transition: "width 0.25s ease-in-out, max-height 0.15s ease-out",
+          transition: "width 0.25s ease-in-out",
         }}
       >
         {/* Fixed Header */}

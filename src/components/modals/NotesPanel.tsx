@@ -39,6 +39,17 @@ export function NotesPanel({
   const isMobile = useIsMobile();
   const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, []);
   const [draftText, setDraftText] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState<string | null>(null);
@@ -120,13 +131,12 @@ export function NotesPanel({
       className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
         position: "fixed",
-        top: `${vvOffsetTop}px`,
+        top: 0,
         left: 0,
         right: 0,
         height: `${vvHeight}px`,
         overflow: "hidden",
         overscrollBehavior: "contain",
-        transition: "top 0.15s ease-out, height 0.15s ease-out",
       }}
       onClick={onClose}
     >
@@ -146,7 +156,6 @@ export function NotesPanel({
         }}
       />
       <motion.div
-        layout
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -162,7 +171,6 @@ export function NotesPanel({
           boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
           overflowY: "auto",
           maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
-          transition: "max-height 0.15s ease-out",
         }}
       >
         {/* Header */}
