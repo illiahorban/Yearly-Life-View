@@ -487,7 +487,7 @@ export function BlocksRenderer({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-1 sm:gap-1.5 pb-3 pt-1">
+                <div className="flex flex-col gap-[2.67px] sm:gap-1.5 pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -572,7 +572,7 @@ export function BlocksRenderer({
                           </div>
                           {/* MIDDLE COLUMN — day tiles, fills remaining space */}
                           <div
-                            className="grid grid-cols-7 gap-1 sm:gap-1.5"
+                            className="grid grid-cols-7 gap-[2.67px] sm:gap-1.5"
                             style={{
                               flex: 1,
                               minWidth: 0,

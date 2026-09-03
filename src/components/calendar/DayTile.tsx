@@ -98,107 +98,116 @@ export function DayTile({
         : labelTone === "invertPale"
           ? "#ffffff"
           : "var(--text)";
-  const microMarkers =
-    dayGoals && dayGoals.count > 0
-      ? (() => {
-          const indicatorLimit = isCompactViewport ? 6 : 8;
-          const showPlus = dayGoals.count > indicatorLimit;
-          const dotCount = showPlus ? indicatorLimit - 1 : dayGoals.count;
-          const allDone = showPlus
-            ? Array.from(
-                { length: dayGoals.count },
-                (_, i) => dayGoals.done[i] ?? false,
-              ).every(Boolean)
-            : false;
-          const dots = Array.from({ length: dotCount }, (_, i) => {
-            const done = dayGoals.done[i] ?? false;
-            return done ? (
-              <svg
-                key={i}
-                width="5"
-                height="5"
-                viewBox="0 0 6 6"
-                fill="none"
-                className="lc-goal-dot"
-                style={{ flexShrink: 0, overflow: "hidden" }}
-              >
-                <rect
-                  x="0"
-                  y="0"
-                  width="6"
-                  height="6"
-                  rx="1.2"
-                  fill="#34c759"
-                />
-                <path
-                  d="M1.4 3l1.1 1.1 2.1-2.2"
-                  stroke="#ffffff"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            ) : (
-              <svg
-                key={i}
-                width="5"
-                height="5"
-                viewBox="0 0 6 6"
-                fill="none"
-                className="lc-goal-dot"
-                style={{ flexShrink: 0, overflow: "hidden" }}
-              >
-                <rect
-                  x="0.75"
-                  y="0.75"
-                  width="4.5"
-                  height="4.5"
-                  rx="1"
-                  stroke={indicatorColor}
-                  strokeWidth="1.2"
-                />
-              </svg>
-            );
-          });
-          const plusColor = allDone ? "#34c759" : indicatorColor;
-          const plusDot = showPlus ? (
-            <svg
-              key="plus"
-              width="5"
-              height="5"
-              viewBox="-0.5 -0.5 7 7"
-              fill="none"
-              className="lc-goal-dot"
-              style={{
-                flexShrink: 0,
-                overflow: "hidden",
-              }}
-            >
-              <path
-                d="M3 1v4M1 3h4"
-                stroke={plusColor}
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-            </svg>
-          ) : null;
-          return (
-            <div
-              className="lc-goal-markers"
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 1,
-                pointerEvents: "none",
-              }}
-            >
-              {dots}
-              {plusDot}
-            </div>
-          );
-        })()
-      : null;
+  const todayBaseTone: "onGreen" | "darkOnLight" = dark ? "onGreen" : "darkOnLight";
+  const todayBaseIndicatorColor = todayBaseTone === "onGreen" ? "white" : "#18181b";
+  const todayFilledTone: "darkOnLight" | "onGreen" =
+    luminanceOf(accentColor) > 0.6 ? "darkOnLight" : "onGreen";
+  const todayFilledIndicatorColor =
+    todayFilledTone === "onGreen" ? "white" : "#18181b";
+
+  const renderMicroMarkers = (indColor: string) => {
+    if (!dayGoals || dayGoals.count <= 0) return null;
+    const indicatorLimit = isCompactViewport ? 6 : 8;
+    const showPlus = dayGoals.count > indicatorLimit;
+    const dotCount = showPlus ? indicatorLimit - 1 : dayGoals.count;
+    const allDone = showPlus
+      ? Array.from(
+          { length: dayGoals.count },
+          (_, i) => dayGoals.done[i] ?? false,
+        ).every(Boolean)
+      : false;
+    const dots = Array.from({ length: dotCount }, (_, i) => {
+      const done = dayGoals.done[i] ?? false;
+      return done ? (
+        <svg
+          key={i}
+          width="5"
+          height="5"
+          viewBox="0 0 6 6"
+          fill="none"
+          className="lc-goal-dot"
+          style={{ flexShrink: 0, overflow: "hidden" }}
+        >
+          <rect
+            x="0"
+            y="0"
+            width="6"
+            height="6"
+            rx="1.2"
+            fill="#34c759"
+          />
+          <path
+            d="M1.4 3l1.1 1.1 2.1-2.2"
+            stroke="#ffffff"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ) : (
+        <svg
+          key={i}
+          width="5"
+          height="5"
+          viewBox="0 0 6 6"
+          fill="none"
+          className="lc-goal-dot"
+          style={{ flexShrink: 0, overflow: "hidden" }}
+        >
+          <rect
+            x="0.75"
+            y="0.75"
+            width="4.5"
+            height="4.5"
+            rx="1"
+            stroke={indColor}
+            strokeWidth="1.2"
+          />
+        </svg>
+      );
+    });
+    const plusColor = allDone
+      ? indColor === "white" && (accentColor === "#34c759" || accentColor === "#30d158")
+        ? "white"
+        : "#34c759"
+      : indColor;
+    const plusDot = showPlus ? (
+      <svg
+        key="plus"
+        width="5"
+        height="5"
+        viewBox="-0.5 -0.5 7 7"
+        fill="none"
+        className="lc-goal-dot"
+        style={{
+          flexShrink: 0,
+          overflow: "hidden",
+        }}
+      >
+        <path
+          d="M3 1v4M1 3h4"
+          stroke={plusColor}
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ) : null;
+    return (
+      <div
+        className="lc-goal-markers"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 1,
+          pointerEvents: "none",
+        }}
+      >
+        {dots}
+        {plusDot}
+      </div>
+    );
+  };
   const activeNotes = dayNotes?.filter((n) => n.text.trim()) ?? [];
   const hasNote = activeNotes.length > 0;
   const noteCount = activeNotes.length;
@@ -556,7 +565,7 @@ export function DayTile({
                 overflow: "visible",
               }}
             >
-              {microMarkers}
+              {renderMicroMarkers(indicatorColor)}
             </div>
             {noteDot}
           </div>
@@ -611,7 +620,7 @@ export function DayTile({
               <Label
                 number={dayNumber}
                 month={monthAbbr}
-                tone={dark ? "onGreen" : "darkOnLight"}
+                tone={todayBaseTone}
               />
               <div
                 className="flex items-center justify-center -translate-y-0.5 sm:translate-y-0"
@@ -621,7 +630,7 @@ export function DayTile({
                   overflow: "visible",
                 }}
               >
-                {microMarkers}
+                {renderMicroMarkers(todayBaseIndicatorColor)}
               </div>
             </div>
 
@@ -637,11 +646,7 @@ export function DayTile({
                 <Label
                   number={dayNumber}
                   month={monthAbbr}
-                  tone={
-                    luminanceOf(accentColor) > 0.55
-                      ? "darkOnLight"
-                      : "onGreen"
-                  }
+                  tone={todayFilledTone}
                 />
                 <div
                   className="flex items-center justify-center -translate-y-0.5 sm:translate-y-0"
@@ -651,7 +656,7 @@ export function DayTile({
                     overflow: "visible",
                   }}
                 >
-                  {microMarkers}
+                  {renderMicroMarkers(todayFilledIndicatorColor)}
                 </div>
               </div>
             )}
@@ -714,7 +719,7 @@ export function DayTile({
               overflow: "visible",
             }}
           >
-            {microMarkers}
+            {renderMicroMarkers(indicatorColor)}
           </div>
           {noteDot}
         </div>

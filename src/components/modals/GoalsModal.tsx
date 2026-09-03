@@ -322,7 +322,7 @@ export function GoalsModal({
                 value={description}
                 onChange={(e) => commitDescription(e.target.value)}
                 placeholder={descPlaceholder ?? t("sprintDescPlaceholder")}
-                minRows={2}
+                minRows={1}
                 style={{
                   width: "100%",
                   resize: "none",

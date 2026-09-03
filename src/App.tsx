@@ -2518,7 +2518,7 @@ function App() {
             <div className="mt-3 px-[13px] sm:px-[21px] flex flex-row items-center">
               <div className="lc-side-col" />
               <div
-                className="grid grid-cols-7 gap-1 sm:gap-1.5"
+                className="grid grid-cols-7 gap-[2.67px] sm:gap-1.5"
                 style={{ flex: 1, minWidth: 0 }}
               >
                 {weekdays.map((w, i) => (
