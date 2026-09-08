@@ -100,8 +100,11 @@ export function DayTile({
           : "var(--text)";
   const todayBaseTone: "onGreen" | "darkOnLight" = dark ? "onGreen" : "darkOnLight";
   const todayBaseIndicatorColor = todayBaseTone === "onGreen" ? "white" : "#18181b";
+  // On all colored accents (including yellow, green, blue, etc.) as well as black/dark accents,
+  // the filled text and indicators invert cleanly to white (just like black/past tiles).
+  // Only pure/ultra-pale white accents (luminance > 0.85) retain dark ink so white-on-white is avoided.
   const todayFilledTone: "darkOnLight" | "onGreen" =
-    luminanceOf(accentColor) > 0.6 ? "darkOnLight" : "onGreen";
+    luminanceOf(accentColor) > 0.85 ? "darkOnLight" : "onGreen";
   const todayFilledIndicatorColor =
     todayFilledTone === "onGreen" ? "white" : "#18181b";
 
@@ -614,8 +617,24 @@ export function DayTile({
               }}
             />
 
-            {/* Layer 1: Base text (unfilled area tone — contrast against var(--surface)) */}
-            <div className="absolute inset-0 flex flex-col items-center pointer-events-none">
+            {/* Layer 1: Base text (unfilled area tone) — clipped strictly to the upper (unfilled) region so its dark pixels never bleed beneath the white layer */}
+            <div
+              className="absolute inset-0 flex flex-col items-center pointer-events-none"
+              style={{
+                clipPath: todayProgress >= 100
+                  ? "inset(100% 0 0 0)"
+                  : todayProgress > 0
+                    ? `inset(0 0 ${todayProgress}% 0)`
+                    : undefined,
+                WebkitClipPath: todayProgress >= 100
+                  ? "inset(100% 0 0 0)"
+                  : todayProgress > 0
+                    ? `inset(0 0 ${todayProgress}% 0)`
+                    : undefined,
+                willChange: "clip-path",
+                transform: "translateZ(0)",
+              }}
+            >
               <div style={{ flex: 1 }} />
               <Label
                 number={dayNumber}
@@ -634,12 +653,15 @@ export function DayTile({
               </div>
             </div>
 
-            {/* Layer 2: Filled text overlay (clipped to progress fill height from bottom, contrast against accentColor) */}
+            {/* Layer 2: Filled text overlay (clipped to the lower filled region from bottom) */}
             {todayProgress > 0 && (
               <div
                 className="absolute inset-0 flex flex-col items-center pointer-events-none"
                 style={{
                   clipPath: `inset(${Math.max(0, 100 - todayProgress)}% 0 0 0)`,
+                  WebkitClipPath: `inset(${Math.max(0, 100 - todayProgress)}% 0 0 0)`,
+                  willChange: "clip-path",
+                  transform: "translateZ(0)",
                 }}
               >
                 <div style={{ flex: 1 }} />

@@ -229,13 +229,13 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // black/grey in dark mode get fill="#ffffff" (for text contrast) but a white cell
   // in dark mode shows the wrong colour entirely. White in light mode gets fill="#ffffff"
   // which merges with the page and makes cells invisible. Use the actual hue instead,
-  // except white-in-light-mode which needs a visible off-white (#e0e0e5) so cells don't
-  // vanish against the white page background.
+  // except white-in-light-mode which needs a subtle off-white (#e0e0e5) so white cells
+  // remain visible against the page background.
   const tileFill =
     isAchromaticDark && dark
       ? hex // grey/black in dark: actual dark hue
       : meta.colorKey === "white"
-        ? "#e0e0e5" // white in both modes: off-white, visible against any bg without inverting content
+        ? (dark ? hex : "#e0e0e5") // white: subtle tint in light, actual in dark
         : hex;
   // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
   // colour surface the way percentages/progress bars are, so they don't need the
