@@ -184,6 +184,7 @@ function App() {
       "data-theme",
       dark ? "dark" : "light",
     );
+    document.documentElement.classList.toggle("dark", dark);
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
     lsSet("lifeCalendar:darkMode", dark);
   }, [dark]);
@@ -1207,6 +1208,23 @@ function App() {
 
   const weekRefs = useRef<Array<HTMLDivElement | null>>([]);
   const calendarScrollRef = useRef<HTMLElement | null>(null);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
+  useEffect(() => {
+    const el = calendarScrollRef.current;
+    if (!el) return;
+    const update = () => {
+      const sw = el.offsetWidth - el.clientWidth;
+      setScrollbarWidth(sw > 0 ? sw : 0);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
   const didScrollRef = useRef(false);
   useEffect(() => {
     didScrollRef.current = false;
@@ -1403,6 +1421,7 @@ function App() {
             backdropFilter: "saturate(180%) blur(20px)",
             WebkitBackdropFilter: "saturate(180%) blur(20px)",
             borderBottom: "1px solid var(--border-soft)",
+            paddingRight: scrollbarWidth > 0 ? scrollbarWidth : undefined,
           }}
         >
           <div className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4">
@@ -2515,22 +2534,40 @@ function App() {
 
             {/* Sticky weekday labels */}
             <div className="mt-3 px-[13px] sm:px-[21px] flex flex-row items-center">
-              <div className="lc-side-col" />
+              <div
+                className="lc-side-col"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
               <div
                 className="grid grid-cols-7 gap-[2.67px] sm:gap-1.5"
-                style={{ flex: 1, minWidth: 0 }}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  justifyContent: "center",
+                }}
               >
                 {weekdays.map((w, i) => (
                   <div
                     key={i}
-                    className="text-center text-[10px] sm:text-[15px] font-medium tracking-widest uppercase"
+                    className="text-center text-[10px] sm:text-[15px] font-medium uppercase"
                     style={{ color: "var(--text-tertiary)" }}
                   >
                     {w}
                   </div>
                 ))}
               </div>
-              <div className="lc-side-col" />
+              <div
+                className="lc-side-col"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
             </div>
           </div>
         </header>

@@ -71,11 +71,14 @@ body {
 /* Responsive side columns for week-number and goals counter */
 .lc-side-col {
   width: 24px;
-  flex-shrink: 0;
+  min-width: 24px;
+  max-width: 24px;
+  flex: 0 0 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  box-sizing: border-box;
 }
 .lc-week-label {
   width: 20px;
@@ -96,6 +99,9 @@ body {
 @media (min-width: 640px) {
   .lc-side-col {
     width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+    flex: 0 0 60px;
   }
   .lc-week-label {
     width: 34px;
@@ -140,9 +146,11 @@ abbr,
 } /* light mode: dark text → medium hint */
 
 /* Dark-mode overrides: black/white text inverts to light, so hints go lighter. */
+[data-theme="dark"] .placeholder-goal-black::placeholder,
 :root.dark .placeholder-goal-black::placeholder {
   color: #d4d4d8;
 }
+[data-theme="dark"] .placeholder-goal-white::placeholder,
 :root.dark .placeholder-goal-white::placeholder {
   color: #d4d4d8;
 }
@@ -158,9 +166,11 @@ abbr,
   color: #71717a;
 }
 
+[data-theme="dark"] .placeholder-note-black::placeholder,
 :root.dark .placeholder-note-black::placeholder {
   color: #d4d4d8;
 }
+[data-theme="dark"] .placeholder-note-white::placeholder,
 :root.dark .placeholder-note-white::placeholder {
   color: #d4d4d8;
 }
@@ -193,6 +203,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   50% {
     opacity: 1;
   }
+}
+
+.lc-fire-tile {
+  z-index: 1;
 }
 
 .lc-fire-glow {
@@ -233,6 +247,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* Scrollbar — thumb only, no track */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+[data-theme="dark"] * {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
