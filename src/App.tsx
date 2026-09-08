@@ -2600,6 +2600,7 @@ function App() {
                       background: "transparent",
                       borderRadius: 18,
                       border: `3px solid ${quarter.border}`,
+                      boxShadow: quarter.contrastBorderShadow,
                     }}
                   >
                     {/* Sticky quarter header — sticks just below main app header */}
@@ -2726,6 +2727,7 @@ function App() {
                                 background: dark
                                   ? "rgba(255,255,255,0.1)"
                                   : "rgba(0,0,0,0.06)",
+                                boxShadow: quarter.progressBarOutline,
                               }}
                             >
                               <motion.div
@@ -2740,9 +2742,13 @@ function App() {
                                   height: 4,
                                   minHeight: 4,
                                   maxHeight: 4,
-                                  background: quarter.fill,
+                                  background: quarter.progressBarFill ?? quarter.fill,
                                   borderRadius: 999,
                                   opacity: 0.88,
+                                  borderRight:
+                                    quarter.progressBarDivider && qPct > 0 && qPct < 100
+                                      ? `0.5px solid ${quarter.progressBarDivider}`
+                                      : undefined,
                                 }}
                               />
                             </div>
@@ -2830,7 +2836,10 @@ function App() {
                               <div className="flex items-stretch gap-1.5 mb-2">
                                 <span
                                   className="w-[2px] rounded-full flex-shrink-0 self-stretch my-0.5"
-                                  style={{ background: quarter.fill }}
+                                  style={{
+                                    background: quarter.progressBarFill ?? quarter.fill,
+                                    boxShadow: quarter.progressBarOutline,
+                                  }}
                                 />
                                 <p
                                   className="leading-snug"

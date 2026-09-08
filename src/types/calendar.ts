@@ -45,6 +45,10 @@ export type Quarter = {
   nameColor: string;
   soft: string;
   darkSoft: string;
+  contrastBorderShadow?: string;
+  progressBarOutline?: string;
+  progressBarFill?: string;
+  progressBarDivider?: string;
 };
 
 export type Block = {

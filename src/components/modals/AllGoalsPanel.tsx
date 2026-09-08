@@ -476,6 +476,7 @@ export function AllGoalsPanel({
                     style={{
                       borderRadius: 16,
                       border: `1.5px solid ${qr.border}`,
+                      boxShadow: qr.contrastBorderShadow,
                       overflow: "hidden",
                       background: "transparent",
                     }}
@@ -687,6 +688,7 @@ export function AllGoalsPanel({
                               style={{
                                 borderRadius: 11,
                                 border: `1.5px solid ${effectiveQ.border}`,
+                                boxShadow: effectiveQ.contrastBorderShadow,
                                 overflow: "hidden",
                                 background: "transparent",
                               }}

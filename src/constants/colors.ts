@@ -256,6 +256,34 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
             ? "#e5e5e7"
             : "#121212"
           : textHex;
+
+  const isWhiteInLight = meta.colorKey === "white" && !dark;
+  const isBlackInDark = meta.colorKey === "black" && dark;
+
+  const contrastBorderShadow = isWhiteInLight
+    ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
+    : isBlackInDark
+      ? "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
+      : undefined;
+
+  const progressBarOutline = isWhiteInLight
+    ? "0 0 0 0.5px rgba(0, 0, 0, 0.20)"
+    : isBlackInDark
+      ? "0 0 0 0.5px rgba(255, 255, 255, 0.22)"
+      : undefined;
+
+  const progressBarFill = isBlackInDark
+    ? "#121212"
+    : isWhiteInLight
+      ? "#ffffff"
+      : fill;
+
+  const progressBarDivider = isWhiteInLight
+    ? "rgba(0, 0, 0, 0.25)"
+    : isBlackInDark
+      ? "rgba(255, 255, 255, 0.25)"
+      : undefined;
+
   return {
     key: meta.colorKey,
     label: meta.name,
@@ -268,6 +296,10 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
     nameColor,
     soft: `rgba(${r},${g},${b},0.22)`,
     darkSoft: `rgba(${r},${g},${b},0.36)`,
+    contrastBorderShadow,
+    progressBarOutline,
+    progressBarFill,
+    progressBarDivider,
   };
 }
 

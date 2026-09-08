@@ -177,6 +177,7 @@ export function BlocksRenderer({
                   background: "transparent",
                   borderRadius: 14,
                   border: `2px solid ${effectiveQ.border}`,
+                  boxShadow: effectiveQ.contrastBorderShadow,
                   overflow: "visible",
                 }}
               >
@@ -298,6 +299,7 @@ export function BlocksRenderer({
                       background: dark
                         ? "rgba(255,255,255,0.1)"
                         : "rgba(0,0,0,0.06)",
+                      boxShadow: effectiveQ.progressBarOutline,
                     }}
                   >
                     <motion.div
@@ -312,9 +314,18 @@ export function BlocksRenderer({
                         height: 4,
                         minHeight: 4,
                         maxHeight: 4,
-                        background: effectiveQ.fill,
+                        background: effectiveQ.progressBarFill ?? effectiveQ.fill,
                         borderRadius: 999,
-                        boxShadow: pct > 0 ? `0 0 6px ${softColor}` : "none",
+                        boxShadow:
+                          pct > 0
+                            ? effectiveQ.progressBarOutline
+                              ? "none"
+                              : `0 0 6px ${softColor}`
+                            : "none",
+                        borderRight:
+                          effectiveQ.progressBarDivider && pct > 0 && pct < 100
+                            ? `0.5px solid ${effectiveQ.progressBarDivider}`
+                            : undefined,
                       }}
                     />
                   </div>
@@ -396,7 +407,10 @@ export function BlocksRenderer({
                     >
                       <span
                         className="w-[2px] rounded-full flex-shrink-0 self-stretch my-0.5"
-                        style={{ background: effectiveQ.fill }}
+                        style={{
+                          background: effectiveQ.progressBarFill ?? effectiveQ.fill,
+                          boxShadow: effectiveQ.progressBarOutline,
+                        }}
                       />
                       <p
                         className="text-[11px] leading-snug"
