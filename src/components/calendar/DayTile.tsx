@@ -2,11 +2,48 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import ReactDOM from "react-dom";
 import type { DayState, Milestone, NoteEntry, DayGoals, AppleColorKey } from "../../types/calendar";
 import { dateKey, sameDay, parseDateQuery } from "../../utils/date-utils";
-import { adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, luminanceOf } from "../../constants/colors";
+import {
+  adaptColor,
+  achromaticStyle,
+  resolveNoteHex,
+  normaliseGrey,
+  getEventColors,
+  luminanceOf,
+  APPLE_COLORS,
+  goalCheckboxAchromaticStyle,
+} from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { GripIcon } from "../icons/Icons";
 
 const FIRE_ANIM_DURATION_MS = 4000; // 4.0s keyframe cycle in index.css
+
+function getGoalMarkerColors(rawColor: string | undefined, dark: boolean) {
+  if (!rawColor) {
+    return {
+      fill: "#34c759",
+      icon: "#ffffff",
+      stroke: undefined,
+    };
+  }
+  const ac = APPLE_COLORS.find(
+    (c) => c.key === rawColor || c.light === rawColor || c.dark === rawColor,
+  );
+  const hex = ac ? (dark ? ac.dark : ac.light) : rawColor;
+  const ach = goalCheckboxAchromaticStyle(resolveNoteHex(hex), dark);
+  if (ach) {
+    return {
+      fill: ach.bg,
+      icon: ach.icon,
+      stroke: ach.bg === "#ffffff" ? "rgba(0,0,0,0.22)" : undefined,
+    };
+  }
+  const lum = luminanceOf(hex);
+  return {
+    fill: hex,
+    icon: lum > 0.65 ? "#18181b" : "#ffffff",
+    stroke: lum > 0.85 ? "rgba(0,0,0,0.22)" : undefined,
+  };
+}
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
@@ -121,7 +158,31 @@ export function DayTile({
       : false;
     const dots = Array.from({ length: dotCount }, (_, i) => {
       const done = dayGoals.done[i] ?? false;
-      return done ? (
+      if (!done) {
+        return (
+          <svg
+            key={i}
+            width="5"
+            height="5"
+            viewBox="0 0 6 6"
+            fill="none"
+            className="lc-goal-dot"
+            style={{ flexShrink: 0, overflow: "hidden" }}
+          >
+            <rect
+              x="0.75"
+              y="0.75"
+              width="4.5"
+              height="4.5"
+              rx="1"
+              stroke={indColor}
+              strokeWidth="1.2"
+            />
+          </svg>
+        );
+      }
+      const marker = getGoalMarkerColors(dayGoals.colors?.[i], dark);
+      return (
         <svg
           key={i}
           width="5"
@@ -132,39 +193,21 @@ export function DayTile({
           style={{ flexShrink: 0, overflow: "hidden" }}
         >
           <rect
-            x="0"
-            y="0"
-            width="6"
-            height="6"
+            x={marker.stroke ? "0.3" : "0"}
+            y={marker.stroke ? "0.3" : "0"}
+            width={marker.stroke ? "5.4" : "6"}
+            height={marker.stroke ? "5.4" : "6"}
             rx="1.2"
-            fill="#34c759"
+            fill={marker.fill}
+            stroke={marker.stroke}
+            strokeWidth={marker.stroke ? "0.6" : undefined}
           />
           <path
             d="M1.4 3l1.1 1.1 2.1-2.2"
-            stroke="#ffffff"
+            stroke={marker.icon}
             strokeWidth="1.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-          />
-        </svg>
-      ) : (
-        <svg
-          key={i}
-          width="5"
-          height="5"
-          viewBox="0 0 6 6"
-          fill="none"
-          className="lc-goal-dot"
-          style={{ flexShrink: 0, overflow: "hidden" }}
-        >
-          <rect
-            x="0.75"
-            y="0.75"
-            width="4.5"
-            height="4.5"
-            rx="1"
-            stroke={indColor}
-            strokeWidth="1.2"
           />
         </svg>
       );
