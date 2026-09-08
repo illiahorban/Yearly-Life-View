@@ -213,7 +213,7 @@ export function DayTile({
       );
     });
     const plusColor = allDone
-      ? indColor === "white" && (accentColor === "#34c759" || accentColor === "#30d158")
+      ? indColor === "white" && accentColor === "#34c759"
         ? "white"
         : "#34c759"
       : indColor;
@@ -358,10 +358,10 @@ export function DayTile({
           left: 0,
           right: 0,
           height: 6,
-          borderRadius: "12px 12px 0 0",
           display: "flex",
           overflow: "hidden",
           zIndex: 4,
+          pointerEvents: "none",
         }}
       >
         {dayMilestones.map((ms, msIdx) => {
@@ -591,6 +591,8 @@ export function DayTile({
               inset: 0,
               borderRadius: 12,
               overflow: "hidden",
+              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+              maskImage: "radial-gradient(white, black)",
               isolation: "isolate",
               contain: "paint",
               background: accentColor,
@@ -643,6 +645,8 @@ export function DayTile({
               inset: 0,
               borderRadius: 12,
               overflow: "hidden",
+              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+              maskImage: "radial-gradient(white, black)",
               isolation: "isolate",
               contain: "paint",
               background: "var(--surface)",
@@ -656,7 +660,6 @@ export function DayTile({
               style={{
                 height: `${todayProgress}%`,
                 background: accentColor,
-                borderRadius: "0 0 12px 12px",
               }}
             />
 
@@ -765,6 +768,8 @@ export function DayTile({
             inset: 0,
             borderRadius: 12,
             overflow: "hidden",
+            WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+            maskImage: "radial-gradient(white, black)",
             contain: "paint",
             background: "var(--surface)",
             color: "var(--text-secondary)",

@@ -5,7 +5,7 @@ export function fireConfettiCannons() {
   const colors = [
     "#ffd700",
     "#ff6b6b",
-    "#51cf66",
+    "#34c759",
     "#74c0fc",
     "#f783ac",
     "#ff922b",
@@ -38,7 +38,7 @@ export function fireConfettiCannons() {
 
 export const APPLE_COLORS = [
   { key: "blue", label: "Blue", light: "#007aff", dark: "#0a84ff" },
-  { key: "green", label: "Green", light: "#34c759", dark: "#30d158" },
+  { key: "green", label: "Green", light: "#34c759", dark: "#34c759" },
   { key: "indigo", label: "Indigo", light: "#5856d6", dark: "#5e5ce6" },
   { key: "orange", label: "Orange", light: "#ff9500", dark: "#ff9f0a" },
   { key: "pink", label: "Pink", light: "#ff2d55", dark: "#ff375f" },

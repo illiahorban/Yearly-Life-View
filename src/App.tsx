@@ -1197,8 +1197,8 @@ function App() {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       el.animate(
         [
-          { boxShadow: "0 0 0 4px #30d158, 0 0 20px 6px rgba(48,209,88,0.6)" },
-          { boxShadow: "0 0 0 2px #30d158, 0 0 8px 2px rgba(48,209,88,0.3)" },
+          { boxShadow: "0 0 0 4px #34c759, 0 0 20px 6px rgba(52,199,89,0.6)" },
+          { boxShadow: "0 0 0 2px #34c759, 0 0 8px 2px rgba(52,199,89,0.3)" },
         ],
         { duration: 700, easing: "ease-out" },
       );
@@ -2478,11 +2478,11 @@ function App() {
                                 paddingBottom: 3,
                                 borderRadius: 7,
                                 background: dark
-                                  ? "rgba(48,209,88,0.15)"
-                                  : "rgba(48,209,88,0.12)",
-                                border: "1px solid rgba(48,209,88,0.35)",
+                                  ? "rgba(52,199,89,0.15)"
+                                  : "rgba(52,199,89,0.12)",
+                                border: "1px solid rgba(52,199,89,0.35)",
                                 cursor: "pointer",
-                                color: "#30d158",
+                                color: "#34c759",
                                 fontSize: 11,
                                 fontWeight: 500,
                                 whiteSpace: "nowrap",

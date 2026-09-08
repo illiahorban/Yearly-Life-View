@@ -619,7 +619,7 @@ export function SprintSettingsModal({
                 background: valid
                   ? "rgba(52,199,89,0.08)"
                   : "rgba(255,59,48,0.07)",
-                color: valid ? "#28a745" : "#c00",
+                color: valid ? "#34c759" : "#c00",
                 border: `1px solid ${valid ? "rgba(52,199,89,0.2)" : "rgba(255,59,48,0.2)"}`,
               }}
             >

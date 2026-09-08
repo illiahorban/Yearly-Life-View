@@ -24,8 +24,8 @@
   --border: #d2d2d7;
   --border-soft: #e5e5ea;
   --apple-green: #34c759;
-  --apple-green-soft: #30d158;
-  --apple-green-deep: #28a745;
+  --apple-green-soft: #34c759;
+  --apple-green-deep: #34c759;
 }
 
 [data-theme="dark"] {
@@ -36,9 +36,9 @@
   --text-tertiary: rgba(235, 235, 245, 0.5);
   --border: rgba(255, 255, 255, 0.18);
   --border-soft: rgba(255, 255, 255, 0.12);
-  --apple-green: #30d158;
+  --apple-green: #34c759;
   --apple-green-soft: #34c759;
-  --apple-green-deep: #30d158;
+  --apple-green-deep: #34c759;
 }
 
 html,
