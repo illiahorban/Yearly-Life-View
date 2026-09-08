@@ -135,7 +135,6 @@ import {
 } from "./components/icons/Icons";
 
 import { IconButton } from "./components/common/IconButton";
-import { ColorSwatchGrid } from "./components/common/ColorSwatchGrid";
 import { ConfirmDialog } from "./components/common/ConfirmDialog";
 import { FactoryResetDialog } from "./components/common/FactoryResetDialog";
 

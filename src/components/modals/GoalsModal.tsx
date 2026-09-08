@@ -8,7 +8,7 @@ import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { makeId, newTimestamps } from "../../utils/storage";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, goalCheckboxAchromaticStyle, getEventColors, normaliseGrey } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
-import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { GripIcon, TrashIcon, GoalsIcon, CheckIcon, ChevronLeftIcon } from "../icons/Icons";
 
@@ -145,14 +145,26 @@ export function GoalsModal({
   const [colorPickerGoalId, setColorPickerGoalId] = useState<string | null>(
     null,
   );
-  const toggleColorPicker = (id: string) => {
-    setColorPickerGoalId(colorPickerGoalId === id ? null : id);
+  const [colorPickerAnchor, setColorPickerAnchor] =
+    useState<HTMLElement | null>(null);
+  const toggleColorPicker = (id: string, el: HTMLElement) => {
+    if (colorPickerGoalId === id) {
+      setColorPickerGoalId(null);
+      setColorPickerAnchor(null);
+    } else {
+      setColorPickerGoalId(id);
+      setColorPickerAnchor(el);
+    }
+  };
+  const closeColorPicker = () => {
+    setColorPickerGoalId(null);
+    setColorPickerAnchor(null);
   };
   const setGoalColor = (id: string, color: string | undefined) => {
     commitGoalsDraft(
       goalsRef.current.map((x) => (x.id === id ? { ...x, color } : x)),
     );
-    setColorPickerGoalId(null);
+    closeColorPicker();
   };
 
   const finalize = (after: () => void) => {
@@ -467,11 +479,13 @@ export function GoalsModal({
                               gap: 6,
                               transition: "top 150ms",
                               opacity:
+                                isMobile ||
                                 hoveredGoalId === g.id ||
                                 colorPickerGoalId === g.id
                                   ? 1
                                   : 0,
                               pointerEvents:
+                                isMobile ||
                                 hoveredGoalId === g.id ||
                                 colorPickerGoalId === g.id
                                   ? "auto"
@@ -482,7 +496,7 @@ export function GoalsModal({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleColorPicker(g.id);
+                                toggleColorPicker(g.id, e.currentTarget);
                               }}
                               onPointerDown={(e) => e.stopPropagation()}
                               title={t("chooseColor")}
@@ -521,64 +535,6 @@ export function GoalsModal({
                                 />
                               )}
                             </button>
-                            {colorPickerGoalId === g.id && (
-                              <motion.div
-                                key="goal-color-popover"
-                                initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.94, y: -4 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 420,
-                                  damping: 28,
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                                style={{
-                                  position: "absolute",
-                                  top: "calc(100% + 6px)",
-                                  right: 0,
-                                  zIndex: 200,
-                                  background: modalBg,
-                                  backdropFilter: "blur(20px)",
-                                  WebkitBackdropFilter: "blur(20px)",
-                                  borderRadius: 12,
-                                  padding: 8,
-                                  boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                                  border: "1px solid var(--border-soft)",
-                                  width: 136,
-                                  isolation: "isolate",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    position: "fixed",
-                                    inset: 0,
-                                    zIndex: -1,
-                                  }}
-                                  onClick={() => setColorPickerGoalId(null)}
-                                />
-                                <ColorSwatchGrid
-                                  colors={APPLE_COLORS.map((ac) => ({
-                                    key: ac.key,
-                                    hex: dark ? ac.dark : ac.light,
-                                    label: ac.label,
-                                  }))}
-                                  selected={
-                                    goals.find(
-                                      (x) => x.id === colorPickerGoalId,
-                                    )?.color ?? null
-                                  }
-                                  onSelect={(hex) =>
-                                    setGoalColor(colorPickerGoalId, hex)
-                                  }
-                                  onClear={() =>
-                                    setGoalColor(colorPickerGoalId, undefined)
-                                  }
-                                  clearLabel={t("noColor")}
-                                  dark={dark}
-                                />
-                              </motion.div>
-                            )}
                             <button
                               onClick={() => setConfirmDeleteGoalId(g.id)}
                               onPointerDown={(e) => e.stopPropagation()}
@@ -673,6 +629,28 @@ export function GoalsModal({
         message={t("deleteGoalConfirm")}
         confirmLabel={t("remove")}
         dark={dark}
+      />
+      <ColorPickerPopover
+        isOpen={colorPickerGoalId !== null}
+        onClose={closeColorPicker}
+        anchorEl={colorPickerAnchor}
+        dark={dark}
+        modalBg={modalBg}
+        selected={
+          goals.find((x) => x.id === colorPickerGoalId)?.color ?? null
+        }
+        onSelect={(hex) => {
+          if (colorPickerGoalId) {
+            const current = goals.find((x) => x.id === colorPickerGoalId)?.color;
+            setGoalColor(colorPickerGoalId, current === hex ? undefined : hex);
+          }
+        }}
+        onClear={() => {
+          if (colorPickerGoalId) {
+            setGoalColor(colorPickerGoalId, undefined);
+          }
+        }}
+        clearLabel={t("noColor")}
       />
     </>
   );

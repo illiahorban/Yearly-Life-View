@@ -7,7 +7,7 @@ import { makeId, newTimestamps } from "../../utils/storage";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors } from "../../constants/colors";
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { HighlightText } from "../common/HighlightText";
-import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { SearchIcon, TrashIcon } from "../icons/Icons";
 import { useIsMobile } from "../../hooks/use-mobile";
@@ -54,6 +54,8 @@ export function NotesPanel({
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState<string | null>(null);
   const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
+  const [draftColorAnchor, setDraftColorAnchor] =
+    useState<HTMLElement | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [hoveredDk, setHoveredDk] = useState<string | null>(null);
   const [confirmDeleteDk, setConfirmDeleteDk] = useState<string | null>(null);
@@ -116,7 +118,8 @@ export function NotesPanel({
     return `${d} ${months[m! - 1]}`;
   };
 
-  const toggleDraftColorPicker = () => {
+  const toggleDraftColorPicker = (el?: HTMLElement) => {
+    if (el) setDraftColorAnchor(el);
     setDraftColorPickerOpen((prev) => !prev);
   };
 
@@ -410,7 +413,7 @@ export function NotesPanel({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggleDraftColorPicker();
+                  toggleDraftColorPicker(e.currentTarget);
                 }}
                 title={t("chooseColor")}
                 style={{
@@ -431,54 +434,23 @@ export function NotesPanel({
                   padding: 0,
                 }}
               />
-              {draftColorPickerOpen && (
-                <motion.div
-                  key="draft-color-popover"
-                  initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.94, y: -4 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    position: "absolute",
-                    top: "calc(100% + 6px)",
-                    right: 0,
-                    zIndex: 200,
-                    background: modalBg,
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                    borderRadius: 12,
-                    padding: 8,
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                    border: "1px solid var(--border-soft)",
-                    width: 136,
-                    isolation: "isolate",
-                  }}
-                >
-                  <div
-                    style={{ position: "fixed", inset: 0, zIndex: -1 }}
-                    onClick={() => setDraftColorPickerOpen(false)}
-                  />
-                  <ColorSwatchGrid
-                    colors={APPLE_COLORS.map((ac) => ({
-                      key: ac.key,
-                      hex: dark ? ac.dark : ac.light,
-                      label: ac.label,
-                    }))}
-                    selected={draftColor}
-                    onSelect={(hex) => {
-                      setDraftColor(draftColor === hex ? null : hex);
-                      setDraftColorPickerOpen(false);
-                    }}
-                    onClear={() => {
-                      setDraftColor(null);
-                      setDraftColorPickerOpen(false);
-                    }}
-                    clearLabel={t("noColor")}
-                    dark={dark}
-                  />
-                </motion.div>
-              )}
+              <ColorPickerPopover
+                isOpen={draftColorPickerOpen}
+                onClose={() => setDraftColorPickerOpen(false)}
+                anchorEl={draftColorAnchor}
+                dark={dark}
+                modalBg={modalBg}
+                selected={draftColor}
+                onSelect={(hex) => {
+                  setDraftColor(draftColor === hex ? null : hex);
+                  setDraftColorPickerOpen(false);
+                }}
+                onClear={() => {
+                  setDraftColor(null);
+                  setDraftColorPickerOpen(false);
+                }}
+                clearLabel={t("noColor")}
+              />
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input

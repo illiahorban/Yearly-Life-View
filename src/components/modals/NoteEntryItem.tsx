@@ -3,10 +3,11 @@ import TextareaAutosize from "react-textarea-autosize";
 import { motion, AnimatePresence } from "framer-motion";
 import type { NoteEntry } from "../../types/calendar";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
-import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ColorPickerPopover } from "../common/ColorPickerPopover";
+import { useIsMobile } from "../../hooks/use-mobile";
 import { DraggableCard } from "./DraggableCard";
 import { LangContext } from "../../constants/i18n";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey, getPopoverPlacement } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
 
 const NOTE_LONG_PRESS_MS = 350;
 const NOTE_LONG_PRESS_MOVE_TOLERANCE = 8;
@@ -56,6 +57,7 @@ export function NoteEntryItem({
   autoFocus?: boolean;
 }) {
   const { t } = React.useContext(LangContext);
+  const isMobile = useIsMobile();
   const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -131,11 +133,15 @@ export function NoteEntryItem({
             gap: 6,
             transition: "top 150ms",
             opacity:
-              hoveredEntryId === entry.id || colorPickerEntryId === entry.id
+              isMobile ||
+              hoveredEntryId === entry.id ||
+              colorPickerEntryId === entry.id
                 ? 1
                 : 0,
             pointerEvents:
-              hoveredEntryId === entry.id || colorPickerEntryId === entry.id
+              isMobile ||
+              hoveredEntryId === entry.id ||
+              colorPickerEntryId === entry.id
                 ? "auto"
                 : "none",
             isolation: "isolate",
@@ -148,8 +154,6 @@ export function NoteEntryItem({
               }}
               onClick={(e) => {
                 e.stopPropagation();
-                const btn = colorBtnRefs.current[entry.id];
-                setPlacement(getPopoverPlacement(btn));
                 toggleColorPicker(entry.id);
               }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -191,68 +195,26 @@ export function NoteEntryItem({
                 />
               )}
             </button>
-            {colorPickerEntryId === entry.id && (
-              <motion.div
-                key="color-popover"
-                initial={{
-                  opacity: 0,
-                  scale: 0.94,
-                  y: placement === "top" ? 4 : -4,
-                }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{
-                  opacity: 0,
-                  scale: 0.94,
-                  y: placement === "top" ? 4 : -4,
-                }}
-                transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  position: "absolute",
-                  ...(placement === "top"
-                    ? { bottom: "calc(100% + 6px)" }
-                    : { top: "calc(100% + 6px)" }),
-                  right: 0,
-                  zIndex: 200,
-                  background:
-                    modalBg ||
-                    (dark
-                      ? "rgba(30,30,30,0.95)"
-                      : "rgba(255,255,255,0.95)"),
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  borderRadius: 12,
-                  padding: 8,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-                  border: "1px solid var(--border-soft)",
-                  width: 136,
-                  isolation: "isolate",
-                }}
-              >
-                <div
-                  style={{ position: "fixed", inset: 0, zIndex: -1 }}
-                  onClick={() => toggleColorPicker(entry.id)}
-                />
-                <ColorSwatchGrid
-                  colors={APPLE_COLORS.map((ac) => ({
-                    key: ac.key,
-                    hex: dark ? ac.dark : ac.light,
-                    label: ac.label,
-                  }))}
-                  selected={entry.color ?? null}
-                  onSelect={(hex) => {
-                    updateEntryColor(entry.id, hex);
-                    toggleColorPicker(entry.id);
-                  }}
-                  onClear={() => {
-                    updateEntryColor(entry.id, undefined);
-                    toggleColorPicker(entry.id);
-                  }}
-                  clearLabel={t("noColor")}
-                  dark={dark}
-                />
-              </motion.div>
-            )}
+            <ColorPickerPopover
+              isOpen={colorPickerEntryId === entry.id}
+              onClose={() => toggleColorPicker(entry.id)}
+              anchorEl={colorBtnRefs.current[entry.id]}
+              dark={dark}
+              modalBg={modalBg}
+              selected={entry.color ?? null}
+              onSelect={(hex) => {
+                updateEntryColor(
+                  entry.id,
+                  entry.color === hex ? undefined : hex,
+                );
+                toggleColorPicker(entry.id);
+              }}
+              onClear={() => {
+                updateEntryColor(entry.id, undefined);
+                toggleColorPicker(entry.id);
+              }}
+              clearLabel={t("noColor")}
+            />
           </div>
           <button
             onClick={() => setConfirmDeleteEntryId(entry.id)}

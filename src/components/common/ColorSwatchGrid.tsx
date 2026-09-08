@@ -1,5 +1,5 @@
 import React from "react";
-import { swatchCheckColor } from "../../constants/colors";
+import { swatchCheckColor, APPLE_COLORS } from "../../constants/colors";
 
 export function ColorSwatchGrid({
   colors,
@@ -49,7 +49,23 @@ export function ColorSwatchGrid({
         </button>
       )}
       {colors.map((c) => {
-        const sel = selected === c.hex;
+        const sel = Boolean(
+          selected &&
+            (selected === c.hex ||
+              selected === c.key ||
+              (c.hex && selected.toLowerCase() === c.hex.toLowerCase()) ||
+              (c.key &&
+                APPLE_COLORS.some(
+                  (ac) =>
+                    ac.key === c.key &&
+                    (ac.light.toLowerCase() === selected.toLowerCase() ||
+                      ac.dark.toLowerCase() === selected.toLowerCase() ||
+                      ac.key === selected),
+                )) ||
+              (c.key === "grey" &&
+                (selected === "#71717a" ||
+                  selected.toLowerCase() === "#71717a"))),
+        );
         return (
           <button
             key={c.key}

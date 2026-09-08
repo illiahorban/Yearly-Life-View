@@ -9,7 +9,6 @@ import { pluralWeeks, pluralDayStreak } from "../../utils/plural";
 import { QuarterNameEditor } from "./QuarterNameEditor";
 import { BlockLabel } from "./BlockLabel";
 import { DayTile } from "./DayTile";
-import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
 import { GoalsIcon, FlagIcon, CheckIcon } from "../icons/Icons";
 
 export function BlocksRenderer({

@@ -7,7 +7,7 @@ import { WEEKS_PER_QUARTER, LangContext } from "../../constants/i18n";
 import { APPLE_COLORS, getQuarterColors, adaptColor, achromaticStyle, getEventColors, readableGoalTextColor } from "../../constants/colors";
 import { pluralWeeks } from "../../utils/plural";
 import { makeId } from "../../utils/storage";
-import { ColorSwatchGrid } from "../common/ColorSwatchGrid";
+import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { QuarterNameEditor } from "../calendar/QuarterNameEditor";
 import { TrashIcon, CheckIcon } from "../icons/Icons";
@@ -84,16 +84,19 @@ export function SprintSettingsModal({
         label: `${t("sprintLabel")} ${i + 1}`,
       })),
     );
-  const [colorPickerAnchor, setColorPickerAnchor] = useState<{
-    id: string;
-    rect: DOMRect;
-  } | null>(null);
-  const activeColorPickerBlock = colorPickerAnchor
-    ? blocks.find((b) => b.id === colorPickerAnchor.id)
+  const [activeColorPickerBlockId, setActiveColorPickerBlockId] = useState<
+    string | null
+  >(null);
+  const [blockColorAnchor, setBlockColorAnchor] =
+    useState<HTMLElement | null>(null);
+  const activeColorPickerBlock = activeColorPickerBlockId
+    ? blocks.find((b) => b.id === activeColorPickerBlockId)
     : null;
   const [confirmResetId, setConfirmResetId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [quarterColorOpen, setQuarterColorOpen] = useState(false);
+  const [quarterColorAnchor, setQuarterColorAnchor] =
+    useState<HTMLElement | null>(null);
 
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -160,7 +163,11 @@ export function SprintSettingsModal({
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
-                  onClick={() => setQuarterColorOpen((v) => !v)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setQuarterColorAnchor(e.currentTarget);
+                    setQuarterColorOpen((v) => !v);
+                  }}
                   title={t("chooseColor")}
                   style={{
                     width: 13,
@@ -175,62 +182,20 @@ export function SprintSettingsModal({
                     flexShrink: 0,
                   }}
                 />
-                <AnimatePresence>
-                  {quarterColorOpen && (
-                    <>
-                      <div
-                        style={{ position: "fixed", inset: 0, zIndex: 49 }}
-                        onClick={() => setQuarterColorOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.94, y: -4 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 420,
-                          damping: 28,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          position: "absolute",
-                          top: "calc(100% + 7px)",
-                          left: 0,
-                          zIndex: 50,
-                          background: modalBg,
-                          backdropFilter: "blur(20px)",
-                          WebkitBackdropFilter: "blur(20px)",
-                          borderRadius: 12,
-                          padding: 8,
-                          boxShadow: "0 8px 32px rgba(0,0,0,0.22)",
-                          border: "1px solid var(--border-soft)",
-                          width: 136,
-                        }}
-                      >
-                        <ColorSwatchGrid
-                          colors={APPLE_COLORS.map((ac) => ({
-                            key: ac.key,
-                            hex: dark ? ac.dark : ac.light,
-                            label: ac.label,
-                          }))}
-                          selected={(() => {
-                            const ac = APPLE_COLORS.find(
-                              (a) => a.key === colorKey,
-                            );
-                            return ac ? (dark ? ac.dark : ac.light) : null;
-                          })()}
-                          onSelect={(_hex, key) => {
-                            onColorChange(
-                              key as (typeof APPLE_COLORS)[number]["key"],
-                            );
-                            setQuarterColorOpen(false);
-                          }}
-                          dark={dark}
-                        />
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
+                <ColorPickerPopover
+                  isOpen={quarterColorOpen}
+                  onClose={() => setQuarterColorOpen(false)}
+                  anchorEl={quarterColorAnchor}
+                  dark={dark}
+                  modalBg={modalBg}
+                  selected={colorKey}
+                  onSelect={(_hex, key) => {
+                    onColorChange(
+                      key as (typeof APPLE_COLORS)[number]["key"],
+                    );
+                    setQuarterColorOpen(false);
+                  }}
+                />
               </div>
               <div
                 className="text-[10px] font-semibold tracking-wide px-2 py-1 rounded-xl"
@@ -301,12 +266,6 @@ export function SprintSettingsModal({
             </div>
           </div>
 
-          {colorPickerAnchor !== null && (
-            <div
-              style={{ position: "fixed", inset: 0, zIndex: 49 }}
-              onClick={() => setColorPickerAnchor(null)}
-            />
-          )}
           <div className="px-6 mt-4 max-h-72 overflow-auto">
             <div className="flex flex-col gap-2">
               <AnimatePresence initial={false}>
@@ -417,10 +376,10 @@ export function SprintSettingsModal({
                             <button
                               type="button"
                               onClick={(e) => {
-                                const rect =
-                                  e.currentTarget.getBoundingClientRect();
-                                setColorPickerAnchor((prev) =>
-                                  prev?.id === b.id ? null : { id: b.id, rect },
+                                e.stopPropagation();
+                                setBlockColorAnchor(e.currentTarget);
+                                setActiveColorPickerBlockId((prev) =>
+                                  prev === b.id ? null : b.id,
                                 );
                               }}
                               title={t("sprintColor")}
@@ -588,83 +547,36 @@ export function SprintSettingsModal({
                 })}
               </AnimatePresence>
 
-              {colorPickerAnchor &&
-                activeColorPickerBlock &&
-                typeof document !== "undefined" &&
-                ReactDOM.createPortal(
-                  <AnimatePresence>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.94, y: -4 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.94, y: -4 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 420,
-                        damping: 28,
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        position: "fixed",
-                        top: (() => {
-                          const below = colorPickerAnchor.rect.bottom + 6;
-                          const popupHeight = 130;
-                          if (below + popupHeight <= window.innerHeight)
-                            return Math.max(8, below);
-                          return Math.max(
-                            8,
-                            Math.min(
-                              colorPickerAnchor.rect.top - popupHeight - 6,
-                              window.innerHeight - popupHeight - 8,
-                            ),
-                          );
-                        })(),
-                        left: Math.min(
-                          Math.max(8, colorPickerAnchor.rect.left),
-                          window.innerWidth - 152,
-                        ),
-                        zIndex: 60,
-                        background: modalBg,
-                        backdropFilter: "blur(20px)",
-                        WebkitBackdropFilter: "blur(20px)",
-                        borderRadius: 12,
-                        padding: 8,
-                        boxShadow:
-                          "0 8px 32px rgba(0,0,0,0.26), inset 0 0 0 1px var(--border-soft)",
-                        width: 136,
-                      }}
-                    >
-                      <ColorSwatchGrid
-                        colors={APPLE_COLORS.map((ac) => ({
-                          key: ac.key,
-                          hex: dark ? ac.dark : ac.light,
-                          label: ac.label,
-                        }))}
-                        selected={(() => {
-                          if (!activeColorPickerBlock.color) return null;
-                          const ac = APPLE_COLORS.find(
-                            (a) => a.key === activeColorPickerBlock.color,
-                          );
-                          return ac ? (dark ? ac.dark : ac.light) : null;
-                        })()}
-                        onSelect={(_hex, key) => {
-                          update(activeColorPickerBlock.id, {
-                            color: key as (typeof APPLE_COLORS)[number]["key"],
-                          });
-                          setColorPickerAnchor(null);
-                        }}
-                        onClear={() => {
-                          update(activeColorPickerBlock.id, {
-                            color: undefined,
-                          });
-                          setColorPickerAnchor(null);
-                        }}
-                        clearLabel={t("quarterDefault")}
-                        dark={dark}
-                      />
-                    </motion.div>
-                  </AnimatePresence>,
-                  document.body,
-                )}
+              <ColorPickerPopover
+                isOpen={Boolean(activeColorPickerBlock && blockColorAnchor)}
+                onClose={() => {
+                  setActiveColorPickerBlockId(null);
+                  setBlockColorAnchor(null);
+                }}
+                anchorEl={blockColorAnchor}
+                dark={dark}
+                modalBg={modalBg}
+                selected={activeColorPickerBlock?.color ?? null}
+                onSelect={(_hex, key) => {
+                  if (activeColorPickerBlock) {
+                    update(activeColorPickerBlock.id, {
+                      color: key as (typeof APPLE_COLORS)[number]["key"],
+                    });
+                  }
+                  setActiveColorPickerBlockId(null);
+                  setBlockColorAnchor(null);
+                }}
+                onClear={() => {
+                  if (activeColorPickerBlock) {
+                    update(activeColorPickerBlock.id, {
+                      color: undefined,
+                    });
+                  }
+                  setActiveColorPickerBlockId(null);
+                  setBlockColorAnchor(null);
+                }}
+                clearLabel={t("quarterDefault")}
+              />
               <button
                 type="button"
                 onClick={() =>
