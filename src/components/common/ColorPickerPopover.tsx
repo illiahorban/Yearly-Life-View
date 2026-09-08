@@ -139,9 +139,10 @@ export function ColorPickerPopover({
   return ReactDOM.createPortal(
     <AnimatePresence>
       {isOpen && coords && (
-        <div key="color-picker-portal-root">
+        <div key="color-picker-portal-root" data-color-picker-portal="true">
           {/* Fullscreen transparent backdrop for dismiss on outside click */}
           <div
+            data-color-picker-backdrop="true"
             style={{
               position: "fixed",
               inset: 0,
@@ -152,10 +153,15 @@ export function ColorPickerPopover({
               e.stopPropagation();
               onClose();
             }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
           />
 
           {/* Floating popover menu */}
           <motion.div
+            data-color-picker-popover="true"
             initial={{
               opacity: 0,
               scale: 0.94,
@@ -170,6 +176,7 @@ export function ColorPickerPopover({
             transition={{ type: "spring", stiffness: 420, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{
               position: "fixed",
               top: coords.top,
