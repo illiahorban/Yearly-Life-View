@@ -175,6 +175,12 @@ abbr,
   color: #d4d4d8;
 }
 
+/* Dynamic placeholder styling for event/milestone forms */
+.event-form-input::placeholder {
+  color: var(--event-ph-color, currentColor);
+  opacity: 0.55;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
   filter: invert(var(--date-invert, 0));

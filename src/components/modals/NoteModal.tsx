@@ -376,6 +376,8 @@ export function NoteModal({
   // New event form state
   const addEventFormRef = React.useRef<HTMLDivElement | null>(null);
   const newLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const newDescInputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const lastFocusedEventInputRef = React.useRef<"label" | "desc">("label");
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newDate, setNewDate] = useState(dk);
@@ -516,6 +518,14 @@ export function NoteModal({
     newLabelInputRef.current?.focus({ preventScroll: true });
     scrollToTarget(addEventFormRef.current, "nearest");
     const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.closest("[data-color-picker-portal='true']") ||
+        target?.closest("[data-color-picker-popover='true']") ||
+        target?.closest("[data-color-picker-backdrop='true']")
+      ) {
+        return;
+      }
       if (
         addEventFormRef.current &&
         !addEventFormRef.current.contains(e.target as Node)
@@ -1490,6 +1500,15 @@ export function NoteModal({
                     const cardFormBdr = ec2.formBorder;
                     const cardFormBg = ec2.formBg;
                     const hovering = hoveredMsId === ms.id && !isEditing;
+                    const msAch = (isEditing ? msEditColor : ms.color)
+                      ? achromaticStyle(
+                          resolveNoteHex(isEditing ? msEditColor : ms.color),
+                          dark,
+                        )
+                      : null;
+                    const msPlaceholderClass = msAch
+                      ? `placeholder-note-${msAch.tier}`
+                      : undefined;
                     return (
                       <DraggableCard key={ms.id} id={ms.id} dark={dark}>
                         <div
@@ -1722,6 +1741,7 @@ export function NoteModal({
                                 }}
                               >
                                 <TextareaAutosize
+                                  key={`ms-edit-label-${ms.id}-${msEditColor || "none"}`}
                                   ref={msEditLabelInputRef}
                                   value={msEditLabel}
                                   onChange={(e) =>
@@ -1735,6 +1755,7 @@ export function NoteModal({
                                     if (e.key === "Escape") setMsEditId(null);
                                   }}
                                   placeholder={t("labelPlaceholder")}
+                                  className={`${msPlaceholderClass || ""} event-form-input`.trim()}
                                   minRows={1}
                                   style={
                                     {
@@ -1747,17 +1768,20 @@ export function NoteModal({
                                       color: cardFormTxt,
                                       background: cardFormBg,
                                       border: `1px solid ${cardFormBdr}`,
+                                      "--event-ph-color": cardFormTxt,
                                     } as any
                                   }
                                 />
                               </div>
                               <div style={{ position: "relative" }}>
                                 <TextareaAutosize
+                                  key={`ms-edit-desc-${ms.id}-${msEditColor || "none"}`}
                                   value={msEditDesc}
                                   onChange={(e) =>
                                     setMsEditDesc(e.target.value)
                                   }
                                   placeholder={t("editDescPlaceholder")}
+                                  className={`${msPlaceholderClass || ""} event-form-input`.trim()}
                                   minRows={2}
                                   style={
                                     {
@@ -1772,6 +1796,7 @@ export function NoteModal({
                                       color: cardFormTxt,
                                       background: cardFormBg,
                                       border: `1px solid ${cardFormBdr}`,
+                                      "--event-ph-color": cardFormTxt,
                                     } as any
                                   }
                                 />
@@ -1842,10 +1867,16 @@ export function NoteModal({
                                           msEditColor === hex ? "" : hex,
                                         );
                                         setMsEditColorPickerOpen(false);
+                                        setTimeout(() => {
+                                          msEditLabelInputRef.current?.focus();
+                                        }, 0);
                                       }}
                                       onClear={() => {
                                         setMsEditColor("");
                                         setMsEditColorPickerOpen(false);
+                                        setTimeout(() => {
+                                          msEditLabelInputRef.current?.focus();
+                                        }, 0);
                                       }}
                                       clearLabel={t("noColor")}
                                     />
@@ -2020,7 +2051,15 @@ export function NoteModal({
                   outline: "none",
                   fontFamily: "inherit",
                   boxSizing: "border-box",
+                  // @ts-ignore
+                  "--event-ph-color": inputText,
                 };
+                const ach = newColor
+                  ? achromaticStyle(resolveNoteHex(newColor), dark)
+                  : null;
+                const placeholderClass = ach
+                  ? `placeholder-note-${ach.tier}`
+                  : undefined;
                 const labelText = ecNew.icon || "var(--text-secondary)";
                 const cancelBorder = `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"}`;
                 const cancelColor = "var(--text-secondary)";
@@ -2050,9 +2089,13 @@ export function NoteModal({
                       style={{ isolation: "isolate" }}
                     >
                       <TextareaAutosize
+                        key={`new-label-${newColor || "none"}`}
                         ref={newLabelInputRef}
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
+                        onFocus={() => {
+                          lastFocusedEventInputRef.current = "label";
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -2061,6 +2104,7 @@ export function NoteModal({
                           if (e.key === "Escape") setAddEventOpen(false);
                         }}
                         placeholder={t("labelPlaceholder")}
+                        className={`${placeholderClass || ""} event-form-input`.trim()}
                         minRows={1}
                         style={
                           {
@@ -2076,9 +2120,15 @@ export function NoteModal({
                     </div>
                     <div style={{ position: "relative" }}>
                       <TextareaAutosize
+                        key={`new-desc-${newColor || "none"}`}
+                        ref={newDescInputRef}
                         value={newDesc}
                         onChange={(e) => setNewDesc(e.target.value)}
+                        onFocus={() => {
+                          lastFocusedEventInputRef.current = "desc";
+                        }}
                         placeholder={t("descPlaceholder")}
+                        className={`${placeholderClass || ""} event-form-input`.trim()}
                         minRows={2}
                         style={
                           {
@@ -2153,10 +2203,24 @@ export function NoteModal({
                           onSelect={(hex) => {
                             setNewColor(newColor === hex ? "" : hex);
                             setNewColorPickerOpen(false);
+                            setTimeout(() => {
+                              if (lastFocusedEventInputRef.current === "desc") {
+                                newDescInputRef.current?.focus();
+                              } else {
+                                newLabelInputRef.current?.focus();
+                              }
+                            }, 0);
                           }}
                           onClear={() => {
                             setNewColor("");
                             setNewColorPickerOpen(false);
+                            setTimeout(() => {
+                              if (lastFocusedEventInputRef.current === "desc") {
+                                newDescInputRef.current?.focus();
+                              } else {
+                                newLabelInputRef.current?.focus();
+                              }
+                            }, 0);
                           }}
                           clearLabel={t("noColor")}
                         />

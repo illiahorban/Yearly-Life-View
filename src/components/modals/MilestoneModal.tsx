@@ -408,6 +408,8 @@ export function MilestoneModal({
                 fontFamily: "inherit",
                 boxSizing: "border-box",
                 transition: "background 0.25s ease, border-color 0.25s ease",
+                // @ts-ignore
+                "--event-ph-color": inputText,
               };
               const labelText = isWhite ? "#18181b" : "var(--text-secondary)";
               const cancelBorder = isWhite
@@ -440,6 +442,7 @@ export function MilestoneModal({
                   }}
                 >
                   <textarea
+                    key={`draft-label-${draftColor || "none"}`}
                     value={draftLabel}
                     rows={1}
                     onChange={(e) => {
@@ -451,7 +454,7 @@ export function MilestoneModal({
                       if (e.key === "Escape") resetDraft();
                     }}
                     placeholder={t("labelPlaceholder")}
-                    className={isWhite ? "placeholder-dark" : undefined}
+                    className={`${isWhite ? "placeholder-dark" : ""} event-form-input`.trim()}
                     style={{
                       ...draftInputStyle,
                       width: "100%",
@@ -462,6 +465,7 @@ export function MilestoneModal({
                     }}
                   />
                   <textarea
+                    key={`draft-desc-${draftColor || "none"}`}
                     value={draftDesc}
                     rows={2}
                     onChange={(e) => {
@@ -470,7 +474,7 @@ export function MilestoneModal({
                       e.target.style.height = e.target.scrollHeight + "px";
                     }}
                     placeholder={t("descPlaceholder")}
-                    className={isWhite ? "placeholder-dark" : undefined}
+                    className={`${isWhite ? "placeholder-dark" : ""} event-form-input`.trim()}
                     style={{
                       ...draftInputStyle,
                       width: "100%",
