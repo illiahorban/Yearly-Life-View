@@ -344,6 +344,7 @@ export function DayTile({
     );
 
   const hasEvents = dayMilestones.length > 0;
+  const hasEventsWithColor = dayMilestones.some((m) => Boolean(m.color));
   const noteDot = hasNote ? (
     <div
       style={{
@@ -364,6 +365,7 @@ export function DayTile({
   ) : null;
 
   const msSep = dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.20)";
+  const tileBaseBg = isPast ? accentColor : futureBg;
   const msBar =
     dayMilestones.length > 0 ? (
       <div
@@ -375,7 +377,7 @@ export function DayTile({
           height: 6,
           display: "flex",
           overflow: "hidden",
-          zIndex: 4,
+          zIndex: 6,
           pointerEvents: "none",
         }}
       >
@@ -388,7 +390,7 @@ export function DayTile({
               <div
                 style={{
                   flex: 1,
-                  background: noColor ? "transparent" : ec.marker,
+                  background: noColor ? tileBaseBg : ec.marker,
                   borderBottom: noColor ? `1px solid ${msSep}` : "none",
                   boxSizing: "border-box",
                   boxShadow:
@@ -606,11 +608,8 @@ export function DayTile({
               inset: 0,
               borderRadius: 12,
               overflow: "hidden",
-              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-              maskImage: "radial-gradient(white, black)",
               isolation: "isolate",
               contain: "paint",
-              background: accentColor,
               color: "white",
               boxShadow: isWhiteInLight
                 ? hovered
@@ -621,6 +620,15 @@ export function DayTile({
                   : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`,
             }}
           >
+            {/* Tile background fill */}
+            <div
+              className="absolute inset-x-0 bottom-0 pointer-events-none"
+              style={{
+                top: hasEventsWithColor ? 5.5 : 0,
+                background: accentColor,
+                zIndex: 0,
+              }}
+            />
             {msBar}
             <div style={{ flex: 1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
@@ -664,11 +672,8 @@ export function DayTile({
               inset: 0,
               borderRadius: 12,
               overflow: "hidden",
-              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-              maskImage: "radial-gradient(white, black)",
               isolation: "isolate",
               contain: "paint",
-              background: futureBg,
               color: "var(--text)",
               boxShadow: isWhiteInLight
                 ? hovered
@@ -677,15 +682,25 @@ export function DayTile({
                 : undefined,
             }}
           >
-            {msBar}
+            {/* Base background fill */}
+            <div
+              className="absolute inset-x-0 bottom-0 pointer-events-none"
+              style={{
+                top: hasEventsWithColor ? 5.5 : 0,
+                background: futureBg,
+                zIndex: 0,
+              }}
+            />
             {/* Fill layer: background bar rising from bottom */}
             <div
               className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out pointer-events-none"
               style={{
                 height: `${todayProgress}%`,
                 background: accentColor,
+                zIndex: 1,
               }}
             />
+            {msBar}
 
             {/* Layer 1: Base text (unfilled area tone) — clipped strictly to the upper (unfilled) region so its dark pixels never bleed beneath the white layer */}
             <div
@@ -762,6 +777,7 @@ export function DayTile({
                 borderRadius: 12,
                 boxShadow: `inset 0 0 0 1.5px ${ringAccent}`,
                 pointerEvents: "none",
+                zIndex: 5,
               }}
             />
           </div>
@@ -792,16 +808,22 @@ export function DayTile({
             inset: 0,
             borderRadius: 12,
             overflow: "hidden",
-            WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-            maskImage: "radial-gradient(white, black)",
             contain: "paint",
-            background: futureBg,
             color: "var(--text-secondary)",
             boxShadow: hovered
               ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
               : "0 1px 1px rgba(0,0,0,0.02), inset 0 0 0 1px var(--border-soft)",
           }}
         >
+          {/* Base background fill */}
+          <div
+            className="absolute inset-x-0 bottom-0 pointer-events-none"
+            style={{
+              top: hasEventsWithColor ? 5.5 : 0,
+              background: futureBg,
+              zIndex: 0,
+            }}
+          />
           {msBar}
           <div style={{ flex: 1 }} />
           <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
