@@ -230,7 +230,7 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
 
   // tileFill is the colour used as the day-cell background.
   // In light mode when white is chosen, past days fill with pure white (#ffffff),
-  // while future days become a subtle grey (#ececf0).
+  // while future days become a subtle grey (#f0f0f3).
   const tileFill =
     isAchromaticDark && dark
       ? hex // grey/black in dark: actual dark hue
@@ -238,7 +238,7 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
         ? (dark ? hex : "#ffffff")
         : hex;
 
-  const futureTileBg = isWhiteInLight ? "#ececf0" : undefined;
+  const futureTileBg = isWhiteInLight ? "#f0f0f3" : undefined;
   // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
   // colour surface the way percentages/progress bars are, so they don't need the
   // white/black contrast boost applied to `text` for legibility. For grey specifically,
