@@ -108,6 +108,13 @@ export function MilestoneModal({
   const [editColorAnchor, setEditColorAnchor] =
     useState<HTMLElement | null>(null);
 
+  const draftLabelInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const draftDescInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const lastFocusedDraftRef = useRef<"label" | "desc">("label");
+  const editLabelInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const editDescInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const lastFocusedEditRef = useRef<"label" | "desc">("label");
+
   const startEdit = (ms: Milestone) => {
     setEditId(ms.id);
     setEditLabel(ms.label);
@@ -443,6 +450,10 @@ export function MilestoneModal({
                 >
                   <textarea
                     key={`draft-label-${draftColor || "none"}`}
+                    ref={draftLabelInputRef}
+                    onFocus={() => {
+                      lastFocusedDraftRef.current = "label";
+                    }}
                     value={draftLabel}
                     rows={1}
                     onChange={(e) => {
@@ -466,6 +477,10 @@ export function MilestoneModal({
                   />
                   <textarea
                     key={`draft-desc-${draftColor || "none"}`}
+                    ref={draftDescInputRef}
+                    onFocus={() => {
+                      lastFocusedDraftRef.current = "desc";
+                    }}
                     value={draftDesc}
                     rows={2}
                     onChange={(e) => {
@@ -555,10 +570,24 @@ export function MilestoneModal({
                         onSelect={(hex) => {
                           setDraftColor(draftColor === hex ? "" : hex);
                           setDraftColorPickerOpen(false);
+                          setTimeout(() => {
+                            if (lastFocusedDraftRef.current === "desc") {
+                              draftDescInputRef.current?.focus();
+                            } else {
+                              draftLabelInputRef.current?.focus();
+                            }
+                          }, 0);
                         }}
                         onClear={() => {
                           setDraftColor("");
                           setDraftColorPickerOpen(false);
+                          setTimeout(() => {
+                            if (lastFocusedDraftRef.current === "desc") {
+                              draftDescInputRef.current?.focus();
+                            } else {
+                              draftLabelInputRef.current?.focus();
+                            }
+                          }, 0);
                         }}
                         clearLabel={t("noColor")}
                       />
@@ -707,8 +736,9 @@ export function MilestoneModal({
 
               const renderCard = (ms: Milestone, showDate: boolean) => {
                 const isEditing = editId === ms.id;
+                const activeCardColor = isEditing ? editColor : ms.color;
                 const ec3 = getEventColors(
-                  isEditing ? editColor : ms.color,
+                  activeCardColor,
                   dark,
                 );
                 const rcBg = ec3.bg;
@@ -718,6 +748,12 @@ export function MilestoneModal({
                 const rcBdrForm = ec3.formBorder;
                 const rcBgForm = ec3.formBg;
                 const hovering = hoveredId === ms.id;
+                const editAch = activeCardColor
+                  ? achromaticStyle(resolveNoteHex(activeCardColor), dark)
+                  : null;
+                const editPlaceholderClass = editAch
+                  ? `placeholder-note-${editAch.tier}`
+                  : undefined;
                 return (
                   <div
                     key={ms.id}
@@ -748,13 +784,18 @@ export function MilestoneModal({
                         }}
                       >
                         <textarea
+                          key={`edit-label-${ms.id}-${editColor || "none"}`}
                           value={editLabel}
                           rows={1}
                           ref={(el) => {
+                            editLabelInputRef.current = el;
                             if (el) {
                               el.style.height = "auto";
                               el.style.height = el.scrollHeight + "px";
                             }
+                          }}
+                          onFocus={() => {
+                            lastFocusedEditRef.current = "label";
                           }}
                           onChange={(e) => {
                             setEditLabel(e.target.value);
@@ -770,6 +811,7 @@ export function MilestoneModal({
                             if (e.key === "Escape") cancelEdit();
                           }}
                           placeholder={t("labelPlaceholder")}
+                          className={`${editPlaceholderClass || ""} event-form-input`.trim()}
                           style={{
                             ...inputStyle,
                             width: "100%",
@@ -782,16 +824,23 @@ export function MilestoneModal({
                             color: rcTxt,
                             background: "transparent",
                             border: `1px solid ${rcBdrForm}`,
+                            // @ts-ignore
+                            "--event-ph-color": rcTxt,
                           }}
                         />
                         <textarea
+                          key={`edit-desc-${ms.id}-${editColor || "none"}`}
                           value={editDesc}
                           rows={2}
                           ref={(el) => {
+                            editDescInputRef.current = el;
                             if (el) {
                               el.style.height = "auto";
                               el.style.height = el.scrollHeight + "px";
                             }
+                          }}
+                          onFocus={() => {
+                            lastFocusedEditRef.current = "desc";
                           }}
                           onChange={(e) => {
                             setEditDesc(e.target.value);
@@ -800,6 +849,7 @@ export function MilestoneModal({
                               e.target.scrollHeight + "px";
                           }}
                           placeholder={t("editDescPlaceholder")}
+                          className={`${editPlaceholderClass || ""} event-form-input`.trim()}
                           style={{
                             ...inputStyle,
                             width: "100%",
@@ -812,6 +862,8 @@ export function MilestoneModal({
                             color: rcSecTxt,
                             background: "transparent",
                             border: `1px solid ${rcBdrForm}`,
+                            // @ts-ignore
+                            "--event-ph-color": rcSecTxt,
                           }}
                         />
                         <div
@@ -886,10 +938,24 @@ export function MilestoneModal({
                               onSelect={(hex) => {
                                 setEditColor(editColor === hex ? "" : hex);
                                 setEditColorPickerOpen(false);
+                                setTimeout(() => {
+                                  if (lastFocusedEditRef.current === "desc") {
+                                    editDescInputRef.current?.focus();
+                                  } else {
+                                    editLabelInputRef.current?.focus();
+                                  }
+                                }, 0);
                               }}
                               onClear={() => {
                                 setEditColor("");
                                 setEditColorPickerOpen(false);
+                                setTimeout(() => {
+                                  if (lastFocusedEditRef.current === "desc") {
+                                    editDescInputRef.current?.focus();
+                                  } else {
+                                    editLabelInputRef.current?.focus();
+                                  }
+                                }, 0);
                               }}
                               clearLabel={t("noColor")}
                             />

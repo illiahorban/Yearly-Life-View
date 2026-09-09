@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import TextareaAutosize from "react-textarea-autosize";
 import type { CalendarConfig, QuarterConfig, Block, QuarterMeta, AppleColorKey, Quarter } from "../../types/calendar";
 import { WEEKS_PER_QUARTER, LangContext } from "../../constants/i18n";
-import { APPLE_COLORS, getQuarterColors, adaptColor, achromaticStyle, getEventColors, readableGoalTextColor } from "../../constants/colors";
+import { APPLE_COLORS, getQuarterColors, adaptColor, achromaticStyle, getEventColors, readableGoalTextColor, resolveNoteHex } from "../../constants/colors";
 import { pluralWeeks } from "../../utils/plural";
 import { makeId } from "../../utils/storage";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
@@ -89,6 +89,7 @@ export function SprintSettingsModal({
   >(null);
   const [blockColorAnchor, setBlockColorAnchor] =
     useState<HTMLElement | null>(null);
+  const blockInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const activeColorPickerBlock = activeColorPickerBlockId
     ? blocks.find((b) => b.id === activeColorPickerBlockId)
     : null;
@@ -297,6 +298,12 @@ export function SprintSettingsModal({
                   const bTextColor = bAc
                     ? readableGoalTextColor(bHex, dark, "var(--text)")
                     : "var(--text)";
+                  const bAch = bAc
+                    ? achromaticStyle(resolveNoteHex(bDotHex), dark)
+                    : null;
+                  const bPlaceholderClass = bAch
+                    ? `placeholder-goal-${bAch.tier}`
+                    : undefined;
                   return (
                     <motion.div
                       layout
@@ -410,6 +417,10 @@ export function SprintSettingsModal({
                           }}
                         >
                           <TextareaAutosize
+                            key={`sprint-label-${b.id}-${b.color || "none"}`}
+                            ref={(el) => {
+                              blockInputRefs.current[b.id] = el;
+                            }}
                             value={b.label}
                             onChange={(e) => {
                               const newBlocks = blocksRef.current.map((x) =>
@@ -421,7 +432,7 @@ export function SprintSettingsModal({
                             }}
                             placeholder={t("sprintLabelPlaceholder")}
                             minRows={1}
-                            className="bg-transparent outline-none w-full resize-none"
+                            className={`${bPlaceholderClass || ""} bg-transparent outline-none w-full resize-none event-form-input`.trim()}
                             style={{
                               color: bDotHex,
                               fontSize: 13,
@@ -435,6 +446,8 @@ export function SprintSettingsModal({
                               overflowWrap: "anywhere",
                               wordBreak: "break-word",
                               overflow: "hidden",
+                              // @ts-ignore
+                              "--event-ph-color": bDotHex,
                             }}
                           />
                           {/* Stepper + actions */}
@@ -559,18 +572,26 @@ export function SprintSettingsModal({
                 selected={activeColorPickerBlock?.color ?? null}
                 onSelect={(_hex, key) => {
                   if (activeColorPickerBlock) {
-                    update(activeColorPickerBlock.id, {
+                    const blockId = activeColorPickerBlock.id;
+                    update(blockId, {
                       color: key as (typeof APPLE_COLORS)[number]["key"],
                     });
+                    setTimeout(() => {
+                      blockInputRefs.current[blockId]?.focus();
+                    }, 0);
                   }
                   setActiveColorPickerBlockId(null);
                   setBlockColorAnchor(null);
                 }}
                 onClear={() => {
                   if (activeColorPickerBlock) {
-                    update(activeColorPickerBlock.id, {
+                    const blockId = activeColorPickerBlock.id;
+                    update(blockId, {
                       color: undefined,
                     });
+                    setTimeout(() => {
+                      blockInputRefs.current[blockId]?.focus();
+                    }, 0);
                   }
                   setActiveColorPickerBlockId(null);
                   setBlockColorAnchor(null);

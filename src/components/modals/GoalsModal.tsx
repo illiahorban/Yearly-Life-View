@@ -165,6 +165,9 @@ export function GoalsModal({
       goalsRef.current.map((x) => (x.id === id ? { ...x, color } : x)),
     );
     closeColorPicker();
+    setTimeout(() => {
+      goalInputRefs.current[id]?.focus();
+    }, 0);
   };
 
   const finalize = (after: () => void) => {
@@ -423,6 +426,7 @@ export function GoalsModal({
                         </span>
                         <div style={{ flex: 1, position: "relative" }}>
                           <TextareaAutosize
+                            key={`goal-item-${g.id}-${gc || "none"}`}
                             ref={(el) => {
                               goalInputRefs.current[g.id] = el;
                             }}
@@ -440,7 +444,7 @@ export function GoalsModal({
                               handleGoalInputHeightChange(g.id, h)
                             }
                             placeholder={`${t("goalPlaceholder")} ${idx + 1}`}
-                            className={placeholderClass}
+                            className={`${placeholderClass || ""} event-form-input`.trim()}
                             minRows={1}
                             style={{
                               width: "100%",
@@ -462,6 +466,8 @@ export function GoalsModal({
                               boxShadow: ec.boxShadow || undefined,
                               transition:
                                 "background 200ms ease, border-color 200ms ease, color 200ms ease",
+                              // @ts-ignore
+                              "--event-ph-color": inputTextColor,
                             }}
                           />
                           <div

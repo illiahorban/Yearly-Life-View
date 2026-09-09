@@ -94,6 +94,7 @@ export function NoteEntryItem({
         onMouseLeave={() => setHoveredEntryId(null)}
       >
         <TextareaAutosize
+          key={`note-entry-${entry.id}-${entryColor || "none"}`}
           ref={setInputRef}
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
@@ -101,7 +102,7 @@ export function NoteEntryItem({
           onKeyDown={handleKey}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
           minRows={1}
-          className={notePlaceholderClass}
+          className={`${notePlaceholderClass || ""} event-form-input`.trim()}
           style={{
             width: "100%",
             resize: "none",
@@ -119,6 +120,8 @@ export function NoteEntryItem({
             overflow: "hidden",
             transition: "background 200ms ease, border-color 200ms ease",
             cursor: "text",
+            // @ts-ignore
+            "--event-ph-color": tintedText,
           }}
         />
         <div
@@ -208,10 +211,16 @@ export function NoteEntryItem({
                   entry.color === hex ? undefined : hex,
                 );
                 toggleColorPicker(entry.id);
+                setTimeout(() => {
+                  textareaRef.current?.focus();
+                }, 0);
               }}
               onClear={() => {
                 updateEntryColor(entry.id, undefined);
                 toggleColorPicker(entry.id);
+                setTimeout(() => {
+                  textareaRef.current?.focus();
+                }, 0);
               }}
               clearLabel={t("noColor")}
             />

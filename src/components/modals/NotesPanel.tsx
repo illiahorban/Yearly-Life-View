@@ -53,6 +53,7 @@ export function NotesPanel({
   const [draftText, setDraftText] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState<string | null>(null);
+  const draftInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [draftColorPickerOpen, setDraftColorPickerOpen] = useState(false);
   const [draftColorAnchor, setDraftColorAnchor] =
     useState<HTMLElement | null>(null);
@@ -358,58 +359,74 @@ export function NotesPanel({
             }}
           >
             <div style={{ position: "relative", marginBottom: 8 }}>
-              <textarea
-                value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
-                placeholder={t("notePlaceholder")}
-                rows={2}
-                style={{
-                  width: "100%",
-                  borderRadius: 10,
-                  border: `${draftColor ? "1.5px" : "1px"} solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`,
-                  background: draftColor
-                    ? getEventColors(resolveNoteHex(draftColor), dark).bg
-                    : inputBg,
-                  color: draftColor
-                    ? getEventColors(resolveNoteHex(draftColor), dark).textTitle
-                    : "var(--text)",
-                  fontSize: 13,
-                  padding: "8px 32px 8px 10px",
-                  fontFamily: "inherit",
-                  outline: "none",
-                  resize: "none",
-                  lineHeight: 1.5,
-                  boxSizing: "border-box",
-                  display: "block",
-                  transition: "background 200ms ease",
-                }}
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    (e.metaKey || e.ctrlKey) &&
-                    draftText.trim()
-                  ) {
-                    e.preventDefault();
-                    onAddNote(draftDate, {
-                      id: makeId(),
-                      text: draftText.trim(),
-                      ...newTimestamps(),
-                      color: draftColor ?? undefined,
-                    });
-                    setDraftText("");
-                    setDraftColor(null);
-                    setDraftDate(dateKey(new Date()));
-                    setDraftColorPickerOpen(false);
-                    setShowAddForm(false);
-                  }
-                  if (e.key === "Escape") {
-                    setShowAddForm(false);
-                    setDraftText("");
-                    setDraftColor(null);
-                    setDraftColorPickerOpen(false);
-                  }
-                }}
-              />
+              {(() => {
+                const draftAch = draftColor
+                  ? achromaticStyle(resolveNoteHex(draftColor), dark)
+                  : null;
+                const draftPlaceholderClass = draftAch
+                  ? `placeholder-note-${draftAch.tier}`
+                  : undefined;
+                const draftTextColor = draftColor
+                  ? getEventColors(resolveNoteHex(draftColor), dark).textTitle
+                  : "var(--text)";
+                return (
+                  <textarea
+                    key={`notes-panel-draft-${draftColor || "none"}`}
+                    ref={draftInputRef}
+                    value={draftText}
+                    onChange={(e) => setDraftText(e.target.value)}
+                    placeholder={t("notePlaceholder")}
+                    rows={2}
+                    className={`${draftPlaceholderClass || ""} event-form-input`.trim()}
+                    style={{
+                      width: "100%",
+                      borderRadius: 10,
+                      border: `${draftColor ? "1.5px" : "1px"} solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`,
+                      background: draftColor
+                        ? getEventColors(resolveNoteHex(draftColor), dark).bg
+                        : inputBg,
+                      color: draftTextColor,
+                      fontSize: 13,
+                      padding: "8px 32px 8px 10px",
+                      fontFamily: "inherit",
+                      outline: "none",
+                      resize: "none",
+                      lineHeight: 1.5,
+                      boxSizing: "border-box",
+                      display: "block",
+                      transition: "background 200ms ease",
+                      // @ts-ignore
+                      "--event-ph-color": draftTextColor,
+                    }}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Enter" &&
+                        (e.metaKey || e.ctrlKey) &&
+                        draftText.trim()
+                      ) {
+                        e.preventDefault();
+                        onAddNote(draftDate, {
+                          id: makeId(),
+                          text: draftText.trim(),
+                          ...newTimestamps(),
+                          color: draftColor ?? undefined,
+                        });
+                        setDraftText("");
+                        setDraftColor(null);
+                        setDraftDate(dateKey(new Date()));
+                        setDraftColorPickerOpen(false);
+                        setShowAddForm(false);
+                      }
+                      if (e.key === "Escape") {
+                        setShowAddForm(false);
+                        setDraftText("");
+                        setDraftColor(null);
+                        setDraftColorPickerOpen(false);
+                      }
+                    }}
+                  />
+                );
+              })()}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -444,10 +461,16 @@ export function NotesPanel({
                 onSelect={(hex) => {
                   setDraftColor(draftColor === hex ? null : hex);
                   setDraftColorPickerOpen(false);
+                  setTimeout(() => {
+                    draftInputRef.current?.focus();
+                  }, 0);
                 }}
                 onClear={() => {
                   setDraftColor(null);
                   setDraftColorPickerOpen(false);
+                  setTimeout(() => {
+                    draftInputRef.current?.focus();
+                  }, 0);
                 }}
                 clearLabel={t("noColor")}
               />

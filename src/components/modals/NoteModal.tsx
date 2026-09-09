@@ -372,6 +372,9 @@ export function NoteModal({
   const [msEditColorAnchor, setMsEditColorAnchor] =
     useState<HTMLElement | null>(null);
   const [msEditColorPlacement, setMsEditColorPlacement] = useState<"top" | "bottom">("bottom");
+  const msEditLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const msEditDescInputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const lastFocusedMsEditInputRef = React.useRef<"label" | "desc">("label");
 
   // New event form state
   const addEventFormRef = React.useRef<HTMLDivElement | null>(null);
@@ -470,7 +473,6 @@ export function NoteModal({
     setMsEditDesc(ms.description ?? "");
     setMsEditRecurring(ms.recurring ?? false);
   };
-  const msEditLabelInputRef = useRef<HTMLTextAreaElement | null>(null);
 
   React.useEffect(() => {
     if (!msEditId) return;
@@ -1154,6 +1156,12 @@ export function NoteModal({
                       const isHovered = hoveredGoalIdx === i;
                       const isColorOpen = goalColorPickerIdx === i;
                       const goalId = goalIds[i] ?? `goal-fallback-${i}`;
+                      const goalAch = goalColor
+                        ? achromaticStyle(resolveNoteHex(goalColor), dark)
+                        : null;
+                      const goalPlaceholderClass = goalAch
+                        ? `placeholder-goal-${goalAch.tier}`
+                        : undefined;
                       return (
                         <DraggableCard key={goalId} id={goalId} dark={dark}>
                           <div
@@ -1232,6 +1240,7 @@ export function NoteModal({
                               );
                             })()}
                             <TextareaAutosize
+                              key={`goal-input-${goalId}-${goalColor || "none"}`}
                               ref={(el) => {
                                 goalInputRefs.current[i] = el;
                               }}
@@ -1248,6 +1257,7 @@ export function NoteModal({
                                 e.stopPropagation();
                               }}
                               placeholder={`${t("goal")} ${i + 1}`}
+                              className={`${goalPlaceholderClass || ""} event-form-input`.trim()}
                               minRows={1}
                               style={{
                                 flex: 1,
@@ -1270,6 +1280,8 @@ export function NoteModal({
                                 minWidth: 0,
                                 display: "block",
                                 boxSizing: "border-box",
+                                // @ts-ignore
+                                "--event-ph-color": textColor,
                               }}
                             />
                             <div
@@ -1359,10 +1371,16 @@ export function NoteModal({
                                         : hex,
                                     );
                                     setGoalColorPickerIdx(null);
+                                    setTimeout(() => {
+                                      goalInputRefs.current[i]?.focus();
+                                    }, 0);
                                   }}
                                   onClear={() => {
                                     handleGoalColorChange(i, undefined);
                                     setGoalColorPickerIdx(null);
+                                    setTimeout(() => {
+                                      goalInputRefs.current[i]?.focus();
+                                    }, 0);
                                   }}
                                   clearLabel={t("noColor")}
                                 />
@@ -1743,6 +1761,9 @@ export function NoteModal({
                                 <TextareaAutosize
                                   key={`ms-edit-label-${ms.id}-${msEditColor || "none"}`}
                                   ref={msEditLabelInputRef}
+                                  onFocus={() => {
+                                    lastFocusedMsEditInputRef.current = "label";
+                                  }}
                                   value={msEditLabel}
                                   onChange={(e) =>
                                     setMsEditLabel(e.target.value)
@@ -1776,6 +1797,10 @@ export function NoteModal({
                               <div style={{ position: "relative" }}>
                                 <TextareaAutosize
                                   key={`ms-edit-desc-${ms.id}-${msEditColor || "none"}`}
+                                  ref={msEditDescInputRef}
+                                  onFocus={() => {
+                                    lastFocusedMsEditInputRef.current = "desc";
+                                  }}
                                   value={msEditDesc}
                                   onChange={(e) =>
                                     setMsEditDesc(e.target.value)
@@ -1868,14 +1893,28 @@ export function NoteModal({
                                         );
                                         setMsEditColorPickerOpen(false);
                                         setTimeout(() => {
-                                          msEditLabelInputRef.current?.focus();
+                                          if (
+                                            lastFocusedMsEditInputRef.current ===
+                                            "desc"
+                                          ) {
+                                            msEditDescInputRef.current?.focus();
+                                          } else {
+                                            msEditLabelInputRef.current?.focus();
+                                          }
                                         }, 0);
                                       }}
                                       onClear={() => {
                                         setMsEditColor("");
                                         setMsEditColorPickerOpen(false);
                                         setTimeout(() => {
-                                          msEditLabelInputRef.current?.focus();
+                                          if (
+                                            lastFocusedMsEditInputRef.current ===
+                                            "desc"
+                                          ) {
+                                            msEditDescInputRef.current?.focus();
+                                          } else {
+                                            msEditLabelInputRef.current?.focus();
+                                          }
                                         }, 0);
                                       }}
                                       clearLabel={t("noColor")}
