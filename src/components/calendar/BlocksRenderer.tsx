@@ -602,6 +602,8 @@ export function BlocksRenderer({
                                 milestones={milestonesMap[dateKey(d)] ?? []}
                                 dayGoals={dayGoalsMap[dateKey(d)]}
                                 accentColor={effectiveQ.tileFill}
+                                futureTileBg={effectiveQ.futureTileBg}
+                                quarterColorKey={effectiveQ.key}
                                 highlighted={
                                   matchedDates.size > 0
                                     ? matchedDates.has(dateKey(d))

@@ -225,18 +225,20 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // stay legible — the card/day-tile surface itself keeps each colour's true hue (grey
   // stays grey, black stays black), only the content drawn on top gets the contrast boost.
   const fill = isAchromaticDark && dark ? "#ffffff" : hex;
-  // tileFill is the colour used as the day-cell background. `fill` is wrong here:
-  // black/grey in dark mode get fill="#ffffff" (for text contrast) but a white cell
-  // in dark mode shows the wrong colour entirely. White in light mode gets fill="#ffffff"
-  // which merges with the page and makes cells invisible. Use the actual hue instead,
-  // except white-in-light-mode which needs a subtle off-white (#e0e0e5) so white cells
-  // remain visible against the page background.
+  const isWhiteInLight = meta.colorKey === "white" && !dark;
+  const isBlackInDark = meta.colorKey === "black" && dark;
+
+  // tileFill is the colour used as the day-cell background.
+  // In light mode when white is chosen, past days fill with pure white (#ffffff),
+  // while future days become a subtle grey (#ececf0).
   const tileFill =
     isAchromaticDark && dark
       ? hex // grey/black in dark: actual dark hue
       : meta.colorKey === "white"
-        ? (dark ? hex : "#e0e0e5") // white: subtle tint in light, actual in dark
+        ? (dark ? hex : "#ffffff")
         : hex;
+
+  const futureTileBg = isWhiteInLight ? "#ececf0" : undefined;
   // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
   // colour surface the way percentages/progress bars are, so they don't need the
   // white/black contrast boost applied to `text` for legibility. For grey specifically,
@@ -256,9 +258,6 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
             ? "#e5e5e7"
             : "#121212"
           : textHex;
-
-  const isWhiteInLight = meta.colorKey === "white" && !dark;
-  const isBlackInDark = meta.colorKey === "black" && dark;
 
   const contrastBorderShadow = isWhiteInLight
     ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
@@ -292,6 +291,7 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
     border: hex,
     fill,
     tileFill,
+    futureTileBg,
     text: textHex,
     nameColor,
     soft: `rgba(${r},${g},${b},0.22)`,

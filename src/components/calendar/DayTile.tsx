@@ -55,6 +55,8 @@ export function DayTile({
   milestones: dayMilestones,
   dayGoals,
   accentColor,
+  futureTileBg,
+  quarterColorKey,
   highlighted,
   isActiveMatch,
   dark,
@@ -69,6 +71,8 @@ export function DayTile({
   milestones: Milestone[];
   dayGoals?: DayGoals;
   accentColor: string;
+  futureTileBg?: string;
+  quarterColorKey?: AppleColorKey;
   highlighted?: boolean;
   isActiveMatch?: boolean;
   dark: boolean;
@@ -90,6 +94,11 @@ export function DayTile({
     dayGoals.count > 0 &&
     dayGoals.done.length >= dayGoals.count &&
     dayGoals.done.every(Boolean);
+
+  const isWhiteInLight =
+    !dark && (quarterColorKey === "white" || (accentColor === "#ffffff" && luminanceOf(accentColor) > 0.9));
+  const futureBg = futureTileBg ?? (isWhiteInLight ? "#ececf0" : "var(--surface)");
+
   // Pale accents (e.g. "White") are too light for a single flat text colour to read
   // against reliably: the tile is part accent-fill / part theme surface, and — for
   // "today" — that split moves as the day progresses. Very dark accents (e.g. "Black"
@@ -97,14 +106,20 @@ export function DayTile({
   // into the dark fill. Either way a flat colour can't win on both sides, so both
   // extremes fall back to "invertPale", which uses mix-blend-mode instead of guessing
   // one colour (see Label for the mechanics).
-  const isPaleAccent = luminanceOf(accentColor) > 0.8; // e.g. White (#d2d2d6); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
+  const isPaleAccent = luminanceOf(accentColor) > 0.8; // e.g. White (#ffffff); yellow (#ffcc00 ≈ 0.77) must NOT be flagged here or mix-blend-mode:difference turns white text blue
   const isDeepAccent = luminanceOf(accentColor) < 0.3; // e.g. Black
   const needsInvertText = (isPast || isToday) && (isPaleAccent || isDeepAccent);
   // When the accent is near-black in dark mode the ring is invisible (black-on-black).
   // Use white so the today outline is clearly legible — same principle iOS uses for
   // dark-coloured elements: give them a light border so they read on a dark surface.
+  // For white in light mode, make the active day ring black (#000000), perfectly symmetric
+  // to how black in dark mode gets a white ring.
   const ringAccent =
-    dark && luminanceOf(accentColor) < 0.12 ? "#ffffff" : accentColor;
+    dark && luminanceOf(accentColor) < 0.12
+      ? "#ffffff"
+      : isWhiteInLight || (!dark && luminanceOf(accentColor) > 0.88)
+        ? "#000000"
+        : accentColor;
   // isPaleAccent (white) → explicit dark text rather than mix-blend-mode trickery, which can
   // be unreliable across `contain:paint` / `isolation:isolate` boundaries in Chrome.
   // In light mode, today's tile background is var(--surface) (light/white) and the accent
@@ -597,9 +612,13 @@ export function DayTile({
               contain: "paint",
               background: accentColor,
               color: "white",
-              boxShadow: hovered
-                ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)`
-                : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`,
+              boxShadow: isWhiteInLight
+                ? hovered
+                  ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
+                  : "0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--border-soft)"
+                : hovered
+                  ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)`
+                  : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`,
             }}
           >
             {msBar}
@@ -649,8 +668,13 @@ export function DayTile({
               maskImage: "radial-gradient(white, black)",
               isolation: "isolate",
               contain: "paint",
-              background: "var(--surface)",
+              background: futureBg,
               color: "var(--text)",
+              boxShadow: isWhiteInLight
+                ? hovered
+                  ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
+                  : "0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--border-soft)"
+                : undefined,
             }}
           >
             {msBar}
@@ -771,7 +795,7 @@ export function DayTile({
             WebkitMaskImage: "-webkit-radial-gradient(white, black)",
             maskImage: "radial-gradient(white, black)",
             contain: "paint",
-            background: "var(--surface)",
+            background: futureBg,
             color: "var(--text-secondary)",
             boxShadow: hovered
               ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"

@@ -41,6 +41,7 @@ export type Quarter = {
   border: string;
   fill: string;
   tileFill: string;
+  futureTileBg?: string;
   text: string;
   nameColor: string;
   soft: string;
