@@ -1430,10 +1430,22 @@ function App() {
             backdropFilter: "saturate(180%) blur(20px)",
             WebkitBackdropFilter: "saturate(180%) blur(20px)",
             borderBottom: "1px solid var(--border-soft)",
-            paddingRight: scrollbarWidth > 0 ? scrollbarWidth : undefined,
+            paddingRight: 11,
+            marginLeft: 0,
+            paddingTop: 0,
           }}
         >
-          <div className="mx-auto max-w-3xl px-3 sm:px-8 pt-5 pb-4">
+          <div
+            className="mx-auto max-w-3xl"
+            style={{
+              marginLeft: 99.5,
+              paddingLeft: 32,
+              paddingTop: 14,
+              paddingBottom: 4,
+              paddingRight: 32,
+              marginTop: 0,
+            }}
+          >
             <div className="flex items-center justify-between">
               <div
                 className="flex items-center gap-1.5"
@@ -2295,13 +2307,26 @@ function App() {
                   flex: 1,
                   minWidth: 0,
                   justifyContent: "center",
+                  paddingLeft: 0,
+                  paddingBottom: 0,
+                  paddingTop: 0,
+                  paddingRight: 0,
+                  marginTop: -10,
+                  fontSize: 16,
+                  lineHeight: "17px",
+                  fontWeight: "normal",
+                  width: 542,
                 }}
               >
                 {weekdays.map((w, i) => (
                   <div
                     key={i}
-                    className="text-center text-[10px] sm:text-[15px] font-medium uppercase"
-                    style={{ color: "var(--text-tertiary)" }}
+                    className="text-center uppercase"
+                    style={{
+                      color: "var(--text-tertiary)",
+                      fontSize: 10,
+                      fontWeight: "bold",
+                    }}
                   >
                     {w}
                   </div>
