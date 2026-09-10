@@ -655,15 +655,6 @@ export function BlocksRenderer({
                                 >
                                   {Math.max(0, weekTotal - weekDone)}
                                 </span>
-                                {/* Разделительная горизонтальная черта дроби */}
-                                <div
-                                  className="w-[12px] sm:w-[15px]"
-                                  style={{
-                                    height: 1,
-                                    backgroundColor: "var(--border-subtle, rgba(255,255,255,0.15))",
-                                    borderRadius: 0.5,
-                                  }}
-                                />
                                 {/* Нижний этаж: выполненные цели (зеленый при > 0, серый при 0) */}
                                 <span
                                   className="text-[11px] sm:text-[13px] tabular-nums"

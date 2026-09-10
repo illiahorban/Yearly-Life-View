@@ -500,18 +500,6 @@ export function NoteModal({
   };
 
   React.useEffect(() => {
-    if (!msEditId) return;
-    const handler = (e: MouseEvent) => {
-      const el = msEditRefs.current.get(msEditId);
-      if (el && !el.contains(e.target as Node)) {
-        setMsEditId(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [msEditId]);
-
-  React.useEffect(() => {
     if (!msEditId) setMsEditColorPickerOpen(false);
   }, [msEditId]);
 
@@ -519,26 +507,6 @@ export function NoteModal({
     if (!addEventOpen) return;
     newLabelInputRef.current?.focus({ preventScroll: true });
     scrollToTarget(addEventFormRef.current, "nearest");
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target?.closest("[data-color-picker-portal='true']") ||
-        target?.closest("[data-color-picker-popover='true']") ||
-        target?.closest("[data-color-picker-backdrop='true']")
-      ) {
-        return;
-      }
-      if (
-        addEventFormRef.current &&
-        !addEventFormRef.current.contains(e.target as Node)
-      ) {
-        setAddEventOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-    };
   }, [addEventOpen, scrollToTarget]);
 
   React.useEffect(() => {
@@ -1191,11 +1159,13 @@ export function NoteModal({
                               const checkColor = _cbAch
                                 ? _cbAch.bg
                                 : (goalColor ?? "#34c759");
-                              const uncheckedBorder = goalColor
-                                ? _cbAch
-                                  ? _cbAch.border
-                                  : `${goalColor}80`
-                                : "var(--border-soft)";
+                              const uncheckedBorder = !dark
+                                ? containerBorder
+                                : goalColor
+                                  ? _cbAch
+                                    ? _cbAch.border
+                                    : `${goalColor}80`
+                                  : "var(--border-soft)";
                               return (
                                 <div
                                   onPointerDown={(e) => {
