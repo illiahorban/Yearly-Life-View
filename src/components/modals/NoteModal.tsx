@@ -1111,7 +1111,7 @@ export function NoteModal({
                   className="flex flex-col gap-1.5"
                   style={{ listStyle: "none", margin: 0, padding: 0 }}
                 >
-                  <AnimatePresence>
+                  <AnimatePresence initial={false}>
                     {Array.from({ length: goalsDraft.count }, (_, i) => {
                       const done = goalsDraft.done[i] ?? false;
                       const goalColor = goalsDraft.colors?.[i];
@@ -1448,16 +1448,19 @@ export function NoteModal({
           </div>
 
           {/* Milestones for this day */}
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {dayMilestones.length > 0 && (
               <motion.div
                 key="milestones-section-header"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, height: 0, overflow: "hidden" }}
+                animate={{
+                  opacity: 1,
+                  height: "auto",
+                  transitionEnd: { overflow: "visible" },
+                }}
+                exit={{ opacity: 0, height: 0, overflow: "hidden" }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 className="px-5 pt-3 pb-0 shrink-0"
-                style={{ overflow: "hidden" }}
               >
                 <div
                   className="text-[10px] font-semibold tracking-widest uppercase mb-1.5"
@@ -1473,7 +1476,7 @@ export function NoteModal({
                   className="flex flex-col gap-1.5"
                   style={{ listStyle: "none", margin: 0, padding: 0 }}
                 >
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {dayMilestones.map((ms) => {
                     const isEditing = msEditId === ms.id;
                     const ec2 = getEventColors(
@@ -2365,7 +2368,7 @@ export function NoteModal({
                 className="flex flex-col gap-1.5"
                 style={{ listStyle: "none", margin: 0, padding: 0 }}
               >
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {entries.map((entry, idx) => (
                     <NoteEntryItem
                       key={entry.id}

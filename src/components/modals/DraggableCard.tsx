@@ -77,7 +77,7 @@ export function DraggableCard({
       data-draggable-card="true"
       dragListener={false}
       dragControls={dragControls}
-      initial={{ opacity: 0, height: 0, scale: 0.98 }}
+      initial={{ opacity: 0, height: 0, scale: 0.98, overflow: "hidden" }}
       animate={{
         opacity: 1,
         height: "auto",
@@ -96,7 +96,7 @@ export function DraggableCard({
         boxShadow: "0 10px 28px rgba(0,0,0,0.22)",
         zIndex: 50,
       }}
-      style={{ overflow: "hidden", listStyle: "none" }}
+      style={{ listStyle: "none" }}
       // Dragging the handle moves the pointer across sibling textareas/inputs
       // while the mouse button is held — the browser's default is to treat
       // that as a text selection. Suspend selection app-wide for the drag.
