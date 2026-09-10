@@ -87,8 +87,13 @@ function loadGisScript(): Promise<void> {
 
 function persistToken(token: string, expiresAt: number): void {
   try {
-    localStorage.setItem(LS_TOKEN, token);
-    localStorage.setItem(LS_EXPIRES, String(expiresAt));
+    // Store in sessionStorage to isolate token to the active browser tab/session
+    // and prevent credentials from persisting indefinitely on disk or across *.github.io origins
+    sessionStorage.setItem(LS_TOKEN, token);
+    sessionStorage.setItem(LS_EXPIRES, String(expiresAt));
+    // Clean up any legacy localStorage entry
+    localStorage.removeItem(LS_TOKEN);
+    localStorage.removeItem(LS_EXPIRES);
   } catch {
     /* non-fatal: private browsing may block writes */
   }
@@ -96,6 +101,8 @@ function persistToken(token: string, expiresAt: number): void {
 
 function clearPersistedToken(): void {
   try {
+    sessionStorage.removeItem(LS_TOKEN);
+    sessionStorage.removeItem(LS_EXPIRES);
     localStorage.removeItem(LS_TOKEN);
     localStorage.removeItem(LS_EXPIRES);
   } catch {
@@ -197,14 +204,30 @@ async function ensureTokenClient(): Promise<void> {
  */
 export function tryRestoreSession(): boolean {
   try {
-    const storedToken = localStorage.getItem(LS_TOKEN);
-    const storedExpires = Number(localStorage.getItem(LS_EXPIRES) ?? "0");
+    // 1. Check sessionStorage (isolated to active tab/session)
+    let storedToken = sessionStorage.getItem(LS_TOKEN);
+    let storedExpires = Number(sessionStorage.getItem(LS_EXPIRES) ?? "0");
+
+    // 2. Migration: check legacy localStorage and upgrade to sessionStorage
+    if (!storedToken) {
+      const legacyToken = localStorage.getItem(LS_TOKEN);
+      const legacyExpires = Number(localStorage.getItem(LS_EXPIRES) ?? "0");
+      if (legacyToken && legacyExpires > Date.now() + 30_000) {
+        persistToken(legacyToken, legacyExpires);
+        storedToken = legacyToken;
+        storedExpires = legacyExpires;
+      }
+    }
+
     // Require at least 30 s of remaining validity so we don't restore a token
     // that will expire before the first Drive request completes.
     if (storedToken && storedExpires > Date.now() + 30_000) {
       accessToken = storedToken;
       tokenExpiresAt = storedExpires;
       return true;
+    } else if (storedToken || storedExpires) {
+      // Purge expired/invalid token immediately so stale credentials do not linger in storage
+      clearPersistedToken();
     }
   } catch {
     /* non-fatal */
