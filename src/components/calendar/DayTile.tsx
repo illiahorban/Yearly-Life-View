@@ -11,6 +11,7 @@ import {
   luminanceOf,
   APPLE_COLORS,
   goalCheckboxAchromaticStyle,
+  DARK_BLACK_FUTURE,
 } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { GripIcon } from "../icons/Icons";
@@ -34,7 +35,12 @@ function getGoalMarkerColors(rawColor: string | undefined, dark: boolean) {
     return {
       fill: ach.bg,
       icon: ach.icon,
-      stroke: ach.bg === "#ffffff" ? "rgba(0,0,0,0.22)" : undefined,
+      stroke:
+        ach.bg === "#ffffff"
+          ? "rgba(0,0,0,0.22)"
+          : dark
+            ? "rgba(255,255,255,0.25)"
+            : "rgba(0,0,0,0.25)",
     };
   }
   const lum = luminanceOf(hex);
@@ -97,7 +103,15 @@ export function DayTile({
 
   const isWhiteInLight =
     !dark && (quarterColorKey === "white" || (accentColor === "#ffffff" && luminanceOf(accentColor) > 0.9));
-  const futureBg = futureTileBg ?? (isWhiteInLight ? "#f0f0f3" : "var(--surface)");
+  const isBlackInDark =
+    dark && (quarterColorKey === "black" || luminanceOf(accentColor) < 0.15);
+  const futureBg =
+    futureTileBg ??
+    (isWhiteInLight
+      ? "#f0f0f3"
+      : isBlackInDark
+        ? DARK_BLACK_FUTURE
+        : "var(--surface)");
 
   // Pale accents (e.g. "White") are too light for a single flat text colour to read
   // against reliably: the tile is part accent-fill / part theme surface, and — for
@@ -154,9 +168,13 @@ export function DayTile({
   const todayBaseIndicatorColor = todayBaseTone === "onGreen" ? "white" : "#18181b";
   // On all colored accents (including yellow, green, blue, etc.) as well as black/dark accents,
   // the filled text and indicators invert cleanly to white (just like black/past tiles).
-  // Only pure/ultra-pale white accents (luminance > 0.85) retain dark ink so white-on-white is avoided.
+  // Only pure/ultra-pale white accents (luminance > 0.85 or quarter key "white") retain dark ink so white-on-white is avoided.
   const todayFilledTone: "darkOnLight" | "onGreen" =
-    luminanceOf(accentColor) > 0.85 ? "darkOnLight" : "onGreen";
+    quarterColorKey === "black"
+      ? "onGreen"
+      : quarterColorKey === "white" || luminanceOf(accentColor) > 0.85
+        ? "darkOnLight"
+        : "onGreen";
   const todayFilledIndicatorColor =
     todayFilledTone === "onGreen" ? "white" : "#18181b";
 
@@ -718,6 +736,7 @@ export function DayTile({
                     : undefined,
                 willChange: "clip-path",
                 transform: "translateZ(0)",
+                zIndex: 2,
               }}
             >
               <div style={{ flex: 1 }} />
@@ -747,6 +766,7 @@ export function DayTile({
                   WebkitClipPath: `inset(${Math.max(0, 100 - todayProgress)}% 0 0 0)`,
                   willChange: "clip-path",
                   transform: "translateZ(0)",
+                  zIndex: 3,
                 }}
               >
                 <div style={{ flex: 1 }} />

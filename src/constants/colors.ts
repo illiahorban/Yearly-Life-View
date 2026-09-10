@@ -1,6 +1,9 @@
 import confetti from "canvas-confetti";
 import type { AppleColorKey, QuarterMeta, AchromaticStyle, GoalCheckboxStyle, Quarter } from "../types/calendar";
 
+export const DARK_BLACK_PAST = "#0a0a0a";
+export const DARK_BLACK_FUTURE = "#161618";
+
 export function fireConfettiCannons() {
   const colors = [
     "#ffd700",
@@ -48,7 +51,7 @@ export const APPLE_COLORS = [
   { key: "yellow", label: "Yellow", light: "#ffcc00", dark: "#ffd60a" },
   { key: "mint", label: "Mint", light: "#00c7be", dark: "#63e6e2" },
   { key: "brown", label: "Brown", light: "#a2845e", dark: "#ac8e68" },
-  { key: "black", label: "Black", light: "#121212", dark: "#121212" },
+  { key: "black", label: "Black", light: "#121212", dark: "#0a0a0a" },
   { key: "grey", label: "Grey", light: "#8e8e93", dark: "#636366" },
   { key: "white", label: "White", light: "#ffffff", dark: "#ffffff" },
 ] as const;
@@ -231,14 +234,20 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
   // tileFill is the colour used as the day-cell background.
   // In light mode when white is chosen, past days fill with pure white (#ffffff),
   // while future days become a subtle grey (#f0f0f3).
+  // In dark mode when black is chosen, past days use DARK_BLACK_PAST (#0a0a0a),
+  // while future days use DARK_BLACK_FUTURE (#161618).
   const tileFill =
     isAchromaticDark && dark
-      ? hex // grey/black in dark: actual dark hue
+      ? (isBlackInDark ? DARK_BLACK_PAST : hex) // grey/black in dark: actual dark hue
       : meta.colorKey === "white"
         ? (dark ? hex : "#ffffff")
         : hex;
 
-  const futureTileBg = isWhiteInLight ? "#f0f0f3" : undefined;
+  const futureTileBg = isWhiteInLight
+    ? "#f0f0f3"
+    : isBlackInDark
+      ? DARK_BLACK_FUTURE
+      : undefined;
   // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
   // colour surface the way percentages/progress bars are, so they don't need the
   // white/black contrast boost applied to `text` for legibility. For grey specifically,
@@ -272,7 +281,7 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
       : undefined;
 
   const progressBarFill = isBlackInDark
-    ? "#121212"
+    ? DARK_BLACK_PAST
     : isWhiteInLight
       ? "#ffffff"
       : fill;
