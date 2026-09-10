@@ -11,7 +11,9 @@ import { BlockLabel } from "./BlockLabel";
 import { DayTile } from "./DayTile";
 import { GoalsIcon, FlagIcon, CheckIcon } from "../icons/Icons";
 
-export function BlocksRenderer({
+const EMPTY_MILESTONES: Milestone[] = [];
+
+function BlocksRendererComponent({
   qi: _qi,
   quarter,
   qConfig,
@@ -599,7 +601,9 @@ export function BlocksRenderer({
                                 state={dayState(d)}
                                 todayProgress={todayProgress}
                                 notes={notes[dateKey(d)]}
-                                milestones={milestonesMap[dateKey(d)] ?? []}
+                                milestones={
+                                  milestonesMap[dateKey(d)] ?? EMPTY_MILESTONES
+                                }
                                 dayGoals={dayGoalsMap[dateKey(d)]}
                                 accentColor={effectiveQ.tileFill}
                                 futureTileBg={effectiveQ.futureTileBg}
@@ -782,5 +786,7 @@ export function BlocksRenderer({
     </LayoutGroup>
   );
 }
+
+export const BlocksRenderer = React.memo(BlocksRendererComponent);
 
 // ─── QuarterNameEditor ────────────────────────────────────────────────────────

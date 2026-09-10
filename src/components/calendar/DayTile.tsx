@@ -53,22 +53,7 @@ function getGoalMarkerColors(rawColor: string | undefined, dark: boolean) {
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
 
-export function DayTile({
-  date,
-  state,
-  todayProgress,
-  notes: dayNotes,
-  milestones: dayMilestones,
-  dayGoals,
-  accentColor,
-  futureTileBg,
-  quarterColorKey,
-  highlighted,
-  isActiveMatch,
-  dark,
-  isCompactViewport,
-  onOpen,
-}: {
+export type DayTileProps = {
   key?: React.Key;
   date: Date;
   state: DayState;
@@ -84,7 +69,43 @@ export function DayTile({
   dark: boolean;
   isCompactViewport: boolean;
   onOpen: () => void;
-}) {
+};
+
+function areDayTilesEqual(prev: DayTileProps, next: DayTileProps): boolean {
+  if (prev.dark !== next.dark) return false;
+  if (prev.isCompactViewport !== next.isCompactViewport) return false;
+  if (prev.state !== next.state) return false;
+  if (prev.highlighted !== next.highlighted) return false;
+  if (prev.isActiveMatch !== next.isActiveMatch) return false;
+  if (prev.accentColor !== next.accentColor) return false;
+  if (prev.futureTileBg !== next.futureTileBg) return false;
+  if (prev.quarterColorKey !== next.quarterColorKey) return false;
+  if (prev.date.getTime() !== next.date.getTime()) return false;
+  if (next.state === "today" && prev.todayProgress !== next.todayProgress) {
+    return false;
+  }
+  if (prev.dayGoals !== next.dayGoals) return false;
+  if (prev.notes !== next.notes) return false;
+  if (prev.milestones !== next.milestones) return false;
+  return true;
+}
+
+function DayTileComponent({
+  date,
+  state,
+  todayProgress,
+  notes: dayNotes,
+  milestones: dayMilestones,
+  dayGoals,
+  accentColor,
+  futureTileBg,
+  quarterColorKey,
+  highlighted,
+  isActiveMatch,
+  dark,
+  isCompactViewport,
+  onOpen,
+}: DayTileProps) {
   const isOut = state === "out";
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const tileRef = useRef<HTMLDivElement>(null);
@@ -864,6 +885,8 @@ export function DayTile({
     </>
   );
 }
+
+export const DayTile = React.memo(DayTileComponent, areDayTilesEqual);
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 

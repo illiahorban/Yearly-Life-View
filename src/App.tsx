@@ -132,6 +132,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   LifeIcon,
+  DownloadIcon,
 } from "./components/icons/Icons";
 
 import { IconButton } from "./components/common/IconButton";
@@ -139,6 +140,12 @@ import { ConfirmDialog } from "./components/common/ConfirmDialog";
 import { FactoryResetDialog } from "./components/common/FactoryResetDialog";
 
 import { BlocksRenderer } from "./components/calendar/BlocksRenderer";
+import { YearProgressBar } from "./components/calendar/YearProgressBar";
+import { MilestoneCountdownStrip } from "./components/calendar/MilestoneCountdownStrip";
+import { SearchBar } from "./components/calendar/SearchBar";
+import { PWAInstallModal } from "./components/modals/PWAInstallModal";
+import { usePWAInstall } from "./hooks/usePWAInstall";
+import { TodayFloatingButton } from "./components/common/TodayFloatingButton";
 import { NoteModal } from "./components/modals/NoteModal";
 import { AllGoalsPanel } from "./components/modals/AllGoalsPanel";
 import { NotesPanel } from "./components/modals/NotesPanel";
@@ -236,6 +243,8 @@ function App() {
   }, [settingsOpen, profileOpen, isMobile]);
 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const { isInstallable, isInstalled, install } = usePWAInstall();
+  const [pwaModalOpen, setPwaModalOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!settingsOpen) setProfileOpen(false);
@@ -2174,6 +2183,27 @@ function App() {
                               {lang === "en" ? "RU" : "EN"}
                             </span>
                           </IconButton>
+                          {!isInstalled && (
+                            <IconButton
+                              title={
+                                lang === "ru"
+                                  ? "Установить приложение"
+                                  : "Install App"
+                              }
+                              onClick={() => {
+                                setSettingsOpen(false);
+                                if (isInstallable) {
+                                  void install();
+                                } else {
+                                  setPwaModalOpen(true);
+                                }
+                              }}
+                              bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
+                              color="#34c759"
+                            >
+                              <DownloadIcon className="w-4 h-4" />
+                            </IconButton>
+                          )}
                           <div
                             style={{
                               height: 1,
@@ -2212,325 +2242,42 @@ function App() {
               </div>
             </div>
 
-            <div
-              className="mt-3 h-1.5 w-full overflow-hidden"
-              style={{ background: "var(--border-soft)", borderRadius: 999 }}
-            >
-              <div
-                className="h-full transition-[width] duration-700 ease-out"
-                style={{
-                  width: `${yearProgress}%`,
-                  background: "#34c759",
-                  borderRadius: 999,
-                }}
-              />
-            </div>
+            <YearProgressBar
+              yearProgress={yearProgress}
+              daysCompleted={daysCompleted}
+              totalDays={totalDays}
+              t={t}
+            />
 
-            <div
-              className="mt-2 flex items-center justify-between text-xs tabular-nums"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              <span>
-                {daysCompleted} {t("of")} {totalDays} {t("daysOf")}
-              </span>
-              <span>
-                {yearProgress.toFixed(1)}% {t("complete")}
-              </span>
-              <span>
-                {(totalDays - daysCompleted).toFixed(0)} {t("daysRemaining")}
-              </span>
-            </div>
-
-            {/* Milestone countdown — up to 20 upcoming */}
-            <AnimatePresence>
-              {nextMilestones.length > 0 && (
-                <motion.div
-                  key="ms-countdown"
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5"
-                  style={{ scrollbarWidth: "none" }}
-                >
-                  {nextMilestones.map((ms) => {
-                    const [y2, m2, d2] = ms.date.split("-").map(Number) as [
-                      number,
-                      number,
-                      number,
-                    ];
-                    const days = daysBetween(today, new Date(y2, m2 - 1, d2));
-                    const ec = getEventColors(ms.color, dark);
-                    const msColBg = ec.bg;
-                    const msColBdr = ec.borderEditing;
-                    const msColTxt =
-                      dark && ec.border === "#ffffff"
-                        ? "#ffffff"
-                        : !dark && ec.border === "#000000"
-                          ? "#000000"
-                          : ec.textTitle;
-                    const msColDot = ec.marker;
-                    return (
-                      <button
-                        key={ms.id}
-                        onClick={() =>
-                          runMobileWindowAction(
-                            milestonePanelOpen,
-                            () => setMilestonePanelOpen(true),
-                          )
-                        }
-                        className="h-7 inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium shrink-0 box-border"
-                        style={{
-                          background: "transparent",
-                          border: `1.5px solid ${ec.border || "transparent"}`,
-                          color: msColTxt,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span className="font-semibold">{ms.label}</span>
-                        <span style={{ opacity: 0.65 }}>·</span>
-                        <span>
-                          {days === 0
-                            ? t("todayCountdown")
-                            : `${days}${t("daysShort")}`}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Search bar */}
-            <div
-              ref={searchBarRef}
-              style={
-                isMobile
-                  ? {
-                      position: "relative",
-                      height: searchOpen ? 52 : 0,
-                      overflow: "visible",
-                    }
-                  : undefined
+            <MilestoneCountdownStrip
+              nextMilestones={nextMilestones}
+              today={today}
+              dark={dark}
+              t={t}
+              onOpenMilestones={() =>
+                runMobileWindowAction(
+                  milestonePanelOpen,
+                  () => setMilestonePanelOpen(true),
+                )
               }
-            >
-              <AnimatePresence>
-                {searchOpen && (
-                  <motion.div
-                    key="search-bar"
-                    initial={
-                      isMobile
-                        ? { opacity: 0, y: -8 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    animate={
-                      isMobile
-                        ? { opacity: 1, y: 0 }
-                        : { opacity: 1, height: "auto", marginTop: 10 }
-                    }
-                    exit={
-                      isMobile
-                        ? { opacity: 0, y: -8 }
-                        : { opacity: 0, height: 0, marginTop: 0 }
-                    }
-                    transition={
-                      isMobile
-                        ? {
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 35,
-                          }
-                        : { duration: 0.2, ease: "easeInOut" }
-                    }
-                    className={isMobile ? "transform-gpu will-change-transform" : undefined}
-                    style={{
-                      ...(isMobile
-                        ? {
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            marginTop: 10,
-                            WebkitTapHighlightColor: "transparent",
-                          }
-                        : {
-                            overflow: "hidden",
-                            willChange: "height, opacity",
-                          }),
-                    }}
-                  >
-                    <div className="relative flex items-center">
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: 10,
-                          color: "var(--text-tertiary)",
-                          pointerEvents: "none",
-                          display: "flex",
-                        }}
-                      >
-                        <SearchIcon />
-                      </div>
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            setSearchOpen(false);
-                            setSearchQuery("");
-                          }
-                          if (e.key === "Enter") {
-                            if (parsedJumpDate) {
-                              scrollToDateKey(dateKey(parsedJumpDate));
-                            } else {
-                              e.shiftKey ? navigateMatch(-1) : navigateMatch(1);
-                            }
-                          }
-                        }}
-                        placeholder={t("searchPlaceholder")}
-                        style={{
-                          width: "100%",
-                          paddingLeft: 34,
-                          paddingRight:
-                            matchedDatesArray.length > 0
-                              ? 112
-                              : parsedJumpDate
-                                ? 180
-                                : 34,
-                          paddingTop: 8,
-                          paddingBottom: 8,
-                          ...(isMobile
-                            ? {
-                                height: 42,
-                                paddingTop: 9,
-                                paddingBottom: 9,
-                                lineHeight: "22px",
-                              }
-                            : {}),
-                          borderRadius: 10,
-                          background: dark
-                            ? "rgba(255,255,255,0.07)"
-                            : "rgba(0,0,0,0.05)",
-                          border: "1px solid var(--border-soft)",
-                          color: "var(--text)",
-                          fontSize: isMobile ? 16 : 13,
-                          outline: "none",
-                          fontFamily: "inherit",
-                        }}
-                      />
-                      {searchQuery.trim() && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: 6,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                        >
-                          {matchedDatesArray.length > 0 ? (
-                            <>
-                              <span
-                                style={{
-                                  fontSize: 11,
-                                  color: "var(--text-tertiary)",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {searchIndex + 1} {t("of")}{" "}
-                                {matchedDatesArray.length}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => navigateMatch(-1)}
-                                style={{
-                                  width: 20,
-                                  height: 20,
-                                  borderRadius: 5,
-                                  background: "transparent",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "var(--text-secondary)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 12,
-                                  padding: 0,
-                                }}
-                              >
-                                ↑
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => navigateMatch(1)}
-                                style={{
-                                  width: 20,
-                                  height: 20,
-                                  borderRadius: 5,
-                                  background: "transparent",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "var(--text-secondary)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 12,
-                                  padding: 0,
-                                }}
-                              >
-                                ↓
-                              </button>
-                            </>
-                          ) : parsedJumpDate ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                scrollToDateKey(dateKey(parsedJumpDate))
-                              }
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 4,
-                                paddingLeft: 8,
-                                paddingRight: 8,
-                                paddingTop: 3,
-                                paddingBottom: 3,
-                                borderRadius: 7,
-                                background: dark
-                                  ? "rgba(52,199,89,0.15)"
-                                  : "rgba(52,199,89,0.12)",
-                                border: "1px solid rgba(52,199,89,0.35)",
-                                cursor: "pointer",
-                                color: "#34c759",
-                                fontSize: 11,
-                                fontWeight: 500,
-                                whiteSpace: "nowrap",
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              <span style={{ fontSize: 12 }}>↵</span>
-                              {t("jumpTo")} {parsedJumpDate.getDate()}{" "}
-                              {MONTHS_I18N[lang][parsedJumpDate.getMonth()]}{" "}
-                              {parsedJumpDate.getFullYear()}
-                            </button>
-                          ) : (
-                            <span
-                              style={{
-                                fontSize: 11,
-                                color: "var(--text-tertiary)",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {t("searchNoResults")}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            />
+
+            <SearchBar
+              searchBarRef={searchBarRef}
+              isMobile={isMobile}
+              searchOpen={searchOpen}
+              setSearchOpen={setSearchOpen}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              parsedJumpDate={parsedJumpDate}
+              matchedDatesArray={matchedDatesArray}
+              searchIndex={searchIndex}
+              navigateMatch={navigateMatch}
+              scrollToDateKey={scrollToDateKey}
+              dark={dark}
+              lang={lang}
+              t={t}
+            />
 
             {/* Sticky weekday labels */}
             <div className="mt-3 px-[13px] sm:px-[21px] flex flex-row items-center">
@@ -3501,51 +3248,19 @@ function App() {
           dark={dark}
         />
 
-        <AnimatePresence>
-          {showTodayBtn && (
-            <motion.button
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.18 }}
-              onClick={scrollToToday}
-              style={{
-                position: "fixed",
-                bottom: 20,
-                right: 20,
-                zIndex: 15,
-                height: 28,
-                paddingInline: 10,
-                borderRadius: 999,
-                background: dark
-                  ? "rgba(36,36,40,0.88)"
-                  : "rgba(242,242,247,0.88)",
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                border: "none",
-                color: "var(--text-secondary)",
-                fontSize: 11,
-                fontWeight: 500,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                boxShadow: `0 0 0 1px ${dark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.08)"}, 0 2px 10px rgba(0,0,0,0.10)`,
-              }}
-            >
-              <span
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: 999,
-                  background: "var(--text-tertiary)",
-                  flexShrink: 0,
-                }}
-              />
-              {t("today")}
-            </motion.button>
-          )}
-        </AnimatePresence>
+        <PWAInstallModal
+          isOpen={pwaModalOpen}
+          onClose={() => setPwaModalOpen(false)}
+          dark={dark}
+          lang={lang}
+        />
+
+        <TodayFloatingButton
+          showTodayBtn={showTodayBtn}
+          scrollToToday={scrollToToday}
+          dark={dark}
+          t={t}
+        />
       </div>
     </LangContext.Provider>
   );

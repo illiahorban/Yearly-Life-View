@@ -445,11 +445,12 @@ export const I18N: Record<Lang, Record<string, string>> = {
   },
 };
 export const LangContext = React.createContext<LangCtx>({
-  t: (k) => I18N.en[k] ?? k,
+  t: (k) => I18N.en[k as keyof typeof I18N.en] ?? k,
   months: MONTHS_I18N.en,
   weekdays: WEEKDAYS_I18N.en,
   lang: "en",
 });
+export type I18nKey = keyof typeof I18N.en;
 export const WEEKS_PER_QUARTER = 13;
 export const TOTAL_WEEKS = 52;
 
