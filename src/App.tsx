@@ -51,6 +51,7 @@ import {
   gridWeeksForYear,
   dayOfYear,
   parseDateQuery,
+  getRecurringDateKey,
 } from "./utils/date-utils";
 
 import {
@@ -1101,8 +1102,7 @@ function App() {
       if (!m[ms.date]) m[ms.date] = [];
       m[ms.date]!.push(ms);
       if (ms.recurring) {
-        const parts = ms.date.split("-");
-        const key = `${viewYear}-${parts[1]}-${parts[2]}`;
+        const key = getRecurringDateKey(ms.date, viewYear);
         if (key !== ms.date) {
           if (!m[key]) m[key] = [];
           m[key]!.push({ ...ms, date: key });
@@ -1118,9 +1118,8 @@ function App() {
     const list: Milestone[] = [];
     for (const ms of activeMilestones) {
       if (ms.recurring) {
-        const parts = ms.date.split("-");
         for (const yr of [thisYear, thisYear + 1]) {
-          const key = `${yr}-${parts[1]}-${parts[2]}`;
+          const key = getRecurringDateKey(ms.date, yr);
           if (key >= todayStr) {
             list.push({ ...ms, date: key });
             break;
@@ -1147,10 +1146,15 @@ function App() {
     for (const ms of activeMilestones) {
       const matchLabel = ms.label.toLowerCase().includes(q);
       const matchDesc = ms.description?.toLowerCase().includes(q) ?? false;
-      if (matchLabel || matchDesc) result.add(ms.date);
+      if (matchLabel || matchDesc) {
+        result.add(ms.date);
+        if (ms.recurring) {
+          result.add(getRecurringDateKey(ms.date, viewYear));
+        }
+      }
     }
     return result;
-  }, [searchQuery, notes, milestones]);
+  }, [searchQuery, notes, milestones, viewYear]);
 
   const matchedDatesArray = useMemo(
     () => Array.from(matchedDates).sort(),
@@ -1198,22 +1202,46 @@ function App() {
 
   const parsedJumpDate = useMemo(() => {
     if (matchedDatesArray.length > 0) return null;
-    return parseDateQuery(searchQuery);
-  }, [searchQuery, matchedDatesArray.length]);
+    return parseDateQuery(searchQuery, viewYear);
+  }, [searchQuery, matchedDatesArray.length, viewYear]);
 
-  const scrollToDateKey = React.useCallback((key: string) => {
-    const el = document.querySelector<HTMLElement>(`[data-datekey="${key}"]`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.animate(
-        [
-          { boxShadow: "0 0 0 4px #34c759, 0 0 20px 6px rgba(52,199,89,0.6)" },
-          { boxShadow: "0 0 0 2px #34c759, 0 0 8px 2px rgba(52,199,89,0.3)" },
-        ],
-        { duration: 700, easing: "ease-out" },
-      );
-    }
-  }, []);
+  const scrollToDateKey = React.useCallback(
+    (key: string) => {
+      const parts = key.split("-");
+      const targetYear = parseInt(parts[0] || "", 10);
+      const pulseElement = (targetKey: string) => {
+        const el = document.querySelector<HTMLElement>(
+          `[data-datekey="${targetKey}"]`,
+        );
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.animate(
+            [
+              {
+                boxShadow:
+                  "0 0 0 4px #34c759, 0 0 20px 6px rgba(52,199,89,0.6)",
+              },
+              {
+                boxShadow:
+                  "0 0 0 2px #34c759, 0 0 8px 2px rgba(52,199,89,0.3)",
+              },
+            ],
+            { duration: 700, easing: "ease-out" },
+          );
+        }
+      };
+
+      if (!isNaN(targetYear) && targetYear !== viewYear) {
+        setViewYear(targetYear);
+        setTimeout(() => {
+          pulseElement(key);
+        }, 70);
+      } else {
+        pulseElement(key);
+      }
+    },
+    [viewYear],
+  );
 
   const weekRefs = useRef<Array<HTMLDivElement | null>>([]);
   const calendarScrollRef = useRef<HTMLElement | null>(null);
@@ -1260,9 +1288,24 @@ function App() {
     }
   }, [currentWeekIndex, viewYear]);
 
+  const pendingScrollToTodayRef = useRef(false);
+  useEffect(() => {
+    if (viewYear === now.getFullYear() && pendingScrollToTodayRef.current) {
+      pendingScrollToTodayRef.current = false;
+      const timer = setTimeout(() => {
+        weekRefs.current[currentWeekIndex]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 70);
+      return () => clearTimeout(timer);
+    }
+  }, [viewYear, currentWeekIndex]);
+
   const [showTodayBtn, setShowTodayBtn] = useState(false);
   const scrollToToday = () => {
     if (viewYear !== now.getFullYear()) {
+      pendingScrollToTodayRef.current = true;
       setViewYear(now.getFullYear());
     } else {
       weekRefs.current[currentWeekIndex]?.scrollIntoView({
@@ -2978,16 +3021,26 @@ function App() {
               }
               onMilestoneUpdate={(ms) =>
                 setMilestones((prev) =>
-                  prev.map((m) =>
-                    m.id === ms.id
-                      ? {
-                          ...ms,
-                          createdAt: m.createdAt ?? ms.createdAt ?? Date.now(),
-                          updatedAt: Date.now(),
-                          isDeleted: false,
-                        }
-                      : m,
-                  ),
+                  prev.map((m) => {
+                    if (m.id !== ms.id) return m;
+                    let targetDate = ms.date;
+                    if (m.recurring && ms.recurring) {
+                      const msYear = parseInt(ms.date.split("-")[0] || "", 10);
+                      if (
+                        !isNaN(msYear) &&
+                        getRecurringDateKey(m.date, msYear) === ms.date
+                      ) {
+                        targetDate = m.date;
+                      }
+                    }
+                    return {
+                      ...ms,
+                      date: targetDate,
+                      createdAt: m.createdAt ?? ms.createdAt ?? Date.now(),
+                      updatedAt: Date.now(),
+                      isDeleted: false,
+                    };
+                  }),
                 )
               }
               onMilestoneAdd={(ms) =>

@@ -239,6 +239,53 @@ export function defaultConfig(q4Cap = WEEKS_PER_QUARTER): CalendarConfig {
     })),
   };
 }
+export function sanitizeQuarterBlocks(
+  blocks: Block[] | undefined,
+  cap: number,
+): Block[] {
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+    return [{ id: makeId(), weeks: cap, label: "All weeks" }];
+  }
+  const valid = blocks
+    .filter((b) => b && typeof b.weeks === "number" && b.weeks > 0)
+    .map((b) => ({ ...b, id: b.id || makeId(), label: b.label || "All weeks" }));
+
+  if (valid.length === 0) {
+    return [{ id: makeId(), weeks: cap, label: "All weeks" }];
+  }
+
+  const total = valid.reduce((sum, b) => sum + b.weeks, 0);
+  if (total === cap) {
+    return valid;
+  }
+
+  const diff = cap - total;
+  if (diff > 0) {
+    // Need more weeks: add the difference to the last block
+    const last = valid[valid.length - 1]!;
+    valid[valid.length - 1] = { ...last, weeks: last.weeks + diff };
+    return valid;
+  } else {
+    // Need fewer weeks: trim from the end
+    let toRemove = -diff;
+    const result: Block[] = [];
+    for (let i = valid.length - 1; i >= 0; i--) {
+      const b = valid[i]!;
+      if (toRemove <= 0) {
+        result.unshift(b);
+      } else if (b.weeks > toRemove) {
+        result.unshift({ ...b, weeks: b.weeks - toRemove });
+        toRemove = 0;
+      } else {
+        toRemove -= b.weeks;
+      }
+    }
+    return result.length > 0
+      ? result
+      : [{ id: makeId(), weeks: cap, label: "All weeks" }];
+  }
+}
+
 export function loadConfig(year: number): CalendarConfig {
   const q4Cap = gridWeeksForYear(year) - 3 * WEEKS_PER_QUARTER;
   if (typeof window === "undefined") return defaultConfig(q4Cap);
@@ -246,15 +293,32 @@ export function loadConfig(year: number): CalendarConfig {
     const raw = localStorage.getItem(`lifeCalendar:v1:${year}`);
     if (!raw) return defaultConfig(q4Cap);
     const p = withTimestamps(JSON.parse(raw) as CalendarConfig);
-    if (!p?.quarters || p.quarters.length !== 4) return defaultConfig(q4Cap);
-    for (let qi = 0; qi < 4; qi++) {
+    if (!p?.quarters || !Array.isArray(p.quarters)) return defaultConfig(q4Cap);
+
+    let hasChanges = false;
+    const quarters: QuarterConfig[] = [0, 1, 2, 3].map((qi) => {
       const cap = qi === 3 ? q4Cap : WEEKS_PER_QUARTER;
+      const existing = p.quarters[qi];
+      const sanitizedBlocks = sanitizeQuarterBlocks(existing?.blocks, cap);
       if (
-        p.quarters[qi]!.blocks.reduce((a, b) => a + (b.weeks || 0), 0) !== cap
-      )
-        return defaultConfig(q4Cap);
+        !existing ||
+        !existing.blocks ||
+        existing.blocks.length !== sanitizedBlocks.length ||
+        existing.blocks.some((b, idx) => b.weeks !== sanitizedBlocks[idx]?.weeks)
+      ) {
+        hasChanges = true;
+      }
+      return { blocks: sanitizedBlocks };
+    });
+
+    const result: CalendarConfig = {
+      ...p,
+      quarters,
+    };
+    if (hasChanges) {
+      saveConfig(year, result);
     }
-    return p;
+    return result;
   } catch {
     return defaultConfig(q4Cap);
   }

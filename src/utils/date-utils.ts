@@ -87,7 +87,28 @@ export function _jumpFindMonth(name: string): number {
   }
   return -1;
 }
-export function parseDateQuery(s: string): Date | null {
+export function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+export function getRecurringDateKey(baseDate: string, targetYear: number): string {
+  const parts = baseDate.split("-");
+  if (parts.length !== 3) return baseDate;
+  const monthStr = parts[1]!;
+  const month = parseInt(monthStr, 10);
+  const day = parseInt(parts[2]!, 10);
+
+  // Feb 29 recurring event in non-leap years transfers to Feb 28
+  if (month === 2 && day === 29) {
+    return `${targetYear}-02-${isLeapYear(targetYear) ? "29" : "28"}`;
+  }
+  return `${targetYear}-${monthStr}-${parts[2]!}`;
+}
+
+export function parseDateQuery(
+  s: string,
+  defaultYear: number = new Date().getFullYear(),
+): Date | null {
   const q = s.trim();
   if (q.length < 3) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(q)) {
@@ -98,7 +119,7 @@ export function parseDateQuery(s: string): Date | null {
   if (numMatch) {
     const day = parseInt(numMatch[1]),
       month = parseInt(numMatch[2]) - 1;
-    let year = new Date().getFullYear();
+    let year = defaultYear;
     if (numMatch[3])
       year =
         numMatch[3].length === 2
@@ -113,7 +134,7 @@ export function parseDateQuery(s: string): Date | null {
   if (dmY) {
     const day = parseInt(dmY[1]),
       mi = _jumpFindMonth(dmY[2]),
-      year = dmY[3] ? parseInt(dmY[3]) : new Date().getFullYear();
+      year = dmY[3] ? parseInt(dmY[3]) : defaultYear;
     if (mi === -1 || day < 1 || day > 31) return null;
     const d = new Date(year, mi, day);
     return d.getDate() === day && d.getMonth() === mi ? d : null;
@@ -122,7 +143,7 @@ export function parseDateQuery(s: string): Date | null {
   if (mdY) {
     const mi = _jumpFindMonth(mdY[1]),
       day = parseInt(mdY[2]),
-      year = mdY[3] ? parseInt(mdY[3]) : new Date().getFullYear();
+      year = mdY[3] ? parseInt(mdY[3]) : defaultYear;
     if (mi === -1 || day < 1 || day > 31) return null;
     const d = new Date(year, mi, day);
     return d.getDate() === day && d.getMonth() === mi ? d : null;

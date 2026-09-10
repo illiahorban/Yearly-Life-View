@@ -390,7 +390,7 @@ function DayTileComponent({
         position: "absolute",
         background: "#007aff",
         boxShadow: "0 0 3px rgba(0,122,255,0.65)",
-        zIndex: 5,
+        zIndex: 12,
       }}
       className={`absolute ${hasEvents ? "top-[8px] right-[2px] sm:top-2.5 sm:right-1" : "top-1 right-1"} flex h-[8px] w-[8px] min-h-[8px] min-w-[8px] flex-shrink-0 items-center justify-center rounded-full bg-[#007aff] sm:h-3 sm:w-3 sm:min-h-3 sm:min-w-3`}
     >
@@ -413,10 +413,10 @@ function DayTileComponent({
           top: 0,
           left: 0,
           right: 0,
-          height: 6,
+          height: isToday ? 7.5 : 6,
           display: "flex",
           overflow: "hidden",
-          zIndex: 6,
+          zIndex: 4,
           pointerEvents: "none",
         }}
       >
@@ -725,7 +725,7 @@ function DayTileComponent({
             <div
               className="absolute inset-x-0 bottom-0 pointer-events-none"
               style={{
-                top: hasEventsWithColor ? 5.5 : 0,
+                top: hasEventsWithColor ? 7 : 0,
                 background: futureBg,
                 zIndex: 0,
               }}
@@ -809,8 +809,8 @@ function DayTileComponent({
               </div>
             )}
             {noteDot}
-            {/* Ring overlay — last in DOM so it paints above the fill and text layers,
-                keeping the outline fully visible at every fill level including 100%. */}
+            {/* Ring overlay — last in DOM so it paints above the fill, milestone, and text layers,
+                keeping the outline fully visible around the entire tile and event indicator at every fill level including 100%. */}
             <div
               style={{
                 position: "absolute",
@@ -818,7 +818,7 @@ function DayTileComponent({
                 borderRadius: 12,
                 boxShadow: `inset 0 0 0 1.5px ${ringAccent}`,
                 pointerEvents: "none",
-                zIndex: 5,
+                zIndex: 10,
               }}
             />
           </div>
