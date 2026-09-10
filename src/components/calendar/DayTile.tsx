@@ -654,9 +654,13 @@ function DayTileComponent({
                 ? hovered
                   ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
                   : "0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--border-soft)"
-                : hovered
-                  ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)`
-                  : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`,
+                : isBlackInDark
+                  ? hovered
+                    ? "0 2px 8px rgba(0,0,0,0.6)"
+                    : "0 1px 2px rgba(0,0,0,0.4)"
+                  : hovered
+                    ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)`
+                    : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`,
             }}
           >
             {/* Tile background fill */}
@@ -682,6 +686,19 @@ function DayTileComponent({
               {renderMicroMarkers(indicatorColor)}
             </div>
             {noteDot}
+            {/* Outline overlay for black accent in dark mode (wraps around event indicators) */}
+            {isBlackInDark && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: 12,
+                  boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.18)",
+                  pointerEvents: "none",
+                  zIndex: 10,
+                }}
+              />
+            )}
           </div>
         </div>
         {tooltipPortal}

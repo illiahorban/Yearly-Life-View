@@ -1473,20 +1473,14 @@ function App() {
             backdropFilter: "saturate(180%) blur(20px)",
             WebkitBackdropFilter: "saturate(180%) blur(20px)",
             borderBottom: "1px solid var(--border-soft)",
-            paddingRight: 11,
-            marginLeft: 0,
-            paddingTop: 0,
+            paddingRight: scrollbarWidth,
           }}
         >
           <div
-            className="mx-auto max-w-3xl"
+            className="mx-auto max-w-3xl px-3 sm:px-8"
             style={{
-              marginLeft: 99.5,
-              paddingLeft: 32,
               paddingTop: 14,
               paddingBottom: 4,
-              paddingRight: 32,
-              marginTop: 0,
             }}
           >
             <div className="flex items-center justify-between">
@@ -2358,7 +2352,6 @@ function App() {
                   fontSize: 16,
                   lineHeight: "17px",
                   fontWeight: "normal",
-                  width: 542,
                 }}
               >
                 {weekdays.map((w, i) => (
