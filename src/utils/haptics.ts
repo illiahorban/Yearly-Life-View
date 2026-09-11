@@ -26,14 +26,45 @@ export const setHapticsEnabled = (enabled: boolean): void => {
 
 export const isHapticsSupported = (): boolean =>
   typeof window !== "undefined" &&
-  typeof navigator !== "undefined" &&
-  typeof navigator.vibrate === "function";
+  ((typeof navigator !== "undefined" && typeof navigator.vibrate === "function") ||
+    ("HTMLInputElement" in window && "switch" in HTMLInputElement.prototype));
+
+let iosSwitchLabel: HTMLLabelElement | null = null;
+let iosSwitchInput: HTMLInputElement | null = null;
+
+const triggerIosHaptic = (): void => {
+  if (typeof document === "undefined") return;
+  try {
+    if (!iosSwitchLabel) {
+      iosSwitchLabel = document.createElement("label");
+      iosSwitchLabel.setAttribute("aria-hidden", "true");
+      iosSwitchLabel.style.cssText =
+        "position:fixed;opacity:0;pointer-events:none;width:0;height:0;top:-100px;left:-100px;z-index:-9999;";
+      iosSwitchInput = document.createElement("input");
+      iosSwitchInput.type = "checkbox";
+      iosSwitchInput.setAttribute("switch", "");
+      iosSwitchInput.style.cssText =
+        "position:fixed;opacity:0;pointer-events:none;width:0;height:0;top:-100px;left:-100px;";
+      iosSwitchLabel.appendChild(iosSwitchInput);
+      document.body.appendChild(iosSwitchLabel);
+    }
+    if (iosSwitchLabel && iosSwitchInput) {
+      iosSwitchInput.checked = !iosSwitchInput.checked;
+      iosSwitchLabel.click();
+    }
+  } catch {
+    // Silently ignore
+  }
+};
 
 const triggerVibrate = (pattern: number | number[]): void => {
   if (!getHapticsEnabled()) return;
   try {
     if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
       navigator.vibrate(pattern);
+    } else {
+      // iOS WebKit fallback (Safari 17.4+)
+      triggerIosHaptic();
     }
   } catch {
     // Silently ignore if vibrations are blocked by browser policy
