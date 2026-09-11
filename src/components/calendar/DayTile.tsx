@@ -15,6 +15,7 @@ import {
 } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { GripIcon } from "../icons/Icons";
+import { haptics } from "../../utils/haptics";
 
 const FIRE_ANIM_DURATION_MS = 4000; // 4.0s keyframe cycle in index.css
 
@@ -474,6 +475,7 @@ function DayTileComponent({
       holdTimerRef.current = null;
       holdStartPos.current = null;
       longPressActiveRef.current = true;
+      haptics.impactMedium();
       if (hasNote && tileRef.current)
         setTooltipRect(tileRef.current.getBoundingClientRect());
     }, 400);
@@ -501,6 +503,7 @@ function DayTileComponent({
       longPressActiveRef.current = false;
       return;
     }
+    haptics.selection();
     onOpen();
   };
 

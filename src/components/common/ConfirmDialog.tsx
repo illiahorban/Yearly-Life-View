@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LangContext } from "../../constants/i18n";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
+import { haptics } from "../../utils/haptics";
 
 export function ConfirmDialog({
   open,
@@ -22,6 +23,13 @@ export function ConfirmDialog({
   const { t } = React.useContext(LangContext);
   const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const modalBg = dark ? "rgba(28,28,30,0.97)" : "rgba(255,255,255,0.97)";
+
+  useEffect(() => {
+    if (open) {
+      haptics.notificationWarning();
+    }
+  }, [open]);
+
   if (typeof document === "undefined") return null;
   return ReactDOM.createPortal(
     <AnimatePresence>
@@ -111,7 +119,10 @@ export function ConfirmDialog({
             >
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  haptics.selection();
+                  onClose();
+                }}
                 style={{
                   padding: "7px 16px",
                   borderRadius: 10,
@@ -131,6 +142,7 @@ export function ConfirmDialog({
               <button
                 type="button"
                 onClick={() => {
+                  haptics.notificationError();
                   onConfirm();
                   onClose();
                 }}

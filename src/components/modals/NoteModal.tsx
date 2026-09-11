@@ -15,6 +15,7 @@ import { DayTemplatesModal } from "./DayTemplatesModal";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { TrashIcon, ChevronLeftIcon, ChevronRightIcon, GripIcon } from "../icons/Icons";
+import { haptics } from "../../utils/haptics";
 
 export function NoteModal({
   dateKey: dk,
@@ -172,6 +173,7 @@ export function NoteModal({
   }, [newlyAddedGoalIdx, scrollToTarget]);
 
   const handleGoalAdd = () => {
+    haptics.impactLight();
     setNewlyAddedEntryId(null);
     setAddEventOpen(false);
     setMsEditId(null);
@@ -223,13 +225,20 @@ export function NoteModal({
   };
   const handleGoalToggle = (i: number) => {
     const current = goalsDraftRef.current;
+    const willBeDone = !(current.done[i] ?? false);
     const newDone = Array.from({ length: current.count }, (_, j) =>
-      j === i ? !(current.done[j] ?? false) : (current.done[j] ?? false),
+      j === i ? willBeDone : (current.done[j] ?? false),
     );
     const g: DayGoals = { ...current, done: newDone };
     commitGoalsDraft(g);
-    if (newDone.every(Boolean) && newDone.length > 0)
+    if (newDone.every(Boolean) && newDone.length > 0) {
+      haptics.notificationSuccess();
       setTimeout(fireConfettiCannons, 80);
+    } else if (willBeDone) {
+      haptics.impactMedium();
+    } else {
+      haptics.selection();
+    }
   };
   const handleGoalLabelChange = (i: number, value: string) => {
     const current = goalsDraftRef.current;
@@ -240,6 +249,7 @@ export function NoteModal({
     commitGoalsDraft(g);
   };
   const handleGoalColorChange = (i: number, color: string | undefined) => {
+    haptics.selection();
     const current = goalsDraftRef.current;
     const newColors: (string | undefined)[] = Array.from(
       { length: current.count },
@@ -250,6 +260,7 @@ export function NoteModal({
     setGoalColorPickerIdx(null);
   };
   const handleGoalDelete = (i: number) => {
+    haptics.notificationError();
     const current = goalsDraftRef.current;
     const newCount = current.count - 1;
     if (newCount < 0) return;
@@ -277,6 +288,7 @@ export function NoteModal({
     number | null
   >(null);
   const handleGoalReset = () => {
+    haptics.notificationError();
     const g: DayGoals = { count: 0, done: [], labels: [], isDeleted: true };
     commitGoalsDraft(g);
     setConfirmReset(false);
@@ -285,6 +297,7 @@ export function NoteModal({
   const [templateMgrOpen, setTemplateMgrOpen] = useState(false);
   const [saveTplPrefill, setSaveTplPrefill] = useState<string[] | null>(null);
   const applyTemplate = (tpl: DayTemplate) => {
+    haptics.notificationSuccess();
     const items = tpl.items.filter((s) => s.trim());
     const n = Math.max(1, items.length);
     const g: DayGoals = {
@@ -305,6 +318,7 @@ export function NoteModal({
   })();
   const tomorrowAlreadyHasGoals = (tomorrowInitGoals?.count ?? 0) > 0;
   const doCopyToTomorrow = () => {
+    haptics.notificationSuccess();
     const current = goalsDraftRef.current;
     const g: DayGoals = {
       count: current.count,
@@ -444,6 +458,7 @@ export function NoteModal({
 
   const submitNewEvent = () => {
     if (!newLabel.trim()) return;
+    haptics.impactLight();
     const newId = makeId();
     onMilestoneAdd({
       id: newId,
@@ -486,6 +501,7 @@ export function NoteModal({
 
   const saveMsEdit = () => {
     if (!msEditLabel.trim() || !msEditId) return;
+    haptics.notificationSuccess();
     const orig = dayMilestones.find((m) => m.id === msEditId);
     if (orig)
       onMilestoneUpdate({
@@ -564,6 +580,7 @@ export function NoteModal({
   }, [newlyAddedEntryId]);
 
   const addEntry = () => {
+    haptics.impactLight();
     const id = makeId();
     setNewlyAddedGoalIdx(null);
     setAddEventOpen(false);
@@ -578,10 +595,12 @@ export function NoteModal({
     commitEntries(
       entriesRef.current.map((e) => (e.id === id ? { ...e, text } : e)),
     );
-  const updateEntryColor = (id: string, color: string | undefined) =>
+  const updateEntryColor = (id: string, color: string | undefined) => {
+    haptics.selection();
     commitEntries(
       entriesRef.current.map((e) => (e.id === id ? { ...e, color } : e)),
     );
+  };
   const [confirmDeleteEntryId, setConfirmDeleteEntryId] = useState<
     string | null
   >(null);
@@ -591,6 +610,7 @@ export function NoteModal({
   >(null);
   const [hoveredMsId, setHoveredMsId] = useState<string | null>(null);
   const deleteEntry = (id: string) => {
+    haptics.notificationError();
     commitEntries(entriesRef.current.filter((e) => e.id !== id));
     setConfirmDeleteEntryId(null);
   };

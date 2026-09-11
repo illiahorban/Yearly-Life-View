@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useDragControls, Reorder } from "framer-motion";
 import { LangContext } from "../../constants/i18n";
+import { haptics } from "../../utils/haptics";
 
 const NOTE_LONG_PRESS_MS = 350;
 const NOTE_LONG_PRESS_MOVE_TOLERANCE = 8;
@@ -92,10 +93,12 @@ export function DraggableCard({
       // while the mouse button is held — the browser's default is to treat
       // that as a text selection. Suspend selection app-wide for the drag.
       onDragStart={() => {
+        haptics.impactMedium();
         document.body.style.userSelect = "none";
         document.body.style.webkitUserSelect = "none" as any;
       }}
       onDragEnd={() => {
+        haptics.impactLight();
         document.body.style.userSelect = "";
         document.body.style.webkitUserSelect = "" as any;
       }}

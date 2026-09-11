@@ -8,6 +8,7 @@ import { useIsMobile } from "../../hooks/use-mobile";
 import { DraggableCard } from "./DraggableCard";
 import { LangContext } from "../../constants/i18n";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
+import { haptics } from "../../utils/haptics";
 
 export function NoteEntryItem({
   entry,
@@ -154,6 +155,7 @@ export function NoteEntryItem({
               }}
               onClick={(e) => {
                 e.stopPropagation();
+                haptics.selection();
                 toggleColorPicker(entry.id);
               }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -223,7 +225,10 @@ export function NoteEntryItem({
             />
           </div>
           <button
-            onClick={() => setConfirmDeleteEntryId(entry.id)}
+            onClick={() => {
+              haptics.impactLight();
+              setConfirmDeleteEntryId(entry.id);
+            }}
             onPointerDown={(e) => e.stopPropagation()}
             style={{
               width: 26,

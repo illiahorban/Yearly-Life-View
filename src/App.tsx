@@ -77,6 +77,7 @@ import {
   loadConfig,
   saveConfig,
 } from "./utils/storage";
+import { haptics } from "./utils/haptics";
 
 import {
   MONTHS,
@@ -1372,12 +1373,23 @@ function App() {
     setBlockGoals((prev) => {
       const bg = prev[blockId];
       if (!bg) return prev;
-      const updated = bg.goals.map((g) =>
-        g.id === goalId ? { ...g, done: !g.done } : g,
-      );
+      let isNowDone = false;
+      const updated = bg.goals.map((g) => {
+        if (g.id === goalId) {
+          isNowDone = !g.done;
+          return { ...g, done: isNowDone };
+        }
+        return g;
+      });
       const active = updated.filter((g) => !g.isDeleted && g.text.trim());
-      if (active.every((g) => g.done) && active.length > 0)
+      if (active.every((g) => g.done) && active.length > 0) {
+        haptics.notificationSuccess();
         setTimeout(fireConfettiCannons, 80);
+      } else if (isNowDone) {
+        haptics.impactMedium();
+      } else {
+        haptics.selection();
+      }
       return {
         ...prev,
         [blockId]: updateBlockGoals(bg, { ...bg, goals: updated }),
@@ -1386,12 +1398,23 @@ function App() {
   const toggleQuarterGoal = (qi: number, goalId: string) =>
     setQuarterGoals((prev) => {
       const bg = prev[qi] ?? { description: "", goals: [] };
-      const updated = bg.goals.map((g) =>
-        g.id === goalId ? { ...g, done: !g.done } : g,
-      );
+      let isNowDone = false;
+      const updated = bg.goals.map((g) => {
+        if (g.id === goalId) {
+          isNowDone = !g.done;
+          return { ...g, done: isNowDone };
+        }
+        return g;
+      });
       const active = updated.filter((g) => !g.isDeleted && g.text.trim());
-      if (active.every((g) => g.done) && active.length > 0)
+      if (active.every((g) => g.done) && active.length > 0) {
+        haptics.notificationSuccess();
         setTimeout(fireConfettiCannons, 80);
+      } else if (isNowDone) {
+        haptics.impactMedium();
+      } else {
+        haptics.selection();
+      }
       return {
         ...prev,
         [qi]: updateBlockGoals(prev[qi], { ...bg, goals: updated }),
@@ -1400,12 +1423,23 @@ function App() {
   const toggleYearGoal = (year: number, goalId: string) =>
     setYearGoals((prev) => {
       const bg = prev[year] ?? { description: "", goals: [] };
-      const updated = bg.goals.map((g) =>
-        g.id === goalId ? { ...g, done: !g.done } : g,
-      );
+      let isNowDone = false;
+      const updated = bg.goals.map((g) => {
+        if (g.id === goalId) {
+          isNowDone = !g.done;
+          return { ...g, done: isNowDone };
+        }
+        return g;
+      });
       const active = updated.filter((g) => !g.isDeleted && g.text.trim());
-      if (active.every((g) => g.done) && active.length > 0)
+      if (active.every((g) => g.done) && active.length > 0) {
+        haptics.notificationSuccess();
         setTimeout(fireConfettiCannons, 80);
+      } else if (isNowDone) {
+        haptics.impactMedium();
+      } else {
+        haptics.selection();
+      }
       return {
         ...prev,
         [year]: updateBlockGoals(prev[year], { ...bg, goals: updated }),
@@ -1547,6 +1581,7 @@ function App() {
                       <button
                         key={y}
                         onClick={() => {
+                          haptics.selection();
                           setViewYear(y);
                           setYearPickerOpen(false);
                         }}
@@ -2204,7 +2239,10 @@ function App() {
                           )}
                           <IconButton
                             title={dark ? t("lightMode") : t("darkMode")}
-                            onClick={() => setDark((d) => !d)}
+                            onClick={() => {
+                              haptics.impactLight();
+                              setDark((d) => !d);
+                            }}
                             bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
                           >
                             {dark ? <SunIcon /> : <MoonIcon />}
@@ -2215,9 +2253,10 @@ function App() {
                                 ? t("switchToRussian")
                                 : t("switchToEnglish")
                             }
-                            onClick={() =>
-                              setLang((l) => (l === "en" ? "ru" : "en"))
-                            }
+                            onClick={() => {
+                              haptics.selection();
+                              setLang((l) => (l === "en" ? "ru" : "en"));
+                            }}
                             bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
                           >
                             <span

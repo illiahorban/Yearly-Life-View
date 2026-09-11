@@ -7,6 +7,7 @@ import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { makeId, newTimestamps } from "../../utils/storage";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
+import { haptics } from "../../utils/haptics";
 
 export function DayTemplatesModal({
   dark,
@@ -107,6 +108,7 @@ export function DayTemplatesModal({
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     if (items.length === 0) return;
+    haptics.notificationSuccess();
     if (editingId === "__new__") {
       const newTpl: DayTemplate = {
         id: makeId(),
@@ -126,15 +128,20 @@ export function DayTemplatesModal({
   };
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const deleteTpl = (id: string) => {
+    haptics.notificationError();
     commitDraft(draftRef.current.filter((tpl) => tpl.id !== id));
     setConfirmDeleteId(null);
   };
   const addItem = () => {
-    if (formItemsRef.current.length < 10)
+    if (formItemsRef.current.length < 10) {
+      haptics.impactLight();
       commitFormItems([...formItemsRef.current, ""]);
+    }
   };
-  const removeItem = (i: number) =>
+  const removeItem = (i: number) => {
+    haptics.selection();
     commitFormItems(formItemsRef.current.filter((_, j) => j !== i));
+  };
   const updateItem = (i: number, v: string) =>
     commitFormItems(formItemsRef.current.map((s, j) => (j === i ? v : s)));
 
@@ -527,7 +534,10 @@ export function DayTemplatesModal({
                       <div style={{ display: "flex", gap: 4 }}>
                         {onApply && (
                           <button
-                            onClick={() => onApply(tpl)}
+                            onClick={() => {
+                              haptics.notificationSuccess();
+                              onApply(tpl);
+                            }}
                             style={{
                               height: 24,
                               padding: "0 9px",

@@ -11,6 +11,7 @@ import { LangContext } from "../../constants/i18n";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { GripIcon, TrashIcon, GoalsIcon, CheckIcon, ChevronLeftIcon } from "../icons/Icons";
+import { haptics } from "../../utils/haptics";
 
 export function GoalsModal({
   blockId: _bid,
@@ -135,6 +136,7 @@ export function GoalsModal({
   }, [newlyAddedGoalId]);
 
   const handleAddGoal = () => {
+    haptics.impactLight();
     const newId = makeId();
     commitGoalsDraft([
       ...goalsRef.current,
@@ -167,6 +169,7 @@ export function GoalsModal({
   const [colorPickerAnchor, setColorPickerAnchor] =
     useState<HTMLElement | null>(null);
   const toggleColorPicker = (id: string, el: HTMLElement) => {
+    haptics.selection();
     if (colorPickerGoalId === id) {
       setColorPickerGoalId(null);
       setColorPickerAnchor(null);
@@ -180,6 +183,7 @@ export function GoalsModal({
     setColorPickerAnchor(null);
   };
   const setGoalColor = (id: string, color: string | undefined) => {
+    haptics.selection();
     commitGoalsDraft(
       goalsRef.current.map((x) => (x.id === id ? { ...x, color } : x)),
     );
@@ -562,7 +566,10 @@ export function GoalsModal({
                               )}
                             </button>
                             <button
-                              onClick={() => setConfirmDeleteGoalId(g.id)}
+                              onClick={() => {
+                                haptics.impactLight();
+                                setConfirmDeleteGoalId(g.id);
+                              }}
                               onPointerDown={(e) => e.stopPropagation()}
                               style={{
                                 width: 20,
@@ -646,6 +653,7 @@ export function GoalsModal({
         onClose={() => setConfirmDeleteGoalId(null)}
         onConfirm={() => {
           if (confirmDeleteGoalId) {
+            haptics.notificationError();
             commitGoalsDraft(
               goalsRef.current.filter((x) => x.id !== confirmDeleteGoalId),
             );

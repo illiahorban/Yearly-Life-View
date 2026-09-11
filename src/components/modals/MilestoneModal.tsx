@@ -12,6 +12,7 @@ import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { HighlightText } from "../common/HighlightText";
 import { FlagIcon, TrashIcon, CheckIcon, SearchIcon } from "../icons/Icons";
+import { haptics } from "../../utils/haptics";
 
 export function MilestoneModal({
   milestones,
@@ -141,6 +142,7 @@ export function MilestoneModal({
       )
       .sort((a, b) => a.date.localeCompare(b.date));
     setItems(newItems);
+    haptics.notificationSuccess();
     onChange(newItems);
     setEditId(null);
   };
@@ -156,6 +158,7 @@ export function MilestoneModal({
 
   const add = () => {
     if (!draftLabel.trim()) return;
+    haptics.impactLight();
     const newItems = [
       ...items,
       {
@@ -1377,6 +1380,7 @@ export function MilestoneModal({
         onClose={() => setConfirmDeleteMsId(null)}
         onConfirm={() => {
           if (confirmDeleteMsId) {
+            haptics.notificationError();
             const newItems = items.filter((x) => x.id !== confirmDeleteMsId);
             setItems(newItems);
             onChange(newItems);

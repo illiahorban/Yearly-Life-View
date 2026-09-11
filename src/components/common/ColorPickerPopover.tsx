@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ColorSwatchGrid } from "./ColorSwatchGrid";
 import { APPLE_COLORS } from "../../constants/colors";
+import { haptics } from "../../utils/haptics";
 
 export interface ColorPickerPopoverProps {
   isOpen: boolean;
@@ -211,12 +212,14 @@ export function ColorPickerPopover({
               colors={defaultColors}
               selected={selected}
               onSelect={(hex, key) => {
+                haptics.selection();
                 onSelect(hex, key);
                 onClose();
               }}
               onClear={
                 onClear
                   ? () => {
+                      haptics.selection();
                       onClear();
                       onClose();
                     }
