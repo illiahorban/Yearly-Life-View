@@ -100,6 +100,25 @@ export function GoalsModal({
   const scrollBodyRef = useRef<HTMLDivElement | null>(null);
   const [newlyAddedGoalId, setNewlyAddedGoalId] = useState<string | null>(null);
 
+  const prevKeyboardOpenRef = useRef(false);
+  useEffect(() => {
+    const wasOpen = prevKeyboardOpenRef.current;
+    prevKeyboardOpenRef.current = isKeyboardOpen;
+    if (!wasOpen && isKeyboardOpen && scrollBodyRef.current) {
+      const handleScroll = () => {
+        const active = document.activeElement;
+        if (
+          active instanceof HTMLElement &&
+          scrollBodyRef.current?.contains(active)
+        ) {
+          active.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      };
+      const t1 = setTimeout(handleScroll, 120);
+      return () => clearTimeout(t1);
+    }
+  }, [isKeyboardOpen]);
+
   useEffect(() => {
     if (newlyAddedGoalId !== null) {
       const id = newlyAddedGoalId;
@@ -192,13 +211,14 @@ export function GoalsModal({
         initial={false}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
+        className="flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
         style={{
           position: "fixed",
-          top: 0,
+          top: `${vvOffsetTop}px`,
           left: 0,
           right: 0,
           height: `${vvHeight}px`,
+          zIndex: 60,
           overflow: "hidden",
           overscrollBehavior: "contain",
         }}
@@ -289,7 +309,7 @@ export function GoalsModal({
                   background: "transparent",
                   border: "none",
                   outline: "none",
-                  fontSize: 15,
+                  fontSize: isMobile ? 16 : 15,
                   fontWeight: 600,
                   letterSpacing: "-0.01em",
                   color: "var(--text)",
@@ -346,7 +366,7 @@ export function GoalsModal({
                   border: `1px solid ${borderColor}`,
                   borderRadius: 10,
                   padding: "8px 10px",
-                  fontSize: 13,
+                  fontSize: isMobile ? 16 : 13,
                   lineHeight: 1.5,
                   fontFamily: "inherit",
                   background: inputBg,
@@ -456,7 +476,7 @@ export function GoalsModal({
                               border: `1.5px solid ${inputBorderColor}`,
                               borderRadius: 12,
                               padding: "8px 59px 8px 10px",
-                              fontSize: 13,
+                              fontSize: isMobile ? 16 : 13,
                               lineHeight: 1.4,
                               color: inputTextColor,
                               outline: "none",

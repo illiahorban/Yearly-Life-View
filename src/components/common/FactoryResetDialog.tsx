@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LangContext } from "../../constants/i18n";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 
 export function FactoryResetDialog({
   open,
@@ -15,6 +16,7 @@ export function FactoryResetDialog({
   dark: boolean;
 }) {
   const { t } = React.useContext(LangContext);
+  const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const [step, setStep] = useState(1);
   const modalBg = dark ? "rgba(28,28,30,0.97)" : "rgba(255,255,255,0.97)";
 
@@ -28,8 +30,14 @@ export function FactoryResetDialog({
       {open && (
         <motion.div
           key="factory-reset-overlay"
-          className="fixed inset-0 flex items-center justify-center p-4 sm:p-6"
-          style={{ zIndex: 60 }}
+          className="fixed left-0 right-0 flex items-center justify-center p-4 sm:p-6"
+          style={{
+            top: `${vvOffsetTop}px`,
+            height: `${vvHeight}px`,
+            zIndex: 75,
+            overflow: "hidden",
+            overscrollBehavior: "contain",
+          }}
           initial={false}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.28, ease: "easeOut" }}

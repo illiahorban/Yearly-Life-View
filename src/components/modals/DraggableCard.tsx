@@ -47,18 +47,9 @@ export function DraggableCard({
     }
   };
   const startDragFromHandle = (e: React.PointerEvent) => {
-    if (e.pointerType === "touch" || e.pointerType === "pen") {
-      holdStartPos.current = { x: e.clientX, y: e.clientY };
-      // Suppress text selection immediately so moving the finger during the
-      // hold period doesn't select text on sibling nodes.
-      document.body.style.userSelect = "none";
-      (document.body.style as any).webkitUserSelect = "none";
-      holdTimer.current = window.setTimeout(() => {
-        dragControls.start(e);
-      }, NOTE_LONG_PRESS_MS);
-    } else {
-      dragControls.start(e);
-    }
+    document.body.style.userSelect = "none";
+    (document.body.style as any).webkitUserSelect = "none";
+    dragControls.start(e);
   };
   const cancelHoldOnMove = (e: React.PointerEvent) => {
     if (holdTimer.current === null || !holdStartPos.current) return;
@@ -128,7 +119,7 @@ export function DraggableCard({
           title={t("dragNote")}
           aria-label={t("dragNote")}
           style={{
-            width: 16,
+            width: 20,
             flexShrink: 0,
             borderRadius: 8,
             cursor: "grab",

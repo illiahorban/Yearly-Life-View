@@ -51,8 +51,15 @@ export function ColorPickerPopover({
       return;
     }
 
+    const vv = window.visualViewport;
+    const vvHeight = vv ? vv.height : window.innerHeight;
+    const vvOffsetTop = vv ? vv.offsetTop : 0;
+    const vvWidth = vv ? vv.width : window.innerWidth;
+    const vvOffsetLeft = vv ? vv.offsetLeft : 0;
+
     // Anchor scrolled completely off-screen
-    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+    const viewBottom = vvOffsetTop + vvHeight;
+    if (rect.bottom < vvOffsetTop || rect.top > viewBottom) {
       onClose();
       return;
     }
@@ -62,31 +69,31 @@ export function ColorPickerPopover({
     const gap = 6;
     const margin = 8;
 
-    // Horizontal positioning: align right if in right half of viewport, else left
+    // Horizontal positioning: align right if in right half of visual viewport, else left
     let left = rect.right - popoverWidth;
-    if (rect.left + rect.width / 2 < window.innerWidth / 2) {
+    if (rect.left + rect.width / 2 < vvOffsetLeft + vvWidth / 2) {
       left = rect.left;
     }
-    // Clamp to viewport edges
+    // Clamp to visual viewport edges
     left = Math.min(
-      Math.max(margin, left),
-      window.innerWidth - popoverWidth - margin,
+      Math.max(vvOffsetLeft + margin, left),
+      vvOffsetLeft + vvWidth - popoverWidth - margin,
     );
 
     // Vertical positioning: decide whether to open below or above
-    const spaceBelow = window.innerHeight - (rect.bottom + gap);
-    const spaceAbove = rect.top - gap;
+    const spaceBelow = viewBottom - (rect.bottom + gap);
+    const spaceAbove = rect.top - gap - vvOffsetTop;
     let top: number;
     let openUpwards = false;
 
     if (spaceBelow >= popoverHeight || spaceBelow >= spaceAbove) {
       top = rect.bottom + gap;
-      top = Math.min(top, window.innerHeight - popoverHeight - margin);
-      top = Math.max(margin, top);
+      top = Math.min(top, viewBottom - popoverHeight - margin);
+      top = Math.max(vvOffsetTop + margin, top);
     } else {
       openUpwards = true;
       top = rect.top - popoverHeight - gap;
-      top = Math.max(margin, top);
+      top = Math.max(vvOffsetTop + margin, top);
     }
 
     setCoords({ top, left, openUpwards });
@@ -107,10 +114,14 @@ export function ColorPickerPopover({
     // Capture true catches scroll inside any modal dialog or scrollable element
     window.addEventListener("scroll", handleScrollOrResize, true);
     window.addEventListener("resize", handleScrollOrResize);
+    window.visualViewport?.addEventListener("resize", handleScrollOrResize);
+    window.visualViewport?.addEventListener("scroll", handleScrollOrResize);
 
     return () => {
       window.removeEventListener("scroll", handleScrollOrResize, true);
       window.removeEventListener("resize", handleScrollOrResize);
+      window.visualViewport?.removeEventListener("resize", handleScrollOrResize);
+      window.visualViewport?.removeEventListener("scroll", handleScrollOrResize);
     };
   }, [isOpen, anchorEl, updatePosition]);
 

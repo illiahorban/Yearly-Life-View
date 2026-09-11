@@ -9,9 +9,6 @@ import { DraggableCard } from "./DraggableCard";
 import { LangContext } from "../../constants/i18n";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
 
-const NOTE_LONG_PRESS_MS = 350;
-const NOTE_LONG_PRESS_MOVE_TOLERANCE = 8;
-
 export function NoteEntryItem({
   entry,
   idx,

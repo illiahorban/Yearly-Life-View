@@ -604,7 +604,6 @@ function App() {
     profileOpen ||
     factoryResetStep > 0 ||
     confirmSignOut ||
-    searchOpen ||
     milestonePanelOpen ||
     notesPanelOpen ||
     goalsOpen ||
@@ -2957,7 +2956,7 @@ function App() {
         <AnimatePresence>
           {openNote !== null && (
             <NoteModal
-              key="note"
+              key={openNote}
               dateKey={openNote}
               initial={(notes[openNote] ?? []).filter(
                 (entry) => !entry.isDeleted,

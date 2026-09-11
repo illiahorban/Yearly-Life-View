@@ -104,13 +104,14 @@ export function SprintSettingsModal({
   return (
     <>
       <motion.div
-        className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
+        className="flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
         style={{
           position: "fixed",
-          top: 0,
+          top: `${vvOffsetTop}px`,
           left: 0,
           right: 0,
           height: `${vvHeight}px`,
+          zIndex: 60,
           overflow: "hidden",
           overscrollBehavior: "contain",
         }}
@@ -435,7 +436,7 @@ export function SprintSettingsModal({
                             className={`${bPlaceholderClass || ""} bg-transparent outline-none w-full resize-none event-form-input`.trim()}
                             style={{
                               color: bDotHex,
-                              fontSize: 13,
+                              fontSize: isMobile ? 16 : 13,
                               fontWeight: 500,
                               lineHeight: 1.45,
                               fontFamily: "inherit",

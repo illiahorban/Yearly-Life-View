@@ -21,42 +21,63 @@ export function useVisualViewport(): VisualViewportState {
     return { height, width, offsetTop, isKeyboardOpen };
   });
 
+  const maxHeightRef = React.useRef<number>(
+    typeof window !== "undefined"
+      ? (window.visualViewport?.height ?? window.innerHeight)
+      : 800,
+  );
+
   React.useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const isEditableFocused = () => {
+      const el = document.activeElement;
+      if (!el) return false;
+      const tag = el.tagName;
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        (el as HTMLElement).isContentEditable
+      );
+    };
+
     const update = () => {
       const vv = window.visualViewport;
-      if (vv) {
-        const height = vv.height;
-        const width = vv.width;
-        const offsetTop = vv.offsetTop;
-        const isKeyboardOpen = window.innerHeight - height > 140;
-        setViewport((prev) => {
-          if (
-            Math.abs(prev.height - height) < 1 &&
-            Math.abs(prev.width - width) < 1 &&
-            Math.abs(prev.offsetTop - offsetTop) < 1 &&
-            prev.isKeyboardOpen === isKeyboardOpen
-          ) {
-            return prev;
-          }
-          return { height, width, offsetTop, isKeyboardOpen };
-        });
-      } else {
-        const height = window.innerHeight;
-        const width = window.innerWidth;
-        setViewport((prev) => {
-          if (
-            prev.height === height &&
-            prev.width === width &&
-            prev.offsetTop === 0 &&
-            !prev.isKeyboardOpen
-          ) {
-            return prev;
-          }
-          return { height, width, offsetTop: 0, isKeyboardOpen: false };
-        });
+      const height = vv ? vv.height : window.innerHeight;
+      const width = vv ? vv.width : window.innerWidth;
+      const offsetTop = vv ? vv.offsetTop : 0;
+
+      // Update baseline height when no input is focused
+      if (!isEditableFocused()) {
+        maxHeightRef.current = Math.max(maxHeightRef.current, height);
       }
+
+      // Detect keyboard on both iOS (layout vs visual viewport difference)
+      // and Android (shrinking visual viewport while an editable element is focused)
+      const iosKeyboard = window.innerHeight - height > 140;
+      const androidKeyboard =
+        isEditableFocused() && maxHeightRef.current - height > 140;
+      const isKeyboardOpen = iosKeyboard || androidKeyboard;
+
+      setViewport((prev) => {
+        if (
+          Math.abs(prev.height - height) < 1 &&
+          Math.abs(prev.width - width) < 1 &&
+          Math.abs(prev.offsetTop - offsetTop) < 1 &&
+          prev.isKeyboardOpen === isKeyboardOpen
+        ) {
+          return prev;
+        }
+        return { height, width, offsetTop, isKeyboardOpen };
+      });
+    };
+
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        const vv = window.visualViewport;
+        maxHeightRef.current = vv ? vv.height : window.innerHeight;
+        update();
+      }, 100);
     };
 
     const vv = window.visualViewport;
@@ -65,7 +86,12 @@ export function useVisualViewport(): VisualViewportState {
       vv.addEventListener("scroll", update);
     }
     window.addEventListener("resize", update);
-    window.addEventListener("orientationchange", update);
+    window.addEventListener("orientationchange", handleOrientationChange);
+    window.addEventListener("focusin", update);
+    const handleFocusOut = () => {
+      setTimeout(update, 100);
+    };
+    window.addEventListener("focusout", handleFocusOut);
 
     update();
 
@@ -75,7 +101,9 @@ export function useVisualViewport(): VisualViewportState {
         vv.removeEventListener("scroll", update);
       }
       window.removeEventListener("resize", update);
-      window.removeEventListener("orientationchange", update);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener("focusin", update);
+      window.removeEventListener("focusout", handleFocusOut);
     };
   }, []);
 

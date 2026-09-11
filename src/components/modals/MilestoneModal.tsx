@@ -176,13 +176,33 @@ export function MilestoneModal({
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const prevKeyboardOpenRef = useRef(false);
+  useEffect(() => {
+    const wasOpen = prevKeyboardOpenRef.current;
+    prevKeyboardOpenRef.current = isKeyboardOpen;
+    if (!wasOpen && isKeyboardOpen && scrollContainerRef.current) {
+      const handleScroll = () => {
+        const active = document.activeElement;
+        if (
+          active instanceof HTMLElement &&
+          scrollContainerRef.current?.contains(active)
+        ) {
+          active.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      };
+      const t1 = setTimeout(handleScroll, 120);
+      return () => clearTimeout(t1);
+    }
+  }, [isKeyboardOpen]);
+
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputStyle: React.CSSProperties = {
     background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)",
     border: `1px solid ${borderColor}`,
     borderRadius: 8,
     padding: "7px 10px",
-    fontSize: 13,
+    fontSize: isMobile ? 16 : 13,
     color: "var(--text)",
     outline: "none",
     fontFamily: "inherit",
@@ -197,7 +217,7 @@ export function MilestoneModal({
       className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
         position: "fixed",
-        top: 0,
+        top: `${vvOffsetTop}px`,
         left: 0,
         right: 0,
         height: `${vvHeight}px`,
@@ -222,6 +242,7 @@ export function MilestoneModal({
         }}
       />
       <motion.div
+        ref={scrollContainerRef}
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -409,7 +430,7 @@ export function MilestoneModal({
                 border: inputBorder,
                 borderRadius: 8,
                 padding: "6px 9px",
-                fontSize: 12,
+                fontSize: isMobile ? 16 : 12,
                 color: inputText,
                 outline: "none",
                 fontFamily: "inherit",
@@ -817,7 +838,7 @@ export function MilestoneModal({
                             width: "100%",
                             resize: "none",
                             overflow: "hidden",
-                            fontSize: 13,
+                            fontSize: isMobile ? 16 : 13,
                             fontWeight: 600,
                             lineHeight: 1.35,
                             display: "block",
@@ -855,7 +876,7 @@ export function MilestoneModal({
                             width: "100%",
                             resize: "none",
                             overflow: "hidden",
-                            fontSize: 11,
+                            fontSize: isMobile ? 16 : 11,
                             fontWeight: 400,
                             lineHeight: 1.375,
                             display: "block",

@@ -49,7 +49,7 @@ export function DayTemplatesModal({
     border: `1px solid ${borderColor}`,
     borderRadius: 8,
     padding: "6px 10px",
-    fontSize: 12,
+    fontSize: isMobile ? 16 : 12,
     color: "var(--text)",
     outline: "none",
     fontFamily: "inherit",
@@ -145,13 +145,14 @@ export function DayTemplatesModal({
       initial={false}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
+      className="flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
       style={{
         position: "fixed",
-        top: 0,
+        top: `${vvOffsetTop}px`,
         left: 0,
         right: 0,
         height: `${vvHeight}px`,
+        zIndex: 65,
         overflow: "hidden",
         overscrollBehavior: "contain",
       }}
@@ -317,7 +318,11 @@ export function DayTemplatesModal({
                   value={formName}
                   onChange={(e) => commitFormName(e.target.value)}
                   placeholder={t("templateNamePlaceholder")}
-                  style={{ ...inputStyle, fontSize: 13, fontWeight: 600 }}
+                  style={{
+                    ...inputStyle,
+                    fontSize: isMobile ? 16 : 13,
+                    fontWeight: 600,
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();

@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LangContext } from "../../constants/i18n";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 
 export function ConfirmDialog({
   open,
@@ -19,6 +20,7 @@ export function ConfirmDialog({
   dark: boolean;
 }) {
   const { t } = React.useContext(LangContext);
+  const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const modalBg = dark ? "rgba(28,28,30,0.97)" : "rgba(255,255,255,0.97)";
   if (typeof document === "undefined") return null;
   return ReactDOM.createPortal(
@@ -26,8 +28,14 @@ export function ConfirmDialog({
       {open && (
         <motion.div
           key="confirm-overlay"
-          className="fixed inset-0 flex items-center justify-center p-4 sm:p-6"
-          style={{ zIndex: 60 }}
+          className="fixed left-0 right-0 flex items-center justify-center p-4 sm:p-6"
+          style={{
+            top: `${vvOffsetTop}px`,
+            height: `${vvHeight}px`,
+            zIndex: 75,
+            overflow: "hidden",
+            overscrollBehavior: "contain",
+          }}
           initial={false}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.28, ease: "easeOut" }}

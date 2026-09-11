@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
+import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { DownloadIcon, XCloseIcon } from "../icons/Icons";
 
 interface PWAInstallModalProps {
@@ -17,6 +18,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
   lang = "ru",
 }) => {
   const { isInstallable, isIOS, install } = usePWAInstall();
+  const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const [isInIframe, setIsInIframe] = useState(false);
 
   useEffect(() => {
@@ -44,11 +46,15 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          className="fixed left-0 right-0 z-[9999] flex items-center justify-center p-4"
           style={{
+            top: `${vvOffsetTop}px`,
+            height: `${vvHeight}px`,
             backgroundColor: "rgba(0, 0, 0, 0.62)",
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
+            overflow: "hidden",
+            overscrollBehavior: "contain",
           }}
           onClick={onClose}
         >
