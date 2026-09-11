@@ -23,6 +23,7 @@
   --text-tertiary: #86868b;
   --border: #d2d2d7;
   --border-soft: #e5e5ea;
+  --white-past-border-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.40);
   --apple-green: #34c759;
   --apple-green-soft: #34c759;
   --apple-green-deep: #34c759;

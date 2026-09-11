@@ -652,8 +652,8 @@ function DayTileComponent({
               color: "white",
               boxShadow: isWhiteInLight
                 ? hovered
-                  ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
-                  : "0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--border-soft)"
+                  ? "0 2px 10px rgba(0,0,0,0.08)"
+                  : "0 1px 2px rgba(0,0,0,0.04)"
                 : isBlackInDark
                   ? hovered
                     ? "0 2px 8px rgba(0,0,0,0.6)"
@@ -694,6 +694,19 @@ function DayTileComponent({
                   inset: 0,
                   borderRadius: 12,
                   boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.18)",
+                  pointerEvents: "none",
+                  zIndex: 10,
+                }}
+              />
+            )}
+            {/* Outline overlay for white accent in light mode (wraps around event indicators) */}
+            {isWhiteInLight && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: 12,
+                  boxShadow: "inset 0 0 0 0.5px rgba(0, 0, 0, 0.40)",
                   pointerEvents: "none",
                   zIndex: 10,
                 }}
