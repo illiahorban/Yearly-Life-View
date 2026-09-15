@@ -497,17 +497,21 @@ export function GoalsModal({
                           <div
                             style={{
                               position: "absolute",
-                              top:
-                                (goalInputHeights[g.id] ?? 20) > 24 ? 8 : "50%",
-                              transform:
-                                (goalInputHeights[g.id] ?? 20) > 24
+                              top: isMobile
+                                ? "50%"
+                                : (goalInputHeights[g.id] ?? 38) > 42
+                                  ? 8
+                                  : "50%",
+                              transform: isMobile
+                                ? "translateY(-50%)"
+                                : (goalInputHeights[g.id] ?? 38) > 42
                                   ? "none"
                                   : "translateY(-50%)",
                               right: 8,
                               display: "flex",
                               alignItems: "center",
                               gap: 6,
-                              transition: "top 150ms",
+                              transition: isMobile ? "none" : "top 150ms",
                               opacity:
                                 isMobile ||
                                 hoveredGoalId === g.id ||
@@ -607,6 +611,7 @@ export function GoalsModal({
                                 stroke="currentColor"
                                 strokeWidth="1.8"
                                 strokeLinecap="round"
+                                style={{ display: "block" }}
                               >
                                 <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
                                 <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
