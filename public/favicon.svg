@@ -1,15 +1,15 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="180" height="180" rx="40" fill="#09090b"/>
   <!-- Row 1 -->
-  <rect x="21" y="21" width="39" height="39" rx="9.8" fill="#34C759"/>
-  <rect x="70.5" y="21" width="39" height="39" rx="9.8" fill="#34C759"/>
-  <rect x="120" y="21" width="39" height="39" rx="9.8" fill="#34C759"/>
+  <rect x="25.5" y="25.5" width="36" height="36" rx="9" fill="#34C759"/>
+  <rect x="72" y="25.5" width="36" height="36" rx="9" fill="#34C759"/>
+  <rect x="118.5" y="25.5" width="36" height="36" rx="9" fill="#34C759"/>
   <!-- Row 2 -->
-  <rect x="21" y="70.5" width="39" height="39" rx="9.8" fill="#34C759"/>
-  <rect x="70.5" y="70.5" width="39" height="39" rx="9.8" fill="#34C759"/>
-  <rect x="120" y="70.5" width="39" height="39" rx="9.8" fill="#34C759"/>
+  <rect x="25.5" y="72" width="36" height="36" rx="9" fill="#34C759"/>
+  <rect x="72" y="72" width="36" height="36" rx="9" fill="#34C759"/>
+  <rect x="118.5" y="72" width="36" height="36" rx="9" fill="#34C759"/>
   <!-- Row 3 -->
-  <rect x="21" y="120" width="39" height="39" rx="9.8" fill="#34C759"/>
-  <rect x="70.5" y="120" width="39" height="39" rx="9.8" fill="#34C759"/>
-  <rect x="120" y="120" width="39" height="39" rx="9.8" fill="#34C759"/>
+  <rect x="25.5" y="118.5" width="36" height="36" rx="9" fill="#34C759"/>
+  <rect x="72" y="118.5" width="36" height="36" rx="9" fill="#34C759"/>
+  <rect x="118.5" y="118.5" width="36" height="36" rx="9" fill="#34C759"/>
 </svg>

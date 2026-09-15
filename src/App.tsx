@@ -156,6 +156,8 @@ import { GoalsModal } from "./components/modals/GoalsModal";
 import { SprintSettingsModal } from "./components/modals/SprintSettingsModal";
 import { LifeCalendarModal } from "./components/modals/LifeCalendarModal";
 import { DayTemplatesModal } from "./components/modals/DayTemplatesModal";
+import { IconEditorModal } from "./components/modals/IconEditorModal";
+import { Sliders } from "lucide-react";
 
 function App() {
   const isMobile = useIsMobile();
@@ -277,6 +279,7 @@ function App() {
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const [pwaModalOpen, setPwaModalOpen] = useState(false);
+  const [iconEditorOpen, setIconEditorOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!settingsOpen) setProfileOpen(false);
@@ -2321,6 +2324,21 @@ function App() {
                               <DownloadIcon className="w-4 h-4" />
                             </IconButton>
                           )}
+                          <IconButton
+                            title={
+                              lang === "ru"
+                                ? "Редактор иконки"
+                                : "Icon Editor"
+                            }
+                            onClick={() => {
+                              setSettingsOpen(false);
+                              setIconEditorOpen(true);
+                            }}
+                            bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
+                            color="#34c759"
+                          >
+                            <Sliders className="w-4 h-4" />
+                          </IconButton>
                           <div
                             style={{
                               height: 1,
@@ -3396,6 +3414,31 @@ function App() {
           dark={dark}
           lang={lang}
         />
+
+        <IconEditorModal
+          isOpen={iconEditorOpen}
+          onClose={() => setIconEditorOpen(false)}
+          dark={dark}
+          lang={lang}
+        />
+
+        {!iconEditorOpen && (
+          <button
+            type="button"
+            onClick={() => setIconEditorOpen(true)}
+            className="fixed bottom-4 left-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-lg border text-xs font-semibold backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            style={{
+              background: dark ? "rgba(24, 24, 27, 0.88)" : "rgba(255, 255, 255, 0.92)",
+              borderColor: "rgba(52, 199, 89, 0.5)",
+              color: "#34c759",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+            }}
+            title={lang === "ru" ? "Открыть редактор иконки" : "Open Icon Editor"}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>{lang === "ru" ? "Редактор иконки" : "Icon Editor"}</span>
+          </button>
+        )}
 
         <TodayFloatingButton
           showTodayBtn={showTodayBtn}
