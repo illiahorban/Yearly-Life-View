@@ -189,13 +189,45 @@ function App() {
     ls<boolean>("lifeCalendar:darkMode", false),
   );
   useEffect(() => {
+    const themeMode = dark ? "dark" : "light";
     document.documentElement.setAttribute(
       "data-theme",
-      dark ? "dark" : "light",
+      themeMode,
     );
     document.documentElement.classList.toggle("dark", dark);
-    document.documentElement.style.colorScheme = dark ? "dark" : "light";
+    document.documentElement.style.colorScheme = themeMode;
+    if (document.body) {
+      document.body.style.colorScheme = themeMode;
+    }
     lsSet("lifeCalendar:darkMode", dark);
+
+    // Dynamic status bar and theme-color update for iOS Safari & PWA standalone
+    const themeColor = dark ? "#000000" : "#f5f5f7";
+    const statusBarStyle = dark ? "black" : "default";
+
+    // 1. Update <meta name="theme-color">
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute("content", themeColor);
+    } else {
+      themeMeta = document.createElement("meta");
+      themeMeta.setAttribute("name", "theme-color");
+      themeMeta.setAttribute("content", themeColor);
+      document.head.appendChild(themeMeta);
+    }
+
+    // 2. Update <meta name="apple-mobile-web-app-status-bar-style">
+    // In iOS PWA:
+    // 'default' = white/light status bar with dark (black) text and icons
+    // 'black' = solid black status bar with light (white) text and icons
+    const oldStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (oldStatusMeta) {
+      oldStatusMeta.remove();
+    }
+    const newStatusMeta = document.createElement("meta");
+    newStatusMeta.setAttribute("name", "apple-mobile-web-app-status-bar-style");
+    newStatusMeta.setAttribute("content", statusBarStyle);
+    document.head.appendChild(newStatusMeta);
   }, [dark]);
 
   const [lang, setLang] = useState<Lang>(() =>
