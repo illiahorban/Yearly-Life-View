@@ -27,8 +27,8 @@ export const TodayFloatingButton: React.FC<TodayFloatingButtonProps> = ({
           onClick={scrollToToday}
           style={{
             position: "fixed",
-            bottom: 20,
-            right: 20,
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+            right: "calc(env(safe-area-inset-right, 0px) + 20px)",
             zIndex: 15,
             height: 28,
             paddingInline: 10,

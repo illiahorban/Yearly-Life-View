@@ -203,31 +203,29 @@ function App() {
 
     // Dynamic status bar and theme-color update for iOS Safari & PWA standalone
     const themeColor = dark ? "#000000" : "#f5f5f7";
-    const statusBarStyle = dark ? "black" : "default";
 
     // 1. Update <meta name="theme-color">
-    let themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) {
-      themeMeta.setAttribute("content", themeColor);
+    const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+    if (themeMetas.length > 0) {
+      themeMetas.forEach((meta) => meta.setAttribute("content", themeColor));
     } else {
-      themeMeta = document.createElement("meta");
-      themeMeta.setAttribute("name", "theme-color");
-      themeMeta.setAttribute("content", themeColor);
-      document.head.appendChild(themeMeta);
+      const meta = document.createElement("meta");
+      meta.setAttribute("name", "theme-color");
+      meta.setAttribute("content", themeColor);
+      document.head.appendChild(meta);
     }
 
-    // 2. Update <meta name="apple-mobile-web-app-status-bar-style">
-    // In iOS PWA:
-    // 'default' = white/light status bar with dark (black) text and icons
-    // 'black' = solid black status bar with light (white) text and icons
-    const oldStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (oldStatusMeta) {
-      oldStatusMeta.remove();
+    // 2. Ensure apple-mobile-web-app-status-bar-style is black-translucent
+    // so iOS never paints an opaque white bar over the content
+    let statusMeta = document.querySelector(
+      'meta[name="apple-mobile-web-app-status-bar-style"]',
+    );
+    if (!statusMeta) {
+      statusMeta = document.createElement("meta");
+      statusMeta.setAttribute("name", "apple-mobile-web-app-status-bar-style");
+      document.head.appendChild(statusMeta);
     }
-    const newStatusMeta = document.createElement("meta");
-    newStatusMeta.setAttribute("name", "apple-mobile-web-app-status-bar-style");
-    newStatusMeta.setAttribute("content", statusBarStyle);
-    document.head.appendChild(newStatusMeta);
+    statusMeta.setAttribute("content", "black-translucent");
   }, [dark]);
 
   const [lang, setLang] = useState<Lang>(() =>
@@ -1544,7 +1542,7 @@ function App() {
           <div
             className="mx-auto max-w-3xl px-3 sm:px-8"
             style={{
-              paddingTop: 14,
+              paddingTop: "max(14px, calc(env(safe-area-inset-top, 0px) + 8px))",
               paddingBottom: 4,
             }}
           >
@@ -2908,8 +2906,11 @@ function App() {
             </LayoutGroup>
 
             <footer
-              className="mt-12 pb-8 text-center text-xs"
-              style={{ color: "var(--text-tertiary)" }}
+              className="mt-12 text-center text-xs"
+              style={{
+                color: "var(--text-tertiary)",
+                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)",
+              }}
             >
               {t("footerBase")} · {viewYear}
             </footer>
