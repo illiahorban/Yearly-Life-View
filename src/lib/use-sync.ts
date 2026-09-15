@@ -15,6 +15,7 @@ import {
   signInWithGoogle,
   signOutFromGoogle,
   isSignedIn,
+  isUserSignedIn,
   getValidToken,
   restoreSession,
   persistUserInfo,
@@ -209,7 +210,9 @@ export function useSyncEngine({
   const [syncActivity, setSyncActivity] = useState<
     "idle" | "downloading" | "uploading"
   >("idle");
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(() => {
+    return isUserSignedIn() ? getStoredUserInfo() : null;
+  });
 
   const fileIdRef = useRef<string | null>(null);
   const pendingSnapshotRef = useRef<AppSnapshot | null>(null);
@@ -323,7 +326,9 @@ export function useSyncEngine({
           localSnapshot;
 
         remoteRequestsLogout = Boolean(
-          remote?.logoutAt && remote.logoutAt > getSessionStartedAt(),
+          remote?.logoutAt &&
+            getSessionStartedAt() > 0 &&
+            remote.logoutAt > getSessionStartedAt(),
         );
 
         if (remoteRequestsLogout) {
@@ -389,6 +394,7 @@ export function useSyncEngine({
             }
             setSyncActivity("uploading");
             const toUpload = { ...merged, exportedAt: Date.now() };
+            delete (toUpload as { logoutAt?: number }).logoutAt;
             isWritingStorageRef.current = true;
             fileIdRef.current = await uploadSnapshot(
               token,
@@ -442,12 +448,18 @@ export function useSyncEngine({
     let cancelled = false;
 
     void (async () => {
-      if (!(await restoreSession()) || cancelled) return;
+      if (!isUserSignedIn()) return;
 
       const stored = getStoredUserInfo();
       if (stored) setUserInfo(stored);
-      if (!getSessionStartedAt()) persistSessionStartedAt();
-      void doSync(getLocalSnapshotRef.current?.());
+      if (!getSessionStartedAt()) persistSessionStartedAt(Date.now());
+
+      const restored = await restoreSession();
+      if (cancelled) return;
+
+      if (restored) {
+        void doSync(getLocalSnapshotRef.current?.());
+      }
     })();
 
     return () => {
