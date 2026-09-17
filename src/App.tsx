@@ -156,6 +156,7 @@ import { GoalsModal } from "./components/modals/GoalsModal";
 import { SprintSettingsModal } from "./components/modals/SprintSettingsModal";
 import { LifeCalendarModal } from "./components/modals/LifeCalendarModal";
 import { DayTemplatesModal } from "./components/modals/DayTemplatesModal";
+import { keepAlive } from "./lib/keep-alive";
 
 function App() {
   const isMobile = useIsMobile();
@@ -275,6 +276,14 @@ function App() {
   }, [settingsOpen, profileOpen, isMobile]);
 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [keepAliveActive, setKeepAliveActive] = useState(() => keepAlive.isEnabled());
+  useEffect(() => {
+    if (keepAliveActive) {
+      keepAlive.start();
+    } else {
+      keepAlive.stop();
+    }
+  }, [keepAliveActive]);
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const [pwaModalOpen, setPwaModalOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -2356,6 +2365,41 @@ function App() {
                             >
                               {lang === "en" ? "RU" : "EN"}
                             </span>
+                          </IconButton>
+                          <IconButton
+                            title={
+                              keepAliveActive
+                                ? `${t("keepAliveTitle")}: ${t("keepAliveEnabled")}`
+                                : `${t("keepAliveTitle")}: ${t("keepAliveDisabled")}`
+                            }
+                            onClick={() => {
+                              haptics.selection();
+                              const next = !keepAliveActive;
+                              setKeepAliveActive(next);
+                              keepAlive.setEnabled(next);
+                            }}
+                            bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
+                            color={keepAliveActive ? "#34c759" : "var(--text-tertiary)"}
+                          >
+                            <svg
+                              width="15"
+                              height="15"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M12 2v4" />
+                              <path d="M12 18v4" />
+                              <path d="M4.93 4.93l2.83 2.83" />
+                              <path d="M16.24 16.24l2.83 2.83" />
+                              <path d="M2 12h4" />
+                              <path d="M18 12h4" />
+                              <path d="M4.93 19.07l2.83-2.83" />
+                              <path d="M16.24 7.76l2.83-2.83" />
+                            </svg>
                           </IconButton>
                           {!isInstalled && (
                             <IconButton
