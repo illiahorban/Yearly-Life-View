@@ -1056,12 +1056,14 @@ function App() {
     if (syncStatus === "synced") return t("syncSynced");
     if (syncStatus === "syncing") return t("syncSyncing");
     if (syncStatus === "uploading") return t("syncUploading");
+    if (syncStatus === "needs_auth") return t("syncNeedsAuth");
     if (syncStatus === "error") return t("syncError");
     return t("syncNow");
   }, [syncStatus, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const syncColor = useMemo(() => {
     if (syncStatus === "error") return "#ff3b30";
+    if (syncStatus === "needs_auth") return "#ff9500";
     if (syncStatus === "synced") return "#34c759";
     if (syncStatus === "syncing" || syncStatus === "uploading")
       return "#ff9500";
@@ -1073,6 +1075,7 @@ function App() {
   const gearSyncColor = useMemo(() => {
     if (!userInfo) return "var(--text-secondary)";
     if (syncStatus === "error") return "#ff3b30";
+    if (syncStatus === "needs_auth") return "#ff9500";
     if (syncActivity === "downloading" || syncActivity === "uploading")
       return "#ff9500";
     return "#34c759";
@@ -1858,16 +1861,16 @@ function App() {
                                     {userInfo!.email}
                                   </div>
                                 </div>
-                                <button
+                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (syncStatus === "error") {
+                                    if (syncStatus === "error" || syncStatus === "needs_auth") {
                                       void googleSignIn();
                                     } else {
                                       void triggerSync();
                                     }
                                   }}
-                                  title={syncStatus === "error" ? t("syncNow") : undefined}
+                                  title={syncStatus === "error" || syncStatus === "needs_auth" ? (syncStatus === "needs_auth" ? t("syncNeedsAuth") : t("syncNow")) : undefined}
                                   style={{
                                     display: "flex",
                                     alignItems: "center",
@@ -1898,7 +1901,7 @@ function App() {
                                     />
                                     <span>{syncLabel}</span>
                                   </div>
-                                  {syncStatus === "error" && (
+                                  {(syncStatus === "error" || syncStatus === "needs_auth") && (
                                     <span
                                       style={{
                                         fontSize: 11,

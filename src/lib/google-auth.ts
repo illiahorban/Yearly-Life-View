@@ -192,7 +192,7 @@ function scheduleProactiveRefresh(expiresInSeconds: number) {
   const refreshInMs = Math.max(30_000, (expiresInSeconds - 600) * 1000);
   proactiveRefreshTimer = setTimeout(async () => {
     proactiveRefreshTimer = null;
-    if (document.visibilityState === "visible" && navigator.onLine && isUserSignedIn()) {
+    if (navigator.onLine && isUserSignedIn()) {
       try {
         await signInSilent();
         console.log("[auth] proactive background token refresh succeeded");
@@ -425,6 +425,12 @@ export async function getValidToken(interactive = false): Promise<string> {
 /** Returns true while the user is authenticated with Google in this app. */
 export function isSignedIn(): boolean {
   return isUserSignedIn() || !!accessToken;
+}
+
+export function invalidateCurrentToken(): void {
+  accessToken = null;
+  tokenExpiresAt = 0;
+  clearPersistedToken();
 }
 
 /** Revoke the token and clear local state when the user personally signs out. */

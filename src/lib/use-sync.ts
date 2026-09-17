@@ -18,6 +18,7 @@ import {
   isUserSignedIn,
   getValidToken,
   restoreSession,
+  invalidateCurrentToken,
   persistUserInfo,
   getStoredUserInfo,
   persistSessionStartedAt,
@@ -421,14 +422,20 @@ export function useSyncEngine({
       interactionRequiredRef.current = false;
     } catch (err: any) {
       console.error("[sync] error:", err);
+      if (err?.message === "UNAUTHORIZED") {
+        invalidateCurrentToken();
+      }
       if (
         err?.googleError === "interaction_required" ||
         err?.googleError === "timeout" ||
-        err?.message?.includes("Silent auth")
+        err?.message?.includes("Silent auth") ||
+        err?.message === "UNAUTHORIZED"
       ) {
         interactionRequiredRef.current = true;
+        setSyncStatus("needs_auth");
+      } else {
+        setSyncStatus("error");
       }
-      setSyncStatus("error");
     } finally {
       if (!activityClearTimerRef.current) setSyncActivity("idle");
       isWritingStorageRef.current = false;
@@ -478,6 +485,7 @@ export function useSyncEngine({
       } else {
         // If silent restore couldn't find/refresh a token, mark that user interaction is needed
         interactionRequiredRef.current = true;
+        setSyncStatus("needs_auth");
       }
     })();
 
@@ -498,14 +506,14 @@ export function useSyncEngine({
     const interval = window.setInterval(pullRemote, SYNC_INTERVAL_MS);
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        // Attempt silent refresh once upon tab becoming visible
-        interactionRequiredRef.current = false;
-        pullRemote(true);
+        // If user already needs to click to re-authenticate, do not spam attempts
+        if (interactionRequiredRef.current) return;
+        pullRemote(false);
       }
     };
     const onOnline = () => {
-      interactionRequiredRef.current = false;
-      pullRemote(true);
+      if (interactionRequiredRef.current) return;
+      pullRemote(false);
     };
     window.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("focus", onVisibilityChange);
@@ -695,6 +703,7 @@ export function useSyncEngine({
   }, []);
 
   const triggerSync = useCallback(async (snapshot?: AppSnapshot) => {
+    interactionRequiredRef.current = false;
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;

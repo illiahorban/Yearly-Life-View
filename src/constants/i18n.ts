@@ -242,6 +242,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     syncSyncing: "Syncing…",
     syncUploading: "Uploading…",
     syncError: "Sync error",
+    syncNeedsAuth: "Reconnect Google",
     syncStatus: "Sync status",
   },
   ru: {
@@ -441,6 +442,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     syncSyncing: "Синхронизация…",
     syncUploading: "Загрузка…",
     syncError: "Ошибка синхронизации",
+    syncNeedsAuth: "Войти в Google снова",
     syncStatus: "Статус синхронизации",
   },
 };
