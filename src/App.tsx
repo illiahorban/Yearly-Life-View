@@ -1858,31 +1858,58 @@ function App() {
                                     {userInfo!.email}
                                   </div>
                                 </div>
-                                <div
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (syncStatus === "error") {
+                                      void googleSignIn();
+                                    } else {
+                                      void triggerSync();
+                                    }
+                                  }}
+                                  title={syncStatus === "error" ? t("syncNow") : undefined}
                                   style={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 7,
+                                    justifyContent: "space-between",
+                                    width: "100%",
                                     padding: "7px 8px",
                                     borderRadius: 8,
+                                    border: "none",
                                     background: overlayBg,
                                     color: syncColor,
                                     fontSize: 12,
                                     fontWeight: 600,
+                                    cursor: "pointer",
+                                    fontFamily: "inherit",
+                                    textAlign: "left",
                                   }}
                                 >
-                                  <span
-                                    aria-hidden="true"
-                                    style={{
-                                      width: 7,
-                                      height: 7,
-                                      borderRadius: 999,
-                                      background: syncColor,
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                  <span>{syncLabel}</span>
-                                </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                                    <span
+                                      aria-hidden="true"
+                                      style={{
+                                        width: 7,
+                                        height: 7,
+                                        borderRadius: 999,
+                                        background: syncColor,
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    <span>{syncLabel}</span>
+                                  </div>
+                                  {syncStatus === "error" && (
+                                    <span
+                                      style={{
+                                        fontSize: 11,
+                                        color: "var(--accent)",
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      ↻
+                                    </span>
+                                  )}
+                                </button>
                                 <div
                                   style={{
                                     height: 1,
@@ -2196,34 +2223,61 @@ function App() {
                                   {userInfo.email}
                                 </div>
                               </div>
-                              <div
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (syncStatus === "error") {
+                                    void googleSignIn();
+                                  } else {
+                                    void triggerSync();
+                                  }
+                                }}
+                                title={syncStatus === "error" ? t("syncNow") : undefined}
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: 7,
+                                  justifyContent: "space-between",
+                                  width: "100%",
                                   marginTop: 7,
                                   padding: "7px 8px",
                                   borderRadius: 8,
+                                  border: "none",
                                   background: dark
                                     ? "rgb(44,44,46)"
                                     : "rgb(232,232,237)",
                                   color: syncColor,
                                   fontSize: 12,
                                   fontWeight: 600,
+                                  cursor: "pointer",
+                                  fontFamily: "inherit",
+                                  textAlign: "left",
                                 }}
                               >
-                                <span
-                                  aria-hidden="true"
-                                  style={{
-                                    width: 7,
-                                    height: 7,
-                                    borderRadius: 999,
-                                    background: syncColor,
-                                    flexShrink: 0,
-                                  }}
-                                />
-                                <span>{syncLabel}</span>
-                              </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                                  <span
+                                    aria-hidden="true"
+                                    style={{
+                                      width: 7,
+                                      height: 7,
+                                      borderRadius: 999,
+                                      background: syncColor,
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                  <span>{syncLabel}</span>
+                                </div>
+                                {syncStatus === "error" && (
+                                  <span
+                                    style={{
+                                      fontSize: 11,
+                                      color: "var(--accent)",
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    ↻
+                                  </span>
+                                )}
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => {

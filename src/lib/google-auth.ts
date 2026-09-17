@@ -21,10 +21,19 @@ interface TokenClientConfig {
   scope: string;
   callback: (resp: TokenResponse) => void;
   error_callback?: (err: { type: string; message?: string }) => void;
+  hint?: string;
+  login_hint?: string;
+}
+
+export interface OverridableTokenClientConfig {
+  prompt?: string;
+  hint?: string;
+  login_hint?: string;
+  enable_granular_consent?: boolean;
 }
 
 interface TokenClient {
-  requestAccessToken(opts?: { prompt?: string }): void;
+  requestAccessToken(opts?: OverridableTokenClientConfig): void;
 }
 
 interface TokenResponse {
@@ -172,6 +181,28 @@ export function getSessionStartedAt(): number {
 
 // ── Token client init ─────────────────────────────────────────────────────────
 
+let proactiveRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleProactiveRefresh(expiresInSeconds: number) {
+  if (proactiveRefreshTimer) {
+    clearTimeout(proactiveRefreshTimer);
+    proactiveRefreshTimer = null;
+  }
+  // Refresh ~10 minutes before expiry (or 30s minimum if short-lived)
+  const refreshInMs = Math.max(30_000, (expiresInSeconds - 600) * 1000);
+  proactiveRefreshTimer = setTimeout(async () => {
+    proactiveRefreshTimer = null;
+    if (document.visibilityState === "visible" && navigator.onLine && isUserSignedIn()) {
+      try {
+        await signInSilent();
+        console.log("[auth] proactive background token refresh succeeded");
+      } catch (err) {
+        console.warn("[auth] proactive background token refresh deferred:", err);
+      }
+    }
+  }, refreshInMs);
+}
+
 async function ensureTokenClient(): Promise<void> {
   await loadGisScript();
 
@@ -179,14 +210,20 @@ async function ensureTokenClient(): Promise<void> {
 
   if (!window.google) throw new Error("Google Identity Services not available");
 
+  const storedUser = getStoredUserInfo();
+  const userEmail = storedUser?.email || undefined;
+
   tokenClient = window.google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: DRIVE_SCOPE,
+    hint: userEmail,
+    login_hint: userEmail,
     callback: (resp: TokenResponse) => {
       if (resp.error || !resp.access_token) {
         const err = new Error(
           resp.error_description ?? resp.error ?? "Auth failed",
         );
+        (err as any).googleError = resp.error ?? "auth_failed";
         if (pendingReject) {
           pendingReject(err);
           pendingReject = null;
@@ -195,10 +232,11 @@ async function ensureTokenClient(): Promise<void> {
         return;
       }
       accessToken = resp.access_token;
-      tokenExpiresAt =
-        Date.now() + (Number(resp.expires_in ?? 3600) - 60) * 1000;
+      const expiresIn = Number(resp.expires_in ?? 3600);
+      tokenExpiresAt = Date.now() + (expiresIn - 60) * 1000;
       // Persist so the session survives a page reload (valid for ~1 hour)
       persistToken(accessToken, tokenExpiresAt);
+      scheduleProactiveRefresh(expiresIn);
       if (pendingResolve) {
         pendingResolve(accessToken);
         pendingResolve = null;
@@ -207,6 +245,7 @@ async function ensureTokenClient(): Promise<void> {
     },
     error_callback: (err) => {
       const error = new Error(err.message ?? err.type ?? "Auth error");
+      (error as any).googleError = err.type ?? "auth_error";
       if (pendingReject) {
         pendingReject(error);
         pendingReject = null;
@@ -238,6 +277,7 @@ export function tryRestoreSession(): boolean {
     if (storedToken && storedExpires > Date.now() + 30_000) {
       accessToken = storedToken;
       tokenExpiresAt = storedExpires;
+      scheduleProactiveRefresh(Math.round((storedExpires - Date.now()) / 1000));
       return true;
     }
   } catch {
@@ -278,45 +318,47 @@ export async function restoreSession(): Promise<boolean> {
 }
 
 /**
- * Request an access token interactively (shows the Google consent popup).
- * Returns the token string.
+ * Request an access token interactively (shows the Google popup).
+ * Always supplies hint and login_hint to bypass the "Choose an account" screen.
  */
 export async function signInWithGoogle(): Promise<string> {
   await ensureTokenClient();
   if (!tokenClient) throw new Error("Token client not initialised");
 
-  // prompt="" silently reuses an existing grant; "consent" forces the dialog.
-  const token = await requestToken(accessToken ? "" : "consent");
+  // Interactive: user clicked, so popup is allowed. Use hint to skip account picker.
+  const token = await requestToken(accessToken ? "" : "consent", true);
   setSignedInFlag(true);
   return token;
 }
 
 /**
- * Attempt a silent token refresh (no popup). Useful after tryRestoreSession
- * detects the stored token has expired but the user's Google grant is still
- * active in the browser. Rejects if user interaction is required.
+ * Attempt a strictly silent token refresh (prompt: "none").
+ * NEVER opens a popup or window.
+ * Rejects if user interaction is required.
  */
 export async function signInSilent(): Promise<string> {
   await ensureTokenClient();
   if (!tokenClient) throw new Error("Token client not initialised");
 
-  return requestToken("");
+  return requestToken("none", false);
 }
 
-function requestToken(prompt: string): Promise<string> {
+function requestToken(prompt: string, interactive = false): Promise<string> {
   if (pendingTokenRequest) return pendingTokenRequest;
 
   const request = new Promise<string>((resolve, reject) => {
     let timer: ReturnType<typeof setTimeout> | null = null;
-    // For silent requests, time out after 15s to prevent hanging on offline / network failure
-    if (prompt === "") {
+    // For non-interactive requests, time out quickly (6s) so sync doesn't hang
+    if (!interactive) {
       timer = setTimeout(() => {
         if (pendingReject) {
           pendingResolve = null;
           pendingReject = null;
-          reject(new Error("Token request timed out"));
+          const err = new Error("Silent auth timeout");
+          (err as any).googleError = "timeout";
+          reject(err);
         }
-      }, 15_000);
+      }, 6_000);
     }
 
     pendingResolve = (token: string) => {
@@ -328,7 +370,16 @@ function requestToken(prompt: string): Promise<string> {
       reject(err);
     };
     try {
-      tokenClient!.requestAccessToken({ prompt });
+      const storedUser = getStoredUserInfo();
+      const userEmail = storedUser?.email || undefined;
+      const opts: OverridableTokenClientConfig = {
+        prompt: interactive ? prompt : "none",
+      };
+      if (userEmail) {
+        opts.hint = userEmail;
+        opts.login_hint = userEmail;
+      }
+      tokenClient!.requestAccessToken(opts);
     } catch (e) {
       if (timer) clearTimeout(timer);
       reject(e instanceof Error ? e : new Error(String(e)));
@@ -346,11 +397,12 @@ function requestToken(prompt: string): Promise<string> {
 }
 
 /**
- * Silently refresh the token if we already have one and it's near expiry.
- * Returns the token if still valid or refreshed; throws if the user needs
- * to sign in again.
+ * Get a valid token for Drive operations.
+ * If interactive is false (default for background sync, polling, wake/focus),
+ * it ONLY attempts silent refresh (prompt: "none") and NEVER opens a popup.
+ * If silent refresh requires interaction, it throws without opening any popup window.
  */
-export async function getValidToken(): Promise<string> {
+export async function getValidToken(interactive = false): Promise<string> {
   // Refresh one minute before the stored expiry. This avoids losing a sync
   // request when the token expires between its first and last Drive call.
   if (accessToken && Date.now() + 60_000 < tokenExpiresAt) return accessToken;
@@ -361,7 +413,13 @@ export async function getValidToken(): Promise<string> {
   }
 
   await ensureTokenClient();
-  return requestToken("");
+  if (!tokenClient) throw new Error("Token client not initialised");
+
+  if (!interactive) {
+    return requestToken("none", false);
+  } else {
+    return requestToken("", true);
+  }
 }
 
 /** Returns true while the user is authenticated with Google in this app. */
@@ -371,6 +429,10 @@ export function isSignedIn(): boolean {
 
 /** Revoke the token and clear local state when the user personally signs out. */
 export async function signOutFromGoogle(): Promise<void> {
+  if (proactiveRefreshTimer) {
+    clearTimeout(proactiveRefreshTimer);
+    proactiveRefreshTimer = null;
+  }
   const token = accessToken;
   accessToken = null;
   tokenExpiresAt = 0;

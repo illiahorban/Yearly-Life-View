@@ -4,9 +4,9 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   return {
-    base: process.env.VITE_BASE_PATH || './',
+    base: command === 'serve' ? '/' : (process.env.GITHUB_ACTIONS ? (process.env.VITE_BASE_PATH || './') : './'),
     plugins: [
       react(),
       tailwindcss(),
@@ -78,8 +78,7 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
-          type: 'module',
+          enabled: false,
         },
       }),
     ],

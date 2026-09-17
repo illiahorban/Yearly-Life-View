@@ -250,6 +250,13 @@ export function useSyncEngine({
    */
   const isWritingStorageRef = useRef(false);
 
+  /**
+   * Tracks whether silent token refresh failed because user interaction is
+   * required (e.g. session expired after laptop sleep). Prevents rapid polling
+   * from repeatedly failing until the user explicitly re-authenticates.
+   */
+  const interactionRequiredRef = useRef(false);
+
   // ── Core sync ─────────────────────────────────────────────────────────────
 
   const doSync = useCallback(async (snapshotToUpload?: AppSnapshot) => {
@@ -411,8 +418,16 @@ export function useSyncEngine({
       }
 
       setSyncStatus("synced");
-    } catch (err) {
+      interactionRequiredRef.current = false;
+    } catch (err: any) {
       console.error("[sync] error:", err);
+      if (
+        err?.googleError === "interaction_required" ||
+        err?.googleError === "timeout" ||
+        err?.message?.includes("Silent auth")
+      ) {
+        interactionRequiredRef.current = true;
+      }
       setSyncStatus("error");
     } finally {
       if (!activityClearTimerRef.current) setSyncActivity("idle");
@@ -458,7 +473,11 @@ export function useSyncEngine({
       if (cancelled) return;
 
       if (restored) {
+        interactionRequiredRef.current = false;
         void doSync(getLocalSnapshotRef.current?.());
+      } else {
+        // If silent restore couldn't find/refresh a token, mark that user interaction is needed
+        interactionRequiredRef.current = true;
       }
     })();
 
@@ -471,19 +490,31 @@ export function useSyncEngine({
   // Pull remote changes made on another device. The fingerprint guard inside
   // doSync prevents this from causing an upload/apply loop.
   useEffect(() => {
-    const pullRemote = () => {
-      if (isSignedIn()) void doSync();
+    const pullRemote = (force = false) => {
+      if (!isSignedIn()) return;
+      if (interactionRequiredRef.current && !force) return;
+      void doSync();
     };
     const interval = window.setInterval(pullRemote, SYNC_INTERVAL_MS);
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") pullRemote();
+      if (document.visibilityState === "visible") {
+        // Attempt silent refresh once upon tab becoming visible
+        interactionRequiredRef.current = false;
+        pullRemote(true);
+      }
+    };
+    const onOnline = () => {
+      interactionRequiredRef.current = false;
+      pullRemote(true);
     };
     window.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("focus", pullRemote);
+    window.addEventListener("focus", onVisibilityChange);
+    window.addEventListener("online", onOnline);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("focus", pullRemote);
+      window.removeEventListener("focus", onVisibilityChange);
+      window.removeEventListener("online", onOnline);
     };
   }, [doSync]);
 
@@ -491,6 +522,7 @@ export function useSyncEngine({
 
   const signIn = useCallback(async () => {
     try {
+      interactionRequiredRef.current = false;
       setSyncStatus("syncing");
       const token = await signInWithGoogle();
       persistSessionStartedAt();
