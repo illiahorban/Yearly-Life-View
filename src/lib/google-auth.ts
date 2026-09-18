@@ -188,18 +188,14 @@ function scheduleProactiveRefresh(expiresInSeconds: number) {
     clearTimeout(proactiveRefreshTimer);
     proactiveRefreshTimer = null;
   }
-  // Refresh ~10 minutes before expiry (or 30s minimum if short-lived)
-  const refreshInMs = Math.max(30_000, (expiresInSeconds - 600) * 1000);
-  proactiveRefreshTimer = setTimeout(async () => {
+  // Schedule invalidation of the in-memory token right before it expires (~30s before).
+  // GIS does NOT support headless token refresh, so we NEVER attempt to open a popup
+  // automatically in the background. When the token expires, the app cleanly transitions
+  // to the "needs_auth" state so the user can re-authenticate with a single click.
+  const refreshInMs = Math.max(10_000, (expiresInSeconds - 30) * 1000);
+  proactiveRefreshTimer = setTimeout(() => {
     proactiveRefreshTimer = null;
-    if (navigator.onLine && isUserSignedIn()) {
-      try {
-        await signInSilent();
-        console.log("[auth] proactive background token refresh succeeded");
-      } catch (err) {
-        console.warn("[auth] proactive background token refresh deferred:", err);
-      }
-    }
+    invalidateCurrentToken();
   }, refreshInMs);
 }
 
@@ -289,32 +285,16 @@ export function tryRestoreSession(): boolean {
 /**
  * Restore a previous Google session without starting any Google UI.
  *
- * Checks if the user is authenticated in this app and restores or silently refreshes
- * the access token via Google Identity Services. Crucially, does NOT log out the user
- * if token refresh fails temporarily (e.g. offline on launch).
+ * Checks if the user has an unexpired access token in storage. Crucially,
+ * NEVER triggers Google Identity Services popups or window.open during
+ * page startup or background restore.
  */
 export async function restoreSession(): Promise<boolean> {
-  // 1. Check if we already have a valid unexpired token in storage
-  if (tryRestoreSession()) {
-    return true;
-  }
-
-  // 2. If the user is authenticated, attempt silent token restoration (no user popup)
-  if (isUserSignedIn()) {
-    try {
-      const token = await signInSilent();
-      if (token) {
-        return true;
-      }
-    } catch (err) {
-      // Non-fatal: the user remains authenticated in the app, but a token will
-      // be requested upon the next network connection or explicit sync trigger.
-      console.warn("[auth] silent token restore failed (will retry on next sync):", err);
-      return false;
-    }
-  }
-
-  return false;
+  // Only restore a valid, non-expired token from storage.
+  // In Google Identity Services (GIS), calling requestAccessToken ALWAYS triggers
+  // a browser popup window. Therefore, we NEVER call requestAccessToken automatically
+  // on app launch, laptop wake, or page restore.
+  return tryRestoreSession();
 }
 
 /**
@@ -332,48 +312,44 @@ export async function signInWithGoogle(): Promise<string> {
 }
 
 /**
- * Attempt a strictly silent token refresh (prompt: "none").
+ * Check for an active token without opening any popup window.
  * NEVER opens a popup or window.
- * Rejects if user interaction is required.
+ * Throws immediately if user interaction is required.
  */
 export async function signInSilent(): Promise<string> {
-  await ensureTokenClient();
-  if (!tokenClient) throw new Error("Token client not initialised");
-
-  return requestToken("none", false);
+  if (accessToken && Date.now() + 60_000 < tokenExpiresAt) return accessToken;
+  if (tryRestoreSession()) {
+    if (accessToken && Date.now() + 60_000 < tokenExpiresAt) return accessToken;
+  }
+  const err = new Error("INTERACTION_REQUIRED");
+  (err as any).googleError = "interaction_required";
+  throw err;
 }
 
 function requestToken(prompt: string, interactive = false): Promise<string> {
+  // Strict safety guarantee: NEVER request an access token from GIS unless
+  // the user has explicitly clicked a sign-in or sync button (interactive = true).
+  // This prevents any unwanted popups, popup-looping, or mobile page thrashing.
+  if (!interactive) {
+    const err = new Error("INTERACTION_REQUIRED");
+    (err as any).googleError = "interaction_required";
+    return Promise.reject(err);
+  }
+
   if (pendingTokenRequest) return pendingTokenRequest;
 
   const request = new Promise<string>((resolve, reject) => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    // For non-interactive requests, time out quickly (6s) so sync doesn't hang
-    if (!interactive) {
-      timer = setTimeout(() => {
-        if (pendingReject) {
-          pendingResolve = null;
-          pendingReject = null;
-          const err = new Error("Silent auth timeout");
-          (err as any).googleError = "timeout";
-          reject(err);
-        }
-      }, 6_000);
-    }
-
     pendingResolve = (token: string) => {
-      if (timer) clearTimeout(timer);
       resolve(token);
     };
     pendingReject = (err: Error) => {
-      if (timer) clearTimeout(timer);
       reject(err);
     };
     try {
       const storedUser = getStoredUserInfo();
       const userEmail = storedUser?.email || undefined;
       const opts: OverridableTokenClientConfig = {
-        prompt: interactive ? prompt : "none",
+        prompt,
       };
       if (userEmail) {
         opts.hint = userEmail;
@@ -381,7 +357,6 @@ function requestToken(prompt: string, interactive = false): Promise<string> {
       }
       tokenClient!.requestAccessToken(opts);
     } catch (e) {
-      if (timer) clearTimeout(timer);
       reject(e instanceof Error ? e : new Error(String(e)));
     }
   });
@@ -399,27 +374,28 @@ function requestToken(prompt: string, interactive = false): Promise<string> {
 /**
  * Get a valid token for Drive operations.
  * If interactive is false (default for background sync, polling, wake/focus),
- * it ONLY attempts silent refresh (prompt: "none") and NEVER opens a popup.
- * If silent refresh requires interaction, it throws without opening any popup window.
+ * it ONLY checks existing non-expired tokens and NEVER opens a popup.
+ * If user interaction is required, it throws immediately without opening any popup window.
  */
 export async function getValidToken(interactive = false): Promise<string> {
-  // Refresh one minute before the stored expiry. This avoids losing a sync
-  // request when the token expires between its first and last Drive call.
+  // Return cached in-memory token if valid for at least 1 more minute
   if (accessToken && Date.now() + 60_000 < tokenExpiresAt) return accessToken;
 
-  // Try checking storage first (in case it was refreshed in another tab or instance)
+  // Try checking storage first (e.g. restored from previous page load or sibling tab)
   if (tryRestoreSession()) {
     if (accessToken && Date.now() + 60_000 < tokenExpiresAt) return accessToken;
+  }
+
+  if (!interactive) {
+    const err = new Error("INTERACTION_REQUIRED");
+    (err as any).googleError = "interaction_required";
+    throw err;
   }
 
   await ensureTokenClient();
   if (!tokenClient) throw new Error("Token client not initialised");
 
-  if (!interactive) {
-    return requestToken("none", false);
-  } else {
-    return requestToken("", true);
-  }
+  return requestToken(accessToken ? "" : "consent", true);
 }
 
 /** Returns true while the user is authenticated with Google in this app. */

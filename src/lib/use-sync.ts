@@ -264,6 +264,10 @@ export function useSyncEngine({
     if (!isSignedIn()) return;
     if (isSyncingRef.current) return;
     if (isControlOperationRef.current) return;
+    if (interactionRequiredRef.current && !snapshotToUpload) {
+      setSyncStatus("needs_auth");
+      return;
+    }
 
     // Consume the snapshot that started this request. If another edit arrives
     // while the request is in flight, markDirty will replace this ref and it
@@ -283,7 +287,7 @@ export function useSyncEngine({
         activityClearTimerRef.current = null;
       }
       setSyncActivity("idle");
-      const token = await getValidToken();
+      const token = await getValidToken(false);
 
       if (!fileIdRef.current) {
         isWritingStorageRef.current = true; // findAppFile may write auth state
@@ -421,7 +425,7 @@ export function useSyncEngine({
       setSyncStatus("synced");
       interactionRequiredRef.current = false;
     } catch (err: any) {
-      console.error("[sync] error:", err);
+      console.warn("[sync] sync paused or needs auth:", err?.message || err);
       if (err?.message === "UNAUTHORIZED") {
         invalidateCurrentToken();
       }
@@ -429,6 +433,8 @@ export function useSyncEngine({
         err?.googleError === "interaction_required" ||
         err?.googleError === "timeout" ||
         err?.message?.includes("Silent auth") ||
+        err?.message?.includes("interaction_required") ||
+        err?.message?.includes("INTERACTION_REQUIRED") ||
         err?.message === "UNAUTHORIZED"
       ) {
         interactionRequiredRef.current = true;
@@ -498,30 +504,40 @@ export function useSyncEngine({
   // Pull remote changes made on another device. The fingerprint guard inside
   // doSync prevents this from causing an upload/apply loop.
   useEffect(() => {
+    let lastPullTime = 0;
+
     const pullRemote = (force = false) => {
       if (!isSignedIn()) return;
       if (interactionRequiredRef.current && !force) return;
+
+      const now = Date.now();
+      // Throttle background pulls to at most once every 5 seconds to prevent spam
+      if (!force && now - lastPullTime < 5_000) return;
+      lastPullTime = now;
+
       void doSync();
     };
-    const interval = window.setInterval(pullRemote, SYNC_INTERVAL_MS);
+
+    const interval = window.setInterval(() => pullRemote(false), SYNC_INTERVAL_MS);
+
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        // If user already needs to click to re-authenticate, do not spam attempts
         if (interactionRequiredRef.current) return;
         pullRemote(false);
       }
     };
+
     const onOnline = () => {
       if (interactionRequiredRef.current) return;
       pullRemote(false);
     };
-    window.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("focus", onVisibilityChange);
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("online", onOnline);
+
     return () => {
       window.clearInterval(interval);
-      window.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("focus", onVisibilityChange);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("online", onOnline);
     };
   }, [doSync]);
@@ -720,6 +736,13 @@ export function useSyncEngine({
       pendingSnapshotRef.current = snapshot;
       if (!isSignedIn()) return;
       if (isControlOperationRef.current) return;
+
+      // If user interaction is required (e.g. token expired), do not attempt background upload.
+      // The pending snapshot remains queued in pendingSnapshotRef and will upload when the user re-authenticates.
+      if (interactionRequiredRef.current) {
+        setSyncStatus("needs_auth");
+        return;
+      }
 
       // Guard 1 — a sync is already running; it will see the latest state via
       // pendingSnapshotRef when it completes, so no extra scheduling needed.

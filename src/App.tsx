@@ -2238,13 +2238,13 @@ function App() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (syncStatus === "error") {
+                                  if (syncStatus === "error" || syncStatus === "needs_auth") {
                                     void googleSignIn();
                                   } else {
                                     void triggerSync();
                                   }
                                 }}
-                                title={syncStatus === "error" ? t("syncNow") : undefined}
+                                title={syncStatus === "error" || syncStatus === "needs_auth" ? (syncStatus === "needs_auth" ? t("syncNeedsAuth") : t("syncNow")) : undefined}
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
@@ -2278,7 +2278,7 @@ function App() {
                                   />
                                   <span>{syncLabel}</span>
                                 </div>
-                                {syncStatus === "error" && (
+                                {(syncStatus === "error" || syncStatus === "needs_auth") && (
                                   <span
                                     style={{
                                       fontSize: 11,
