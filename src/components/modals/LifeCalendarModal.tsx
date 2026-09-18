@@ -225,16 +225,14 @@ export function LifeCalendarModal({
       const fromW = (availW - gapPx * (cols - 1)) / cols;
       const fromH = (effectiveAvailH - gapPx * (rows - 1)) / rows;
       // In months, fit height so the whole life fits vertically on one screen
-      cellPx = Math.max(2.6, Math.min(fromW, fromH));
-      cellPx = Math.floor(cellPx * 10) / 10;
+      cellPx = Math.max(2, Math.floor(Math.min(fromW, fromH)));
     } else if (view === "weeks") {
       const padY = 26;
       const effectiveAvailH = Math.max(80, availH - padY);
       const fromW = (availW - gapPx * (cols - 1)) / cols;
       const fromH = (effectiveAvailH - gapPx * (rows - 1)) / rows;
       // In weeks, fit both width (52 cols) and height (80+ rows)
-      cellPx = Math.max(2.2, Math.min(fromW, fromH));
-      cellPx = Math.floor(cellPx * 10) / 10;
+      cellPx = Math.max(2, Math.floor(Math.min(fromW, fromH)));
     } else {
       // Days: compute optimal matrix to fit all ~30,000 days into availW x availH without scroll
       let bestCell = 1;

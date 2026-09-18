@@ -57,15 +57,17 @@ export const LifeGridCanvas = React.memo(function LifeGridCanvas({
       ? Math.max(8, Math.min(10, Math.floor(cellPx * 0.95 + 4)))
       : 0;
 
-  const padTop = showColHeaders
-    ? colHeaderHeight + (showYearLabels && labelWidth > 0 ? 6 : 2)
-    : showYearLabels && labelWidth > 0
-      ? Math.max(8, Math.ceil(fontSize / 2 - cellPx / 2 + 4))
-      : 2;
+  const padTop = Math.round(
+    showColHeaders
+      ? colHeaderHeight + (showYearLabels && labelWidth > 0 ? 6 : 2)
+      : showYearLabels && labelWidth > 0
+        ? Math.max(8, Math.ceil(fontSize / 2 - cellPx / 2 + 4))
+        : 2,
+  );
   const padRight = showColHeaders ? 12 : 4;
-  const padBottom = Math.max(8, Math.ceil(fontSize / 2 - cellPx / 2 + 4));
-  const cw = labelWidth + gridW + padRight;
-  const ch = padTop + (rows * pitch - gapPx) + padBottom;
+  const padBottom = Math.round(Math.max(8, Math.ceil(fontSize / 2 - cellPx / 2 + 4)));
+  const cw = Math.round(labelWidth + gridW + padRight);
+  const ch = Math.round(padTop + (rows * pitch - gapPx) + padBottom);
   const radius = Math.max(0, Math.floor(cellPx / 5));
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export const LifeGridCanvas = React.memo(function LifeGridCanvas({
     const pastFill = "#007aff";
     const currFill = "rgba(0,122,255,0.45)";
     const futureFill = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.07)";
-    const offsetX = labelWidth;
+    const offsetX = Math.round(labelWidth);
 
     // ── Horizontal column numbering (1..12 for months, 1..52 for weeks) ──
     if (showColHeaders) {
