@@ -196,6 +196,31 @@ function App() {
     document.documentElement.classList.toggle("dark", dark);
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
     lsSet("lifeCalendar:darkMode", dark);
+
+    const themeColor = dark ? "#000000" : "#f5f5f7";
+    const statusBarStyle = dark ? "black-translucent" : "default";
+
+    // Synchronize iOS Safari and PWA top status bar / theme color
+    const metaThemeColors = document.querySelectorAll('meta[name="theme-color"]');
+    if (metaThemeColors.length > 0) {
+      metaThemeColors.forEach((el) => {
+        el.removeAttribute("media");
+        el.setAttribute("content", themeColor);
+      });
+    } else {
+      const meta = document.createElement("meta");
+      meta.setAttribute("name", "theme-color");
+      meta.setAttribute("content", themeColor);
+      document.head.appendChild(meta);
+    }
+
+    let metaStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (!metaStatusBar) {
+      metaStatusBar = document.createElement("meta");
+      metaStatusBar.setAttribute("name", "apple-mobile-web-app-status-bar-style");
+      document.head.appendChild(metaStatusBar);
+    }
+    metaStatusBar.setAttribute("content", statusBarStyle);
   }, [dark]);
 
   const [lang, setLang] = useState<Lang>(() =>
@@ -1507,6 +1532,7 @@ function App() {
             WebkitBackdropFilter: "saturate(180%) blur(20px)",
             borderBottom: "1px solid var(--border-soft)",
             paddingRight: scrollbarWidth,
+            paddingTop: "env(safe-area-inset-top, 0px)",
           }}
         >
           <div
@@ -2423,7 +2449,10 @@ function App() {
           className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8">
+          <div
+            className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8"
+            style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+          >
             <LayoutGroup>
               <div className="flex flex-col gap-3 sm:gap-6">
               {[0, 1, 2, 3].map((qi) => {
