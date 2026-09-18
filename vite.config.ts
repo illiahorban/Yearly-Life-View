@@ -21,6 +21,8 @@ export default defineConfig(({ command }) => {
           theme_color: '#09090b',
           background_color: '#09090b',
           display: 'standalone',
+          display_override: ['standalone', 'minimal-ui'],
+          orientation: 'any',
           start_url: './',
           scope: './',
           icons: [
@@ -78,7 +80,8 @@ export default defineConfig(({ command }) => {
           ],
         },
         devOptions: {
-          enabled: false,
+          enabled: true,
+          type: 'module',
         },
       }),
     ],

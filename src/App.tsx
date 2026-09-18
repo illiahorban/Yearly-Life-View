@@ -2552,9 +2552,17 @@ function App() {
         <main
           ref={calendarScrollRef}
           className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          style={{
+            WebkitOverflowScrolling: "touch",
+            paddingBottom: "max(16px, env(safe-area-inset-bottom, 0px))",
+          }}
         >
-          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8">
+          <div
+            className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8"
+            style={{
+              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+            }}
+          >
             <LayoutGroup>
               <div className="flex flex-col gap-3 sm:gap-6">
               {[0, 1, 2, 3].map((qi) => {
