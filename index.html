@@ -32,6 +32,16 @@
           if (statusMeta) {
             statusMeta.setAttribute("content", "black-translucent");
           }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+              for (var i = 0; i < registrations.length; i++) {
+                var reg = registrations[i];
+                if (reg.active && reg.active.scriptURL && reg.active.scriptURL.indexOf('dev-sw') !== -1) {
+                  reg.unregister();
+                }
+              }
+            }).catch(function () {});
+          }
         } catch (e) {}
       })();
     </script>

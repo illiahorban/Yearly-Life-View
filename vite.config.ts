@@ -10,6 +10,27 @@ export default defineConfig(({ command }) => {
     plugins: [
       react(),
       tailwindcss(),
+      {
+        name: 'sw-cleanup-middleware',
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            if (req.url && (req.url.includes('dev-sw') || req.url.includes('sw.js'))) {
+              res.setHeader('Content-Type', 'application/javascript');
+              res.end(`
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => {
+  e.waitUntil(self.registration.unregister().then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', (e) => {
+  e.respondWith(fetch(e.request));
+});
+              `);
+              return;
+            }
+            next();
+          });
+        },
+      },
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
@@ -80,8 +101,7 @@ export default defineConfig(({ command }) => {
           ],
         },
         devOptions: {
-          enabled: true,
-          type: 'module',
+          enabled: false,
         },
       }),
     ],
