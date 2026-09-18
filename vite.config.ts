@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ command }) => {
   return {
-    base: command === 'serve' ? '/' : (process.env.GITHUB_ACTIONS ? (process.env.VITE_BASE_PATH || './') : './'),
+    base: (process.env.GITHUB_ACTIONS && process.env.VITE_BASE_PATH) ? process.env.VITE_BASE_PATH : '/',
     plugins: [
       react(),
       tailwindcss(),
@@ -14,7 +14,7 @@ export default defineConfig(({ command }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
-          id: './',
+          id: '/',
           name: 'Yearly Life View',
           short_name: 'Yearly',
           description: 'Personal life-planning and calendar app that visualizes your year and life as weekly grids with goals, notes, and progress tracking.',
@@ -23,23 +23,23 @@ export default defineConfig(({ command }) => {
           display: 'standalone',
           display_override: ['standalone', 'minimal-ui'],
           orientation: 'any',
-          start_url: './',
-          scope: './',
+          start_url: '/',
+          scope: '/',
           icons: [
             {
-              src: 'pwa-192x192.png',
+              src: '/pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: 'pwa-512x512.png',
+              src: '/pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: 'pwa-maskable-512x512.png',
+              src: '/pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',

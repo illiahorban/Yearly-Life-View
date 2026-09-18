@@ -2560,7 +2560,7 @@ function App() {
           <div
             className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8"
             style={{
-              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 110px)",
             }}
           >
             <LayoutGroup>
@@ -3018,7 +3018,7 @@ function App() {
               className="mt-12 text-center text-xs"
               style={{
                 color: "var(--text-tertiary)",
-                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)",
+                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 48px)",
               }}
             >
               {t("footerBase")} · {viewYear}
