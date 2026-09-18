@@ -48,4 +48,5 @@ When an element does not match an expected/reference element:
 ## 6. Git & GitHub Push Policy (STRICT)
 - **STRICT PROHIBITION**: NEVER push changes to GitHub (`git push`) automatically, autonomously, or on your own initiative.
 - **Explicit Instruction Only**: Pushing to GitHub is ONLY allowed when the user explicitly gives a direct command to push.
+- 
 
