@@ -73,7 +73,7 @@ export const LifeGridCanvas = React.memo(function LifeGridCanvas({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = typeof window !== "undefined" ? Math.max(1, window.devicePixelRatio || 1) : 1;
     canvas.width = Math.ceil(cw * dpr);
     canvas.height = Math.ceil(ch * dpr);
     const ctx = canvas.getContext("2d");
