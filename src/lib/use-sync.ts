@@ -18,7 +18,6 @@ import {
   isUserSignedIn,
   getValidToken,
   restoreSession,
-  invalidateCurrentToken,
   persistUserInfo,
   getStoredUserInfo,
   persistSessionStartedAt,
@@ -251,23 +250,12 @@ export function useSyncEngine({
    */
   const isWritingStorageRef = useRef(false);
 
-  /**
-   * Tracks whether silent token refresh failed because user interaction is
-   * required (e.g. session expired after laptop sleep). Prevents rapid polling
-   * from repeatedly failing until the user explicitly re-authenticates.
-   */
-  const interactionRequiredRef = useRef(false);
-
   // ── Core sync ─────────────────────────────────────────────────────────────
 
   const doSync = useCallback(async (snapshotToUpload?: AppSnapshot) => {
     if (!isSignedIn()) return;
     if (isSyncingRef.current) return;
     if (isControlOperationRef.current) return;
-    if (interactionRequiredRef.current && !snapshotToUpload) {
-      setSyncStatus("needs_auth");
-      return;
-    }
 
     // Consume the snapshot that started this request. If another edit arrives
     // while the request is in flight, markDirty will replace this ref and it
@@ -287,7 +275,7 @@ export function useSyncEngine({
         activityClearTimerRef.current = null;
       }
       setSyncActivity("idle");
-      const token = await getValidToken(false);
+      const token = await getValidToken();
 
       if (!fileIdRef.current) {
         isWritingStorageRef.current = true; // findAppFile may write auth state
@@ -423,25 +411,9 @@ export function useSyncEngine({
       }
 
       setSyncStatus("synced");
-      interactionRequiredRef.current = false;
-    } catch (err: any) {
-      console.warn("[sync] sync paused or needs auth:", err?.message || err);
-      if (err?.message === "UNAUTHORIZED") {
-        invalidateCurrentToken();
-      }
-      if (
-        err?.googleError === "interaction_required" ||
-        err?.googleError === "timeout" ||
-        err?.message?.includes("Silent auth") ||
-        err?.message?.includes("interaction_required") ||
-        err?.message?.includes("INTERACTION_REQUIRED") ||
-        err?.message === "UNAUTHORIZED"
-      ) {
-        interactionRequiredRef.current = true;
-        setSyncStatus("needs_auth");
-      } else {
-        setSyncStatus("error");
-      }
+    } catch (err) {
+      console.error("[sync] error:", err);
+      setSyncStatus("error");
     } finally {
       if (!activityClearTimerRef.current) setSyncActivity("idle");
       isWritingStorageRef.current = false;
@@ -486,12 +458,7 @@ export function useSyncEngine({
       if (cancelled) return;
 
       if (restored) {
-        interactionRequiredRef.current = false;
         void doSync(getLocalSnapshotRef.current?.());
-      } else {
-        // If silent restore couldn't find/refresh a token, mark that user interaction is needed
-        interactionRequiredRef.current = true;
-        setSyncStatus("needs_auth");
       }
     })();
 
@@ -504,41 +471,19 @@ export function useSyncEngine({
   // Pull remote changes made on another device. The fingerprint guard inside
   // doSync prevents this from causing an upload/apply loop.
   useEffect(() => {
-    let lastPullTime = 0;
-
-    const pullRemote = (force = false) => {
-      if (!isSignedIn()) return;
-      if (interactionRequiredRef.current && !force) return;
-
-      const now = Date.now();
-      // Throttle background pulls to at most once every 5 seconds to prevent spam
-      if (!force && now - lastPullTime < 5_000) return;
-      lastPullTime = now;
-
-      void doSync();
+    const pullRemote = () => {
+      if (isSignedIn()) void doSync();
     };
-
-    const interval = window.setInterval(() => pullRemote(false), SYNC_INTERVAL_MS);
-
+    const interval = window.setInterval(pullRemote, SYNC_INTERVAL_MS);
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        if (interactionRequiredRef.current) return;
-        pullRemote(false);
-      }
+      if (document.visibilityState === "visible") pullRemote();
     };
-
-    const onOnline = () => {
-      if (interactionRequiredRef.current) return;
-      pullRemote(false);
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("online", onOnline);
-
+    window.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", pullRemote);
     return () => {
       window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("online", onOnline);
+      window.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", pullRemote);
     };
   }, [doSync]);
 
@@ -546,7 +491,6 @@ export function useSyncEngine({
 
   const signIn = useCallback(async () => {
     try {
-      interactionRequiredRef.current = false;
       setSyncStatus("syncing");
       const token = await signInWithGoogle();
       persistSessionStartedAt();
@@ -719,7 +663,6 @@ export function useSyncEngine({
   }, []);
 
   const triggerSync = useCallback(async (snapshot?: AppSnapshot) => {
-    interactionRequiredRef.current = false;
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
@@ -736,13 +679,6 @@ export function useSyncEngine({
       pendingSnapshotRef.current = snapshot;
       if (!isSignedIn()) return;
       if (isControlOperationRef.current) return;
-
-      // If user interaction is required (e.g. token expired), do not attempt background upload.
-      // The pending snapshot remains queued in pendingSnapshotRef and will upload when the user re-authenticates.
-      if (interactionRequiredRef.current) {
-        setSyncStatus("needs_auth");
-        return;
-      }
 
       // Guard 1 — a sync is already running; it will see the latest state via
       // pendingSnapshotRef when it completes, so no extra scheduling needed.

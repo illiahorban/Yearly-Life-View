@@ -242,11 +242,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     syncSyncing: "Syncing…",
     syncUploading: "Uploading…",
     syncError: "Sync error",
-    syncNeedsAuth: "Reconnect Google",
     syncStatus: "Sync status",
-    keepAliveTitle: "Background activity (keep sync active)",
-    keepAliveEnabled: "Active in background",
-    keepAliveDisabled: "Background activity disabled",
   },
   ru: {
     complete: "выполнено",
@@ -445,11 +441,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     syncSyncing: "Синхронизация…",
     syncUploading: "Загрузка…",
     syncError: "Ошибка синхронизации",
-    syncNeedsAuth: "Войти в Google снова",
     syncStatus: "Статус синхронизации",
-    keepAliveTitle: "Фоновая активность (не усыплять вкладку)",
-    keepAliveEnabled: "Активно в фоне",
-    keepAliveDisabled: "Фоновая активность отключена",
   },
 };
 export const LangContext = React.createContext<LangCtx>({

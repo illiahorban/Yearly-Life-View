@@ -8,7 +8,6 @@ export type SyncStatus =
   | "synced" // last sync succeeded
   | "uploading" // uploading to Drive
   | "syncing" // downloading + merging
-  | "needs_auth" // session expired (e.g. after device sleep) and user interaction required
   | "error"; // last operation failed
 
 export interface UserInfo {

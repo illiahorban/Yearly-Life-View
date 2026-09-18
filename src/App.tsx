@@ -156,7 +156,6 @@ import { GoalsModal } from "./components/modals/GoalsModal";
 import { SprintSettingsModal } from "./components/modals/SprintSettingsModal";
 import { LifeCalendarModal } from "./components/modals/LifeCalendarModal";
 import { DayTemplatesModal } from "./components/modals/DayTemplatesModal";
-import { keepAlive } from "./lib/keep-alive";
 
 function App() {
   const isMobile = useIsMobile();
@@ -276,14 +275,6 @@ function App() {
   }, [settingsOpen, profileOpen, isMobile]);
 
   const [confirmSignOut, setConfirmSignOut] = useState(false);
-  const [keepAliveActive, setKeepAliveActive] = useState(() => keepAlive.isEnabled());
-  useEffect(() => {
-    if (keepAliveActive) {
-      keepAlive.start();
-    } else {
-      keepAlive.stop();
-    }
-  }, [keepAliveActive]);
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const [pwaModalOpen, setPwaModalOpen] = useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -1065,14 +1056,12 @@ function App() {
     if (syncStatus === "synced") return t("syncSynced");
     if (syncStatus === "syncing") return t("syncSyncing");
     if (syncStatus === "uploading") return t("syncUploading");
-    if (syncStatus === "needs_auth") return t("syncNeedsAuth");
     if (syncStatus === "error") return t("syncError");
     return t("syncNow");
   }, [syncStatus, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const syncColor = useMemo(() => {
     if (syncStatus === "error") return "#ff3b30";
-    if (syncStatus === "needs_auth") return "#ff9500";
     if (syncStatus === "synced") return "#34c759";
     if (syncStatus === "syncing" || syncStatus === "uploading")
       return "#ff9500";
@@ -1084,7 +1073,6 @@ function App() {
   const gearSyncColor = useMemo(() => {
     if (!userInfo) return "var(--text-secondary)";
     if (syncStatus === "error") return "#ff3b30";
-    if (syncStatus === "needs_auth") return "#ff9500";
     if (syncActivity === "downloading" || syncActivity === "uploading")
       return "#ff9500";
     return "#34c759";
@@ -1870,58 +1858,31 @@ function App() {
                                     {userInfo!.email}
                                   </div>
                                 </div>
-                                 <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (syncStatus === "error" || syncStatus === "needs_auth") {
-                                      void googleSignIn();
-                                    } else {
-                                      void triggerSync();
-                                    }
-                                  }}
-                                  title={syncStatus === "error" || syncStatus === "needs_auth" ? (syncStatus === "needs_auth" ? t("syncNeedsAuth") : t("syncNow")) : undefined}
+                                <div
                                   style={{
                                     display: "flex",
                                     alignItems: "center",
-                                    justifyContent: "space-between",
-                                    width: "100%",
+                                    gap: 7,
                                     padding: "7px 8px",
                                     borderRadius: 8,
-                                    border: "none",
                                     background: overlayBg,
                                     color: syncColor,
                                     fontSize: 12,
                                     fontWeight: 600,
-                                    cursor: "pointer",
-                                    fontFamily: "inherit",
-                                    textAlign: "left",
                                   }}
                                 >
-                                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                                    <span
-                                      aria-hidden="true"
-                                      style={{
-                                        width: 7,
-                                        height: 7,
-                                        borderRadius: 999,
-                                        background: syncColor,
-                                        flexShrink: 0,
-                                      }}
-                                    />
-                                    <span>{syncLabel}</span>
-                                  </div>
-                                  {(syncStatus === "error" || syncStatus === "needs_auth") && (
-                                    <span
-                                      style={{
-                                        fontSize: 11,
-                                        color: "var(--accent)",
-                                        fontWeight: 600,
-                                      }}
-                                    >
-                                      ↻
-                                    </span>
-                                  )}
-                                </button>
+                                  <span
+                                    aria-hidden="true"
+                                    style={{
+                                      width: 7,
+                                      height: 7,
+                                      borderRadius: 999,
+                                      background: syncColor,
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                  <span>{syncLabel}</span>
+                                </div>
                                 <div
                                   style={{
                                     height: 1,
@@ -2235,61 +2196,34 @@ function App() {
                                   {userInfo.email}
                                 </div>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (syncStatus === "error" || syncStatus === "needs_auth") {
-                                    void googleSignIn();
-                                  } else {
-                                    void triggerSync();
-                                  }
-                                }}
-                                title={syncStatus === "error" || syncStatus === "needs_auth" ? (syncStatus === "needs_auth" ? t("syncNeedsAuth") : t("syncNow")) : undefined}
+                              <div
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  justifyContent: "space-between",
-                                  width: "100%",
+                                  gap: 7,
                                   marginTop: 7,
                                   padding: "7px 8px",
                                   borderRadius: 8,
-                                  border: "none",
                                   background: dark
                                     ? "rgb(44,44,46)"
                                     : "rgb(232,232,237)",
                                   color: syncColor,
                                   fontSize: 12,
                                   fontWeight: 600,
-                                  cursor: "pointer",
-                                  fontFamily: "inherit",
-                                  textAlign: "left",
                                 }}
                               >
-                                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                                  <span
-                                    aria-hidden="true"
-                                    style={{
-                                      width: 7,
-                                      height: 7,
-                                      borderRadius: 999,
-                                      background: syncColor,
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                  <span>{syncLabel}</span>
-                                </div>
-                                {(syncStatus === "error" || syncStatus === "needs_auth") && (
-                                  <span
-                                    style={{
-                                      fontSize: 11,
-                                      color: "var(--accent)",
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    ↻
-                                  </span>
-                                )}
-                              </button>
+                                <span
+                                  aria-hidden="true"
+                                  style={{
+                                    width: 7,
+                                    height: 7,
+                                    borderRadius: 999,
+                                    background: syncColor,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <span>{syncLabel}</span>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -2365,41 +2299,6 @@ function App() {
                             >
                               {lang === "en" ? "RU" : "EN"}
                             </span>
-                          </IconButton>
-                          <IconButton
-                            title={
-                              keepAliveActive
-                                ? `${t("keepAliveTitle")}: ${t("keepAliveEnabled")}`
-                                : `${t("keepAliveTitle")}: ${t("keepAliveDisabled")}`
-                            }
-                            onClick={() => {
-                              haptics.selection();
-                              const next = !keepAliveActive;
-                              setKeepAliveActive(next);
-                              keepAlive.setEnabled(next);
-                            }}
-                            bg={dark ? "rgb(44,44,46)" : "rgb(232,232,237)"}
-                            color={keepAliveActive ? "#34c759" : "var(--text-tertiary)"}
-                          >
-                            <svg
-                              width="15"
-                              height="15"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M12 2v4" />
-                              <path d="M12 18v4" />
-                              <path d="M4.93 4.93l2.83 2.83" />
-                              <path d="M16.24 16.24l2.83 2.83" />
-                              <path d="M2 12h4" />
-                              <path d="M18 12h4" />
-                              <path d="M4.93 19.07l2.83-2.83" />
-                              <path d="M16.24 7.76l2.83-2.83" />
-                            </svg>
                           </IconButton>
                           {!isInstalled && (
                             <IconButton
@@ -2552,17 +2451,9 @@ function App() {
         <main
           ref={calendarScrollRef}
           className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
-          style={{
-            WebkitOverflowScrolling: "touch",
-            paddingBottom: "max(16px, env(safe-area-inset-bottom, 0px))",
-          }}
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div
-            className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8"
-            style={{
-              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 110px)",
-            }}
-          >
+          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8">
             <LayoutGroup>
               <div className="flex flex-col gap-3 sm:gap-6">
               {[0, 1, 2, 3].map((qi) => {
@@ -3018,7 +2909,7 @@ function App() {
               className="mt-12 text-center text-xs"
               style={{
                 color: "var(--text-tertiary)",
-                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 48px)",
+                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)",
               }}
             >
               {t("footerBase")} · {viewYear}

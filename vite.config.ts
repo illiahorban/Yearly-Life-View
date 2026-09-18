@@ -4,65 +4,40 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(({ command }) => {
-  const basePath = (process.env.GITHUB_ACTIONS && process.env.VITE_BASE_PATH) ? process.env.VITE_BASE_PATH : '/';
-
+export default defineConfig(() => {
   return {
-    base: basePath,
+    base: process.env.VITE_BASE_PATH || './',
     plugins: [
       react(),
       tailwindcss(),
-      {
-        name: 'sw-cleanup-middleware',
-        configureServer(server) {
-          server.middlewares.use((req, res, next) => {
-            if (req.url && (req.url.includes('dev-sw') || req.url.includes('sw.js'))) {
-              res.setHeader('Content-Type', 'application/javascript');
-              res.end(`
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => {
-  e.waitUntil(self.registration.unregister().then(() => self.clients.claim()));
-});
-self.addEventListener('fetch', (e) => {
-  e.respondWith(fetch(e.request));
-});
-              `);
-              return;
-            }
-            next();
-          });
-        },
-      },
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
-          id: basePath,
+          id: './',
           name: 'Yearly Life View',
           short_name: 'Yearly',
           description: 'Personal life-planning and calendar app that visualizes your year and life as weekly grids with goals, notes, and progress tracking.',
           theme_color: '#09090b',
           background_color: '#09090b',
           display: 'standalone',
-          display_override: ['standalone', 'minimal-ui'],
-          orientation: 'any',
-          start_url: basePath,
-          scope: basePath,
+          start_url: './',
+          scope: './',
           icons: [
             {
-              src: `${basePath}pwa-192x192.png`.replace(/\/+/g, '/'),
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: `${basePath}pwa-512x512.png`.replace(/\/+/g, '/'),
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: `${basePath}pwa-maskable-512x512.png`.replace(/\/+/g, '/'),
+              src: 'pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -103,7 +78,8 @@ self.addEventListener('fetch', (e) => {
           ],
         },
         devOptions: {
-          enabled: false,
+          enabled: true,
+          type: 'module',
         },
       }),
     ],
