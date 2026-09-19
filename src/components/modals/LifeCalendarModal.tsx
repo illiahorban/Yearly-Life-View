@@ -219,19 +219,13 @@ export function LifeCalendarModal({
       const fromW = (availW - gapPx * (cols - 1)) / cols;
       const fromH = (availH - gapPx * (rows - 1)) / rows;
       cellPx = Math.max(14, Math.floor(Math.min(fromW, fromH)));
-    } else if (view === "months") {
-      const padY = 28;
-      const effectiveAvailH = Math.max(80, availH - padY);
-      const fromW = (availW - gapPx * (cols - 1)) / cols;
-      const fromH = (effectiveAvailH - gapPx * (rows - 1)) / rows;
-      // In months, fit height so the whole life fits vertically on one screen
-      cellPx = Math.max(2, Math.floor(Math.min(fromW, fromH)));
-    } else if (view === "weeks") {
+    } else if (view === "months" || view === "weeks") {
       const padY = 26;
       const effectiveAvailH = Math.max(80, availH - padY);
-      const fromW = (availW - gapPx * (cols - 1)) / cols;
+      const weeksCols = 52;
+      const fromW = (availW - gapPx * (weeksCols - 1)) / weeksCols;
       const fromH = (effectiveAvailH - gapPx * (rows - 1)) / rows;
-      // In weeks, fit both width (52 cols) and height (80+ rows)
+      // Use identical cell size logic for both months and weeks
       cellPx = Math.max(2, Math.floor(Math.min(fromW, fromH)));
     } else {
       // Days: compute optimal matrix to fit all ~30,000 days into availW x availH without scroll
