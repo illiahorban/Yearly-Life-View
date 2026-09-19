@@ -198,7 +198,6 @@ function App() {
     lsSet("lifeCalendar:darkMode", dark);
 
     const themeColor = dark ? "#000000" : "#f5f5f7";
-    const statusBarStyle = dark ? "black-translucent" : "default";
 
     // Synchronize iOS Safari and PWA top status bar / theme color
     const metaThemeColors = document.querySelectorAll('meta[name="theme-color"]');
@@ -220,7 +219,7 @@ function App() {
       metaStatusBar.setAttribute("name", "apple-mobile-web-app-status-bar-style");
       document.head.appendChild(metaStatusBar);
     }
-    metaStatusBar.setAttribute("content", statusBarStyle);
+    metaStatusBar.setAttribute("content", "black-translucent");
   }, [dark]);
 
   const [lang, setLang] = useState<Lang>(() =>
@@ -1520,7 +1519,7 @@ function App() {
   return (
     <LangContext.Provider value={{ t, months, weekdays, lang }}>
       <div
-        className="fixed inset-0 flex h-screen h-[100dvh] w-full flex-col overflow-hidden"
+        className="fixed inset-0 flex w-full flex-col overflow-hidden"
         style={{ background: "var(--bg)" }}
       >
         {/* ── Header ─────────────────────────────────────────────────── */}
