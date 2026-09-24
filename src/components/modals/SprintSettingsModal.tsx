@@ -268,7 +268,7 @@ export function SprintSettingsModal({
             </div>
           </div>
 
-          <div className="px-6 mt-4 max-h-72 overflow-auto">
+          <div className="px-6 mt-4 max-h-80 overflow-auto">
             <div className="flex flex-col gap-2">
               <AnimatePresence initial={false}>
                 {blocks.map((b, idx) => {
@@ -282,20 +282,12 @@ export function SprintSettingsModal({
                     : dark
                       ? quarter.darkSoft
                       : quarter.soft;
-                  // Dot always shows the vivid colour — the block's own if set, else the quarter's fill
                   const bDotHex = bAc
                     ? dark
                       ? bAc.dark
                       : bAc.light
                     : quarter.border;
-                  // Tint the sprint row itself using the same colour logic as note/event
-                  // cards (getEventColors), so choosing a sprint colour visibly colours
-                  // its row here, in the sprint distribution modal.
                   const bEc = bAc ? getEventColors(bHex, dark) : null;
-                  // The row background stays transparent (bEc.bg), so its text sits directly on the
-                  // modal's page background rather than a filled surface — use the literal colour for
-                  // white/black/grey instead of getEventColors' contrast-flipped textTitle, consistent
-                  // with the goal-text literal-colour fix.
                   const bTextColor = bAc
                     ? readableGoalTextColor(bHex, dark, "var(--text)")
                     : "var(--text)";
@@ -305,6 +297,175 @@ export function SprintSettingsModal({
                   const bPlaceholderClass = bAch
                     ? `placeholder-goal-${bAch.tier}`
                     : undefined;
+
+                  const renderInput = (fontSize = isMobile ? 15 : 13) => (
+                    <TextareaAutosize
+                      key={`sprint-label-${b.id}-${b.color || "none"}`}
+                      ref={(el) => {
+                        blockInputRefs.current[b.id] = el;
+                      }}
+                      value={b.label}
+                      onChange={(e) => {
+                        const newBlocks = blocksRef.current.map((x) =>
+                          x.id === b.id ? { ...x, label: e.target.value } : x,
+                        );
+                        commitBlocks(newBlocks);
+                      }}
+                      placeholder={t("sprintLabelPlaceholder")}
+                      minRows={1}
+                      className={`${bPlaceholderClass || ""} bg-transparent outline-none w-full resize-none event-form-input`.trim()}
+                      style={{
+                        color: bDotHex,
+                        fontSize,
+                        fontWeight: 500,
+                        lineHeight: 1.4,
+                        fontFamily: "inherit",
+                        padding: 0,
+                        border: "none",
+                        display: "block",
+                        minWidth: 0,
+                        overflowWrap: "anywhere",
+                        wordBreak: "break-word",
+                        overflow: "hidden",
+                        // @ts-ignore
+                        "--event-ph-color": bDotHex,
+                      }}
+                    />
+                  );
+
+                  const renderColorDot = (size = 14) => (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBlockColorAnchor(e.currentTarget);
+                        setActiveColorPickerBlockId((prev) => (prev === b.id ? null : b.id));
+                      }}
+                      title={t("sprintColor")}
+                      style={{
+                        width: size,
+                        height: size,
+                        borderRadius: 999,
+                        background: bDotHex,
+                        border: "none",
+                        boxShadow: "0 0 0 1.5px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.2)",
+                        cursor: "pointer",
+                        display: "block",
+                        flexShrink: 0,
+                        padding: 0,
+                      }}
+                    />
+                  );
+
+                  const renderActions = () => (
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                      <button
+                        type="button"
+                        title={t("resetSprint")}
+                        onClick={() => setConfirmResetId(b.id)}
+                        className="flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+                        style={{
+                          width: 24,
+                          height: 24,
+                          color: "var(--text-secondary)",
+                          background: "transparent",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = "#ff3b30";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = "var(--text-secondary)";
+                        }}
+                      >
+                        <svg
+                          width="11"
+                          height="11"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                          <path d="M3 3v5h5" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        title={t("deleteSprintBtn") || "Удалить"}
+                        onClick={() => setConfirmDeleteId(b.id)}
+                        disabled={blocks.length === 1}
+                        className="flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+                        style={{
+                          width: 24,
+                          height: 24,
+                          color: blocks.length === 1 ? "var(--text-tertiary)" : "var(--text-secondary)",
+                          opacity: blocks.length === 1 ? 0.35 : 1,
+                          background: "transparent",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (blocks.length > 1) {
+                            e.currentTarget.style.color = "#ff3b30";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = blocks.length === 1 ? "var(--text-tertiary)" : "var(--text-secondary)";
+                        }}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  );
+
+                  const renderStepper = () => (
+                    <div
+                      className="flex items-center flex-shrink-0"
+                      style={{
+                        background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                        border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+                        borderRadius: 7,
+                        padding: 1.5,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => update(b.id, { weeks: Math.max(1, b.weeks - 1) })}
+                        className="flex items-center justify-center rounded transition-colors text-[13px] leading-none cursor-pointer"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          color: bTextColor,
+                        }}
+                      >
+                        −
+                      </button>
+                      <span
+                        className="text-[11px] font-semibold tabular-nums text-center select-none"
+                        style={{
+                          color: bTextColor,
+                          paddingLeft: 2,
+                          paddingRight: 2,
+                          minWidth: 20,
+                        }}
+                      >
+                        {b.weeks}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => update(b.id, { weeks: Math.min(weeksCapacity, b.weeks + 1) })}
+                        className="flex items-center justify-center rounded transition-colors text-[13px] leading-none cursor-pointer"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          color: bTextColor,
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  );
+
                   return (
                     <motion.div
                       layout
@@ -324,237 +485,35 @@ export function SprintSettingsModal({
                               : "rgba(0,0,0,0.025)",
                           border: `1px solid ${bEc ? bEc.border : borderColor}`,
                           borderRadius: 12,
-                          padding: "8px 10px",
+                          padding: "6px 10px",
                           display: "flex",
-                          flexDirection: "row",
-                          gap: 8,
+                          alignItems: "center",
+                          gap: 7,
                           flex: 1,
+                          minWidth: 0,
                           transition:
                             "background 200ms ease, border-color 200ms ease",
                         }}
                       >
-                        {/* Left column: number badge top (aligned with first text line), color dot bottom */}
-                        <div
+                        <span
+                          className="text-[10px] font-bold tabular-nums w-5 h-5 flex items-center justify-center rounded-md flex-shrink-0"
                           style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexShrink: 0,
-                            alignSelf: "stretch",
+                            background: bAc
+                              ? `${bHex}20`
+                              : dark
+                                ? "rgba(255,255,255,0.08)"
+                                : "rgba(0,0,0,0.05)",
+                            color: bAc ? bHex : "var(--text-secondary)",
                           }}
                         >
-                          {/* Badge wrapped in a container matching first-line height so it centres on the text baseline */}
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              height: 19,
-                              flexShrink: 0,
-                            }}
-                          >
-                            <div
-                              className="text-[10px] font-semibold tabular-nums flex items-center justify-center"
-                              style={{
-                                width: 13,
-                                height: 13,
-                                borderRadius: 999,
-                                background: bAc
-                                  ? `${bHex}22`
-                                  : dark
-                                    ? quarter.darkTint
-                                    : quarter.tint,
-                                color: bAc ? bHex : quarter.text,
-                                flexShrink: 0,
-                                boxShadow: `0 0 0 2px ${bAc ? `${bHex}22` : dark ? quarter.darkTint : quarter.tint}, 0 1px 3px rgba(0,0,0,0.18)`,
-                              }}
-                            >
-                              {idx + 1}
-                            </div>
-                          </div>
-                          {/* Color dot — wrapped to match stepper-row height (28px) so they sit on the same axis */}
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              height: 28,
-                              flexShrink: 0,
-                            }}
-                          >
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setBlockColorAnchor(e.currentTarget);
-                                setActiveColorPickerBlockId((prev) =>
-                                  prev === b.id ? null : b.id,
-                                );
-                              }}
-                              title={t("sprintColor")}
-                              style={{
-                                width: 13,
-                                height: 13,
-                                borderRadius: 999,
-                                background: bDotHex,
-                                border: "none",
-                                boxShadow:
-                                  "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",
-                                cursor: "pointer",
-                                display: "block",
-                                flexShrink: 0,
-                                padding: 0,
-                              }}
-                            />
-                          </div>
+                          {idx + 1}
+                        </span>
+                        {renderColorDot(13)}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {renderInput()}
                         </div>
-                        {/* Right column: textarea on top, stepper + actions on bottom */}
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 4,
-                            flex: 1,
-                            minWidth: 0,
-                          }}
-                        >
-                          <TextareaAutosize
-                            key={`sprint-label-${b.id}-${b.color || "none"}`}
-                            ref={(el) => {
-                              blockInputRefs.current[b.id] = el;
-                            }}
-                            value={b.label}
-                            onChange={(e) => {
-                              const newBlocks = blocksRef.current.map((x) =>
-                                x.id === b.id
-                                  ? { ...x, label: e.target.value }
-                                  : x,
-                              );
-                              commitBlocks(newBlocks);
-                            }}
-                            placeholder={t("sprintLabelPlaceholder")}
-                            minRows={1}
-                            className={`${bPlaceholderClass || ""} bg-transparent outline-none w-full resize-none event-form-input`.trim()}
-                            style={{
-                              color: bDotHex,
-                              fontSize: isMobile ? 16 : 13,
-                              fontWeight: 500,
-                              lineHeight: 1.45,
-                              fontFamily: "inherit",
-                              padding: 0,
-                              border: "none",
-                              display: "block",
-                              minWidth: 0,
-                              overflowWrap: "anywhere",
-                              wordBreak: "break-word",
-                              overflow: "hidden",
-                              // @ts-ignore
-                              "--event-ph-color": bDotHex,
-                            }}
-                          />
-                          {/* Stepper + actions */}
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                            }}
-                          >
-                            <div
-                              className="flex items-center gap-1"
-                              style={{
-                                background: "rgba(120,120,128,0.20)",
-                                border: "1px solid rgba(120,120,128,0.40)",
-                                borderRadius: 8,
-                                padding: 2,
-                              }}
-                            >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  update(b.id, {
-                                    weeks: Math.max(1, b.weeks - 1),
-                                  })
-                                }
-                                className="w-6 h-6 rounded-md text-[14px]"
-                                style={{
-                                  color: bAc
-                                    ? bTextColor
-                                    : "var(--text-secondary)",
-                                }}
-                              >
-                                −
-                              </button>
-                              <span
-                                className="text-[12px] font-semibold tabular-nums w-6 text-center"
-                                style={{ color: bTextColor }}
-                              >
-                                {b.weeks}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  update(b.id, {
-                                    weeks: Math.min(weeksCapacity, b.weeks + 1),
-                                  })
-                                }
-                                className="w-6 h-6 rounded-md text-[14px]"
-                                style={{
-                                  color: bAc
-                                    ? bTextColor
-                                    : "var(--text-secondary)",
-                                }}
-                              >
-                                +
-                              </button>
-                            </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                marginLeft: "auto",
-                                flexShrink: 0,
-                              }}
-                            >
-                              <button
-                                type="button"
-                                title={t("resetSprint")}
-                                onClick={() => setConfirmResetId(b.id)}
-                                className="w-7 h-7 flex items-center justify-center rounded-md"
-                                style={{ color: "#ff3b30", flexShrink: 0 }}
-                              >
-                                <svg
-                                  width="12"
-                                  height="12"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                                  <path d="M3 3v5h5" />
-                                </svg>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmDeleteId(b.id)}
-                                disabled={blocks.length === 1}
-                                className="w-7 h-7 flex items-center justify-center rounded-md"
-                                style={{
-                                  color:
-                                    blocks.length === 1
-                                      ? "var(--text-tertiary)"
-                                      : "#ff3b30",
-                                  opacity: blocks.length === 1 ? 0.4 : 1,
-                                }}
-                              >
-                                <TrashIcon />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
+                        {renderStepper()}
+                        {renderActions()}
                       </div>
                     </motion.div>
                   );

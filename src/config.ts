@@ -1,6 +1,7 @@
 // ─── Google Drive Sync Configuration ─────────────────────────────────────────
 
 export const GOOGLE_CLIENT_ID =
+  (import.meta.env?.VITE_GOOGLE_CLIENT_ID as string) ||
   "895828296496-6ic97j33a9n7vo6ljjkhqhkvugf64c6k.apps.googleusercontent.com";
 
 export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
