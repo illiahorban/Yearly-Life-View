@@ -32,7 +32,7 @@ export function MilestoneModal({
   onClose: () => void;
   onChange: (m: Milestone[]) => void;
 }) {
-  const { t, lang } = React.useContext(LangContext);
+  const { t, months, lang } = React.useContext(LangContext);
   const isMobile = useIsMobile();
   const { height: vvHeight, offsetTop: vvOffsetTop, isKeyboardOpen } = useVisualViewport();
 
@@ -87,6 +87,42 @@ export function MilestoneModal({
     });
     return counts;
   }, [filteredItems, dateToQi]);
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-").map(Number);
+    if (parts.length < 3) return dateStr;
+    const [y, m, d] = parts;
+    const monthName = months[m! - 1] ?? "";
+    return `${d} ${monthName} ${y}`.trim();
+  };
+
+  const grouped = useMemo(() => {
+    const qGroups: { date: string; items: Milestone[] }[][] = [[], [], [], []];
+    const dateMap: Record<
+      string,
+      { date: string; qi: number; items: Milestone[] }
+    > = {};
+    for (const ms of filteredItems) {
+      if (!dateMap[ms.date]) {
+        dateMap[ms.date] = {
+          date: ms.date,
+          qi: quarterOf(ms.date),
+          items: [],
+        };
+      }
+      dateMap[ms.date]!.items.push(ms);
+    }
+    const allDateGroups = Object.values(dateMap).sort((a, b) =>
+      a.date.localeCompare(b.date),
+    );
+    for (const dg of allDateGroups) {
+      const qi = dg.qi >= 0 && dg.qi < 4 ? dg.qi : 0;
+      qGroups[qi]!.push(dg);
+    }
+    return qGroups;
+  }, [filteredItems, dateToQi]);
+
   const [draftLabel, setDraftLabel] = useState("");
   const [draftDate, setDraftDate] = useState(dateKey(new Date()));
   const [draftColor, setDraftColor] = useState("");
@@ -199,7 +235,7 @@ export function MilestoneModal({
     }
   }, [isKeyboardOpen]);
 
-  const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
+  const borderColor = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
   const inputStyle: React.CSSProperties = {
     background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)",
     border: `1px solid ${borderColor}`,
@@ -726,43 +762,21 @@ export function MilestoneModal({
               {t("searchNoResults")}
             </div>
           )}
-          <div className="flex flex-col gap-1.5 pb-3">
+          <div
+            style={{
+              padding: "10px 0 20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+            }}
+          >
             {(() => {
-              // Group consecutive events by date
-              const dateGroups: {
-                date: string;
-                lbl: string;
-                qi: number;
-                items: Milestone[];
-              }[] = [];
-              for (const ms of filteredItems) {
-                const last = dateGroups[dateGroups.length - 1];
-                if (last && last.date === ms.date) {
-                  last.items.push(ms);
-                } else {
-                  const [y2, m2, d2] = ms.date.split("-").map(Number) as [
-                    number,
-                    number,
-                    number,
-                  ];
-                  const lbl = new Date(y2, m2 - 1, d2).toLocaleDateString(
-                    lang === "ru" ? "ru-RU" : "en-US",
-                    { month: "short", day: "numeric", year: "numeric" },
-                  );
-                  dateGroups.push({
-                    date: ms.date,
-                    lbl,
-                    qi: quarterOf(ms.date),
-                    items: [ms],
-                  });
-                }
-              }
-
               const renderCard = (ms: Milestone, showDate: boolean) => {
                 const isEditing = editId === ms.id;
-                const activeCardColor = isEditing ? editColor : ms.color;
+                const activeCardColor =
+                  (isEditing ? editColor : ms.color) || "";
                 const ec3 = getEventColors(
-                  activeCardColor,
+                  activeCardColor ? resolveNoteHex(activeCardColor) : "",
                   dark,
                 );
                 const rcBg = ec3.bg;
@@ -781,12 +795,14 @@ export function MilestoneModal({
                 return (
                   <div
                     key={ms.id}
-                    className="flex flex-col px-2.5 py-2.5 rounded-xl"
+                    className="flex flex-col"
                     style={{
                       position: "relative",
                       minHeight: 36,
+                      padding: "8px 10px 8px 12px",
+                      borderRadius: 12,
                       background: rcBg,
-                      border: `1.5px solid ${ec3.border || "transparent"}`,
+                      border: `1.5px solid ${ec3.border}`,
                       boxShadow: ec3.boxShadow || undefined,
                       transition:
                         "background 0.25s ease, border-color 0.25s ease",
@@ -1102,11 +1118,7 @@ export function MilestoneModal({
                                   marginBottom: 2,
                                 }}
                               >
-                                {
-                                  dateGroups.find((g) =>
-                                    g.items.some((x) => x.id === ms.id),
-                                  )?.lbl
-                                }
+                                {formatDate(ms.date)}
                               </div>
                             )}
                             <span
@@ -1282,93 +1294,102 @@ export function MilestoneModal({
                 );
               };
 
-              return dateGroups.map((group, gi) => {
-                const prevGroup = dateGroups[gi - 1];
-                const _showQHeader = !prevGroup || group.qi !== prevGroup.qi;
-                const isMulti = group.items.length > 1;
+              return grouped.map((group, qi) => {
+                if (group.length === 0) return null;
+                const quarter = resolvedQuarters[qi] ?? resolvedQuarters[0]!;
+                const qCount = group.reduce(
+                  (acc, dg) => acc + dg.items.length,
+                  0,
+                );
                 return (
-                  <React.Fragment key={group.date}>
-                    {_showQHeader && (
-                      <div className="flex items-center gap-1.5 pt-1.5 pb-0 px-0.5">
-                        <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            background: resolvedQuarters[group.qi]?.tint,
-                            border: "none",
-                            boxShadow: `0 0 0 2px ${resolvedQuarters[group.qi]?.border}`,
-                            flexShrink: 0,
-                            display: "inline-block",
-                          }}
-                        />
-                        <span
-                          className="text-[10px] font-semibold tracking-widest uppercase"
-                          style={{ color: "var(--text-tertiary)" }}
-                        >
-                          {resolvedQuarters[group.qi]?.label ??
-                            t("q" + String(group.qi + 1))}
-                        </span>
-                        <span
-                          className="text-[10px]"
-                          style={{ color: "var(--text-tertiary)" }}
-                        >
-                          · {quarterCounts[group.qi]}
-                        </span>
-                      </div>
-                    )}
+                  <div key={qi}>
                     <div
                       style={{
-                        borderRadius: 14,
-                        border: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)"}`,
-                        overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 8,
                       }}
                     >
-                      <div
+                      <span
                         style={{
-                          padding: "6px 10px 5px",
-                          background: dark
-                            ? "rgba(255,255,255,0.05)"
-                            : "rgba(0,0,0,0.03)",
-                          borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"}`,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: quarter.tint,
+                          border: "none",
+                          boxShadow: `0 0 0 2px ${quarter.border}`,
+                          flexShrink: 0,
+                          display: "inline-block",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--text-secondary)",
                         }}
                       >
-                        <span
+                        {quarter.label}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "var(--text-tertiary)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {qCount}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      {group.map((dg) => (
+                        <div
+                          key={dg.date}
                           style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: "var(--text-secondary)",
-                            letterSpacing: "0.01em",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 4,
+                            padding: "10px 12px",
+                            borderRadius: 12,
+                            background: dark
+                              ? "rgba(255,255,255,0.05)"
+                              : "rgba(0,0,0,0.03)",
+                            border: `1.5px solid ${quarter.border}`,
+                            boxShadow: quarter.contrastBorderShadow,
+                            width: "100%",
+                            boxSizing: "border-box",
                           }}
                         >
-                          {group.lbl}
-                        </span>
-                        {isMulti && (
                           <span
                             style={{
                               fontSize: 11,
-                              color: "var(--text-tertiary)",
+                              fontWeight: 600,
+                              color: quarter.text,
+                              letterSpacing: "0.01em",
                             }}
                           >
-                            · {group.items.length}
+                            {formatDate(dg.date)}
                           </span>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 4,
-                          padding: "6px 6px",
-                        }}
-                      >
-                        {group.items.map((ms) => renderCard(ms, false))}
-                      </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 3,
+                            }}
+                          >
+                            {dg.items.map((ms) => renderCard(ms, false))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </React.Fragment>
+                  </div>
                 );
               });
             })()}

@@ -366,9 +366,10 @@ export function NotesPanel({
                 const draftPlaceholderClass = draftAch
                   ? `placeholder-note-${draftAch.tier}`
                   : undefined;
-                const draftTextColor = draftColor
-                  ? getEventColors(resolveNoteHex(draftColor), dark).textTitle
-                  : "var(--text)";
+                const draftEc = getEventColors(
+                  draftColor ? resolveNoteHex(draftColor) : "",
+                  dark,
+                );
                 return (
                   <textarea
                     key={`notes-panel-draft-${draftColor || "none"}`}
@@ -381,11 +382,9 @@ export function NotesPanel({
                     style={{
                       width: "100%",
                       borderRadius: 10,
-                      border: `${draftColor ? "1.5px" : "1px"} solid ${draftColor ? getEventColors(resolveNoteHex(draftColor), dark).border : borderColor}`,
-                      background: draftColor
-                        ? getEventColors(resolveNoteHex(draftColor), dark).bg
-                        : inputBg,
-                      color: draftTextColor,
+                      border: `1.5px solid ${draftEc.border}`,
+                      background: draftEc.bg,
+                      color: draftEc.textTitle,
                       fontSize: 13,
                       padding: "8px 32px 8px 10px",
                       fontFamily: "inherit",
@@ -394,9 +393,9 @@ export function NotesPanel({
                       lineHeight: 1.5,
                       boxSizing: "border-box",
                       display: "block",
-                      transition: "background 200ms ease",
+                      transition: "background 200ms ease, border-color 200ms ease",
                       // @ts-ignore
-                      "--event-ph-color": draftTextColor,
+                      "--event-ph-color": draftEc.textTitle,
                     }}
                     onKeyDown={(e) => {
                       if (
@@ -666,7 +665,8 @@ export function NotesPanel({
                                 : dark
                                   ? "rgba(255,255,255,0.05)"
                                   : "rgba(0,0,0,0.03)",
-                            border: `1px solid ${borderColor}`,
+                            border: `1.5px solid ${quarter.border}`,
+                            boxShadow: quarter.contrastBorderShadow,
                             cursor: "pointer",
                             textAlign: "left",
                             fontFamily: "inherit",
@@ -692,30 +692,25 @@ export function NotesPanel({
                             }}
                           >
                             {entries.map((e, i) => {
-                              const eec = e.color
-                                ? getEventColors(resolveNoteHex(e.color), dark)
-                                : null;
+                              const eec = getEventColors(
+                                e.color ? resolveNoteHex(e.color) : "",
+                                dark,
+                              );
                               return (
                                 <div
                                   key={i}
                                   style={{
-                                    padding: e.color
-                                      ? "8px 10px 8px 12px"
-                                      : "2px 0",
-                                    borderRadius: e.color ? 12 : 0,
-                                    border: eec
-                                      ? `1.5px solid ${eec.border}`
-                                      : "none",
-                                    background: eec ? eec.bg : "transparent",
+                                    padding: "8px 10px 8px 12px",
+                                    borderRadius: 12,
+                                    border: `1.5px solid ${eec.border}`,
+                                    background: eec.bg,
                                     overflow: "hidden",
                                   }}
                                 >
                                   <span
                                     style={{
                                       fontSize: 13,
-                                      color: eec
-                                        ? eec.textTitle
-                                        : "var(--text)",
+                                      color: eec.textTitle,
                                       lineHeight: 1.55,
                                       display: "block",
                                       wordBreak: "break-word",
