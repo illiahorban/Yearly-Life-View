@@ -504,6 +504,10 @@ export function AllGoalsPanel({
                               letterSpacing: "-0.01em",
                               color: qHeaderText,
                               flex: 1,
+                              minWidth: 0,
+                              overflowWrap: "anywhere",
+                              wordBreak: "break-word",
+                              lineHeight: 1.35,
                             }}
                           >
                             {qr.label ?? t(`q${qi + 1}` as keyof typeof t)}
@@ -710,9 +714,9 @@ export function AllGoalsPanel({
                                     color: sprintHeaderText,
                                     flex: 1,
                                     minWidth: 0,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
+                                    overflowWrap: "anywhere",
+                                    wordBreak: "break-word",
+                                    lineHeight: 1.35,
                                   }}
                                 >
                                   {block.label}

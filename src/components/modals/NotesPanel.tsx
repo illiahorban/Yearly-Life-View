@@ -622,6 +622,11 @@ export function NotesPanel({
                         fontSize: 11,
                         fontWeight: 700,
                         color: "var(--text-secondary)",
+                        flex: 1,
+                        minWidth: 0,
+                        overflowWrap: "anywhere",
+                        wordBreak: "break-word",
+                        lineHeight: 1.35,
                       }}
                     >
                       {quarter.label}
@@ -631,6 +636,7 @@ export function NotesPanel({
                         fontSize: 11,
                         color: "var(--text-tertiary)",
                         fontWeight: 500,
+                        flexShrink: 0,
                       }}
                     >
                       {group.length}
