@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import ReactDOM from "react-dom";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type { QuarterConfig, Quarter, QuarterMeta, DayState, Milestone, NoteEntry, DayGoals, BlockGoals, AppleColorKey } from "../../types/calendar";
 import { startOfYear, startOfWeekMonday, startOfDay, addDays, sameDay, dateKey } from "../../utils/date-utils";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuarter, mutedTextColors, readableGoalTextColor, goalCheckboxAchromaticStyle, goalCheckboxColors } from "../../constants/colors";
@@ -86,14 +86,12 @@ function BlocksRendererComponent({
   const hasSelection = weekSel?.qi === _qi;
 
   return (
-    <LayoutGroup>
-      <div className="flex flex-col gap-2.5">
-        <AnimatePresence initial={false}>
-          {blocks.map((block) => {
-            const blockRows = weeks.slice(
-              startIndex + block.start,
-              startIndex + block.end,
-            );
+    <div className="flex flex-col gap-2.5">
+      {blocks.map((block) => {
+        const blockRows = weeks.slice(
+          startIndex + block.start,
+          startIndex + block.end,
+        );
             const allDays = blockRows.flatMap((r) => r.days);
             // Count only days that belong to the viewed year so that cross-year
             // grid weeks (e.g. Dec 29-31 from the prior year in Q1's first week)
@@ -168,13 +166,8 @@ function BlocksRendererComponent({
             const mt = mutedTextColors(block.color ?? quarter.key, dark);
 
             return (
-              <motion.div
-                layout
+              <div
                 key={block.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ type: "spring", stiffness: 320, damping: 30 }}
                 style={{
                   background: "transparent",
                   borderRadius: 14,
@@ -518,10 +511,8 @@ function BlocksRendererComponent({
                       return s + (g ? g.count : 0);
                     }, 0);
                     return (
-                      <motion.div
+                      <div
                         key={wi}
-                        layout="position"
-                        className="transform-gpu will-change-transform"
                         style={{ display: "flex", flexDirection: "column" }}
                       >
                         {/* Three-column week row: [left 60px] [tiles flex-1] [right 60px] */}
@@ -676,114 +667,115 @@ function BlocksRendererComponent({
                             )}
                           </div>
                         </div>
-                        <AnimatePresence initial={false} mode="popLayout">
+                        <AnimatePresence initial={false}>
                           {isPanelOpen && (
                             <motion.div
                               key={`week-selection-panel-${_qi}-${qOffset}`}
-                              initial={{ y: "100%", opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              exit={{ y: "100%", opacity: 0 }}
+                              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                              animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+                              exit={{ height: 0, opacity: 0, marginTop: 0 }}
                               transition={{
-                                type: "spring",
-                                stiffness: 400,
-                                damping: 35,
+                                height: { type: "spring", stiffness: 420, damping: 36 },
+                                marginTop: { type: "spring", stiffness: 420, damping: 36 },
+                                opacity: { duration: 0.18, ease: "easeInOut" },
                               }}
                               className="transform-gpu will-change-transform"
                               style={{
                                 overflow: "hidden",
-                                marginTop: 8,
                                 WebkitTapHighlightColor: "transparent",
                               }}
                             >
-                              <div
-                                data-week-selection-panel
-                                className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl transform-gpu will-change-transform"
-                                style={{
-                                  background: "transparent",
-                                  border: `1px solid ${quarter.border}55`,
-                                  WebkitTapHighlightColor: "transparent",
-                                }}
-                              >
-                                <div className="flex flex-col gap-0.5 min-w-0">
-                                  <span
-                                    className="text-[12px] font-semibold truncate"
-                                    style={{ color: quarter.text }}
-                                  >
-                                    {selMin === selMax
-                                      ? `${t("week")} ${selMin + startIndex + 1}`
-                                      : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
-                                  </span>
-                                  <span
-                                    className="text-[10px]"
-                                    style={{ color: "var(--text-tertiary)" }}
-                                  >
-                                    {pluralWeeks(selMax - selMin + 1, lang, t)}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <motion.button
-                                    type="button"
-                                    whileTap={{ scale: 0.96 }}
-                                    onClick={onCancelSel}
-                                    className="transform-gpu will-change-transform"
-                                    style={{
-                                      height: 28,
-                                      paddingInline: 10,
-                                      borderRadius: 8,
-                                      border: `1px solid ${quarter.border}44`,
-                                      background: "transparent",
-                                      color: "var(--text-secondary)",
-                                      fontSize: 12,
-                                      cursor: "pointer",
-                                      fontFamily: "inherit",
-                                      WebkitTapHighlightColor: "transparent",
-                                    }}
-                                  >
-                                    {t("cancel")}
-                                  </motion.button>
-                                  <motion.button
-                                    type="button"
-                                    whileTap={{ scale: 0.96 }}
-                                    onClick={() => onCreateSprint(selMin, selMax)}
-                                    className="transform-gpu will-change-transform"
-                                    style={{
-                                      height: 28,
-                                      paddingInline: 12,
-                                      borderRadius: 8,
-                                      border:
-                                        quarter.key === "white" && !dark
-                                          ? "1px solid rgba(0,0,0,0.15)"
-                                          : "none",
-                                      background: quarter.border,
-                                      color:
-                                        quarter.key === "white"
-                                          ? "#000000"
-                                          : "white",
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      cursor: "pointer",
-                                      fontFamily: "inherit",
-                                      boxShadow: `0 2px 8px ${quarter.border}55`,
-                                      WebkitTapHighlightColor: "transparent",
-                                    }}
-                                  >
-                                    {t("createSprint")}
-                                  </motion.button>
+                              <div style={{ padding: "2px" }}>
+                                <div
+                                  data-week-selection-panel
+                                  className="flex items-center justify-between gap-3 px-3 py-2.5 transform-gpu will-change-transform"
+                                  style={{
+                                    background: "transparent",
+                                    borderRadius: 14,
+                                    border: `2px solid ${effectiveQ.border}`,
+                                    boxShadow: effectiveQ.contrastBorderShadow,
+                                    WebkitTapHighlightColor: "transparent",
+                                  }}
+                                >
+                                  <div className="flex flex-col gap-0.5 min-w-0">
+                                    <span
+                                      className="text-[12px] font-semibold truncate"
+                                      style={{ color: effectiveQ.nameColor ?? effectiveQ.text }}
+                                    >
+                                      {selMin === selMax
+                                        ? `${t("week")} ${selMin + startIndex + 1}`
+                                        : `${t("week")} ${selMin + startIndex + 1}–${selMax + startIndex + 1}`}
+                                    </span>
+                                    <span
+                                      className="text-[10px]"
+                                      style={{ color: "var(--text-tertiary)" }}
+                                    >
+                                      {pluralWeeks(selMax - selMin + 1, lang, t)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <motion.button
+                                      type="button"
+                                      whileTap={{ scale: 0.96 }}
+                                      onClick={onCancelSel}
+                                      className="transform-gpu will-change-transform"
+                                      style={{
+                                        height: 28,
+                                        paddingInline: 10,
+                                        borderRadius: 8,
+                                        border: `1px solid ${effectiveQ.border}44`,
+                                        background: "transparent",
+                                        color: "var(--text-secondary)",
+                                        fontSize: 12,
+                                        cursor: "pointer",
+                                        fontFamily: "inherit",
+                                        WebkitTapHighlightColor: "transparent",
+                                      }}
+                                    >
+                                      {t("cancel")}
+                                    </motion.button>
+                                    <motion.button
+                                      type="button"
+                                      whileTap={{ scale: 0.96 }}
+                                      onClick={() => onCreateSprint(selMin, selMax)}
+                                      className="transform-gpu will-change-transform"
+                                      style={{
+                                        height: 28,
+                                        paddingInline: 12,
+                                        borderRadius: 8,
+                                        border:
+                                          effectiveQ.key === "white" && !dark
+                                            ? "1px solid rgba(0,0,0,0.15)"
+                                            : "none",
+                                        background: effectiveQ.border,
+                                        color:
+                                          effectiveQ.key === "white"
+                                            ? "#000000"
+                                            : "white",
+                                        fontSize: 12,
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                        fontFamily: "inherit",
+                                        boxShadow: `0 2px 8px ${effectiveQ.border}55`,
+                                        WebkitTapHighlightColor: "transparent",
+                                      }}
+                                    >
+                                      {t("createSprint")}
+                                    </motion.button>
+                                  </div>
                                 </div>
                               </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </AnimatePresence>
       </div>
-    </LayoutGroup>
   );
 }
 

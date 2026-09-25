@@ -76,7 +76,7 @@ export function SprintSettingsModal({
     commitBlocks(
       blocksRef.current.map((b) => (b.id === id ? { ...b, ...patch } : b)),
     );
-  const applyPreset = (parts: number[]) =>
+  const applyPreset = (parts: number[]) => {
     commitBlocks(
       parts.map((w, i) => ({
         id: makeId(),
@@ -84,6 +84,7 @@ export function SprintSettingsModal({
         label: `${t("sprintLabel")} ${i + 1}`,
       })),
     );
+  };
   const [activeColorPickerBlockId, setActiveColorPickerBlockId] = useState<
     string | null
   >(null);
@@ -560,7 +561,7 @@ export function SprintSettingsModal({
               />
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   commitBlocks([
                     ...blocksRef.current,
                     {
@@ -568,8 +569,8 @@ export function SprintSettingsModal({
                       weeks: Math.max(1, remaining > 0 ? remaining : 1),
                       label: `${t("sprintLabel")} ${blocksRef.current.length + 1}`,
                     },
-                  ])
-                }
+                  ]);
+                }}
                 disabled={remaining < 1}
                 className="text-[12px] font-medium mt-1 self-start"
                 style={{
@@ -665,10 +666,11 @@ export function SprintSettingsModal({
         open={confirmDeleteId !== null}
         onClose={() => setConfirmDeleteId(null)}
         onConfirm={() => {
-          if (confirmDeleteId)
+          if (confirmDeleteId) {
             commitBlocks(
               blocksRef.current.filter((x) => x.id !== confirmDeleteId),
             );
+          }
         }}
         message={t("deleteSprintConfirm")}
         confirmLabel={t("deleteSprintBtn")}

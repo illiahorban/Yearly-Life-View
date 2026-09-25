@@ -1274,6 +1274,59 @@ function App() {
       calendarScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, [viewYear]);
 
+  const scrollToWeek = useCallback((weekIdx: number, smooth = true) => {
+    if (weekIdx < 0) return;
+    const container = calendarScrollRef.current;
+    const el = weekRefs.current[weekIdx];
+    if (!container || !el) return;
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const targetScrollTop =
+      container.scrollTop +
+      (elRect.top - containerRect.top) -
+      (container.clientHeight / 2 - el.clientHeight / 2);
+    container.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior: smooth ? "smooth" : "auto",
+    });
+  }, []);
+
+  const [showTodayBtn, setShowTodayBtn] = useState(false);
+  const pendingScrollToTodayRef = useRef(false);
+
+  const scrollToToday = useCallback(
+    (smooth = true) => {
+      if (viewYear !== now.getFullYear()) {
+        pendingScrollToTodayRef.current = true;
+        setViewYear(now.getFullYear());
+        return;
+      }
+      if (currentWeekIndex < 0) return;
+      scrollToWeek(currentWeekIndex, smooth);
+      const el = weekRefs.current[currentWeekIndex];
+      if (el && typeof el.animate === "function") {
+        el.animate(
+          [
+            { boxShadow: "0 0 0 2px #34c759, 0 0 14px rgba(52,199,89,0.45)" },
+            { boxShadow: "0 0 0 0px transparent, 0 0 0px transparent" },
+          ],
+          { duration: 900, easing: "ease-out" },
+        );
+      }
+    },
+    [viewYear, now, currentWeekIndex, scrollToWeek],
+  );
+
+  useEffect(() => {
+    if (viewYear === now.getFullYear() && pendingScrollToTodayRef.current) {
+      pendingScrollToTodayRef.current = false;
+      const raf = requestAnimationFrame(() => {
+        scrollToToday(true);
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [viewYear, scrollToToday, now]);
+
   useEffect(() => {
     if (
       didScrollRef.current ||
@@ -1283,37 +1336,10 @@ function App() {
       return;
     const el = weekRefs.current[currentWeekIndex];
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      scrollToWeek(currentWeekIndex, false);
       didScrollRef.current = true;
     }
-  }, [currentWeekIndex, viewYear]);
-
-  const pendingScrollToTodayRef = useRef(false);
-  useEffect(() => {
-    if (viewYear === now.getFullYear() && pendingScrollToTodayRef.current) {
-      pendingScrollToTodayRef.current = false;
-      const timer = setTimeout(() => {
-        weekRefs.current[currentWeekIndex]?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }, 70);
-      return () => clearTimeout(timer);
-    }
-  }, [viewYear, currentWeekIndex]);
-
-  const [showTodayBtn, setShowTodayBtn] = useState(false);
-  const scrollToToday = () => {
-    if (viewYear !== now.getFullYear()) {
-      pendingScrollToTodayRef.current = true;
-      setViewYear(now.getFullYear());
-    } else {
-      weekRefs.current[currentWeekIndex]?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
-  };
+  }, [currentWeekIndex, viewYear, scrollToWeek]);
   useEffect(() => {
     if (viewYear !== now.getFullYear()) {
       setShowTodayBtn(true);
@@ -2423,69 +2449,67 @@ function App() {
           className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8">
-            <LayoutGroup>
-              <div className="flex flex-col gap-3 sm:gap-6">
-              {[0, 1, 2, 3].map((qi) => {
-                const quarter = resolvedQuarters[qi]!;
-                const meta = quarterMeta[qi]!;
-                const qWeeksCount = qi === 3 ? q4Weeks : WEEKS_PER_QUARTER;
-                const startIndex = qi * WEEKS_PER_QUARTER;
-                const qConfig = config.quarters[qi]!;
+          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8 pb-32 sm:pb-48">
+            <div className="flex flex-col gap-3 sm:gap-6">
+            {[0, 1, 2, 3].map((qi) => {
+              const quarter = resolvedQuarters[qi]!;
+              const meta = quarterMeta[qi]!;
+              const qWeeksCount = qi === 3 ? q4Weeks : WEEKS_PER_QUARTER;
+              const startIndex = qi * WEEKS_PER_QUARTER;
+              const qConfig = config.quarters[qi]!;
 
-                // Quarter day counters: count grid cells that belong to the current year.
-                // Q1 may start with a few days from the previous year (grid begins on the
-                // Monday before Jan 1), and Q4 may end with a few days from the next year
-                // (the 53rd week completes the last partial week of Dec). Filtering to
-                // viewYear gives the actual cells the user sees for this year.
-                const qWeeks = weeks.slice(
-                  startIndex,
-                  startIndex + qWeeksCount,
-                );
-                const qAllDays = qWeeks.flatMap((w) => w.days);
-                const qYearDays = qAllDays.filter(
-                  (d) => d.getFullYear() === viewYear,
-                );
-                const qTotalDays = qYearDays.length;
-                const qPastDays = qYearDays.filter((d) => d < today).length;
-                const qHasToday = qYearDays.some((d) => sameDay(d, today));
-                const qCompleted =
-                  qPastDays + (qHasToday ? todayProgress / 100 : 0);
-                const qPct =
-                  qTotalDays > 0
-                    ? Math.max(
-                        0,
-                        Math.min(100, (qCompleted / qTotalDays) * 100),
-                      )
-                    : 0;
-                const qRemainingDays = Math.max(
-                  0,
-                  qTotalDays - qPastDays - (qHasToday ? 1 : 0),
-                );
-                const qIsComplete =
-                  qYearDays.length > 0 &&
-                  qYearDays[qYearDays.length - 1]! < today;
-                const qStreak = computeQuarterStreak(qAllDays);
-                const qDayStart =
-                  qYearDays.length > 0 ? dayOfYear(qYearDays[0]!) : 0;
-                const qDayEnd =
-                  qYearDays.length > 0
-                    ? dayOfYear(qYearDays[qYearDays.length - 1]!)
-                    : 0;
-                const mt = mutedTextColors(meta.colorKey, dark);
+              // Quarter day counters: count grid cells that belong to the current year.
+              // Q1 may start with a few days from the previous year (grid begins on the
+              // Monday before Jan 1), and Q4 may end with a few days from the next year
+              // (the 53rd week completes the last partial week of Dec). Filtering to
+              // viewYear gives the actual cells the user sees for this year.
+              const qWeeks = weeks.slice(
+                startIndex,
+                startIndex + qWeeksCount,
+              );
+              const qAllDays = qWeeks.flatMap((w) => w.days);
+              const qYearDays = qAllDays.filter(
+                (d) => d.getFullYear() === viewYear,
+              );
+              const qTotalDays = qYearDays.length;
+              const qPastDays = qYearDays.filter((d) => d < today).length;
+              const qHasToday = qYearDays.some((d) => sameDay(d, today));
+              const qCompleted =
+                qPastDays + (qHasToday ? todayProgress / 100 : 0);
+              const qPct =
+                qTotalDays > 0
+                  ? Math.max(
+                      0,
+                      Math.min(100, (qCompleted / qTotalDays) * 100),
+                    )
+                  : 0;
+              const qRemainingDays = Math.max(
+                0,
+                qTotalDays - qPastDays - (qHasToday ? 1 : 0),
+              );
+              const qIsComplete =
+                qYearDays.length > 0 &&
+                qYearDays[qYearDays.length - 1]! < today;
+              const qStreak = computeQuarterStreak(qAllDays);
+              const qDayStart =
+                qYearDays.length > 0 ? dayOfYear(qYearDays[0]!) : 0;
+              const qDayEnd =
+                qYearDays.length > 0
+                  ? dayOfYear(qYearDays[qYearDays.length - 1]!)
+                  : 0;
+              const mt = mutedTextColors(meta.colorKey, dark);
 
-                return (
-                  <motion.section
-                    layout
-                    key={qi}
-                    className="overflow-visible"
-                    style={{
-                      background: "transparent",
-                      borderRadius: 18,
-                      border: `3px solid ${quarter.border}`,
-                      boxShadow: quarter.contrastBorderShadow,
-                    }}
-                  >
+              return (
+                <section
+                  key={qi}
+                  className="overflow-visible"
+                  style={{
+                    background: "transparent",
+                    borderRadius: 18,
+                    border: `3px solid ${quarter.border}`,
+                    boxShadow: quarter.contrastBorderShadow,
+                  }}
+                >
                     {/* Sticky quarter header — sticks just below main app header */}
                     <div style={{ borderRadius: 16 }}>
                       {/* Centered quarter weeks & days info */}
@@ -2854,6 +2878,14 @@ function App() {
                         }
                         onWeekLabelClick={handleWeekLabelClick}
                         onCreateSprint={(selStart, selEnd) => {
+                          const container = calendarScrollRef.current;
+                          const targetWeekIdx = qi * WEEKS_PER_QUARTER + selStart;
+                          const targetEl = weekRefs.current[targetWeekIdx];
+                          const oldTop =
+                            targetEl && container
+                              ? targetEl.getBoundingClientRect().top
+                              : null;
+
                           updateQuarter(
                             qi,
                             createSprintFromSelection(
@@ -2864,16 +2896,29 @@ function App() {
                             ),
                           );
                           setWeekSel(null);
+
+                          if (container && oldTop !== null) {
+                            requestAnimationFrame(() => {
+                              const newEl = weekRefs.current[targetWeekIdx];
+                              if (newEl && container) {
+                                const newTop =
+                                  newEl.getBoundingClientRect().top;
+                                const diff = newTop - oldTop;
+                                if (Math.abs(diff) > 0.5) {
+                                  container.scrollTop += diff;
+                                }
+                              }
+                            });
+                          }
                         }}
                         onCancelSel={() => setWeekSel(null)}
                         viewYear={viewYear}
                       />
                     </div>
-                  </motion.section>
+                  </section>
                 );
               })}
               </div>
-            </LayoutGroup>
 
             <footer
               className="mt-12 pb-8 text-center text-xs"
@@ -2898,7 +2943,10 @@ function App() {
               onColorChange={(key) =>
                 updateQuarterMeta(settingsQuarter, { colorKey: key })
               }
-              onClose={() => setSettingsQuarter(null)}
+              onClose={() => {
+                setSettingsQuarter(null);
+                requestAnimationFrame(() => scrollToToday(true));
+              }}
               onAutoSave={(next) => updateQuarter(settingsQuarter, next)}
               quarterName={quarterMeta[settingsQuarter]!.name}
               onQuarterNameChange={(name) =>
@@ -2910,6 +2958,7 @@ function App() {
               onSave={(next) => {
                 updateQuarter(settingsQuarter, next);
                 setSettingsQuarter(null);
+                requestAnimationFrame(() => scrollToToday(true));
               }}
               onResetBlock={(blockId) => {
                 const qi = settingsQuarter;
@@ -3333,6 +3382,9 @@ function App() {
               applySnapshot(resetSnapshot);
               await triggerSync(resetSnapshot);
               setFactoryResetStep(0);
+              setTimeout(() => {
+                scrollToToday(true);
+              }, 60);
             } catch (e) {
               console.error("Ошибка при сбросе данных календаря:", e);
               window.alert(
