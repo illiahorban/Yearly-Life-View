@@ -37,62 +37,39 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   lang,
   t,
 }) => {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (searchOpen) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 160);
+      return () => clearTimeout(timer);
+    }
+  }, [searchOpen]);
+
   return (
     <div
       ref={searchBarRef}
-      style={
-        isMobile
-          ? {
-              position: "relative",
-              height: searchOpen ? 52 : 0,
-              overflow: "visible",
-            }
-          : undefined
-      }
+      className="w-full min-w-0"
+      style={{ position: "relative" }}
     >
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {searchOpen && (
           <motion.div
             key="search-bar"
-            initial={
-              isMobile
-                ? { opacity: 0, y: -8 }
-                : { opacity: 0, height: 0, marginTop: 0 }
-            }
-            animate={
-              isMobile
-                ? { opacity: 1, y: 0 }
-                : { opacity: 1, height: "auto", marginTop: 10 }
-            }
-            exit={
-              isMobile
-                ? { opacity: 0, y: -8 }
-                : { opacity: 0, height: 0, marginTop: 0 }
-            }
-            transition={
-              isMobile
-                ? {
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 35,
-                  }
-                : { duration: 0.2, ease: "easeInOut" }
-            }
-            className={isMobile ? "transform-gpu will-change-transform" : undefined}
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: "auto", opacity: 1, marginTop: isMobile ? 8 : 10 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            transition={{
+              height: { type: "spring", stiffness: 420, damping: 36 },
+              marginTop: { type: "spring", stiffness: 420, damping: 36 },
+              opacity: { duration: 0.18, ease: "easeInOut" },
+            }}
+            className="w-full transform-gpu will-change-transform"
             style={{
-              ...(isMobile
-                ? {
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    marginTop: 10,
-                    WebkitTapHighlightColor: "transparent",
-                  }
-                : {
-                    overflow: "hidden",
-                    willChange: "height, opacity",
-                  }),
+              overflow: "hidden",
+              WebkitTapHighlightColor: "transparent",
             }}
           >
             <div className="relative flex items-center">
@@ -108,6 +85,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <SearchIcon />
               </div>
               <input
+                ref={inputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -127,6 +105,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 placeholder={t("searchPlaceholder")}
                 style={{
                   width: "100%",
+                  boxSizing: "border-box",
                   paddingLeft: 34,
                   paddingRight:
                     matchedDatesArray.length > 0
