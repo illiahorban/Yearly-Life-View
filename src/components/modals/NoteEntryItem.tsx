@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { NoteEntry } from "../../types/calendar";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
-import { useIsMobile } from "../../hooks/use-mobile";
 import { DraggableCard } from "./DraggableCard";
 import { LangContext } from "../../constants/i18n";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
@@ -55,7 +54,6 @@ export function NoteEntryItem({
   autoFocus?: boolean;
 }) {
   const { t } = React.useContext(LangContext);
-  const isMobile = useIsMobile();
   const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -134,13 +132,11 @@ export function NoteEntryItem({
             gap: 6,
             transition: "top 150ms",
             opacity:
-              isMobile ||
               hoveredEntryId === entry.id ||
               colorPickerEntryId === entry.id
                 ? 1
                 : 0,
             pointerEvents:
-              isMobile ||
               hoveredEntryId === entry.id ||
               colorPickerEntryId === entry.id
                 ? "auto"
@@ -242,9 +238,7 @@ export function NoteEntryItem({
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              opacity: hoveredEntryId === entry.id ? 1 : 0,
-              pointerEvents: hoveredEntryId === entry.id ? "auto" : "none",
-              transition: "opacity 150ms, background 0.1s",
+              transition: "background 0.1s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = dark
