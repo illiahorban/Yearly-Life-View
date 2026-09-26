@@ -2002,18 +2002,25 @@ function App() {
                     }}
                     bg={settingsOpen ? "rgba(0,122,255,0.13)" : overlayBg}
                   >
-                    <span
+                    <motion.span
+                      className="transform-gpu will-change-transform"
+                      animate={{ rotate: settingsOpen ? 90 : 0 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 340,
+                        damping: 24,
+                      }}
                       style={{
-                        display: "inline-flex",
-                        transition:
-                          "transform 320ms cubic-bezier(0.34,1.56,0.64,1)",
-                        transform: settingsOpen
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 16,
+                        height: 16,
+                        transformOrigin: "center center",
                       }}
                     >
-                      <GearIcon />
-                    </span>
+                      <GearIcon size={16} />
+                    </motion.span>
                     <span
                       aria-hidden="true"
                       title={syncLabel}
