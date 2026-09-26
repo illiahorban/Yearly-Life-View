@@ -28,15 +28,21 @@ export function QuarterNameEditor({
     fontFamily: "inherit",
     padding: "1px 0",
     wordBreak: "break-word",
-    overflowWrap: "break-word",
+    overflowWrap: "anywhere",
     whiteSpace: "pre-wrap",
     gridArea: "1/1",
+    minWidth: 0,
+    maxWidth: "100%",
+    boxSizing: "border-box",
   };
   return (
     <div
       style={{
         display: "inline-grid",
+        width: "100%",
         maxWidth: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
       }}
     >
       <textarea

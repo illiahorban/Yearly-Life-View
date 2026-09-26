@@ -302,23 +302,34 @@ export function GoalsModal({
               >
                 {titleLabel ?? t("sprintGoals")}
               </div>
-              <input
+              <TextareaAutosize
                 value={label}
                 onChange={(e) => commitLabel(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") e.currentTarget.blur();
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
                 }}
+                minRows={1}
                 style={{
                   width: "100%",
                   background: "transparent",
                   border: "none",
                   outline: "none",
+                  resize: "none",
+                  overflow: "hidden",
                   fontSize: isMobile ? 16 : 15,
                   fontWeight: 600,
                   letterSpacing: "-0.01em",
                   color: "var(--text)",
                   fontFamily: "inherit",
                   padding: 0,
+                  display: "block",
+                  lineHeight: 1.35,
+                  minWidth: 0,
+                  overflowWrap: "anywhere",
+                  wordBreak: "break-word",
                 }}
               />
             </div>

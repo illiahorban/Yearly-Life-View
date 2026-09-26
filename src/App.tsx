@@ -2446,11 +2446,11 @@ function App() {
 
         <main
           ref={calendarScrollRef}
-          className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
+          className="min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8 pb-32 sm:pb-48">
-            <div className="flex flex-col gap-3 sm:gap-6">
+          <div className="mx-auto max-w-3xl px-3 py-4 sm:px-8 sm:py-8 pb-32 sm:pb-48 w-full min-w-0">
+            <div className="flex flex-col gap-3 sm:gap-6 w-full min-w-0">
             {[0, 1, 2, 3].map((qi) => {
               const quarter = resolvedQuarters[qi]!;
               const meta = quarterMeta[qi]!;
@@ -2502,12 +2502,13 @@ function App() {
               return (
                 <section
                   key={qi}
-                  className="overflow-visible"
+                  className="w-full min-w-0"
                   style={{
                     background: "transparent",
                     borderRadius: 18,
                     border: `3px solid ${quarter.border}`,
                     boxShadow: quarter.contrastBorderShadow,
+                    overflow: "hidden",
                   }}
                 >
                     {/* Sticky quarter header — sticks just below main app header */}
@@ -2738,9 +2739,12 @@ function App() {
                           ) ?? [];
                         if (activeQGoals.length === 0 && !qg?.description) return null;
                         return (
-                          <div className="px-3 sm:px-5 pb-3">
+                          <div className="px-3 sm:px-5 pb-3 w-full min-w-0">
                             {qg?.description ? (
-                              <div className="flex items-stretch gap-1.5 mb-2">
+                              <div
+                                className="flex items-stretch gap-1.5 mb-2 min-w-0 w-full"
+                                style={{ maxWidth: "100%", boxSizing: "border-box" }}
+                              >
                                 <span
                                   className="w-[2px] rounded-full flex-shrink-0 self-stretch my-0.5"
                                   style={{
@@ -2749,7 +2753,7 @@ function App() {
                                   }}
                                 />
                                 <p
-                                  className="leading-snug"
+                                  className="leading-snug flex-1 min-w-0"
                                   style={{
                                     fontSize: 13,
                                     color: mt.tertiary,
@@ -2760,6 +2764,10 @@ function App() {
                                     marginLeft: 0,
                                     opacity: 0.8,
                                     whiteSpace: "pre-wrap",
+                                    overflowWrap: "anywhere",
+                                    wordBreak: "break-word",
+                                    maxWidth: "100%",
+                                    boxSizing: "border-box",
                                   }}
                                 >
                                   {qg.description}
@@ -2838,7 +2846,7 @@ function App() {
                     </div>
                     {/* end quarter header wrapper */}
 
-                    <div className="pb-3 sm:pb-4 px-2 sm:px-4 pt-0 flex flex-col gap-2">
+                    <div className="pb-3 sm:pb-4 px-2 sm:px-4 pt-0 flex flex-col gap-2 w-full min-w-0">
                       <BlocksRenderer
                         qi={qi}
                         quarter={quarter}

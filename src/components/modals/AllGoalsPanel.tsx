@@ -345,6 +345,11 @@ export function AllGoalsPanel({
                       paddingLeft: 8,
                       lineHeight: "1.5",
                       whiteSpace: "pre-wrap",
+                      minWidth: 0,
+                      maxWidth: "100%",
+                      overflowWrap: "anywhere",
+                      wordBreak: "break-word",
+                      boxSizing: "border-box",
                     }}
                   >
                     {yearGoals.description}

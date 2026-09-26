@@ -86,7 +86,7 @@ function BlocksRendererComponent({
   const hasSelection = weekSel?.qi === _qi;
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5 w-full min-w-0">
       {blocks.map((block) => {
         const blockRows = weeks.slice(
           startIndex + block.start,
@@ -168,12 +168,13 @@ function BlocksRendererComponent({
             return (
               <div
                 key={block.id}
+                className="w-full min-w-0"
                 style={{
                   background: "transparent",
                   borderRadius: 14,
                   border: `2px solid ${effectiveQ.border}`,
                   boxShadow: effectiveQ.contrastBorderShadow,
-                  overflow: "visible",
+                  overflow: "hidden",
                 }}
               >
                 {/* Header */}
@@ -392,13 +393,16 @@ function BlocksRendererComponent({
                 {/* Sprint description */}
                 {bg?.description && (
                   <div
-                    className="px-2 sm:px-3.5 pb-2"
+                    className="px-2 sm:px-3.5 pb-2 min-w-0 w-full"
                     style={{
                       paddingBottom: 4,
+                      boxSizing: "border-box",
+                      maxWidth: "100%",
                     }}
                   >
                     <div
-                      className="flex items-stretch gap-1.5"
+                      className="flex items-stretch gap-1.5 min-w-0 w-full"
+                      style={{ maxWidth: "100%", boxSizing: "border-box" }}
                     >
                       <span
                         className="w-[2px] rounded-full flex-shrink-0 self-stretch my-0.5"
@@ -408,13 +412,17 @@ function BlocksRendererComponent({
                         }}
                       />
                       <p
-                        className="text-[11px] leading-snug"
+                        className="text-[11px] leading-snug flex-1 min-w-0"
                         style={{
                           color: mt.tertiary,
                           paddingLeft: 0,
                           paddingTop: 0,
                           paddingBottom: 0,
                           whiteSpace: "pre-wrap",
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
+                          maxWidth: "100%",
+                          boxSizing: "border-box",
                         }}
                       >
                         {bg.description}
