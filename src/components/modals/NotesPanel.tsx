@@ -333,7 +333,7 @@ export function NotesPanel({
                 width: "100%",
                 height: 34,
                 borderRadius: 10,
-                border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                border: `1px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
                 background: "transparent",
                 color: "var(--text-secondary)",
                 fontSize: 13,
@@ -382,7 +382,7 @@ export function NotesPanel({
                     style={{
                       width: "100%",
                       borderRadius: 10,
-                      border: `1.5px solid ${draftEc.border}`,
+                      border: `1px solid ${draftEc.border}`,
                       background: draftEc.bg,
                       color: draftEc.textTitle,
                       fontSize: 13,
@@ -444,7 +444,7 @@ export function NotesPanel({
                     (dark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)"),
                   border: "none",
                   boxShadow:
-                    "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3.5px rgba(0,0,0,0.32), 0 1px 3px rgba(0,0,0,0.18)",
+                    "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.32)",
                   cursor: "pointer",
                   display: "block",
                   padding: 0,
@@ -671,7 +671,7 @@ export function NotesPanel({
                                 : dark
                                   ? "rgba(255,255,255,0.05)"
                                   : "rgba(0,0,0,0.03)",
-                            border: `1.5px solid ${quarter.border}`,
+                            border: `1px solid ${quarter.border}`,
                             boxShadow: quarter.contrastBorderShadow,
                             cursor: "pointer",
                             textAlign: "left",
@@ -708,7 +708,7 @@ export function NotesPanel({
                                   style={{
                                     padding: "8px 10px 8px 12px",
                                     borderRadius: 12,
-                                    border: `1.5px solid ${eec.border}`,
+                                    border: `1px solid ${eec.border}`,
                                     background: eec.bg,
                                     overflow: "hidden",
                                   }}

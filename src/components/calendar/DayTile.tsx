@@ -596,7 +596,7 @@ function DayTileComponent({
                         padding: "6px 9px",
                         borderRadius: 8,
                         background: "rgba(255,255,255,0.06)",
-                        border: `1.5px solid ${getEventColors(n.color ?? "", dark).border || "rgba(255,255,255,0.08)"}`,
+                        border: `1px solid ${getEventColors(n.color ?? "", dark).border || "rgba(255,255,255,0.08)"}`,
                         whiteSpace: "pre-wrap",
                         overflow: "hidden",
                         maxHeight: `${MAX_LINES * LINE_H}px`,
@@ -696,7 +696,7 @@ function DayTileComponent({
                   position: "absolute",
                   inset: 0,
                   borderRadius: 12,
-                  boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.18)",
+                  boxShadow: "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)",
                   pointerEvents: "none",
                   zIndex: 10,
                 }}
@@ -709,7 +709,7 @@ function DayTileComponent({
                   position: "absolute",
                   inset: 0,
                   borderRadius: 12,
-                  boxShadow: "inset 0 0 0 0.5px rgba(0, 0, 0, 0.40)",
+                  boxShadow: "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)",
                   pointerEvents: "none",
                   zIndex: 10,
                 }}
@@ -849,7 +849,7 @@ function DayTileComponent({
                 position: "absolute",
                 inset: 0,
                 borderRadius: 12,
-                boxShadow: `inset 0 0 0 1.5px ${ringAccent}`,
+                boxShadow: `inset 0 0 0 2px ${ringAccent}`,
                 pointerEvents: "none",
                 zIndex: 10,
               }}

@@ -504,7 +504,7 @@ export function LifeCalendarModal({
                     remMinutes > 0 ||
                     remSeconds > 0) && (
                     <div
-                      className="mt-1 text-[10.5px] tabular-nums leading-tight flex items-center justify-between"
+                      className="mt-1 text-[11px] tabular-nums leading-tight flex items-center justify-between"
                       style={{ color: "var(--text-tertiary)" }}
                     >
                       <span>{t("remainingLabel")}</span>

@@ -238,7 +238,7 @@ export function AllGoalsPanel({
               <div
                 style={{
                   borderRadius: 16,
-                  border: `1.5px solid ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)"}`,
+                  border: `1px solid ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)"}`,
                   overflow: "hidden",
                   background: dark
                     ? "rgba(255,255,255,0.05)"
@@ -401,7 +401,7 @@ export function AllGoalsPanel({
                               flexShrink: 0,
                               marginTop: 1,
                               background: goal.done ? gc : "transparent",
-                              border: `1.5px solid ${goal.done ? gc : goal.color ? gc : "var(--border-soft)"}`,
+                              border: `1px solid ${goal.done ? gc : goal.color ? gc : "var(--border-soft)"}`,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -480,7 +480,7 @@ export function AllGoalsPanel({
                   <div
                     style={{
                       borderRadius: 16,
-                      border: `1.5px solid ${qr.border}`,
+                      border: `1px solid ${qr.border}`,
                       boxShadow: qr.contrastBorderShadow,
                       overflow: "hidden",
                       background: "transparent",
@@ -631,7 +631,7 @@ export function AllGoalsPanel({
                                   background: goal.done
                                     ? cb.doneBg
                                     : cb.emptyBg,
-                                  border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                  border: `1px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -696,7 +696,7 @@ export function AllGoalsPanel({
                               key={block.id}
                               style={{
                                 borderRadius: 11,
-                                border: `1.5px solid ${effectiveQ.border}`,
+                                border: `1px solid ${effectiveQ.border}`,
                                 boxShadow: effectiveQ.contrastBorderShadow,
                                 overflow: "hidden",
                                 background: "transparent",
@@ -837,7 +837,7 @@ export function AllGoalsPanel({
                                           background: goal.done
                                             ? cb.doneBg
                                             : cb.emptyBg,
-                                          border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                          border: `1px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",

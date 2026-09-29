@@ -53,7 +53,7 @@ export const MilestoneCountdownStrip = React.memo(function MilestoneCountdownStr
                 className="h-7 inline-flex items-center justify-center gap-1.5 px-3 rounded-full text-[11px] font-medium shrink-0 box-border"
                 style={{
                   background: "transparent",
-                  border: `1.5px solid ${ec.border || "transparent"}`,
+                  border: `1px solid ${ec.border || "transparent"}`,
                   color: msColTxt,
                   cursor: "pointer",
                 }}

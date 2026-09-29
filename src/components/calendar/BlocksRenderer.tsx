@@ -471,7 +471,7 @@ function BlocksRendererComponent({
                                 flexShrink: 0,
                                 marginTop: 1,
                                 background: goal.done ? cb.doneBg : cb.emptyBg,
-                                border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                border: `1px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -503,7 +503,7 @@ function BlocksRendererComponent({
                 )}
 
                 {/* Week rows */}
-                <div className="flex flex-col gap-[2.67px] sm:gap-1.5 pb-3 pt-1">
+                <div className="flex flex-col gap-[3px] sm:gap-[6px] pb-3 pt-1">
                   {blockRows.map(({ days }, ri) => {
                     const wi = startIndex + block.start + ri;
                     const qOffset = block.start + ri;
@@ -570,8 +570,8 @@ function BlocksRendererComponent({
                                  justifyContent: "center",
                                  lineHeight: 1,
                                 boxShadow: isSel
-                                   ? `inset 0 0 0 1.5px ${effectiveQ.border}`
-                                  : "inset 0 0 0 1.5px transparent",
+                                   ? `inset 0 0 0 2px ${effectiveQ.border}`
+                                  : "inset 0 0 0 2px transparent",
                                 cursor: "pointer",
                                 fontFamily: "inherit",
                                 outline: "none",
@@ -586,7 +586,7 @@ function BlocksRendererComponent({
                           </div>
                           {/* MIDDLE COLUMN — day tiles, fills remaining space */}
                           <div
-                            className="grid grid-cols-7 gap-[2.67px] sm:gap-1.5"
+                            className="grid grid-cols-7 gap-[3px] sm:gap-[6px]"
                             style={{
                               flex: 1,
                               minWidth: 0,

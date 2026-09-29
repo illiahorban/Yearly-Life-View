@@ -1742,7 +1742,7 @@ function App() {
                             height: 30,
                             borderRadius: 999,
                             border: "none",
-                            boxShadow: "inset 0 0 0 1.5px var(--border-soft)",
+                            boxShadow: "inset 0 0 0 1px var(--border-soft)",
                             overflow: "visible",
                             cursor: "pointer",
                             padding: 0,
@@ -2410,7 +2410,7 @@ function App() {
                 }}
               />
               <div
-                className="grid grid-cols-7 gap-[2.67px] sm:gap-1.5"
+                className="grid grid-cols-7 gap-[3px] sm:gap-[6px]"
                 style={{
                   flex: 1,
                   minWidth: 0,
@@ -2817,7 +2817,7 @@ function App() {
                                         background: goal.done
                                           ? cb.doneBg
                                           : cb.emptyBg,
-                                        border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                        border: `1px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",

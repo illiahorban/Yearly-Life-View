@@ -209,6 +209,30 @@ export function GoalsModal({
   const borderColor = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
   const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.03)";
 
+  const isWhiteAccentInLight =
+    !dark &&
+    Boolean(
+      accentColor &&
+        (accentColor === "#ffffff" ||
+          accentColor === "#fff" ||
+          accentColor.toLowerCase() === "white"),
+    );
+  const isBlackAccentInDark =
+    dark &&
+    Boolean(
+      accentColor &&
+        (accentColor === "#000000" ||
+          accentColor === "#000" ||
+          accentColor.toLowerCase() === "black" ||
+          accentColor === "#121212" ||
+          accentColor === "#18181b"),
+    );
+  const accentContrastShadow = isWhiteAccentInLight
+    ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
+    : isBlackAccentInDark
+      ? "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
+      : undefined;
+
   return (
     <>
       <motion.div
@@ -263,9 +287,9 @@ export function GoalsModal({
             WebkitBackdropFilter: "saturate(180%) blur(28px)",
             borderRadius: 22,
             boxShadow: accentColor
-              ? `0 20px 60px rgba(0,0,0,0.28), 0 0 0 1.5px ${accentColor}`
-              : `0 20px 60px rgba(0,0,0,0.28), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
-            border: `1.5px solid ${accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)")}`,
+              ? `0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px ${accentColor}${accentContrastShadow ? `, ${accentContrastShadow}` : ""}`
+              : `0 20px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+            border: `1px solid ${accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)")}`,
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
@@ -402,7 +426,7 @@ export function GoalsModal({
                     width: "100%",
                     height: 34,
                     borderRadius: 10,
-                    border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                    border: `1px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
                     background: "transparent",
                     color: "var(--text-secondary)",
                     fontSize: 13,
@@ -444,14 +468,15 @@ export function GoalsModal({
                       : undefined;
                     const dotBorder =
                       ach?.tier === "white"
-                        ? "1.5px solid rgba(0,0,0,0.35)"
-                        : `1.5px solid ${dark ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)"}`;
+                        ? "1px solid rgba(0,0,0,0.35)"
+                        : `1px solid ${dark ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)"}`;
                     return (
                       <div
                         key={g.id}
                         className="flex items-center gap-2"
                         onMouseEnter={() => setHoveredGoalId(g.id)}
                         onMouseLeave={() => setHoveredGoalId(null)}
+                        onFocusCapture={() => setHoveredGoalId(g.id)}
                       >
                         <span
                           className="text-[11px] tabular-nums w-4 text-right shrink-0"
@@ -488,7 +513,7 @@ export function GoalsModal({
                               overflowWrap: "anywhere",
                               wordBreak: "break-word",
                               background: inputBackground,
-                              border: `1.5px solid ${inputBorderColor}`,
+                              border: `1px solid ${inputBorderColor}`,
                               borderRadius: 12,
                               padding: "8px 59px 8px 10px",
                               fontSize: isMobile ? 16 : 13,
@@ -508,25 +533,19 @@ export function GoalsModal({
                           <div
                             style={{
                               position: "absolute",
-                              top:
-                                (goalInputHeights[g.id] ?? 20) > 24 ? 8 : "50%",
-                              transform:
-                                (goalInputHeights[g.id] ?? 20) > 24
-                                  ? "none"
-                                  : "translateY(-50%)",
+                              top: isMobile ? 9 : 8,
+                              transform: "none",
                               right: 8,
                               display: "flex",
                               alignItems: "center",
+                              justifyContent: "center",
                               gap: 6,
-                              transition: "top 150ms",
                               opacity:
-                                isMobile ||
                                 hoveredGoalId === g.id ||
                                 colorPickerGoalId === g.id
                                   ? 1
                                   : 0,
                               pointerEvents:
-                                isMobile ||
                                 hoveredGoalId === g.id ||
                                 colorPickerGoalId === g.id
                                   ? "auto"
@@ -543,21 +562,24 @@ export function GoalsModal({
                               title={t("chooseColor")}
                               aria-label={t("chooseColor")}
                               style={{
-                                width: 20,
-                                height: 20,
+                                width: 22,
+                                height: 22,
                                 borderRadius: 999,
                                 flexShrink: 0,
                                 background: normaliseGrey(gc) || "transparent",
-                                border: "none",
-                                boxShadow: gc
-                                  ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                                  : "0 0 0 1.5px var(--border-soft)",
+                                border: gc
+                                  ? (dark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.18)")
+                                  : (dark ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(0,0,0,0.20)"),
+                                boxShadow: "none",
                                 boxSizing: "border-box",
                                 cursor: "pointer",
                                 position: "relative",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                margin: 0,
+                                padding: 0,
+                                lineHeight: 0,
                                 mixBlendMode: "normal",
                                 isolation: "isolate",
                               }}
@@ -567,7 +589,7 @@ export function GoalsModal({
                                   style={{
                                     position: "absolute",
                                     width: "55%",
-                                    height: "1.5px",
+                                    height: "1px",
                                     background: dark
                                       ? "rgba(255,255,255,0.55)"
                                       : "rgba(0,0,0,0.35)",
@@ -583,8 +605,8 @@ export function GoalsModal({
                               }}
                               onPointerDown={(e) => e.stopPropagation()}
                               style={{
-                                width: 20,
-                                height: 20,
+                                width: 22,
+                                height: 22,
                                 borderRadius: 999,
                                 border: "none",
                                 boxSizing: "border-box",
@@ -597,6 +619,9 @@ export function GoalsModal({
                                 alignItems: "center",
                                 justifyContent: "center",
                                 flexShrink: 0,
+                                margin: 0,
+                                padding: 0,
+                                lineHeight: 0,
                                 transition: "background 0.1s",
                               }}
                               onMouseEnter={(e) => {
@@ -611,13 +636,14 @@ export function GoalsModal({
                               }}
                             >
                               <svg
-                                width="9"
-                                height="9"
+                                width="10"
+                                height="10"
                                 viewBox="0 0 10 10"
                                 fill="none"
                                 stroke="currentColor"
                                 strokeWidth="1.8"
                                 strokeLinecap="round"
+                                style={{ display: "block" }}
                               >
                                 <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
                                 <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
@@ -637,7 +663,7 @@ export function GoalsModal({
                       width: "100%",
                       height: 34,
                       borderRadius: 10,
-                      border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                      border: `1px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
                       background: "transparent",
                       color: "var(--text-secondary)",
                       fontSize: 13,

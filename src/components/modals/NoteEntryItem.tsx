@@ -103,7 +103,7 @@ export function NoteEntryItem({
             width: "100%",
             resize: "none",
             outline: "none",
-            border: `1.5px solid ${tintedBorder}`,
+            border: `1px solid ${tintedBorder}`,
             borderRadius: 12,
             padding: "10px 60px 10px 16px",
             fontSize: 14,
@@ -123,14 +123,13 @@ export function NoteEntryItem({
         <div
           style={{
             position: "absolute",
-            top: (noteHeights[entry.id] ?? 44) > 44 ? 8 : "50%",
-            transform:
-              (noteHeights[entry.id] ?? 44) > 44 ? "none" : "translateY(-50%)",
+            top: 10,
+            transform: "none",
             right: 8,
             display: "flex",
             alignItems: "center",
+            justifyContent: "center",
             gap: 6,
-            transition: "top 150ms",
             opacity:
               hoveredEntryId === entry.id ||
               colorPickerEntryId === entry.id
@@ -144,7 +143,14 @@ export function NoteEntryItem({
             isolation: "isolate",
           }}
         >
-          <div style={{ position: "relative", display: "inline-flex" }}>
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <button
               ref={(el) => {
                 colorBtnRefs.current[entry.id] = el;
@@ -159,24 +165,26 @@ export function NoteEntryItem({
               aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
               data-testid={`note-color-btn-${idx}`}
               style={{
-                width: 19,
-                height: 19,
+                width: 20,
+                height: 20,
                 borderRadius: 999,
                 flexShrink: 0,
                 background: normaliseGrey(entryColor) || "transparent",
-                border: "none",
-                boxShadow: entryColor
-                  ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                  : "0 0 0 1.5px var(--border-soft)",
+                border: entryColor
+                  ? (dark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.18)")
+                  : (dark ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(0,0,0,0.20)"),
+                boxShadow: "none",
                 boxSizing: "border-box",
                 cursor: "pointer",
                 position: "relative",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                margin: 0,
+                padding: 0,
+                lineHeight: 0,
                 mixBlendMode: "normal",
                 isolation: "isolate",
-                marginRight: 1,
               }}
             >
               {!entryColor && (
@@ -184,7 +192,7 @@ export function NoteEntryItem({
                   style={{
                     position: "absolute",
                     width: "55%",
-                    height: "1.5px",
+                    height: "1px",
                     background: dark
                       ? "rgba(255,255,255,0.55)"
                       : "rgba(0,0,0,0.35)",
@@ -227,10 +235,11 @@ export function NoteEntryItem({
             }}
             onPointerDown={(e) => e.stopPropagation()}
             style={{
-              width: 26,
-              height: 26,
+              width: 24,
+              height: 24,
               borderRadius: 999,
               border: "none",
+              boxSizing: "border-box",
               background: dark ? "rgba(255,59,48,0.15)" : "rgba(255,59,48,0.1)",
               color: "#ff3b30",
               cursor: "pointer",
@@ -238,6 +247,9 @@ export function NoteEntryItem({
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
+              margin: 0,
+              padding: 0,
+              lineHeight: 0,
               transition: "background 0.1s",
             }}
             onMouseEnter={(e) => {
@@ -252,13 +264,14 @@ export function NoteEntryItem({
             }}
           >
             <svg
-              width="9"
-              height="9"
+              width="10"
+              height="10"
               viewBox="0 0 10 10"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
               strokeLinecap="round"
+              style={{ display: "block" }}
             >
               <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
               <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />

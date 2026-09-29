@@ -35,7 +35,7 @@ export function ColorSwatchGrid({
             background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
             border: "none",
             boxShadow: !selected
-              ? `0 0 0 1.5px ${dark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)"}`
+              ? `0 0 0 2px ${dark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`
               : undefined,
             cursor: "pointer",
             display: "flex",

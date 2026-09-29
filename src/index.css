@@ -120,7 +120,18 @@ body {
    way it styles <abbr>. This bleeds visually onto nearby text in the same row.
    Override it globally for every element in the calendar that could be affected. */
 abbr,
-[title],
+abbr[title] {
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  text-decoration-style: unset !important;
+  border-bottom: none !important;
+}
+
+[title] {
+  text-decoration: none;
+  -webkit-text-decoration: none;
+}
+
 .lc-label,
 .lc-label *,
 .lc-week-counter,
@@ -128,7 +139,6 @@ abbr,
   text-decoration: none !important;
   -webkit-text-decoration: none !important;
   text-decoration-style: unset !important;
-  border-bottom: none !important;
 }
 
 .placeholder-dark::placeholder {
@@ -242,7 +252,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     max-width: 100%;
   }
   .lc-fire-glow {
-    box-shadow: 0 0 0 1.5px #ff7722, 0 0 10px 3px rgba(255, 110, 0, 0.45), 0 0 24px 7px rgba(255, 80, 0, 0.25);
+    box-shadow: 0 0 0 2px #ff7722, 0 0 10px 3px rgba(255, 110, 0, 0.45), 0 0 24px 7px rgba(255, 80, 0, 0.25);
   }
 }
 

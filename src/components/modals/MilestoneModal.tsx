@@ -426,7 +426,7 @@ export function MilestoneModal({
                 width: "100%",
                 height: 32,
                 borderRadius: 9,
-                border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                border: `1px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
                 background: "transparent",
                 color: "var(--text-secondary)",
                 fontSize: 12,
@@ -590,10 +590,10 @@ export function MilestoneModal({
                           borderRadius: 999,
                           flexShrink: 0,
                           background: draftColor || "transparent",
-                          border: "none",
-                          boxShadow: draftColor
-                            ? `0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)`
-                            : `0 0 0 1.5px ${isWhite ? "#a1a1aa" : "var(--border-soft)"}`,
+                          border: draftColor
+                            ? (dark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.18)")
+                            : (dark ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(0,0,0,0.20)"),
+                          boxShadow: "none",
                           boxSizing: "border-box",
                           cursor: "pointer",
                           position: "relative",
@@ -609,7 +609,7 @@ export function MilestoneModal({
                             style={{
                               position: "absolute",
                               width: "55%",
-                              height: "1.5px",
+                              height: "1px",
                               background: isWhite
                                 ? "rgba(0,0,0,0.35)"
                                 : dark
@@ -802,7 +802,7 @@ export function MilestoneModal({
                       padding: "8px 10px 8px 12px",
                       borderRadius: 12,
                       background: rcBg,
-                      border: `1.5px solid ${ec3.border}`,
+                      border: `1px solid ${ec3.border}`,
                       boxShadow: ec3.boxShadow || undefined,
                       transition:
                         "background 0.25s ease, border-color 0.25s ease",
@@ -940,10 +940,10 @@ export function MilestoneModal({
                                 borderRadius: 999,
                                 flexShrink: 0,
                                 background: editColor || "transparent",
-                                border: "none",
-                                boxShadow: editColor
-                                  ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                                  : "0 0 0 1.5px var(--border-soft)",
+                                border: editColor
+                                  ? (dark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.18)")
+                                  : (dark ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(0,0,0,0.20)"),
+                                boxShadow: "none",
                                 boxSizing: "border-box",
                                 cursor: "pointer",
                                 position: "relative",
@@ -959,7 +959,7 @@ export function MilestoneModal({
                                   style={{
                                     position: "absolute",
                                     width: "55%",
-                                    height: "1.5px",
+                                    height: "1px",
                                     background: dark
                                       ? "rgba(255,255,255,0.55)"
                                       : "rgba(0,0,0,0.35)",
@@ -1367,7 +1367,7 @@ export function MilestoneModal({
                             background: dark
                               ? "rgba(255,255,255,0.05)"
                               : "rgba(0,0,0,0.03)",
-                            border: `1.5px solid ${quarter.border}`,
+                            border: `1px solid ${quarter.border}`,
                             boxShadow: quarter.contrastBorderShadow,
                             width: "100%",
                             boxSizing: "border-box",

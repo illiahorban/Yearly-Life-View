@@ -275,9 +275,9 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
       : undefined;
 
   const progressBarOutline = isWhiteInLight
-    ? "0 0 0 0.5px rgba(0, 0, 0, 0.20)"
+    ? "0 0 0 0.5px rgba(0, 0, 0, 0.20), inset 0 0 0 0.5px rgba(0, 0, 0, 0.20)"
     : isBlackInDark
-      ? "0 0 0 0.5px rgba(255, 255, 255, 0.22)"
+      ? "0 0 0 0.5px rgba(255, 255, 255, 0.22), inset 0 0 0 0.5px rgba(255, 255, 255, 0.22)"
       : undefined;
 
   const progressBarFill = isBlackInDark

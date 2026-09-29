@@ -48,5 +48,14 @@ When an element does not match an expected/reference element:
 ## 6. Git & GitHub Push Policy (STRICT)
 - **STRICT PROHIBITION**: NEVER push changes to GitHub (`git push`) automatically, autonomously, or on your own initiative.
 - **Explicit Instruction Only**: Pushing to GitHub is ONLY allowed when the user explicitly gives a direct command to push.
-- 
 
+---
+
+## 7. Integer Pixel & Sharp Rendering Policy (STRICT)
+- **Zero Fractional Pixels**: NEVER use fractional CSS pixel values (`0.5px`, `1.5px`, `2.67px`, `3.5px`, etc.) for `border`, `box-shadow` spread/blur, `outline`, `gap`, `padding`, `margin`, `font-size`, or container dimensions.
+- **Anti-Aliasing Integrity**: Fractional pixels on high-density mobile screens (DPR 2, 2.625, 2.75, 3) cause subpixel blur, asymmetrical stroke widths, and shimmering/floating artifacts during scrolling.
+- **Standard Widths & Spacing**:
+  - Always use integer pixels (`1px`, `2px`, `3px`, etc.).
+  - For subtle borders or dividers, use `1px` with reduced opacity/alpha instead of fractional widths like `0.5px`.
+  - For rings/strokes that need to be prominent, use `2px` instead of `1.5px`.
+  - **Authorized Dual-Sided Contrast Exception**: The two-sided ultra-subtle 0.5px contrast outline (`contrastBorderShadow`, `progressBarOutline`, and modal window contrast) for black in dark mode and white in light mode (`0 0 0 0.5px ..., inset 0 0 0 0.5px ...`) is an authorized system exception to preserve sharp, high-contrast double-sided contours without washing out borders.

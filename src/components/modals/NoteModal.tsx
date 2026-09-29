@@ -1159,11 +1159,13 @@ export function NoteModal({
                               position: "relative",
                               display: "flex",
                               alignItems: "center",
-                              gap: 8,
+                              gap: 10,
                               background: containerBg,
-                              border: `1.5px solid ${containerBorder}`,
+                              border: `1px solid ${containerBorder}`,
                               borderRadius: 12,
-                              padding: "8px 59px 8px 10px",
+                              padding: "10px 60px 10px 14px",
+                              minHeight: 44,
+                              boxSizing: "border-box",
                               boxShadow: ec.boxShadow || undefined,
                               transition:
                                 "background 150ms ease, border-color 150ms ease",
@@ -1194,14 +1196,14 @@ export function NoteModal({
                                     handleGoalToggle(i);
                                   }}
                                   style={{
-                                    width: 16,
-                                    height: 16,
+                                    width: 18,
+                                    height: 18,
                                     borderRadius: 5,
                                     flexShrink: 0,
                                     background: done
                                       ? checkColor
                                       : "transparent",
-                                    border: `1.5px solid ${done ? checkColor : uncheckedBorder}`,
+                                    border: `1px solid ${done ? checkColor : uncheckedBorder}`,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -1258,12 +1260,12 @@ export function NoteModal({
                                 overflow: "hidden",
                                 overflowWrap: "anywhere",
                                 wordBreak: "break-word",
-                                fontSize: 13,
+                                fontSize: 14,
                                 color: textColor,
                                 textDecoration: done ? "line-through" : "none",
                                 opacity: done ? 0.55 : 1,
                                 transition: "color 150ms, opacity 150ms",
-                                lineHeight: 1.35,
+                                lineHeight: 1.55,
                                 fontFamily: "inherit",
                                 padding: 0,
                                 cursor: "text",
@@ -1277,16 +1279,13 @@ export function NoteModal({
                             <div
                               style={{
                                 position: "absolute",
-                                top: (goalHeights[i] ?? 18) > 20 ? 8 : "50%",
-                                transform:
-                                  (goalHeights[i] ?? 18) > 20
-                                    ? "none"
-                                    : "translateY(-50%)",
+                                top: 10,
+                                transform: "none",
                                 right: 8,
                                 display: "flex",
                                 alignItems: "center",
+                                justifyContent: "center",
                                 gap: 6,
-                                transition: "top 150ms",
                                 opacity: isHovered || isColorOpen ? 1 : 0,
                                 pointerEvents:
                                   isHovered || isColorOpen ? "auto" : "none",
@@ -1296,7 +1295,9 @@ export function NoteModal({
                               <div
                                 style={{
                                   position: "relative",
-                                  display: "inline-flex",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
                                 }}
                               >
                                 <button
@@ -1311,25 +1312,27 @@ export function NoteModal({
                                   title={t("chooseColor")}
                                   aria-label={t("chooseColor")}
                                   style={{
-                                    width: 19,
-                                    height: 19,
+                                    width: 20,
+                                    height: 20,
                                     borderRadius: 999,
                                     flexShrink: 0,
                                     background:
                                       normaliseGrey(goalColor) || "transparent",
-                                    border: "none",
-                                    boxShadow: goalColor
-                                      ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                                      : "0 0 0 1.5px var(--border-soft)",
+                                    border: goalColor
+                                      ? (dark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.18)")
+                                      : (dark ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(0,0,0,0.20)"),
+                                    boxShadow: "none",
                                     boxSizing: "border-box",
                                     cursor: "pointer",
                                     position: "relative",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    margin: 0,
+                                    padding: 0,
+                                    lineHeight: 0,
                                     mixBlendMode: "normal",
                                     isolation: "isolate",
-                                    marginRight: 1,
                                   }}
                                 >
                                   {!goalColor && (
@@ -1337,7 +1340,7 @@ export function NoteModal({
                                       style={{
                                         position: "absolute",
                                         width: "55%",
-                                        height: "1.5px",
+                                        height: "1px",
                                         background: dark
                                           ? "rgba(255,255,255,0.55)"
                                           : "rgba(0,0,0,0.35)",
@@ -1382,10 +1385,11 @@ export function NoteModal({
                                 }}
                                 onPointerDown={(e) => e.stopPropagation()}
                                 style={{
-                                  width: 26,
-                                  height: 26,
+                                  width: 24,
+                                  height: 24,
                                   borderRadius: 999,
                                   border: "none",
+                                  boxSizing: "border-box",
                                   background: dark
                                     ? "rgba(255,59,48,0.15)"
                                     : "rgba(255,59,48,0.1)",
@@ -1395,6 +1399,9 @@ export function NoteModal({
                                   alignItems: "center",
                                   justifyContent: "center",
                                   flexShrink: 0,
+                                  margin: 0,
+                                  padding: 0,
+                                  lineHeight: 0,
                                   transition: "background 0.1s",
                                 }}
                                 onMouseEnter={(e) => {
@@ -1409,13 +1416,14 @@ export function NoteModal({
                                 }}
                               >
                                 <svg
-                                  width="9"
-                                  height="9"
+                                  width="10"
+                                  height="10"
                                   viewBox="0 0 10 10"
                                   fill="none"
                                   stroke="currentColor"
                                   strokeWidth="1.8"
                                   strokeLinecap="round"
+                                  style={{ display: "block" }}
                                 >
                                   <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
                                   <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
@@ -1447,7 +1455,7 @@ export function NoteModal({
                     width: "100%",
                     height: 32,
                     borderRadius: 9,
-                    border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                    border: `1px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
                     background: "transparent",
                     color: "var(--text-secondary)",
                     fontSize: 12,
@@ -1528,7 +1536,7 @@ export function NoteModal({
                             borderRadius: 12,
                             overflow: "hidden",
                             background: cardBg,
-                            border: `1.5px solid ${ec2.border || "transparent"}`,
+                            border: `1px solid ${ec2.border || "transparent"}`,
                             boxShadow: ec2.boxShadow || undefined,
                             transition:
                               "background 0.25s ease, border-color 0.25s ease",
@@ -1630,7 +1638,7 @@ export function NoteModal({
                                   gap: 6,
                                   maxWidth: 70,
                                   flexShrink: 0,
-                                  alignSelf: "flex-start",
+                                  alignSelf: "center",
                                   opacity: hovering ? 1 : 0,
                                   pointerEvents: hovering ? "auto" : "none",
                                   transition: "opacity 0.15s ease-in-out",
@@ -1640,10 +1648,11 @@ export function NoteModal({
                                   onClick={() => setConfirmDeleteMsIdDay(ms.id)}
                                   title={t("remove")}
                                   style={{
-                                    width: 26,
-                                    height: 26,
+                                    width: 24,
+                                    height: 24,
                                     borderRadius: 999,
                                     border: "none",
+                                    boxSizing: "border-box",
                                     background: dark
                                       ? "rgba(255,59,48,0.15)"
                                       : "rgba(255,59,48,0.1)",
@@ -1652,6 +1661,9 @@ export function NoteModal({
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    margin: 0,
+                                    padding: 0,
+                                    lineHeight: 0,
                                     transition: "background 0.1s",
                                   }}
                                   onMouseEnter={(e) => {
@@ -1666,13 +1678,14 @@ export function NoteModal({
                                   }}
                                 >
                                   <svg
-                                    width="9"
-                                    height="9"
+                                    width="10"
+                                    height="10"
                                     viewBox="0 0 10 10"
                                     fill="none"
                                     stroke="currentColor"
                                     strokeWidth="1.8"
                                     strokeLinecap="round"
+                                    style={{ display: "block" }}
                                   >
                                     <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
                                     <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
@@ -1682,10 +1695,11 @@ export function NoteModal({
                                   onClick={() => startMsEdit(ms)}
                                   title={t("edit")}
                                   style={{
-                                    width: 26,
-                                    height: 26,
+                                    width: 24,
+                                    height: 24,
                                     borderRadius: 999,
                                     border: "none",
+                                    boxSizing: "border-box",
                                     background: dark
                                       ? "rgba(255,255,255,0.1)"
                                       : "rgba(0,0,0,0.07)",
@@ -1696,6 +1710,9 @@ export function NoteModal({
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
+                                    margin: 0,
+                                    padding: 0,
+                                    lineHeight: 0,
                                     transition: "background 0.1s",
                                   }}
                                   onMouseEnter={(e) => {
@@ -1718,6 +1735,7 @@ export function NoteModal({
                                     strokeWidth="1.7"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
+                                    style={{ display: "block" }}
                                   >
                                     <path d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z" />
                                   </svg>
@@ -1845,10 +1863,10 @@ export function NoteModal({
                                         background:
                                           normaliseGrey(msEditColor) ||
                                           "transparent",
-                                        border: "none",
-                                        boxShadow: msEditColor
-                                          ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                                          : "0 0 0 1.5px var(--border-soft)",
+                                        border: msEditColor
+                                          ? (dark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.18)")
+                                          : (dark ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(0,0,0,0.20)"),
+                                        boxShadow: "none",
                                         boxSizing: "border-box",
                                         cursor: "pointer",
                                         position: "relative",
@@ -1862,7 +1880,7 @@ export function NoteModal({
                                           style={{
                                             position: "absolute",
                                             width: "55%",
-                                            height: "1.5px",
+                                            height: "1px",
                                             background: dark
                                               ? "rgba(255,255,255,0.55)"
                                               : "rgba(0,0,0,0.35)",
@@ -2037,7 +2055,7 @@ export function NoteModal({
                       width: "100%",
                       height: 32,
                       borderRadius: 9,
-                      border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                      border: `1px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
                       background: "transparent",
                       color: "var(--text-secondary)",
                       fontSize: 12,
@@ -2105,7 +2123,7 @@ export function NoteModal({
                   <div
                     style={{
                       background: cardBg,
-                      border: `1.5px solid ${cardBorder}`,
+                      border: `1px solid ${cardBorder}`,
                       boxShadow: ecNew.boxShadow || undefined,
                       borderRadius: 12,
                       padding: "10px 12px",
@@ -2197,10 +2215,10 @@ export function NoteModal({
                             flexShrink: 0,
                             background:
                               normaliseGrey(newColor) || "transparent",
-                            border: "none",
-                            boxShadow: newColor
-                              ? "0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 3px rgba(0,0,0,0.18)"
-                              : "0 0 0 1.5px var(--border-soft)",
+                            border: newColor
+                              ? (dark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.18)")
+                              : (dark ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(0,0,0,0.20)"),
+                            boxShadow: "none",
                             boxSizing: "border-box",
                             cursor: "pointer",
                             position: "relative",
@@ -2216,7 +2234,7 @@ export function NoteModal({
                               style={{
                                 position: "absolute",
                                 width: "55%",
-                                height: "1.5px",
+                                height: "1px",
                                 background: dark
                                   ? "rgba(255,255,255,0.55)"
                                   : "rgba(0,0,0,0.35)",
@@ -2429,7 +2447,7 @@ export function NoteModal({
                 width: "100%",
                 height: 34,
                 borderRadius: 10,
-                border: `1.5px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
+                border: `1px dashed ${dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.13)"}`,
                 background: "transparent",
                 color: "var(--text-secondary)",
                 fontSize: 13,
