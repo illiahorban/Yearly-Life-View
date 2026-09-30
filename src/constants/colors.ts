@@ -556,7 +556,7 @@ export function goalCheckboxColors(
     doneBg: "#34c759",
     doneBorder: "#34c759",
     emptyBg: "transparent",
-    emptyBorder: "var(--border-soft)",
+    emptyBorder: "var(--border)",
     icon: "#ffffff",
   };
 }

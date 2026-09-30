@@ -293,7 +293,7 @@ function BlocksRendererComponent({
                       minHeight: 4,
                       maxHeight: 4,
                       background: dark
-                        ? "rgba(255,255,255,0.1)"
+                        ? "rgba(255,255,255,0.16)"
                         : "rgba(0,0,0,0.06)",
                       boxShadow: effectiveQ.progressBarOutline,
                     }}
@@ -360,8 +360,8 @@ function BlocksRendererComponent({
                             minHeight: 3,
                             maxHeight: 3,
                             background: dark
-                              ? "rgba(255,255,255,0.1)"
-                              : "rgba(0,0,0,0.06)",
+                              ? "rgba(255,255,255,0.16)"
+                              : "rgba(0,0,0,0.11)",
                           }}
                         >
                           <motion.div
@@ -471,7 +471,7 @@ function BlocksRendererComponent({
                                 flexShrink: 0,
                                 marginTop: 1,
                                 background: goal.done ? cb.doneBg : cb.emptyBg,
-                                border: `1px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",

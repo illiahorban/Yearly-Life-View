@@ -401,7 +401,7 @@ export function AllGoalsPanel({
                               flexShrink: 0,
                               marginTop: 1,
                               background: goal.done ? gc : "transparent",
-                              border: `1px solid ${goal.done ? gc : goal.color ? gc : "var(--border-soft)"}`,
+                              border: `1px solid ${goal.done ? gc : goal.color ? gc : "var(--border)"}`,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -631,7 +631,7 @@ export function AllGoalsPanel({
                                   background: goal.done
                                     ? cb.doneBg
                                     : cb.emptyBg,
-                                  border: `1px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                  border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -829,15 +829,15 @@ export function AllGoalsPanel({
                                       <div
                                         style={{
                                           boxSizing: "border-box",
-                                          width: 13,
-                                          height: 13,
-                                          borderRadius: 3,
+                                          width: 14,
+                                          height: 14,
+                                          borderRadius: 4,
                                           flexShrink: 0,
                                           marginTop: 1,
                                           background: goal.done
                                             ? cb.doneBg
                                             : cb.emptyBg,
-                                          border: `1px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                          border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
