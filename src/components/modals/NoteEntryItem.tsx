@@ -68,12 +68,10 @@ export function NoteEntryItem({
   }, []);
 
   const entryColor = entry.color;
-  const ec = entryColor
-    ? getEventColors(resolveNoteHex(entryColor), dark)
-    : null;
-  const tintedBg = ec ? ec.bg : inputBg;
-  const tintedBorder = ec ? ec.border : borderColor;
-  const tintedText = ec ? ec.textTitle : "var(--text)";
+  const ec = getEventColors(entryColor ? resolveNoteHex(entryColor) : "", dark);
+  const tintedBg = ec.bg;
+  const tintedBorder = ec.border;
+  const tintedText = entryColor ? ec.textTitle : "var(--text)";
   const noteAch = entryColor
     ? achromaticStyle(resolveNoteHex(entryColor), dark)
     : null;
@@ -112,6 +110,7 @@ export function NoteEntryItem({
             background: tintedBg,
             color: tintedText,
             boxSizing: "border-box",
+            boxShadow: ec.boxShadow || undefined,
             display: "block",
             overflow: "hidden",
             transition: "background 200ms ease, border-color 200ms ease",

@@ -534,8 +534,9 @@ export function NoteModal({
     lang === "ru" ? "ru-RU" : "en-US",
     { weekday: "long", month: "long", day: "numeric" },
   );
-  const borderColor = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
-  const inputBg = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.7)";
+  const defaultEc = getEventColors("", dark);
+  const borderColor = defaultEc.border;
+  const inputBg = defaultEc.bg;
   const inputStyleMs: React.CSSProperties = {
     background: inputBg,
     border: `1px solid ${borderColor}`,

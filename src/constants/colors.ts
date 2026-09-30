@@ -233,7 +233,7 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
 
   // tileFill is the colour used as the day-cell background.
   // In light mode when white is chosen, past days fill with pure white (#ffffff),
-  // while future days become a subtle grey (#f0f0f3).
+  // while future days become a subtle clean grey (#ededf0).
   // In dark mode when black is chosen, past days use DARK_BLACK_PAST (#0a0a0a),
   // while future days use DARK_BLACK_FUTURE (#161618).
   const tileFill =
@@ -244,7 +244,7 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
         : hex;
 
   const futureTileBg = isWhiteInLight
-    ? "#f0f0f3"
+    ? "#ededf0"
     : isBlackInDark
       ? DARK_BLACK_FUTURE
       : undefined;

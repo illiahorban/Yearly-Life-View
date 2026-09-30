@@ -17,7 +17,29 @@ import { LangContext } from "../../constants/i18n";
 import { GripIcon } from "../icons/Icons";
 import { haptics } from "../../utils/haptics";
 
-const FIRE_ANIM_DURATION_MS = 4000; // 4.0s keyframe cycle in index.css
+export function syncAllFireAnimations() {
+  if (typeof document === "undefined") return;
+  requestAnimationFrame(() => {
+    const glowElements = document.querySelectorAll<HTMLElement>(".lc-fire-glow");
+    if (glowElements.length === 0) return;
+    const now = (document.timeline?.currentTime as number) ?? performance.now();
+    const speedSec =
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--fire-pulse-speed")
+      ) || 5;
+    const cycleMs = Math.max(500, speedSec * 1000);
+    const targetTime = Number(now) % cycleMs;
+
+    glowElements.forEach((el) => {
+      if (typeof el.getAnimations === "function") {
+        const anims = el.getAnimations();
+        for (const anim of anims) {
+          anim.currentTime = targetTime;
+        }
+      }
+    });
+  });
+}
 
 function getGoalMarkerColors(rawColor: string | undefined, dark: boolean) {
   if (!rawColor) {
@@ -130,7 +152,7 @@ function DayTileComponent({
   const futureBg =
     futureTileBg ??
     (isWhiteInLight
-      ? "#f0f0f3"
+      ? "#ededf0"
       : isBlackInDark
         ? DARK_BLACK_FUTURE
         : "var(--surface)");
@@ -324,12 +346,12 @@ function DayTileComponent({
       : highlighted === false
         ? "none"
         : undefined;
-  const fireDelayRef = useRef<string | undefined>(undefined);
-  if (isAllDone && fireDelayRef.current === undefined) {
-    fireDelayRef.current = `${-((Date.now() % FIRE_ANIM_DURATION_MS) / 1000).toFixed(3)}s`;
-  } else if (!isAllDone) {
-    fireDelayRef.current = undefined;
-  }
+  useEffect(() => {
+    if (isAllDone) {
+      syncAllFireAnimations();
+    }
+  }, [isAllDone]);
+
   const base: React.CSSProperties = {
     borderRadius: 12,
     aspectRatio: "1/1",
@@ -638,10 +660,7 @@ function DayTileComponent({
           {...hov}
         >
           {isAllDone && (
-            <div
-              className="lc-fire-glow"
-              style={{ animationDelay: fireDelayRef.current }}
-            />
+            <div className="lc-fire-glow" />
           )}
           <div
             className="flex flex-col items-center"
@@ -732,10 +751,7 @@ function DayTileComponent({
           {...hov}
         >
           {isAllDone && (
-            <div
-              className="lc-fire-glow"
-              style={{ animationDelay: fireDelayRef.current }}
-            />
+            <div className="lc-fire-glow" />
           )}
           <div
             className="flex flex-col items-center justify-center"
@@ -870,10 +886,7 @@ function DayTileComponent({
         {...hov}
       >
         {isAllDone && (
-          <div
-            className="lc-fire-glow"
-            style={{ animationDelay: fireDelayRef.current }}
-          />
+          <div className="lc-fire-glow lc-fire-glow-future" />
         )}
         <div
           className="flex flex-col items-center justify-center"
