@@ -379,8 +379,13 @@ export function AllGoalsPanel({
                     }}
                   >
                     {activeYearGoals.map((goal) => {
-                      const gc =
-                        normaliseGrey(goal.color) ?? goal.color ?? "#34c759";
+                      const cb = goalCheckboxColors(
+                        goal.color,
+                        dark,
+                        "#34c759",
+                        undefined,
+                        { skipBlackOutline: true },
+                      );
                       return (
                         <label
                           key={goal.id}
@@ -395,20 +400,22 @@ export function AllGoalsPanel({
                         >
                           <div
                             style={{
+                              boxSizing: "border-box",
                               width: 14,
                               height: 14,
                               borderRadius: 4,
                               flexShrink: 0,
                               marginTop: 1,
-                              background: goal.done ? gc : "transparent",
-                              border: `1px solid ${goal.done ? gc : goal.color ? gc : "var(--border)"}`,
+                              background: goal.done ? cb.doneBg : cb.emptyBg,
+                              border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                              boxShadow: cb.boxShadow,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               transition: "all 150ms ease",
                             }}
                           >
-                            {goal.done && <CheckIcon />}
+                            {goal.done && <CheckIcon color={cb.icon} />}
                           </div>
                           <span
                             style={{
@@ -606,6 +613,7 @@ export function AllGoalsPanel({
                             dark,
                             qr.fill,
                             qr.key,
+                            { skipBlackOutline: true },
                           );
                           return (
                             <label
@@ -632,6 +640,7 @@ export function AllGoalsPanel({
                                     ? cb.doneBg
                                     : cb.emptyBg,
                                   border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                  boxShadow: cb.boxShadow,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -810,6 +819,7 @@ export function AllGoalsPanel({
                                     dark,
                                     effectiveQ.fill,
                                     effectiveQ.key,
+                                    { skipBlackOutline: true },
                                   );
                                   return (
                                     <label
@@ -838,6 +848,7 @@ export function AllGoalsPanel({
                                             ? cb.doneBg
                                             : cb.emptyBg,
                                           border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                          boxShadow: cb.boxShadow,
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",

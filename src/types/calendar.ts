@@ -139,6 +139,8 @@ export type GoalCheckboxStyle = {
   bg: string;
   border: string;
   icon: string;
+  boxShadow?: string;
+  tier?: "white" | "black" | "grey";
 };
 
 export type LangCtx = {

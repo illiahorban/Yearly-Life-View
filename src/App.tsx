@@ -2818,6 +2818,7 @@ function App() {
                                           ? cb.doneBg
                                           : cb.emptyBg,
                                         border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                        boxShadow: cb.boxShadow,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",

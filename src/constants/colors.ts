@@ -467,7 +467,12 @@ export function achromaticStyle(hex: string, dark: boolean): AchromaticStyle | n
  *  hex so achromaticStyle always classifies it correctly regardless of theme.
  *  Custom hex values not in APPLE_COLORS are returned unchanged. */
 export function resolveNoteHex(hex: string): string {
-  const ac = APPLE_COLORS.find((c) => c.light === hex || c.dark === hex);
+  const ac = APPLE_COLORS.find(
+    (c) =>
+      c.key === hex ||
+      c.light.toLowerCase() === hex.toLowerCase() ||
+      c.dark.toLowerCase() === hex.toLowerCase(),
+  );
   return ac ? ac.light : hex;
 }
 
@@ -491,7 +496,7 @@ export function normaliseGrey(hex: string | undefined): string | undefined {
 export function goalCheckboxAchromaticStyle(
   hex: string,
   dark: boolean,
-): GoalCheckboxStyle | null {
+): (GoalCheckboxStyle & { tier: "white" | "black" | "grey" }) | null {
   const h = hex.replace("#", "").toLowerCase();
   if (h.length !== 6) return null;
   const r = parseInt(h.slice(0, 2), 16);
@@ -502,14 +507,14 @@ export function goalCheckboxAchromaticStyle(
   const sat = maxC === 0 ? 0 : (maxC - Math.min(r, g, b)) / maxC;
   if (sat > 0.18) return null;
   if (lum > 0.7) {
-    return { bg: "#ffffff", border: "#ffffff", icon: "#18181b" };
+    return { bg: "#ffffff", border: "#ffffff", icon: "#18181b", tier: "white" };
   }
   if (lum < 0.12) {
     return dark
-      ? { bg: "#09090b", border: "#000000", icon: "#ffffff" }
-      : { bg: "#000000", border: "#000000", icon: "#ffffff" };
+      ? { bg: "#09090b", border: "#000000", icon: "#ffffff", tier: "black" }
+      : { bg: "#000000", border: "#000000", icon: "#ffffff", tier: "black" };
   }
-  return { bg: "#71717a", border: "#71717a", icon: "#ffffff" };
+  return { bg: "#71717a", border: "#71717a", icon: "#ffffff", tier: "grey" };
 }
 
 /** Resolves the background/border/checkmark colours for a single sprint or quarter
@@ -526,17 +531,28 @@ export function goalCheckboxColors(
   dark: boolean,
   fallbackHex: string,
   fallbackColorKey?: string,
+  options?: { skipBlackOutline?: boolean },
 ) {
   const ach = colorHex
     ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark)
     : null;
   if (ach) {
+    const isWhiteInLight = !dark && ach.tier === "white";
+    const isBlackInDark = dark && ach.tier === "black";
+
+    const boxShadow = isWhiteInLight
+      ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
+      : isBlackInDark && !options?.skipBlackOutline
+        ? "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
+        : undefined;
+
     return {
       doneBg: ach.bg,
       doneBorder: ach.border,
       emptyBg: "transparent",
       emptyBorder: ach.border,
       icon: ach.icon,
+      boxShadow,
     };
   }
 
@@ -547,6 +563,7 @@ export function goalCheckboxColors(
       emptyBg: "transparent",
       emptyBorder: colorHex,
       icon: "#ffffff",
+      boxShadow: undefined,
     };
   }
 
@@ -558,6 +575,7 @@ export function goalCheckboxColors(
     emptyBg: "transparent",
     emptyBorder: "var(--border)",
     icon: "#ffffff",
+    boxShadow: undefined,
   };
 }
 
