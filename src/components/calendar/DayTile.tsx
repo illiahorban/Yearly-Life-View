@@ -446,6 +446,16 @@ function DayTileComponent({
         {dayMilestones.map((ms, msIdx) => {
           const ec = getEventColors(ms.color, dark);
           const noColor = !ms.color;
+          const isWhiteIndicator =
+            !dark &&
+            Boolean(
+              ms.color &&
+                (ms.color.toLowerCase() === "white" ||
+                  ms.color.toLowerCase() === "#ffffff" ||
+                  ms.color.toLowerCase() === "#fff" ||
+                  achromaticStyle(resolveNoteHex(ms.color), dark)?.tier ===
+                    "white"),
+            );
           const isLast = msIdx === dayMilestones.length - 1;
           return (
             <React.Fragment key={ms.id}>
@@ -453,7 +463,11 @@ function DayTileComponent({
                 style={{
                   flex: 1,
                   background: noColor ? tileBaseBg : ec.marker,
-                  borderBottom: noColor ? `1px solid ${msSep}` : "none",
+                  borderBottom: isWhiteIndicator
+                    ? "0.5px solid rgba(0, 0, 0, 0.22)"
+                    : noColor
+                      ? `1px solid ${msSep}`
+                      : "none",
                   boxSizing: "border-box",
                   boxShadow:
                     noColor && dark
