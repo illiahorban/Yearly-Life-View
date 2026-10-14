@@ -5,7 +5,7 @@ import TextareaAutosize from "react-textarea-autosize";
 import type { DayState, Milestone, NoteEntry, DayGoals, DayTemplate, AppleColorKey } from "../../types/calendar";
 import { dateKey, addDays, sameDay, startOfDay } from "../../utils/date-utils";
 import { makeId, newTimestamps } from "../../utils/storage";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, clampedPopoverPos, fireConfettiCannons, goalCheckboxAchromaticStyle, swatchCheckColor, getPopoverPlacement } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, normaliseGrey, getEventColors, clampedPopoverPos, fireConfettiCannons, goalCheckboxAchromaticStyle, goalCheckboxColors, swatchCheckColor, getPopoverPlacement } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
@@ -1169,25 +1169,21 @@ export function NoteModal({
                               boxSizing: "border-box",
                               boxShadow: ec.boxShadow || undefined,
                               transition:
-                                "background 150ms ease, border-color 150ms ease",
+                                "background 150ms ease, border-color 150ms ease, box-shadow 150ms ease",
                             }}
                           >
                             {(() => {
-                              const _cbAch = goalColor
-                                ? goalCheckboxAchromaticStyle(
-                                    resolveNoteHex(goalColor),
-                                    dark,
-                                  )
-                                : null;
-                              const checkColor = _cbAch
-                                ? _cbAch.bg
-                                : (goalColor ?? "#34c759");
+                              const cb = goalCheckboxColors(
+                                goalColor,
+                                dark,
+                                "#34c759",
+                                undefined,
+                                { skipBlackOutline: true },
+                              );
                               const uncheckedBorder = !dark
                                 ? containerBorder
                                 : goalColor
-                                  ? _cbAch
-                                    ? _cbAch.border
-                                    : `${goalColor}80`
+                                  ? cb.emptyBorder
                                   : "var(--border-soft)";
                               return (
                                 <div
@@ -1202,14 +1198,15 @@ export function NoteModal({
                                     borderRadius: 5,
                                     flexShrink: 0,
                                     background: done
-                                      ? checkColor
+                                      ? cb.doneBg
                                       : "transparent",
-                                    border: `1px solid ${done ? checkColor : uncheckedBorder}`,
+                                    border: `1px solid ${done ? cb.doneBorder : uncheckedBorder}`,
+                                    boxShadow: cb.boxShadow,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     transition:
-                                      "background 150ms ease, border-color 150ms ease",
+                                      "background 150ms ease, border-color 150ms ease, box-shadow 150ms ease",
                                     cursor: "pointer",
                                   }}
                                 >
@@ -1222,7 +1219,7 @@ export function NoteModal({
                                     >
                                       <path
                                         d="M1 4l3 3 5-6"
-                                        stroke={swatchCheckColor(checkColor)}
+                                        stroke={cb.icon}
                                         strokeWidth="1.8"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -1537,10 +1534,10 @@ export function NoteModal({
                             borderRadius: 12,
                             overflow: "hidden",
                             background: cardBg,
-                            border: `1px solid ${ec2.border || "transparent"}`,
+                            border: `1px solid ${cardBdr || "transparent"}`,
                             boxShadow: ec2.boxShadow || undefined,
                             transition:
-                              "background 0.25s ease, border-color 0.25s ease",
+                              "background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
                           }}
                           onMouseEnter={() => setHoveredMsId(ms.id)}
                           onMouseLeave={() => setHoveredMsId(null)}
@@ -2132,7 +2129,7 @@ export function NoteModal({
                       flexDirection: "column",
                       gap: 8,
                       transition:
-                        "background 0.25s ease, border-color 0.25s ease",
+                        "background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
                     }}
                   >
                     <div

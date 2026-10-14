@@ -113,7 +113,7 @@ export function NoteEntryItem({
             boxShadow: ec.boxShadow || undefined,
             display: "block",
             overflow: "hidden",
-            transition: "background 200ms ease, border-color 200ms ease",
+            transition: "background 200ms ease, border-color 200ms ease, box-shadow 200ms ease",
             cursor: "text",
             // @ts-ignore
             "--event-ph-color": tintedText,

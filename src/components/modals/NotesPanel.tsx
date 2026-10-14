@@ -709,6 +709,7 @@ export function NotesPanel({
                                     padding: "8px 10px 8px 12px",
                                     borderRadius: 12,
                                     border: `1px solid ${eec.border}`,
+                                    boxShadow: eec.boxShadow || undefined,
                                     background: eec.bg,
                                     overflow: "hidden",
                                   }}

@@ -613,7 +613,8 @@ export function getEventColors(hex: string, dark: boolean): EventColors {
     };
   }
   // ── Achromatic path (white / grey / black) ──────────────────────────────────
-  const ach = achromaticStyle(hex, dark);
+  const resolvedHex = resolveNoteHex(hex);
+  const ach = achromaticStyle(resolvedHex, dark);
   if (ach) {
     // Grey  → unified #71717a (zinc-500) in both themes.
     // Black → text inverts in dark mode (#e5e5e7) so it stays legible; border
@@ -629,7 +630,11 @@ export function getEventColors(hex: string, dark: boolean): EventColors {
       textHex = dark ? "#ffffff" : "#18181b";
     }
     // Border and editing border keep the literal selected colour unchanged.
-    const borderHex = ach.tier === "grey" ? "#71717a" : resolveNoteHex(hex);
+    const borderHex = ach.tier === "grey" ? "#71717a" : resolvedHex;
+    const isWhiteInLight = !dark && ach.tier === "white";
+    const contrastShadow = isWhiteInLight
+      ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
+      : (ach.ring ?? "");
     return {
       bg: "transparent",
       textTitle: textHex,
@@ -637,7 +642,7 @@ export function getEventColors(hex: string, dark: boolean): EventColors {
       icon: textHex,
       border: borderHex,
       borderEditing: borderHex,
-      boxShadow: ach.ring ?? "",
+      boxShadow: contrastShadow,
       marker: ach.marker,
       formBg: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
       formBorder: dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)",
@@ -646,13 +651,13 @@ export function getEventColors(hex: string, dark: boolean): EventColors {
 
   // ── Chromatic path ───────────────────────────────────────────────────────────
   // adaptColor lifts very-dark hues in dark mode so they stay visible.
-  const adapted = adaptColor(hex, dark);
+  const adapted = adaptColor(resolvedHex, dark);
 
   // Perceived luminance of the *original* hex determines text contrast on the
   // card surface.  In light mode the card bg is near-white with a subtle tint,
   // so very bright colours (yellow, mint, light-teal, orange) need a strongly
   // darkened variant to remain legible.  In dark mode adaptColor handles it.
-  const [r, g, b] = hexToRgb(hex);
+  const [r, g, b] = hexToRgb(resolvedHex);
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
   return {
