@@ -564,18 +564,21 @@ function BlocksRendererComponent({
                                 background: "transparent",
                                  borderRadius: 12,
                                  padding: 0,
-                                border: "none",
+                                border: isSel
+                                  ? `2px solid ${effectiveQ.border}`
+                                  : "2px solid transparent",
                                  display: "flex",
                                  alignItems: "center",
                                  justifyContent: "center",
                                  lineHeight: 1,
                                 boxShadow: isSel
-                                   ? `inset 0 0 0 2px ${effectiveQ.border}`
-                                  : "inset 0 0 0 2px transparent",
+                                  ? effectiveQ.contrastBorderShadow
+                                  : undefined,
                                 cursor: "pointer",
                                 fontFamily: "inherit",
                                 outline: "none",
-                                 transition: "color 120ms, box-shadow 120ms",
+                                transition:
+                                  "color 120ms, border-color 120ms, box-shadow 120ms",
                                 opacity: hasSelection && !isSel ? 0.4 : 1,
                               }}
                             >
@@ -731,7 +734,13 @@ function BlocksRendererComponent({
                                         height: 28,
                                         paddingInline: 10,
                                         borderRadius: 8,
-                                        border: `1px solid ${effectiveQ.border}44`,
+                                        border: `1px solid ${
+                                          effectiveQ.key === "black" && dark
+                                            ? "rgba(255,255,255,0.18)"
+                                            : effectiveQ.key === "white" && !dark
+                                              ? "rgba(0,0,0,0.15)"
+                                              : `${effectiveQ.border}44`
+                                        }`,
                                         background: "transparent",
                                         color: "var(--text-secondary)",
                                         fontSize: 12,
@@ -754,7 +763,9 @@ function BlocksRendererComponent({
                                         border:
                                           effectiveQ.key === "white" && !dark
                                             ? "1px solid rgba(0,0,0,0.15)"
-                                            : "none",
+                                            : effectiveQ.key === "black" && dark
+                                              ? "1px solid rgba(255,255,255,0.24)"
+                                              : "none",
                                         background: effectiveQ.border,
                                         color:
                                           effectiveQ.key === "white"
