@@ -580,6 +580,19 @@ function DayTileComponent({
             );
             const arrowLeft =
               tooltipRect.left + tooltipRect.width / 2 - left - 6;
+            const popoverBg = dark
+              ? "rgba(29,29,31,0.96)"
+              : "rgba(255,255,255,0.96)";
+            const popoverText = dark
+              ? "rgba(255,255,255,0.92)"
+              : "rgba(0,0,0,0.88)";
+            const popoverBorder = dark
+              ? "1px solid rgba(255,255,255,0.08)"
+              : "1px solid rgba(0,0,0,0.08)";
+            const popoverShadow = dark
+              ? "0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset"
+              : "0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.8) inset";
+
             return (
               <div
                 style={{
@@ -588,18 +601,17 @@ function DayTileComponent({
                   left,
                   width: TW,
                   zIndex: 9999,
-                  background: "rgba(29,29,31,0.96)",
+                  background: popoverBg,
                   backdropFilter: "blur(16px) saturate(180%)",
                   WebkitBackdropFilter: "blur(16px) saturate(180%)",
-                  color: "rgba(255,255,255,0.92)",
+                  color: popoverText,
                   fontSize: 12,
                   lineHeight: 1.55,
                   borderRadius: 12,
                   padding: "10px 12px",
                   wordBreak: "break-word",
-                  boxShadow:
-                    "0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: popoverShadow,
+                  border: popoverBorder,
                   pointerEvents: "none",
                   transform: showBelow ? "none" : "translateY(-100%)",
                 }}
@@ -614,7 +626,7 @@ function DayTileComponent({
                       height: 0,
                       borderLeft: "6px solid transparent",
                       borderRight: "6px solid transparent",
-                      borderBottom: "6px solid rgba(29,29,31,0.96)",
+                      borderBottom: `6px solid ${popoverBg}`,
                     }}
                   />
                 )}
@@ -624,6 +636,14 @@ function DayTileComponent({
                   const displayText = clipped
                     ? lines.slice(0, MAX_LINES).join("\n") + "\n…"
                     : n.text;
+                  const nec = getEventColors(
+                    n.color ? resolveNoteHex(n.color) : "",
+                    dark,
+                  );
+                  const itemColor = n.color ? nec.textTitle : popoverText;
+                  const itemBg = dark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.03)";
                   return (
                     <div
                       key={n.id}
@@ -631,8 +651,10 @@ function DayTileComponent({
                         marginTop: i > 0 ? 5 : 0,
                         padding: "6px 9px",
                         borderRadius: 8,
-                        background: "rgba(255,255,255,0.06)",
-                        border: `1px solid ${getEventColors(n.color ?? "", dark).border || "rgba(255,255,255,0.08)"}`,
+                        background: itemBg,
+                        border: `1px solid ${nec.border}`,
+                        boxShadow: nec.boxShadow || undefined,
+                        color: itemColor,
                         whiteSpace: "pre-wrap",
                         overflow: "hidden",
                         maxHeight: `${MAX_LINES * LINE_H}px`,
@@ -652,7 +674,7 @@ function DayTileComponent({
                       height: 0,
                       borderLeft: "6px solid transparent",
                       borderRight: "6px solid transparent",
-                      borderTop: "6px solid rgba(29,29,31,0.96)",
+                      borderTop: `6px solid ${popoverBg}`,
                     }}
                   />
                 )}
