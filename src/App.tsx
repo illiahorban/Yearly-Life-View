@@ -1554,16 +1554,18 @@ function App() {
                       setYearPickerOpen((o) => !o),
                     )
                   }
+                  className="h-9 sm:h-auto flex items-center justify-center"
                   style={{
                     background: "none",
                     border: "none",
                     padding: "0 2px",
                     cursor: "pointer",
                     lineHeight: 1,
+                    WebkitTapHighlightColor: "transparent",
                   }}
                 >
                   <h1
-                    className="text-2xl sm:text-3xl font-semibold tabular-nums"
+                    className="text-4xl sm:text-3xl font-semibold tabular-nums leading-none sm:leading-[2.25rem]"
                     style={{
                       color: "var(--text)",
                       letterSpacing: "-0.02em",

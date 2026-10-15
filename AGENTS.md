@@ -59,3 +59,28 @@ When an element does not match an expected/reference element:
   - For subtle borders or dividers, use `1px` with reduced opacity/alpha instead of fractional widths like `0.5px`.
   - For rings/strokes that need to be prominent, use `2px` instead of `1.5px`.
   - **Authorized Dual-Sided Contrast Exception**: The two-sided ultra-subtle 0.5px contrast outline (`contrastBorderShadow`, `progressBarOutline`, and modal window contrast) for black in dark mode and white in light mode (`0 0 0 0.5px ..., inset 0 0 0 0.5px ...`) is an authorized system exception to preserve sharp, high-contrast double-sided contours without washing out borders.
+
+---
+
+## 8. Mobile-Only Focus Policy (STRICT)
+- **Desktop Freeze**: The desktop version of the application is finalized and frozen. It MUST NOT be touched, modified, refactored, or affected in any way.
+- **Mobile Scope**: All subsequent development, fine-tuning, bug fixes, and feature adjustments are strictly scoped to the mobile version (mobile viewports, touch interactions, mobile modals, mobile layout, and mobile-specific states).
+- **Desktop Invariance**: Any code changes must be strictly isolated to mobile (using mobile breakpoints, conditions like `isCompactViewport`, or mobile media queries) so that desktop layout, dimensions, styling, and behavior remain 100% intact and untouched.
+
+---
+
+## 9. iPhone & Chrome iOS Runtime Architecture (STRICT)
+The mobile version is specifically engineered for and evaluated on **Google Chrome on iPhone** (iOS WebKit / WKWebView environment):
+- **Viewport & Dynamic Toolbars**:
+  - Chrome on iOS dynamically expands and collapses its top omnibox and bottom navigation bar during scroll.
+  - Always account for dynamic viewport units (`dvh`, `svh`) instead of static `vh`, and honor iOS safe-area insets (`env(safe-area-inset-top)`, `env(safe-area-inset-bottom)`).
+  - Prevent unwanted background page scroll and bounce when modals are open (`overscroll-behavior: contain`, locked body scroll).
+- **Overscroll & Swipe Gestures**:
+  - Chrome on iOS features native edge-swipe navigation (back/forward) and pull-to-refresh.
+  - Modals, popovers, and scrollable panels must use `overscroll-behavior-y: contain` to prevent accidental page reloads or triggering browser history transitions while scrolling inside dialogs.
+- **Form Inputs & Auto-Zoom Prevention**:
+  - iOS WebKit forces auto-zoom on any input or textarea with `font-size < 16px`. Mobile form inputs and note textareas must maintain at least `16px` base font size (or `text-base`) to prevent jarring viewport scale jumps.
+- **Touch Responsiveness & Anti-Aliasing**:
+  - Suppress grey tap flashes with `-webkit-tap-highlight-color: transparent`.
+  - Maintain crisp integer pixel strokes and contours for iPhone Super Retina OLED displays (DPR 2x and 3x).
+
