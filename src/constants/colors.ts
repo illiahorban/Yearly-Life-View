@@ -629,8 +629,8 @@ export function getEventColors(hex: string, dark: boolean): EventColors {
       // white
       textHex = dark ? "#ffffff" : "#18181b";
     }
-    // Border and editing border keep the literal selected colour unchanged.
-    const borderHex = ach.tier === "grey" ? "#71717a" : resolvedHex;
+    // Border and editing border keep the achromatic tier's border (#000000 for black, #ffffff for white).
+    const borderHex = ach.tier === "grey" ? "#71717a" : ach.border;
     const isWhiteInLight = !dark && ach.tier === "white";
     const contrastShadow = isWhiteInLight
       ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
