@@ -128,7 +128,8 @@ export function AllGoalsPanel({
           backdropFilter: "saturate(180%) blur(28px)",
           WebkitBackdropFilter: "saturate(180%) blur(28px)",
           borderRadius: 22,
-          boxShadow: `0 24px 70px rgba(0,0,0,0.24), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+          border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+          boxShadow: "none",
           overflow: "hidden",
           maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
         }}

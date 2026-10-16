@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ColorSwatchGrid } from "./ColorSwatchGrid";
 import { APPLE_COLORS } from "../../constants/colors";
+import { useIsMobile } from "../../hooks/use-mobile";
 import { haptics } from "../../utils/haptics";
 
 export interface ColorPickerPopoverProps {
@@ -32,6 +33,7 @@ export function ColorPickerPopover({
   colors,
   width = 136,
 }: ColorPickerPopoverProps) {
+  const isMobile = useIsMobile();
   const [coords, setCoords] = useState<{
     top: number;
     left: number;
@@ -201,8 +203,9 @@ export function ColorPickerPopover({
               WebkitBackdropFilter: "blur(20px)",
               borderRadius: 12,
               padding: 8,
-              boxShadow:
-                "0 8px 32px rgba(0,0,0,0.28), inset 0 0 0 1px var(--border-soft)",
+              boxShadow: isMobile
+                ? "none"
+                : "0 8px 32px rgba(0,0,0,0.28), inset 0 0 0 1px var(--border-soft)",
               border: "1px solid var(--border-soft)",
               width,
               isolation: "isolate",

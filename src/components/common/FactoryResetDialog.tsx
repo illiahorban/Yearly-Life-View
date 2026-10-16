@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LangContext } from "../../constants/i18n";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 export function FactoryResetDialog({
   open,
@@ -15,6 +16,7 @@ export function FactoryResetDialog({
   onConfirm: () => void | Promise<void>;
   dark: boolean;
 }) {
+  const isMobile = useIsMobile();
   const { t } = React.useContext(LangContext);
   const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const [step, setStep] = useState(1);
@@ -71,7 +73,12 @@ export function FactoryResetDialog({
               WebkitBackdropFilter: "blur(30px) saturate(180%)",
               borderRadius: 20,
               padding: "20px",
-              boxShadow: `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+              border: isMobile
+                ? `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`
+                : "none",
+              boxShadow: isMobile
+                ? "none"
+                : `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
               display: "flex",
               flexDirection: "column",
               gap: 16,
@@ -182,7 +189,7 @@ export function FactoryResetDialog({
                         border: "none",
                         cursor: "pointer",
                         fontFamily: "inherit",
-                        boxShadow: "0 2px 10px rgba(255,149,0,0.4)",
+                        boxShadow: isMobile ? "none" : "0 2px 10px rgba(255,149,0,0.4)",
                       }}
                     >
                       {t("nextStep")}
@@ -295,7 +302,7 @@ export function FactoryResetDialog({
                         border: "none",
                         cursor: "pointer",
                         fontFamily: "inherit",
-                        boxShadow: "0 2px 10px rgba(255,59,48,0.4)",
+                        boxShadow: isMobile ? "none" : "0 2px 10px rgba(255,59,48,0.4)",
                       }}
                     >
                       {t("factoryResetBtn")}

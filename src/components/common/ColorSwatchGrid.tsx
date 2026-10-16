@@ -1,5 +1,6 @@
 import React from "react";
 import { swatchCheckColor, APPLE_COLORS } from "../../constants/colors";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 export function ColorSwatchGrid({
   colors,
@@ -16,6 +17,7 @@ export function ColorSwatchGrid({
   clearLabel?: string;
   dark: boolean;
 }) {
+  const isMobile = useIsMobile();
   return (
     <div
       style={{
@@ -80,7 +82,9 @@ export function ColorSwatchGrid({
               cursor: "pointer",
               transition: "transform 120ms ease",
               boxShadow: sel
-                ? `0 0 0 2px rgba(255,255,255,0.9), 0 1px 4px rgba(0,0,0,0.22)${c.key === "white" || c.key === "grey" ? ", inset 0 0 0 1px rgba(0,0,0,0.15)" : ""}`
+                ? isMobile
+                  ? `0 0 0 2px rgba(255,255,255,0.9)${c.key === "white" || c.key === "grey" ? ", inset 0 0 0 1px rgba(0,0,0,0.15)" : ""}`
+                  : `0 0 0 2px rgba(255,255,255,0.9), 0 1px 4px rgba(0,0,0,0.22)${c.key === "white" || c.key === "grey" ? ", inset 0 0 0 1px rgba(0,0,0,0.15)" : ""}`
                 : c.key === "white" || c.key === "grey"
                   ? "inset 0 0 0 1px rgba(0,0,0,0.15)"
                   : undefined,

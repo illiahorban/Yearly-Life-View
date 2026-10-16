@@ -105,13 +105,11 @@ export function SprintSettingsModal({
   const isWhiteInLight = colorKey === "white" && !dark;
   const isBlackInDark = colorKey === "black" && dark;
 
-  const modalBoxShadow = isMobile
-    ? isWhiteInLight
-      ? "0 30px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
-      : isBlackInDark
-        ? "0 30px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
-        : "0 30px 80px rgba(0,0,0,0.28)"
-    : `0 30px 80px rgba(0,0,0,0.22), 0 0 0 2px ${quarter.border}${quarter.contrastBorderShadow ? `, ${quarter.contrastBorderShadow}` : ""}`;
+  const modalBoxShadow = isWhiteInLight
+    ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+    : isBlackInDark
+      ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
+      : "none";
 
   const modalBorder = isMobile
     ? `2px solid ${quarter.border}`
@@ -364,7 +362,8 @@ export function SprintSettingsModal({
                         borderRadius: 999,
                         background: bDotHex,
                         border: "none",
-                        boxShadow: "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.2)",
+                        boxShadow:
+                          "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25)",
                         cursor: "pointer",
                         display: "block",
                         flexShrink: 0,
@@ -657,7 +656,7 @@ export function SprintSettingsModal({
                 borderRadius: 10,
                 color: "white",
                 background: valid ? "#34c759" : "rgba(128,128,128,0.2)",
-                boxShadow: valid ? "0 1px 2px rgba(40,167,69,0.25)" : "none",
+                boxShadow: "none",
                 cursor: valid ? "pointer" : "not-allowed",
               }}
             >

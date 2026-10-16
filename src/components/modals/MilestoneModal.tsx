@@ -294,7 +294,8 @@ export function MilestoneModal({
           backdropFilter: "saturate(180%) blur(28px)",
           WebkitBackdropFilter: "saturate(180%) blur(28px)",
           borderRadius: 22,
-          boxShadow: `0 20px 60px rgba(0,0,0,0.28), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+          border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+          boxShadow: "none",
           overflowY: "auto",
           maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
         }}

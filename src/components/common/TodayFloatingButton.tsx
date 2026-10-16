@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { I18nKey } from "../../constants/i18n";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 interface TodayFloatingButtonProps {
   showTodayBtn: boolean;
@@ -15,6 +16,7 @@ export const TodayFloatingButton: React.FC<TodayFloatingButtonProps> = ({
   dark,
   t,
 }) => {
+  const isMobile = useIsMobile();
   return (
     <AnimatePresence>
       {showTodayBtn && (
@@ -38,7 +40,9 @@ export const TodayFloatingButton: React.FC<TodayFloatingButtonProps> = ({
               : "rgba(242,242,247,0.88)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
-            border: "none",
+            border: isMobile
+              ? `1px solid ${dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.12)"}`
+              : "none",
             color: "var(--text-secondary)",
             fontSize: 11,
             fontWeight: 500,
@@ -46,7 +50,9 @@ export const TodayFloatingButton: React.FC<TodayFloatingButtonProps> = ({
             display: "flex",
             alignItems: "center",
             gap: 5,
-            boxShadow: `0 0 0 1px ${dark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.08)"}, 0 2px 10px rgba(0,0,0,0.10)`,
+            boxShadow: isMobile
+              ? "none"
+              : `0 0 0 1px ${dark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.08)"}, 0 2px 10px rgba(0,0,0,0.10)`,
           }}
         >
           <span

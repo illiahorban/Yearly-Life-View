@@ -239,15 +239,11 @@ export function GoalsModal({
       : undefined;
 
   const modalBorderColor = accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)");
-  const modalBoxShadow = isMobile
-    ? isWhiteAccentInLight
-      ? "0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
-      : isBlackAccentInDark
-        ? "0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
-        : "0 20px 60px rgba(0,0,0,0.28)"
-    : accentColor
-      ? `0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px ${accentColor}${accentContrastShadow ? `, ${accentContrastShadow}` : ""}`
-      : `0 20px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`;
+  const modalBoxShadow = isWhiteAccentInLight
+    ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+    : isBlackAccentInDark
+      ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
+      : "none";
 
   return (
     <>

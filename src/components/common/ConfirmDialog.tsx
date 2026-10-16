@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LangContext } from "../../constants/i18n";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
+import { useIsMobile } from "../../hooks/use-mobile";
 import { haptics } from "../../utils/haptics";
 
 export function ConfirmDialog({
@@ -20,6 +21,7 @@ export function ConfirmDialog({
   confirmLabel: string;
   dark: boolean;
 }) {
+  const isMobile = useIsMobile();
   const { t } = React.useContext(LangContext);
   const { height: vvHeight, offsetTop: vvOffsetTop } = useVisualViewport();
   const modalBg = dark ? "rgba(28,28,30,0.97)" : "rgba(255,255,255,0.97)";
@@ -80,7 +82,8 @@ export function ConfirmDialog({
               WebkitBackdropFilter: "blur(30px) saturate(180%)",
               borderRadius: 20,
               padding: "20px",
-              boxShadow: `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+              border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+              boxShadow: "none",
               display: "flex",
               flexDirection: "column",
               gap: 16,
@@ -156,7 +159,7 @@ export function ConfirmDialog({
                   border: "none",
                   cursor: "pointer",
                   fontFamily: "inherit",
-                  boxShadow: "0 2px 10px rgba(255,59,48,0.4)",
+                  boxShadow: isMobile ? "none" : "0 2px 10px rgba(255,59,48,0.4)",
                 }}
               >
                 {confirmLabel}

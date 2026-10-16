@@ -412,7 +412,7 @@ function DayTileComponent({
       style={{
         position: "absolute",
         background: "#007aff",
-        boxShadow: "0 0 3px rgba(0,122,255,0.65)",
+        boxShadow: isCompactViewport ? undefined : "0 0 3px rgba(0,122,255,0.65)",
         zIndex: 12,
       }}
       className={`absolute ${hasEvents ? "top-[8px] right-[2px] sm:top-2.5 sm:right-1" : "top-1 right-1"} flex h-[8px] w-[8px] min-h-[8px] min-w-[8px] flex-shrink-0 items-center justify-center rounded-full bg-[#007aff] sm:h-3 sm:w-3 sm:min-h-3 sm:min-w-3`}
@@ -591,9 +591,11 @@ function DayTileComponent({
             const popoverBorder = dark
               ? "1px solid rgba(255,255,255,0.08)"
               : "1px solid rgba(0,0,0,0.08)";
-            const popoverShadow = dark
-              ? "0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset"
-              : "0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.8) inset";
+            const popoverShadow = isCompactViewport
+              ? "none"
+              : dark
+                ? "0 8px 32px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06) inset"
+                : "0 8px 32px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.8) inset";
 
             return (
               <div
@@ -710,19 +712,19 @@ function DayTileComponent({
               isolation: "isolate",
               contain: "paint",
               color: "white",
-              boxShadow: isWhiteInLight
-                ? isCompactViewport
-                  ? undefined
-                  : hovered
+              boxShadow: isCompactViewport
+                ? undefined
+                : isWhiteInLight
+                  ? hovered
                     ? "0 2px 10px rgba(0,0,0,0.08)"
                     : "0 1px 2px rgba(0,0,0,0.04)"
-                : isBlackInDark
-                  ? hovered
-                    ? "0 2px 8px rgba(0,0,0,0.6)"
-                    : "0 1px 2px rgba(0,0,0,0.4)"
-                  : hovered
-                    ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)`
-                    : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`,
+                  : isBlackInDark
+                    ? hovered
+                      ? "0 2px 8px rgba(0,0,0,0.6)"
+                      : "0 1px 2px rgba(0,0,0,0.4)"
+                    : hovered
+                      ? `0 2px 8px ${accentColor}61, inset 0 0 0 0.5px rgba(255,255,255,0.18)`
+                      : `0 1px 2px ${accentColor}2e, inset 0 0 0 0.5px rgba(255,255,255,0.18)`,
             }}
           >
             {/* Tile background fill */}
@@ -943,9 +945,11 @@ function DayTileComponent({
             overflow: "hidden",
             contain: "paint",
             color: "var(--text-secondary)",
-            boxShadow: hovered
-              ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
-              : "0 1px 1px rgba(0,0,0,0.02), inset 0 0 0 1px var(--border-soft)",
+            boxShadow: isCompactViewport
+              ? "inset 0 0 0 1px var(--border-soft)"
+              : hovered
+                ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
+                : "0 1px 1px rgba(0,0,0,0.02), inset 0 0 0 1px var(--border-soft)",
           }}
         >
           {/* Base background fill */}

@@ -63,7 +63,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="w-full max-w-sm rounded-2xl p-5 shadow-2xl relative"
+            className="w-full max-w-sm rounded-2xl p-5 shadow-none sm:shadow-2xl relative"
             style={{
               backgroundColor: dark ? "#1c1c1e" : "#ffffff",
               border: dark
@@ -108,7 +108,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
                   <button
                     type="button"
                     onClick={openInNewTab}
-                    className="w-full py-2.5 px-3 text-xs font-semibold rounded-xl text-white flex items-center justify-center gap-2 transition-opacity hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-sm"
+                    className="w-full py-2.5 px-3 text-xs font-semibold rounded-xl text-white flex items-center justify-center gap-2 transition-opacity hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-none sm:shadow-sm"
                     style={{ backgroundColor: "#34c759" }}
                   >
                     <span>{isRu ? "Открыть в новой вкладке" : "Open in New Tab"}</span>
@@ -125,7 +125,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
                   <button
                     type="button"
                     onClick={handleInstallClick}
-                    className="w-full py-2.5 px-3 text-xs font-semibold rounded-xl text-white flex items-center justify-center gap-2 transition-opacity hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-sm"
+                    className="w-full py-2.5 px-3 text-xs font-semibold rounded-xl text-white flex items-center justify-center gap-2 transition-opacity hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-none sm:shadow-sm"
                     style={{ backgroundColor: "#34c759" }}
                   >
                     <DownloadIcon className="w-4 h-4" />
