@@ -2516,7 +2516,12 @@ function App() {
                     background: "transparent",
                     borderRadius: 18,
                     border: `3px solid ${quarter.border}`,
-                    boxShadow: quarter.contrastBorderShadow,
+                    boxShadow:
+                      isCompactViewport && meta.colorKey === "white" && !dark
+                        ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+                        : isCompactViewport && meta.colorKey === "black" && dark
+                          ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.16)"
+                          : quarter.contrastBorderShadow,
                     overflow: "hidden",
                   }}
                 >
@@ -2644,7 +2649,12 @@ function App() {
                                 background: dark
                                   ? "rgba(255,255,255,0.16)"
                                   : "rgba(0,0,0,0.06)",
-                                boxShadow: quarter.progressBarOutline,
+                                boxShadow:
+                                  isCompactViewport && meta.colorKey === "white" && !dark
+                                    ? "0 0 0 1px rgba(0, 0, 0, 0.12)"
+                                    : isCompactViewport && meta.colorKey === "black" && dark
+                                      ? "0 0 0 1px rgba(255, 255, 255, 0.16)"
+                                      : quarter.progressBarOutline,
                               }}
                             >
                               <motion.div

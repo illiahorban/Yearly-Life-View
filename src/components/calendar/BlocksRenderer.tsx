@@ -173,7 +173,12 @@ function BlocksRendererComponent({
                   background: "transparent",
                   borderRadius: 14,
                   border: `2px solid ${effectiveQ.border}`,
-                  boxShadow: effectiveQ.contrastBorderShadow,
+                  boxShadow:
+                    isCompactViewport && (block.color ?? quarter.key) === "white" && !dark
+                      ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+                      : isCompactViewport && (block.color ?? quarter.key) === "black" && dark
+                        ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.16)"
+                        : effectiveQ.contrastBorderShadow,
                   overflow: "hidden",
                 }}
               >
@@ -295,7 +300,12 @@ function BlocksRendererComponent({
                       background: dark
                         ? "rgba(255,255,255,0.16)"
                         : "rgba(0,0,0,0.06)",
-                      boxShadow: effectiveQ.progressBarOutline,
+                      boxShadow:
+                        isCompactViewport && (block.color ?? quarter.key) === "white" && !dark
+                          ? "0 0 0 1px rgba(0, 0, 0, 0.12)"
+                          : isCompactViewport && (block.color ?? quarter.key) === "black" && dark
+                            ? "0 0 0 1px rgba(255, 255, 255, 0.16)"
+                            : effectiveQ.progressBarOutline,
                     }}
                   >
                     <motion.div

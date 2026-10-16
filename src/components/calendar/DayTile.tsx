@@ -464,7 +464,9 @@ function DayTileComponent({
                   flex: 1,
                   background: noColor ? tileBaseBg : ec.marker,
                   borderBottom: isWhiteIndicator
-                    ? "0.5px solid rgba(0, 0, 0, 0.22)"
+                    ? isCompactViewport
+                      ? "1px solid rgba(0, 0, 0, 0.14)"
+                      : "0.5px solid rgba(0, 0, 0, 0.22)"
                     : noColor
                       ? `1px solid ${msSep}`
                       : "none",
@@ -751,7 +753,9 @@ function DayTileComponent({
                   position: "absolute",
                   inset: 0,
                   borderRadius: 12,
-                  boxShadow: "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)",
+                  boxShadow: isCompactViewport
+                    ? "inset 0 0 0 1px rgba(255, 255, 255, 0.18)"
+                    : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)",
                   pointerEvents: "none",
                   zIndex: 10,
                 }}
@@ -764,7 +768,9 @@ function DayTileComponent({
                   position: "absolute",
                   inset: 0,
                   borderRadius: 12,
-                  boxShadow: "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)",
+                  boxShadow: isCompactViewport
+                    ? "inset 0 0 0 1px rgba(0, 0, 0, 0.14)"
+                    : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)",
                   pointerEvents: "none",
                   zIndex: 10,
                 }}
