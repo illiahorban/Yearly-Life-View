@@ -185,7 +185,7 @@ export function FactoryResetDialog({
                         border: "none",
                         cursor: "pointer",
                         fontFamily: "inherit",
-                        boxShadow: isMobile ? "none" : "0 2px 10px rgba(255,149,0,0.4)",
+                        boxShadow: "none",
                       }}
                     >
                       {t("nextStep")}
@@ -298,7 +298,7 @@ export function FactoryResetDialog({
                         border: "none",
                         cursor: "pointer",
                         fontFamily: "inherit",
-                        boxShadow: isMobile ? "none" : "0 2px 10px rgba(255,59,48,0.4)",
+                        boxShadow: "none",
                       }}
                     >
                       {t("factoryResetBtn")}

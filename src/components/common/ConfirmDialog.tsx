@@ -159,7 +159,7 @@ export function ConfirmDialog({
                   border: "none",
                   cursor: "pointer",
                   fontFamily: "inherit",
-                  boxShadow: isMobile ? "none" : "0 2px 10px rgba(255,59,48,0.4)",
+                  boxShadow: "none",
                 }}
               >
                 {confirmLabel}
