@@ -711,9 +711,11 @@ function DayTileComponent({
               contain: "paint",
               color: "white",
               boxShadow: isWhiteInLight
-                ? hovered
-                  ? "0 2px 10px rgba(0,0,0,0.08)"
-                  : "0 1px 2px rgba(0,0,0,0.04)"
+                ? isCompactViewport
+                  ? undefined
+                  : hovered
+                    ? "0 2px 10px rgba(0,0,0,0.08)"
+                    : "0 1px 2px rgba(0,0,0,0.04)"
                 : isBlackInDark
                   ? hovered
                     ? "0 2px 8px rgba(0,0,0,0.6)"
@@ -806,9 +808,11 @@ function DayTileComponent({
               contain: "paint",
               color: "var(--text)",
               boxShadow: isWhiteInLight
-                ? hovered
-                  ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
-                  : "0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--border-soft)"
+                ? isCompactViewport
+                  ? "inset 0 0 0 1px var(--border-soft)"
+                  : hovered
+                    ? "0 2px 10px rgba(0,0,0,0.08), inset 0 0 0 1px var(--border-soft)"
+                    : "0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--border-soft)"
                 : undefined,
             }}
           >
