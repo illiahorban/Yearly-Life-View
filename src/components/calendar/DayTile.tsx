@@ -145,8 +145,9 @@ function DayTileComponent({
     dayGoals.done.length >= dayGoals.count &&
     dayGoals.done.every(Boolean);
 
-  const isWhiteInLight =
-    !dark && (quarterColorKey === "white" || (accentColor === "#ffffff" && luminanceOf(accentColor) > 0.9));
+  const isWhiteQuarter =
+    quarterColorKey === "white" || (accentColor === "#ffffff" && luminanceOf(accentColor) > 0.9);
+  const isWhiteInLight = !dark && isWhiteQuarter;
   const isBlackInDark =
     dark && (quarterColorKey === "black" || luminanceOf(accentColor) < 0.15);
   const futureBg =
@@ -426,19 +427,37 @@ function DayTileComponent({
     </div>
   ) : null;
 
-  const msSep = dark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.20)";
+  const hasPastWhiteOutline = isPast && isWhiteInLight;
+  const hasPastBlackOutline = isPast && isBlackInDark;
+  const hasPastOutline = hasPastWhiteOutline || hasPastBlackOutline;
+  const tileOutlineWidth = isToday
+    ? 2
+    : hasPastOutline
+      ? 1
+      : !isPast && !isToday
+        ? 1
+        : 0;
+
+  const msSep =
+    dark && !(isPast && isWhiteQuarter)
+      ? "rgba(255,255,255,0.40)"
+      : (dark && isPast && isWhiteQuarter)
+        ? "#000000"
+        : "rgba(0,0,0,0.20)";
   const tileBaseBg = isPast ? accentColor : futureBg;
   const msBar =
     dayMilestones.length > 0 ? (
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: isToday ? 7.5 : 6,
+          top: tileOutlineWidth,
+          left: tileOutlineWidth,
+          right: tileOutlineWidth,
+          height: isToday ? 7 : 6,
           display: "flex",
           overflow: "hidden",
+          borderTopLeftRadius: Math.max(0, 12 - tileOutlineWidth),
+          borderTopRightRadius: Math.max(0, 12 - tileOutlineWidth),
           zIndex: 4,
           pointerEvents: "none",
         }}
@@ -447,7 +466,6 @@ function DayTileComponent({
           const ec = getEventColors(ms.color, dark);
           const noColor = !ms.color;
           const isWhiteIndicator =
-            !dark &&
             Boolean(
               ms.color &&
                 (ms.color.toLowerCase() === "white" ||
@@ -455,7 +473,8 @@ function DayTileComponent({
                   ms.color.toLowerCase() === "#fff" ||
                   achromaticStyle(resolveNoteHex(ms.color), dark)?.tier ===
                     "white"),
-            );
+            ) &&
+            (!dark || (dark && isPast && isWhiteQuarter));
           const isLast = msIdx === dayMilestones.length - 1;
           return (
             <React.Fragment key={ms.id}>
@@ -463,22 +482,36 @@ function DayTileComponent({
                 style={{
                   flex: 1,
                   background: noColor ? tileBaseBg : ec.marker,
-                  borderBottom: isWhiteIndicator
-                    ? isCompactViewport
-                      ? "1px solid rgba(0, 0, 0, 0.14)"
-                      : "0.5px solid rgba(0, 0, 0, 0.22)"
-                    : noColor
-                      ? `1px solid ${msSep}`
-                      : "none",
+                  position: "relative",
                   boxSizing: "border-box",
                   boxShadow:
                     noColor && dark
                       ? "inset 0 1px 3px rgba(0,0,0,0.45)"
                       : undefined,
                 }}
-              />
+              >
+                {(isWhiteIndicator || noColor) && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 1,
+                      background: msSep,
+                    }}
+                  />
+                )}
+              </div>
               {!isLast && (
-                <div style={{ width: 1, flexShrink: 0, background: msSep }} />
+                <div
+                  style={{
+                    width: 1,
+                    flexShrink: 0,
+                    marginTop: 0,
+                    background: msSep,
+                  }}
+                />
               )}
             </React.Fragment>
           );
@@ -707,19 +740,19 @@ function DayTileComponent({
               overflow: "hidden",
               isolation: "isolate",
               contain: "paint",
+              background: accentColor,
               color: "white",
-              boxShadow: undefined,
+              boxShadow: isWhiteInLight
+                ? (isCompactViewport
+                    ? "inset 0 0 0 1px rgba(0, 0, 0, 0.14)"
+                    : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)")
+                : isBlackInDark
+                  ? (isCompactViewport
+                      ? "inset 0 0 0 1px rgba(255, 255, 255, 0.18)"
+                      : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)")
+                  : undefined,
             }}
           >
-            {/* Tile background fill */}
-            <div
-              className="absolute inset-x-0 bottom-0 pointer-events-none"
-              style={{
-                top: hasEventsWithColor ? 5.5 : 0,
-                background: accentColor,
-                zIndex: 0,
-              }}
-            />
             {msBar}
             <div style={{ flex: 1 }} />
             <Label number={dayNumber} month={monthAbbr} tone={labelTone} />
@@ -734,36 +767,6 @@ function DayTileComponent({
               {renderMicroMarkers(indicatorColor)}
             </div>
             {noteDot}
-            {/* Outline overlay for black accent in dark mode (wraps around event indicators) */}
-            {isBlackInDark && (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: 12,
-                  boxShadow: isCompactViewport
-                    ? "inset 0 0 0 1px rgba(255, 255, 255, 0.18)"
-                    : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)",
-                  pointerEvents: "none",
-                  zIndex: 10,
-                }}
-              />
-            )}
-            {/* Outline overlay for white accent in light mode (wraps around event indicators) */}
-            {isWhiteInLight && (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: 12,
-                  boxShadow: isCompactViewport
-                    ? "inset 0 0 0 1px rgba(0, 0, 0, 0.14)"
-                    : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)",
-                  pointerEvents: "none",
-                  zIndex: 10,
-                }}
-              />
-            )}
           </div>
         </div>
         {tooltipPortal}
@@ -800,9 +803,8 @@ function DayTileComponent({
           >
             {/* Base background fill */}
             <div
-              className="absolute inset-x-0 bottom-0 pointer-events-none"
+              className="absolute inset-0 pointer-events-none"
               style={{
-                top: hasEventsWithColor ? 7 : 0,
                 background: futureBg,
                 zIndex: 0,
               }}
@@ -930,9 +932,8 @@ function DayTileComponent({
         >
           {/* Base background fill */}
           <div
-            className="absolute inset-x-0 bottom-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              top: hasEventsWithColor ? 5.5 : 0,
               background: futureBg,
               zIndex: 0,
             }}
