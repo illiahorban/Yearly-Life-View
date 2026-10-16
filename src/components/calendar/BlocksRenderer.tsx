@@ -573,17 +573,21 @@ function BlocksRendererComponent({
                                     : mt.tertiary,
                                 fontWeight: isCurrent ? 600 : 400,
                                 background: "transparent",
-                                 borderRadius: 12,
-                                 padding: 0,
+                                borderRadius: isCompactViewport ? 6 : 12,
+                                padding: 0,
                                 border: isSel
                                   ? `2px solid ${effectiveQ.border}`
                                   : "2px solid transparent",
-                                 display: "flex",
-                                 alignItems: "center",
-                                 justifyContent: "center",
-                                 lineHeight: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                lineHeight: 1,
                                 boxShadow: isSel
-                                  ? effectiveQ.contrastBorderShadow
+                                  ? isCompactViewport && (block.color ?? quarter.key) === "white" && !dark
+                                    ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+                                    : isCompactViewport && (block.color ?? quarter.key) === "black" && dark
+                                      ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.16)"
+                                      : effectiveQ.contrastBorderShadow
                                   : undefined,
                                 cursor: "pointer",
                                 fontFamily: "inherit",
