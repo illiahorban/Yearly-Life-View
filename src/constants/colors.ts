@@ -662,11 +662,16 @@ export function getEventColors(
       textHex = dark ? "#ffffff" : "#18181b";
     }
     // Border and editing border keep the achromatic tier's border (#000000 for black, #ffffff for white).
-    const borderHex = ach.tier === "grey" ? "#71717a" : ach.border;
     const isWhiteInLight = !dark && ach.tier === "white";
+    const borderHex =
+      isWhiteInLight && options?.isMobile
+        ? "rgba(0, 0, 0, 0.12)"
+        : ach.tier === "grey"
+          ? "#71717a"
+          : ach.border;
     const contrastShadow = isWhiteInLight
       ? options?.isMobile
-        ? MOBILE_WHITE_IN_LIGHT_SHADOW
+        ? "inset 0 0 0 1px #ffffff, inset 0 0 0 2px rgba(0, 0, 0, 0.12)"
         : "0 0 0 0.5px rgba(0, 0, 0, 0.12), inset 0 0 0 0.5px rgba(0, 0, 0, 0.12)"
       : (ach.ring ?? "");
     return {

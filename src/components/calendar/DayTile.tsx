@@ -432,11 +432,9 @@ function DayTileComponent({
   const hasPastOutline = hasPastWhiteOutline || hasPastBlackOutline;
   const tileOutlineWidth = isToday
     ? 2
-    : hasPastOutline
+    : !isPast && !isToday
       ? 1
-      : !isPast && !isToday
-        ? 1
-        : 0;
+      : 0;
 
   const msSep =
     dark && !(isPast && isWhiteQuarter)
@@ -742,15 +740,6 @@ function DayTileComponent({
               contain: "paint",
               background: accentColor,
               color: "white",
-              boxShadow: isWhiteInLight
-                ? (isCompactViewport
-                    ? "inset 0 0 0 1px rgba(0, 0, 0, 0.14)"
-                    : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)")
-                : isBlackInDark
-                  ? (isCompactViewport
-                      ? "inset 0 0 0 1px rgba(255, 255, 255, 0.18)"
-                      : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)")
-                  : undefined,
             }}
           >
             {msBar}
@@ -768,6 +757,26 @@ function DayTileComponent({
             </div>
             {noteDot}
           </div>
+          {hasPastOutline && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: 12,
+                boxShadow: isWhiteInLight
+                  ? (isCompactViewport
+                      ? "inset 0 0 0 1px rgba(0, 0, 0, 0.14)"
+                      : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)")
+                  : isBlackInDark
+                    ? (isCompactViewport
+                        ? "inset 0 0 0 1px rgba(255, 255, 255, 0.18)"
+                        : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)")
+                    : undefined,
+                pointerEvents: "none",
+                zIndex: 10,
+              }}
+            />
+          )}
         </div>
         {tooltipPortal}
       </>
