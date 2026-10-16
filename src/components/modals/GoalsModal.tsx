@@ -467,7 +467,7 @@ export function GoalsModal({
                 <div className="flex flex-col gap-1.5">
                   {goals.map((g, idx) => {
                     const gc = g.color;
-                    const ec = getEventColors(gc ?? "", dark);
+                    const ec = getEventColors(gc ?? "", dark, { isMobile });
                     const inputBackground = ec.bg;
                     const inputBorderColor = ec.border;
                     const ach = gc

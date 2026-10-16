@@ -2800,6 +2800,7 @@ function App() {
                                   dark,
                                   quarter.fill,
                                   quarter.key,
+                                  { isMobile: isCompactViewport, allowBlackOutlineInDark: true },
                                 );
                                 return (
                                   <label
@@ -2829,7 +2830,7 @@ function App() {
                                         background: goal.done
                                           ? cb.doneBg
                                           : cb.emptyBg,
-                                        border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                        border: `${isCompactViewport ? 1 : 1.5}px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                         boxShadow: cb.boxShadow,
                                         display: "flex",
                                         alignItems: "center",

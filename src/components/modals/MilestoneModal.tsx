@@ -452,16 +452,15 @@ export function MilestoneModal({
             }}
           >
             {(() => {
-              const ecDraft = getEventColors(draftColor, dark);
+              const ecDraft = getEventColors(draftColor, dark, { isMobile });
               const isWhite = draftColor === "#ffffff";
-              const cardBg = isWhite ? "#ffffff" : ecDraft.bg;
-              const cardBorder = isWhite
-                ? "#d4d4d8"
-                : ecDraft.border ||
-                  (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)");
+              const cardBg = ecDraft.bg;
+              const cardBorder =
+                ecDraft.border ||
+                (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)");
               const inputBg = isWhite ? "transparent" : ecDraft.formBg;
               const inputBorder = isWhite
-                ? "1px solid #d4d4d8"
+                ? "1px solid rgba(0,0,0,0.12)"
                 : `1px solid ${ecDraft.formBorder}`;
               const inputText = isWhite ? "#18181b" : "var(--text)";
               const draftInputStyle: React.CSSProperties = {
@@ -778,6 +777,7 @@ export function MilestoneModal({
                 const ec3 = getEventColors(
                   activeCardColor ? resolveNoteHex(activeCardColor) : "",
                   dark,
+                  { isMobile },
                 );
                 const rcBg = ec3.bg;
                 const rcBdr = isEditing ? ec3.borderEditing : ec3.border;
@@ -802,7 +802,7 @@ export function MilestoneModal({
                       padding: "8px 10px 8px 12px",
                       borderRadius: 12,
                       background: rcBg,
-                      border: `1px solid ${ec3.border}`,
+                      border: `1px solid ${rcBdr}`,
                       boxShadow: ec3.boxShadow || undefined,
                       transition:
                         "background 0.25s ease, border-color 0.25s ease",

@@ -517,6 +517,29 @@ export function goalCheckboxAchromaticStyle(
   return { bg: "#71717a", border: "#71717a", icon: "#ffffff", tier: "grey" };
 }
 
+export const MOBILE_WHITE_IN_LIGHT_SHADOW =
+  "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)";
+export const MOBILE_BLACK_IN_DARK_SHADOW =
+  "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.16)";
+
+export function getContrastBoxShadow(
+  colorKeyOrHex: string | undefined,
+  dark: boolean,
+  isMobile: boolean,
+  defaultShadow?: string,
+): string | undefined {
+  if (!colorKeyOrHex) return defaultShadow;
+  const resolved = resolveNoteHex(colorKeyOrHex);
+  const ach = achromaticStyle(resolved, dark);
+  if (!ach) return defaultShadow;
+  if (ach.tier === "white" && !dark) {
+    return isMobile
+      ? MOBILE_WHITE_IN_LIGHT_SHADOW
+      : defaultShadow ?? "0 0 0 0.5px rgba(0, 0, 0, 0.12), inset 0 0 0 0.5px rgba(0, 0, 0, 0.12)";
+  }
+  return defaultShadow;
+}
+
 /** Resolves the background/border/checkmark colours for a single sprint or quarter
  *  goal checkbox, applying the opaque achromatic mirror above for black/grey/white
  *  and falling back to the plain chromatic colour (or the block/quarter accent)
@@ -531,19 +554,24 @@ export function goalCheckboxColors(
   dark: boolean,
   fallbackHex: string,
   fallbackColorKey?: string,
-  options?: { skipBlackOutline?: boolean },
+  options?: { skipBlackOutline?: boolean; isMobile?: boolean; allowBlackOutlineInDark?: boolean },
 ) {
   const ach = colorHex
     ? goalCheckboxAchromaticStyle(resolveNoteHex(colorHex), dark)
     : null;
   if (ach) {
     const isWhiteInLight = !dark && ach.tier === "white";
-    const isBlackInDark = dark && ach.tier === "black";
+    const isBlackInDark =
+      dark && ach.tier === "black" && Boolean(options?.allowBlackOutlineInDark);
 
     const boxShadow = isWhiteInLight
-      ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
-      : isBlackInDark && !options?.skipBlackOutline
-        ? "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
+      ? options?.isMobile
+        ? MOBILE_WHITE_IN_LIGHT_SHADOW
+        : "0 0 0 0.5px rgba(0, 0, 0, 0.12), inset 0 0 0 0.5px rgba(0, 0, 0, 0.12)"
+      : isBlackInDark
+        ? options?.isMobile
+          ? MOBILE_BLACK_IN_DARK_SHADOW
+          : "0 0 0 0.5px rgba(255, 255, 255, 0.16), inset 0 0 0 0.5px rgba(255, 255, 255, 0.16)"
         : undefined;
 
     return {
@@ -596,7 +624,11 @@ type EventColors = {
   formBorder: string; // input border inside card
 };
 
-export function getEventColors(hex: string, dark: boolean): EventColors {
+export function getEventColors(
+  hex: string,
+  dark: boolean,
+  options?: { isMobile?: boolean },
+): EventColors {
   // ── No-color path (empty string) ────────────────────────────────────────────
   if (!hex) {
     return {
@@ -633,7 +665,9 @@ export function getEventColors(hex: string, dark: boolean): EventColors {
     const borderHex = ach.tier === "grey" ? "#71717a" : ach.border;
     const isWhiteInLight = !dark && ach.tier === "white";
     const contrastShadow = isWhiteInLight
-      ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
+      ? options?.isMobile
+        ? MOBILE_WHITE_IN_LIGHT_SHADOW
+        : "0 0 0 0.5px rgba(0, 0, 0, 0.12), inset 0 0 0 0.5px rgba(0, 0, 0, 0.12)"
       : (ach.ring ?? "");
     return {
       bg: "transparent",

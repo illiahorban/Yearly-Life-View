@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { CalendarConfig, QuarterMeta, BlockGoals, DayGoals, AppleColorKey, Quarter } from "../../types/calendar";
 import { startOfYear, startOfWeekMonday, addDays, sameDay, dateKey } from "../../utils/date-utils";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuarter, goalCheckboxAchromaticStyle, normaliseGrey, readableGoalTextColor, goalCheckboxColors } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuarter, goalCheckboxAchromaticStyle, normaliseGrey, readableGoalTextColor, goalCheckboxColors, getContrastBoxShadow } from "../../constants/colors";
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { pluralCount } from "../../utils/plural";
 import { HighlightText } from "../common/HighlightText";
@@ -384,7 +384,7 @@ export function AllGoalsPanel({
                         dark,
                         "#34c759",
                         undefined,
-                        { skipBlackOutline: true },
+                        { isMobile },
                       );
                       return (
                         <label
@@ -407,7 +407,7 @@ export function AllGoalsPanel({
                               flexShrink: 0,
                               marginTop: 1,
                               background: goal.done ? cb.doneBg : cb.emptyBg,
-                              border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                              border: `${isMobile ? 1 : 1.5}px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                               boxShadow: cb.boxShadow,
                               display: "flex",
                               alignItems: "center",
@@ -488,7 +488,7 @@ export function AllGoalsPanel({
                     style={{
                       borderRadius: 16,
                       border: `1px solid ${qr.border}`,
-                      boxShadow: qr.contrastBorderShadow,
+                      boxShadow: getContrastBoxShadow(qr.key, dark, isMobile, qr.contrastBorderShadow),
                       overflow: "hidden",
                       background: "transparent",
                     }}
@@ -613,7 +613,7 @@ export function AllGoalsPanel({
                             dark,
                             qr.fill,
                             qr.key,
-                            { skipBlackOutline: true },
+                            { isMobile },
                           );
                           return (
                             <label
@@ -639,7 +639,7 @@ export function AllGoalsPanel({
                                   background: goal.done
                                     ? cb.doneBg
                                     : cb.emptyBg,
-                                  border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                  border: `${isMobile ? 1 : 1.5}px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                   boxShadow: cb.boxShadow,
                                   display: "flex",
                                   alignItems: "center",
@@ -706,7 +706,7 @@ export function AllGoalsPanel({
                               style={{
                                 borderRadius: 11,
                                 border: `1px solid ${effectiveQ.border}`,
-                                boxShadow: effectiveQ.contrastBorderShadow,
+                                boxShadow: getContrastBoxShadow(block.color ?? qr.key, dark, isMobile, effectiveQ.contrastBorderShadow),
                                 overflow: "hidden",
                                 background: "transparent",
                               }}
@@ -819,7 +819,7 @@ export function AllGoalsPanel({
                                     dark,
                                     effectiveQ.fill,
                                     effectiveQ.key,
-                                    { skipBlackOutline: true },
+                                    { isMobile },
                                   );
                                   return (
                                     <label
@@ -847,7 +847,7 @@ export function AllGoalsPanel({
                                           background: goal.done
                                             ? cb.doneBg
                                             : cb.emptyBg,
-                                          border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                          border: `${isMobile ? 1 : 1.5}px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                           boxShadow: cb.boxShadow,
                                           display: "flex",
                                           alignItems: "center",

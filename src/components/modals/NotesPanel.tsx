@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { NoteEntry, Milestone, DayGoals, AppleColorKey, Quarter } from "../../types/calendar";
 import { parseDateQuery, dateKey } from "../../utils/date-utils";
 import { makeId, newTimestamps } from "../../utils/storage";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, getContrastBoxShadow } from "../../constants/colors";
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { HighlightText } from "../common/HighlightText";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
@@ -369,6 +369,7 @@ export function NotesPanel({
                 const draftEc = getEventColors(
                   draftColor ? resolveNoteHex(draftColor) : "",
                   dark,
+                  { isMobile },
                 );
                 return (
                   <textarea
@@ -383,6 +384,7 @@ export function NotesPanel({
                       width: "100%",
                       borderRadius: 10,
                       border: `1px solid ${draftEc.border}`,
+                      boxShadow: draftEc.boxShadow || undefined,
                       background: draftEc.bg,
                       color: draftEc.textTitle,
                       fontSize: 13,
@@ -672,7 +674,7 @@ export function NotesPanel({
                                   ? "rgba(255,255,255,0.05)"
                                   : "rgba(0,0,0,0.03)",
                             border: `1px solid ${quarter.border}`,
-                            boxShadow: quarter.contrastBorderShadow,
+                            boxShadow: getContrastBoxShadow(quarter.key, dark, isMobile, quarter.contrastBorderShadow),
                             cursor: "pointer",
                             textAlign: "left",
                             fontFamily: "inherit",
@@ -701,6 +703,7 @@ export function NotesPanel({
                               const eec = getEventColors(
                                 e.color ? resolveNoteHex(e.color) : "",
                                 dark,
+                                { isMobile },
                               );
                               return (
                                 <div

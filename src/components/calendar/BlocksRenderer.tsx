@@ -456,6 +456,7 @@ function BlocksRendererComponent({
                           dark,
                           effectiveQ.fill,
                           effectiveQ.key,
+                          { isMobile: isCompactViewport, allowBlackOutlineInDark: true },
                         );
                         return (
                           <label
@@ -481,7 +482,7 @@ function BlocksRendererComponent({
                                 flexShrink: 0,
                                 marginTop: 1,
                                 background: goal.done ? cb.doneBg : cb.emptyBg,
-                                border: `1.5px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
+                                border: `${isCompactViewport ? 1 : 1.5}px solid ${goal.done ? cb.doneBorder : cb.emptyBorder}`,
                                 boxShadow: cb.boxShadow,
                                 display: "flex",
                                 alignItems: "center",

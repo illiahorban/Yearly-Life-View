@@ -7,6 +7,7 @@ import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { DraggableCard } from "./DraggableCard";
 import { LangContext } from "../../constants/i18n";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
+import { useIsMobile } from "../../hooks/use-mobile";
 import { haptics } from "../../utils/haptics";
 
 export function NoteEntryItem({
@@ -67,8 +68,9 @@ export function NoteEntryItem({
     textareaRef.current = el;
   }, []);
 
+  const isMobile = useIsMobile();
   const entryColor = entry.color;
-  const ec = getEventColors(entryColor ? resolveNoteHex(entryColor) : "", dark);
+  const ec = getEventColors(entryColor ? resolveNoteHex(entryColor) : "", dark, { isMobile });
   const tintedBg = ec.bg;
   const tintedBorder = ec.border;
   const tintedText = entryColor ? ec.textTitle : "var(--text)";

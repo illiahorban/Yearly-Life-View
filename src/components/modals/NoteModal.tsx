@@ -1136,7 +1136,7 @@ export function NoteModal({
                     {Array.from({ length: goalsDraft.count }, (_, i) => {
                       const done = goalsDraft.done[i] ?? false;
                       const goalColor = goalsDraft.colors?.[i];
-                      const ec = getEventColors(goalColor ?? "", dark);
+                      const ec = getEventColors(goalColor ?? "", dark, { isMobile });
                       const containerBg = ec.bg;
                       const containerBorder = ec.border;
                       const textColor = done
@@ -1178,10 +1178,10 @@ export function NoteModal({
                                 dark,
                                 "#34c759",
                                 undefined,
-                                { skipBlackOutline: true },
+                                { isMobile },
                               );
                               const uncheckedBorder = !dark
-                                ? containerBorder
+                                ? (goalColor ? cb.emptyBorder : containerBorder)
                                 : goalColor
                                   ? cb.emptyBorder
                                   : "var(--border-soft)";
@@ -1508,6 +1508,7 @@ export function NoteModal({
                     const ec2 = getEventColors(
                       isEditing ? msEditColor : ms.color,
                       dark,
+                      { isMobile },
                     );
                     const cardBg = ec2.bg;
                     const cardBdr = isEditing ? ec2.borderEditing : ec2.border;
@@ -2081,7 +2082,7 @@ export function NoteModal({
                   style={{ overflow: "hidden" }}
                 >
               {(() => {
-                const ecNew = getEventColors(newColor, dark);
+                const ecNew = getEventColors(newColor, dark, { isMobile });
                 const cardBg = ecNew.bg;
                 const cardBorder =
                   ecNew.border ||
