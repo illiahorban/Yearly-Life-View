@@ -73,12 +73,8 @@ export function FactoryResetDialog({
               WebkitBackdropFilter: "blur(30px) saturate(180%)",
               borderRadius: 20,
               padding: "20px",
-              border: isMobile
-                ? `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`
-                : "none",
-              boxShadow: isMobile
-                ? "none"
-                : `0 24px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
+              border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+              boxShadow: "none",
               display: "flex",
               flexDirection: "column",
               gap: 16,

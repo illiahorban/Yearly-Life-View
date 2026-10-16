@@ -82,9 +82,7 @@ export function ColorSwatchGrid({
               cursor: "pointer",
               transition: "transform 120ms ease",
               boxShadow: sel
-                ? isMobile
-                  ? `0 0 0 2px rgba(255,255,255,0.9)${c.key === "white" || c.key === "grey" ? ", inset 0 0 0 1px rgba(0,0,0,0.15)" : ""}`
-                  : `0 0 0 2px rgba(255,255,255,0.9), 0 1px 4px rgba(0,0,0,0.22)${c.key === "white" || c.key === "grey" ? ", inset 0 0 0 1px rgba(0,0,0,0.15)" : ""}`
+                ? `0 0 0 2px rgba(255,255,255,0.9)${c.key === "white" || c.key === "grey" ? ", inset 0 0 0 1px rgba(0,0,0,0.15)" : ""}`
                 : c.key === "white" || c.key === "grey"
                   ? "inset 0 0 0 1px rgba(0,0,0,0.15)"
                   : undefined,

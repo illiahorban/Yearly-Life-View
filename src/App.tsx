@@ -1175,14 +1175,10 @@ function App() {
         el.animate(
           [
             {
-              boxShadow: isMobile
-                ? "0 0 0 3px #ff9f0a"
-                : "0 0 0 4px #ff9f0a, 0 0 20px 6px rgba(255,159,10,0.6)",
+              boxShadow: "0 0 0 3px #ff9f0a",
             },
             {
-              boxShadow: isMobile
-                ? "0 0 0 2px #ff9f0a"
-                : "0 0 0 2px #ff9f0a, 0 0 8px 2px rgba(255,159,10,0.45)",
+              boxShadow: "0 0 0 2px #ff9f0a",
             },
           ],
           { duration: 600, easing: "ease-out" },
@@ -1222,14 +1218,10 @@ function App() {
           el.animate(
             [
               {
-                boxShadow: isMobile
-                  ? "0 0 0 3px #34c759"
-                  : "0 0 0 4px #34c759, 0 0 20px 6px rgba(52,199,89,0.6)",
+                boxShadow: "0 0 0 3px #34c759",
               },
               {
-                boxShadow: isMobile
-                  ? "0 0 0 2px #34c759"
-                  : "0 0 0 2px #34c759, 0 0 8px 2px rgba(52,199,89,0.3)",
+                boxShadow: "0 0 0 2px #34c759",
               },
             ],
             { duration: 700, easing: "ease-out" },
@@ -1314,11 +1306,9 @@ function App() {
         el.animate(
           [
             {
-              boxShadow: isMobile
-                ? "0 0 0 2px #34c759"
-                : "0 0 0 2px #34c759, 0 0 14px rgba(52,199,89,0.45)",
+              boxShadow: "0 0 0 2px #34c759",
             },
-            { boxShadow: "0 0 0 0px transparent, 0 0 0px transparent" },
+            { boxShadow: "0 0 0 0px transparent" },
           ],
           { duration: 900, easing: "ease-out" },
         );
@@ -1602,9 +1592,7 @@ function App() {
                         : "rgba(255,255,255,0.97)",
                       border: "1px solid var(--border-soft)",
                       borderRadius: 12,
-                      boxShadow: isMobile
-                        ? "none"
-                        : "0 8px 32px rgba(0,0,0,0.18)",
+                      boxShadow: "none",
                       padding: "6px 4px",
                       zIndex: 200,
                       minWidth: 80,
@@ -1834,12 +1822,8 @@ function App() {
                                   WebkitBackdropFilter: "blur(20px)",
                                   borderRadius: 12,
                                   padding: "8px",
-                                  boxShadow: isMobile
-                                    ? "none"
-                                    : "0 8px 32px rgba(0,0,0,0.22)",
-                                  border: isMobile
-                                    ? "1px solid var(--border-soft)"
-                                    : "none",
+                                  boxShadow: "none",
+                                  border: "1px solid var(--border-soft)",
                                   display: "flex",
                                   flexDirection: "column",
                                   gap: 6,
@@ -2190,9 +2174,7 @@ function App() {
                                   ? "rgb(28,28,30)"
                                   : "rgb(255,255,255)",
                                 borderRadius: 12,
-                                boxShadow: isMobile
-                                  ? "none"
-                                  : "0 8px 32px rgba(0,0,0,0.28)",
+                                boxShadow: "none",
                                 border: "1px solid var(--border-soft)",
                                 zIndex: 2,
                               }}
@@ -2754,11 +2736,7 @@ function App() {
                                         maxHeight: 3,
                                         background: "#34c759",
                                         borderRadius: 999,
-                                        boxShadow: isCompactViewport
-                                          ? "none"
-                                          : goalPct > 0
-                                            ? "0 0 6px rgba(52,199,89,0.35)"
-                                            : "none",
+                                        boxShadow: "none",
                                       }}
                                     />
                                   </div>

@@ -595,8 +595,7 @@ export function LifeCalendarModal({
                           border: "none",
                           cursor: "pointer",
                           fontFamily: "inherit",
-                          boxShadow:
-                            view === v ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                          boxShadow: "none",
                           fontWeight: view === v ? 600 : 400,
                         }}
                       >

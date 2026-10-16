@@ -203,9 +203,7 @@ export function ColorPickerPopover({
               WebkitBackdropFilter: "blur(20px)",
               borderRadius: 12,
               padding: 8,
-              boxShadow: isMobile
-                ? "none"
-                : "0 8px 32px rgba(0,0,0,0.28), inset 0 0 0 1px var(--border-soft)",
+              boxShadow: "none",
               border: "1px solid var(--border-soft)",
               width,
               isolation: "isolate",

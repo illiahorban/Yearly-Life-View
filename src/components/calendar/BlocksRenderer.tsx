@@ -210,9 +210,7 @@ function BlocksRendererComponent({
                       <span
                         style={{
                           fontSize: 11,
-                          filter: isCompactViewport
-                            ? "none"
-                            : "drop-shadow(0 0 3px rgba(255,149,0,0.5))",
+                          filter: "none",
                         }}
                       >
                         🔥
@@ -324,13 +322,7 @@ function BlocksRendererComponent({
                         maxHeight: 4,
                         background: effectiveQ.progressBarFill ?? effectiveQ.fill,
                         borderRadius: 999,
-                        boxShadow: isCompactViewport
-                          ? "none"
-                          : pct > 0
-                            ? effectiveQ.progressBarOutline
-                              ? "none"
-                              : `0 0 6px ${softColor}`
-                            : "none",
+                        boxShadow: "none",
                         borderRight:
                           effectiveQ.progressBarDivider && pct > 0 && pct < 100
                             ? `0.5px solid ${effectiveQ.progressBarDivider}`
@@ -391,11 +383,7 @@ function BlocksRendererComponent({
                               maxHeight: 3,
                               background: "#34c759",
                               borderRadius: 999,
-                              boxShadow: isCompactViewport
-                                ? "none"
-                                : goalPct > 0
-                                  ? "0 0 6px rgba(52,199,89,0.35)"
-                                  : "none",
+                              boxShadow: "none",
                             }}
                           />
                         </div>
@@ -795,9 +783,7 @@ function BlocksRendererComponent({
                                         fontWeight: 600,
                                         cursor: "pointer",
                                         fontFamily: "inherit",
-                                        boxShadow: isCompactViewport
-                                          ? "none"
-                                          : `0 2px 8px ${effectiveQ.border}55`,
+                                        boxShadow: "none",
                                         WebkitTapHighlightColor: "transparent",
                                       }}
                                     >

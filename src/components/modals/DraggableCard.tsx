@@ -85,7 +85,7 @@ export function DraggableCard({
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       whileDrag={{
         scale: 1.02,
-        boxShadow: "0 10px 28px rgba(0,0,0,0.22)",
+        boxShadow: "none",
         zIndex: 50,
       }}
       style={{ listStyle: "none" }}
