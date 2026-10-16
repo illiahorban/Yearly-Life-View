@@ -20,6 +20,7 @@ export function GoalsModal({
   dark,
   modalBg,
   accentColor,
+  colorKey,
   titleLabel,
   descPlaceholder,
   onSave,
@@ -33,6 +34,7 @@ export function GoalsModal({
   dark: boolean;
   modalBg: string;
   accentColor?: string;
+  colorKey?: AppleColorKey;
   titleLabel?: string;
   descPlaceholder?: string;
   onSave: (bg: BlockGoals, label: string) => void;
@@ -212,26 +214,40 @@ export function GoalsModal({
   const isWhiteAccentInLight =
     !dark &&
     Boolean(
-      accentColor &&
-        (accentColor === "#ffffff" ||
-          accentColor === "#fff" ||
-          accentColor.toLowerCase() === "white"),
+      colorKey === "white" ||
+        (accentColor &&
+          (accentColor === "#ffffff" ||
+            accentColor === "#fff" ||
+            accentColor.toLowerCase() === "white")),
     );
   const isBlackAccentInDark =
     dark &&
     Boolean(
-      accentColor &&
-        (accentColor === "#000000" ||
-          accentColor === "#000" ||
-          accentColor.toLowerCase() === "black" ||
-          accentColor === "#121212" ||
-          accentColor === "#18181b"),
+      colorKey === "black" ||
+        (accentColor &&
+          (accentColor === "#000000" ||
+            accentColor === "#000" ||
+            accentColor.toLowerCase() === "black" ||
+            accentColor === "#0a0a0a" ||
+            accentColor === "#121212" ||
+            accentColor === "#18181b")),
     );
   const accentContrastShadow = isWhiteAccentInLight
     ? "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
     : isBlackAccentInDark
       ? "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
       : undefined;
+
+  const modalBorderColor = accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)");
+  const modalBoxShadow = isMobile
+    ? isWhiteAccentInLight
+      ? "0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+      : isBlackAccentInDark
+        ? "0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
+        : "0 20px 60px rgba(0,0,0,0.28)"
+    : accentColor
+      ? `0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px ${accentColor}${accentContrastShadow ? `, ${accentContrastShadow}` : ""}`
+      : `0 20px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`;
 
   return (
     <>
@@ -286,10 +302,8 @@ export function GoalsModal({
             backdropFilter: "saturate(180%) blur(28px)",
             WebkitBackdropFilter: "saturate(180%) blur(28px)",
             borderRadius: 22,
-            boxShadow: accentColor
-              ? `0 20px 60px rgba(0,0,0,0.28), 0 0 0 1px ${accentColor}${accentContrastShadow ? `, ${accentContrastShadow}` : ""}`
-              : `0 20px 60px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)"}`,
-            border: `1px solid ${accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)")}`,
+            boxShadow: modalBoxShadow,
+            border: `${isMobile ? 2 : 1}px solid ${modalBorderColor}`,
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",

@@ -3282,63 +3282,73 @@ function App() {
         </AnimatePresence>
 
         <AnimatePresence>
-          {editGoalsBlockId !== null && editGoalsBlock !== null && (
-            <GoalsModal
-              key="goals"
-              blockId={editGoalsBlockId}
-              blockLabel={editGoalsBlock.label}
-              initial={
-                blockGoals[editGoalsBlockId] ?? { description: "", goals: [] }
-              }
-              dark={dark}
-              modalBg={modalBg}
-              accentColor={editGoalsAccentColor}
-              onSave={(bg, lbl) => {
-                setBlockGoals((prev) => ({
-                  ...prev,
-                  [editGoalsBlockId!]: updateBlockGoals(
-                    prev[editGoalsBlockId!],
-                    bg,
-                  ),
-                }));
-                const qi = config.quarters.findIndex((q) =>
-                  q.blocks.some((b) => b.id === editGoalsBlockId),
-                );
-                if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl);
-              }}
-              onClose={() => setEditGoalsBlockId(null)}
-            />
-          )}
+          {editGoalsBlockId !== null && editGoalsBlock !== null && (() => {
+            const qi = config.quarters.findIndex((q) =>
+              q.blocks.some((b) => b.id === editGoalsBlockId),
+            );
+            const blockColorKey = editGoalsBlock.color ?? (qi >= 0 ? quarterMeta[qi]!.colorKey : "white");
+            const effQ = resolveQuarter({ name: editGoalsBlock.label, colorKey: blockColorKey }, dark);
+            return (
+              <GoalsModal
+                key="goals"
+                blockId={editGoalsBlockId}
+                blockLabel={editGoalsBlock.label}
+                initial={
+                  blockGoals[editGoalsBlockId] ?? { description: "", goals: [] }
+                }
+                dark={dark}
+                modalBg={modalBg}
+                accentColor={effQ.border}
+                colorKey={blockColorKey}
+                onSave={(bg, lbl) => {
+                  setBlockGoals((prev) => ({
+                    ...prev,
+                    [editGoalsBlockId!]: updateBlockGoals(
+                      prev[editGoalsBlockId!],
+                      bg,
+                    ),
+                  }));
+                  if (qi >= 0) updateBlockLabel(qi, editGoalsBlockId!, lbl);
+                }}
+                onClose={() => setEditGoalsBlockId(null)}
+              />
+            );
+          })()}
         </AnimatePresence>
 
         <AnimatePresence>
-          {editGoalsQi !== null && (
-            <GoalsModal
-              key="quarter-goals"
-              blockId={String(editGoalsQi)}
-              blockLabel={
-                quarterMeta[editGoalsQi]?.name ??
-                resolvedQuarters[editGoalsQi]?.label ??
-                ""
-              }
-              initial={
-                quarterGoals[editGoalsQi] ?? { description: "", goals: [] }
-              }
-              dark={dark}
-              modalBg={modalBg}
-              accentColor={resolvedQuarters[editGoalsQi]?.fill}
-              titleLabel={t("quarterGoals")}
-              descPlaceholder={t("quarterDescPlaceholder")}
-              onSave={(bg, lbl) => {
-                setQuarterGoals((prev) => ({
-                  ...prev,
-                  [editGoalsQi!]: updateBlockGoals(prev[editGoalsQi!], bg),
-                }));
-                updateQuarterMeta(editGoalsQi!, { name: lbl });
-              }}
-              onClose={() => setEditGoalsQi(null)}
-            />
-          )}
+          {editGoalsQi !== null && (() => {
+            const qMeta = quarterMeta[editGoalsQi]!;
+            const q = resolvedQuarters[editGoalsQi]!;
+            return (
+              <GoalsModal
+                key="quarter-goals"
+                blockId={String(editGoalsQi)}
+                blockLabel={
+                  qMeta?.name ??
+                  q?.label ??
+                  ""
+                }
+                initial={
+                  quarterGoals[editGoalsQi] ?? { description: "", goals: [] }
+                }
+                dark={dark}
+                modalBg={modalBg}
+                accentColor={q.border}
+                colorKey={qMeta.colorKey}
+                titleLabel={t("quarterGoals")}
+                descPlaceholder={t("quarterDescPlaceholder")}
+                onSave={(bg, lbl) => {
+                  setQuarterGoals((prev) => ({
+                    ...prev,
+                    [editGoalsQi!]: updateBlockGoals(prev[editGoalsQi!], bg),
+                  }));
+                  updateQuarterMeta(editGoalsQi!, { name: lbl });
+                }}
+                onClose={() => setEditGoalsQi(null)}
+              />
+            );
+          })()}
         </AnimatePresence>
 
         <AnimatePresence>
@@ -3350,6 +3360,8 @@ function App() {
               initial={yearGoals[viewYear] ?? { description: "", goals: [] }}
               dark={dark}
               modalBg={modalBg}
+              accentColor="#34c759"
+              colorKey="green"
               titleLabel={t("yearGoals")}
               descPlaceholder={t("yearDescPlaceholder")}
               onSave={(bg) => {

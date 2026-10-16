@@ -102,6 +102,21 @@ export function SprintSettingsModal({
 
   const borderColor = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
+  const isWhiteInLight = colorKey === "white" && !dark;
+  const isBlackInDark = colorKey === "black" && dark;
+
+  const modalBoxShadow = isMobile
+    ? isWhiteInLight
+      ? "0 30px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+      : isBlackInDark
+        ? "0 30px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
+        : "0 30px 80px rgba(0,0,0,0.28)"
+    : `0 30px 80px rgba(0,0,0,0.22), 0 0 0 2px ${quarter.border}${quarter.contrastBorderShadow ? `, ${quarter.contrastBorderShadow}` : ""}`;
+
+  const modalBorder = isMobile
+    ? `2px solid ${quarter.border}`
+    : `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.6)"}`;
+
   return (
     <>
       <motion.div
@@ -149,8 +164,8 @@ export function SprintSettingsModal({
             backdropFilter: "blur(30px) saturate(180%)",
             WebkitBackdropFilter: "blur(30px) saturate(180%)",
             borderRadius: 22,
-            boxShadow: `0 30px 80px rgba(0,0,0,0.22), 0 0 0 2px ${quarter.border}${quarter.contrastBorderShadow ? `, ${quarter.contrastBorderShadow}` : ""}`,
-            border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.6)"}`,
+            boxShadow: modalBoxShadow,
+            border: modalBorder,
             overflowY: "auto",
             maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
           }}
