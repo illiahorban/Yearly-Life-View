@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LifeSettings, LifeView } from "../../types/calendar";
-import { startOfDay, startOfYear, addDays, sameDay, daysBetween, monthsBetween, addYears, dayOfYear } from "../../utils/date-utils";
+import { startOfDay, startOfYear, startOfNextYear, addDays, sameDay, daysBetween, monthsBetween, addYears, dayOfYear } from "../../utils/date-utils";
 import { LIFE_ACCENT } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { pluralUnits, pluralCount } from "../../utils/plural";
@@ -55,6 +55,13 @@ export function LifeCalendarModal({
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  const yearProgress = useMemo(() => {
+    const currentYear = today.getFullYear();
+    const s = startOfYear(currentYear).getTime();
+    const e = startOfNextYear(currentYear).getTime();
+    return Math.max(0, Math.min(100, ((now.getTime() - s) / (e - s)) * 100));
+  }, [now, today]);
 
   const [viewportSize, setViewportSize] = useState(() => ({
     width: typeof window !== "undefined" ? window.innerWidth : 400,
@@ -662,6 +669,125 @@ export function LifeCalendarModal({
                         7,
                         Math.min(11, Math.floor(layout.cellPx * 0.24)),
                       );
+                      if (isCurrent) {
+                        return (
+                          <div
+                            key={i}
+                            style={{
+                              width: layout.cellPx,
+                              height: layout.cellPx,
+                              borderRadius: radius,
+                              flexShrink: 0,
+                              position: "relative",
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                borderRadius: radius,
+                                overflow: "hidden",
+                                isolation: "isolate",
+                                contain: "paint",
+                                background: dark
+                                  ? "rgba(255,255,255,0.1)"
+                                  : "rgba(0,0,0,0.07)",
+                              }}
+                            >
+                              {/* Fill layer: background bar rising from bottom */}
+                              <div
+                                className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out pointer-events-none"
+                                style={{
+                                  height: `${yearProgress}%`,
+                                  background: LIFE_ACCENT,
+                                  zIndex: 1,
+                                }}
+                              />
+
+                              {/* Layer 1: Base text (unfilled area tone, clipped to upper region) */}
+                              {showYearLabel && (
+                                <div
+                                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                  style={{
+                                    clipPath:
+                                      yearProgress >= 100
+                                        ? "inset(100% 0 0 0)"
+                                        : yearProgress > 0
+                                          ? `inset(0 0 ${yearProgress}% 0)`
+                                          : undefined,
+                                    WebkitClipPath:
+                                      yearProgress >= 100
+                                        ? "inset(100% 0 0 0)"
+                                        : yearProgress > 0
+                                          ? `inset(0 0 ${yearProgress}% 0)`
+                                          : undefined,
+                                    willChange: "clip-path",
+                                    transform: "translateZ(0)",
+                                    zIndex: 2,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: yearFontSize,
+                                      lineHeight: 1,
+                                      fontVariantNumeric: "tabular-nums",
+                                      color: dark
+                                        ? "rgba(255,255,255,0.4)"
+                                        : "rgba(0,0,0,0.35)",
+                                      userSelect: "none",
+                                      pointerEvents: "none",
+                                    }}
+                                  >
+                                    {yearLabel}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Layer 2: Filled text overlay (clipped to filled lower region) */}
+                              {showYearLabel && yearProgress > 0 && (
+                                <div
+                                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                  style={{
+                                    clipPath: `inset(${Math.max(0, 100 - yearProgress)}% 0 0 0)`,
+                                    WebkitClipPath: `inset(${Math.max(0, 100 - yearProgress)}% 0 0 0)`,
+                                    willChange: "clip-path",
+                                    transform: "translateZ(0)",
+                                    zIndex: 3,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: yearFontSize,
+                                      lineHeight: 1,
+                                      fontVariantNumeric: "tabular-nums",
+                                      color: "#ffffff",
+                                      userSelect: "none",
+                                      pointerEvents: "none",
+                                    }}
+                                  >
+                                    {yearLabel}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Ring overlay — placed outside clipping container so it is never clipped on subpixel edges */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                borderRadius: radius,
+                                boxShadow: isMobile
+                                  ? `0 0 0 0.5px ${LIFE_ACCENT}, inset 0 0 0 0.5px ${LIFE_ACCENT}`
+                                  : `0 0 0 1px ${LIFE_ACCENT}, inset 0 0 0 1px ${LIFE_ACCENT}`,
+                                pointerEvents: "none",
+                                zIndex: 10,
+                              }}
+                            />
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={i}
@@ -672,20 +798,9 @@ export function LifeCalendarModal({
                             flexShrink: 0,
                             background: isPast
                               ? LIFE_ACCENT
-                              : isCurrent
-                                ? `${LIFE_ACCENT}66`
-                                : dark
-                                  ? "rgba(255,255,255,0.1)"
-                                  : "rgba(0,0,0,0.07)",
-                            border: showBorder
-                              ? isCurrent
-                                ? `${Math.max(1, Math.round(layout.cellPx / 6))}px solid ${LIFE_ACCENT}`
-                                : "none"
-                              : "none",
-                            boxShadow:
-                              layout.cellPx >= 5 && isCurrent
-                                ? `0 0 0 2px ${LIFE_ACCENT}44`
-                                : "none",
+                              : dark
+                                ? "rgba(255,255,255,0.1)"
+                                : "rgba(0,0,0,0.07)",
                             display: showYearLabel ? "flex" : undefined,
                             alignItems: showYearLabel ? "center" : undefined,
                             justifyContent: showYearLabel ? "center" : undefined,
@@ -700,11 +815,9 @@ export function LifeCalendarModal({
                                 fontVariantNumeric: "tabular-nums",
                                 color: isPast
                                   ? "rgba(255,255,255,0.85)"
-                                  : isCurrent
-                                    ? "#fff"
-                                    : dark
-                                      ? "rgba(255,255,255,0.4)"
-                                      : "rgba(0,0,0,0.35)",
+                                  : dark
+                                    ? "rgba(255,255,255,0.4)"
+                                    : "rgba(0,0,0,0.35)",
                                 userSelect: "none",
                                 pointerEvents: "none",
                               }}
