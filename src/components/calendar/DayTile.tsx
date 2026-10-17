@@ -113,6 +113,47 @@ function areDayTilesEqual(prev: DayTileProps, next: DayTileProps): boolean {
   return true;
 }
 
+const NOTE_BADGE_PATHS: Record<number, string> = {
+  1: "M 4.9 4.6 L 6.1 3.4 L 6.1 8.7",
+  2: "M 4.5 4.8 C 4.5 3.5 5.3 3.3 6.0 3.3 C 6.8 3.3 7.5 3.7 7.5 4.6 C 7.5 5.8 4.6 7.3 4.5 8.7 L 7.5 8.7",
+  3: "M 4.6 4.3 C 4.8 3.5 5.4 3.3 6.0 3.3 C 6.8 3.3 7.4 3.8 7.4 4.7 C 7.4 5.5 6.7 5.9 6.0 5.9 M 6.0 5.9 C 6.8 5.9 7.5 6.4 7.5 7.3 C 7.5 8.2 6.8 8.7 6.0 8.7 C 5.3 8.7 4.7 8.4 4.6 7.7",
+  4: "M 6.7 3.3 L 4.5 6.8 L 7.5 6.8 M 6.7 5.2 L 6.7 8.7",
+  5: "M 7.3 3.4 L 4.8 3.4 L 4.6 5.6 C 4.9 5.3 5.4 5.1 6.0 5.1 C 6.9 5.1 7.5 5.8 7.5 6.9 C 7.5 8.0 6.9 8.7 5.9 8.7 C 5.2 8.7 4.6 8.3 4.5 7.6",
+  6: "M 7.2 4.0 C 6.9 3.4 6.3 3.3 5.8 3.3 C 4.9 3.3 4.5 4.3 4.5 6.0 C 4.5 7.6 5.1 8.7 6.1 8.7 C 6.9 8.7 7.5 8.1 7.5 7.0 C 7.5 6.0 6.9 5.4 6.0 5.4 C 5.2 5.4 4.7 6.0 4.6 6.6",
+  7: "M 4.5 3.5 L 7.5 3.5 L 5.5 8.7",
+  8: "M 6.0 5.8 C 5.2 5.8 4.6 5.3 4.6 4.5 C 4.6 3.7 5.2 3.3 6.0 3.3 C 6.8 3.3 7.4 3.7 7.4 4.5 C 7.4 5.3 6.8 5.8 6.0 5.8 Z M 6.0 5.8 C 5.1 5.8 4.5 6.4 4.5 7.3 C 4.5 8.2 5.1 8.7 6.0 8.7 C 6.9 8.7 7.5 8.2 7.5 7.3 C 7.5 6.4 6.9 5.8 6.0 5.8 Z",
+  9: "M 4.8 8.0 C 5.1 8.6 5.7 8.7 6.2 8.7 C 7.1 8.7 7.5 7.7 7.5 6.0 C 7.5 4.4 6.9 3.3 5.9 3.3 C 5.1 3.3 4.5 3.9 4.5 5.0 C 4.5 6.0 5.1 6.6 6.0 6.6 C 6.8 6.6 7.3 6.0 7.4 5.4",
+};
+
+const NOTE_BADGE_PATH_PLUS =
+  "M 4.2 7.6 C 4.5 8.1 4.9 8.2 5.3 8.2 C 6.0 8.2 6.3 7.4 6.3 6.0 C 6.3 4.6 5.8 3.7 5.0 3.7 C 4.4 3.7 3.9 4.2 3.9 5.1 C 3.9 6.0 4.4 6.5 5.1 6.5 C 5.8 6.5 6.2 6.0 6.3 5.5 M 7.8 5.5 L 9.6 5.5 M 8.7 4.6 L 8.7 6.4";
+
+function NoteBadgeIcon({ count }: { count: number }) {
+  const isPlus = count > 9;
+  const path = isPlus
+    ? NOTE_BADGE_PATH_PLUS
+    : (NOTE_BADGE_PATHS[count] ?? NOTE_BADGE_PATHS[1]!);
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-full h-full block"
+      style={{ overflow: "visible" }}
+    >
+      <circle cx="6" cy="6" r="6" fill="#007aff" />
+      <path
+        d={path}
+        stroke="#ffffff"
+        strokeWidth={isPlus ? 1.15 : 1.35}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 function DayTileComponent({
   date,
   state,
@@ -412,18 +453,11 @@ function DayTileComponent({
     <div
       style={{
         position: "absolute",
-        background: "#007aff",
-        boxShadow: undefined,
         zIndex: 12,
       }}
-      className={`absolute ${hasEvents ? "top-[8px] right-[2px] sm:top-2.5 sm:right-1" : "top-1 right-1"} flex h-[8px] w-[8px] min-h-[8px] min-w-[8px] flex-shrink-0 items-center justify-center rounded-full bg-[#007aff] sm:h-3 sm:w-3 sm:min-h-3 sm:min-w-3`}
+      className={`absolute ${hasEvents ? "top-[8px] right-[2px] sm:top-2.5 sm:right-1" : "top-1 right-1"} flex h-[8px] w-[8px] min-h-[8px] min-w-[8px] sm:h-3 sm:w-3 sm:min-h-3 sm:min-w-3 flex-shrink-0 items-center justify-center select-none pointer-events-none`}
     >
-      <span
-        className="text-[5px] sm:text-[8px]"
-        style={{ color: "white", fontWeight: 700, lineHeight: 1 }}
-      >
-        {noteCount}
-      </span>
+      <NoteBadgeIcon count={noteCount} />
     </div>
   ) : null;
 
