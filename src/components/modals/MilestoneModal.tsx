@@ -1305,6 +1305,11 @@ export function MilestoneModal({
                   (quarter.key === "black" ||
                     quarter.border === "#0a0a0a" ||
                     resolveNoteHex(quarter.border) === "#121212");
+                const isWhiteInLight =
+                  !dark &&
+                  (quarter.key === "white" ||
+                    quarter.border === "#ffffff" ||
+                    resolveNoteHex(quarter.border) === "#ffffff");
                 const qCount = group.reduce(
                   (acc, dg) => acc + dg.items.length,
                   0,
@@ -1321,12 +1326,16 @@ export function MilestoneModal({
                     >
                       <span
                         style={{
-                          width: 8,
-                          height: 8,
+                          width: 12,
+                          height: 12,
                           borderRadius: "50%",
-                          background: quarter.tint,
+                          background: isWhiteInLight ? "#ffffff" : quarter.border,
                           border: "none",
-                          boxShadow: `0 0 0 2px ${quarter.border}`,
+                          boxShadow: isWhiteInLight
+                            ? "0 0 0 1px rgba(0, 0, 0, 0.25)"
+                            : isBlackInDark
+                              ? "0 0 0 1px rgba(255, 255, 255, 0.25)"
+                              : "none",
                           flexShrink: 0,
                           display: "inline-block",
                         }}

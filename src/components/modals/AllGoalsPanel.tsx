@@ -482,6 +482,17 @@ export function AllGoalsPanel({
               const qTotal = qQDone + qSprintDone;
               const qAllTotal = qGoals.length + qSprintTotal;
 
+              const isBlackInDark =
+                dark &&
+                (qr.key === "black" ||
+                  qr.border === "#0a0a0a" ||
+                  resolveNoteHex(qr.border) === "#121212");
+              const isWhiteInLight =
+                !dark &&
+                (qr.key === "white" ||
+                  qr.border === "#ffffff" ||
+                  resolveNoteHex(qr.border) === "#ffffff");
+
               return (
                 <div key={qi} style={{ padding: "10px 12px 6px" }}>
                   {/* Quarter container card */}
@@ -510,6 +521,22 @@ export function AllGoalsPanel({
                             gap: 6,
                           }}
                         >
+                          <span
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: "50%",
+                              background: isWhiteInLight ? "#ffffff" : qr.border,
+                              border: "none",
+                              boxShadow: isWhiteInLight
+                                ? "0 0 0 1px rgba(0, 0, 0, 0.25)"
+                                : isBlackInDark
+                                  ? "0 0 0 1px rgba(255, 255, 255, 0.25)"
+                                  : "none",
+                              flexShrink: 0,
+                              display: "inline-block",
+                            }}
+                          />
                           <span
                             style={{
                               fontSize: 12,
