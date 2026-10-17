@@ -90,7 +90,7 @@ export function NoteEntryItem({
 
   const isColorOpen = colorPickerEntryId === entry.id;
   const isActionVisible = isMobile
-    ? isFocused || isColorOpen || Boolean(entryColor)
+    ? isFocused || isColorOpen
     : hoveredEntryId === entry.id || isColorOpen;
   const lastColorPointerTimeRef = useRef(0);
 

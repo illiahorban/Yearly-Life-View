@@ -1192,7 +1192,7 @@ export function NoteModal({
                         colorPicker.target.index === i;
                       const isFocused = focusedGoalIdx === i;
                       const isGoalActionVisible = isMobile
-                        ? isFocused || isColorOpen || Boolean(goalColor)
+                        ? isFocused || isColorOpen
                         : isHovered || isColorOpen;
                       const goalId = goalIds[i] ?? `goal-fallback-${i}`;
                       const goalAch = goalColor
@@ -1316,7 +1316,7 @@ export function NoteModal({
                               onBlur={() => {
                                 goalBlurTimeoutRef.current = setTimeout(() => {
                                   setFocusedGoalIdx((prev) => (prev === i ? null : prev));
-                                });
+                                }, 200);
                               }}
                               onMouseDown={(e) => {
                                 if (isGhostBlocked()) {
