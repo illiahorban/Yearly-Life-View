@@ -466,9 +466,9 @@ function DayTileComponent({
   const hasPastOutline = hasPastWhiteOutline || hasPastBlackOutline;
 
   const msSep =
-    dark && !(isPast && isWhiteQuarter)
+    dark && !isWhiteQuarter
       ? "rgba(255,255,255,0.40)"
-      : (dark && isPast && isWhiteQuarter)
+      : (dark && isWhiteQuarter)
         ? "#000000"
         : "rgba(0,0,0,0.20)";
   const tileBaseBg = isPast ? accentColor : futureBg;
@@ -501,7 +501,7 @@ function DayTileComponent({
                   achromaticStyle(resolveNoteHex(ms.color), dark)?.tier ===
                     "white"),
             ) &&
-            (!dark || (dark && isPast && isWhiteQuarter));
+            (!dark || (dark && isWhiteQuarter));
           const isLast = msIdx === dayMilestones.length - 1;
           return (
             <React.Fragment key={ms.id}>
