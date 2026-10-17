@@ -430,7 +430,6 @@ function DayTileComponent({
   const hasPastWhiteOutline = isPast && isWhiteInLight;
   const hasPastBlackOutline = isPast && isBlackInDark;
   const hasPastOutline = hasPastWhiteOutline || hasPastBlackOutline;
-  const tileOutlineWidth = !isPast && !isToday ? 1 : 0;
 
   const msSep =
     dark && !(isPast && isWhiteQuarter)
@@ -444,14 +443,14 @@ function DayTileComponent({
       <div
         style={{
           position: "absolute",
-          top: tileOutlineWidth,
-          left: tileOutlineWidth,
-          right: tileOutlineWidth,
+          top: 0,
+          left: 0,
+          right: 0,
           height: isCompactViewport ? 6 : 7,
           display: "flex",
           overflow: "hidden",
-          borderTopLeftRadius: Math.max(0, 12 - tileOutlineWidth),
-          borderTopRightRadius: Math.max(0, 12 - tileOutlineWidth),
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
           zIndex: 4,
           pointerEvents: "none",
         }}
