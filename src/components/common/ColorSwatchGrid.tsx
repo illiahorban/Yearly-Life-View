@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useRef } from "react";
 import { swatchCheckColor, APPLE_COLORS } from "../../constants/colors";
 import { useIsMobile } from "../../hooks/use-mobile";
+import { blockGhostEvents } from "../../lib/utils";
 
 export function ColorSwatchGrid({
   colors,
@@ -18,6 +19,22 @@ export function ColorSwatchGrid({
   dark: boolean;
 }) {
   const isMobile = useIsMobile();
+  const lastActionTimeRef = useRef(0);
+  const activePointerDownKeyRef = useRef<string | null>(null);
+
+  const handleSelectSafe = (hex: string, key: string) => {
+    lastActionTimeRef.current = Date.now();
+    blockGhostEvents(500);
+    onSelect(hex, key);
+  };
+
+  const handleClearSafe = () => {
+    if (!onClear) return;
+    lastActionTimeRef.current = Date.now();
+    blockGhostEvents(500);
+    onClear();
+  };
+
   return (
     <div
       style={{
@@ -28,8 +45,28 @@ export function ColorSwatchGrid({
     >
       {onClear && (
         <button
-          onClick={onClear}
+          type="button"
+          onPointerDown={(e) => {
+            e.preventDefault(); // Prevents input blur, keeps keyboard up!
+            e.stopPropagation();
+            activePointerDownKeyRef.current = "__clear__";
+          }}
+          onPointerUp={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (activePointerDownKeyRef.current === "__clear__") {
+              activePointerDownKeyRef.current = null;
+              handleClearSafe();
+            }
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (Date.now() - lastActionTimeRef.current < 400) return;
+            handleClearSafe();
+          }}
           title={clearLabel ?? "—"}
+          aria-label={clearLabel ?? "—"}
           style={{
             width: 20,
             height: 20,
@@ -45,9 +82,34 @@ export function ColorSwatchGrid({
             justifyContent: "center",
             position: "relative",
             flexShrink: 0,
+            padding: 0,
+            margin: 0,
+            lineHeight: 0,
+            boxSizing: "border-box",
+            overflow: "hidden",
+            WebkitAppearance: "none",
+            appearance: "none",
           }}
         >
-          <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>✕</span>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 10 10"
+            fill="none"
+            stroke="var(--text-tertiary)"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            style={{
+              display: "block",
+              flexShrink: 0,
+              pointerEvents: "none",
+              margin: 0,
+              padding: 0,
+            }}
+          >
+            <line x1="2.5" y1="2.5" x2="7.5" y2="7.5" />
+            <line x1="7.5" y1="2.5" x2="2.5" y2="7.5" />
+          </svg>
         </button>
       )}
       {colors.map((c) => {
@@ -70,8 +132,27 @@ export function ColorSwatchGrid({
         );
         return (
           <button
+            type="button"
             key={c.key}
-            onClick={() => onSelect(c.hex, c.key)}
+            onPointerDown={(e) => {
+              e.preventDefault(); // Prevents input blur, keeps keyboard up!
+              e.stopPropagation();
+              activePointerDownKeyRef.current = c.key;
+            }}
+            onPointerUp={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (activePointerDownKeyRef.current === c.key) {
+                activePointerDownKeyRef.current = null;
+                handleSelectSafe(c.hex, c.key);
+              }
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (Date.now() - lastActionTimeRef.current < 400) return;
+              handleSelectSafe(c.hex, c.key);
+            }}
             title={c.label}
             style={{
               width: 20,
@@ -92,6 +173,10 @@ export function ColorSwatchGrid({
               justifyContent: "center",
               transform: sel ? "scale(1.08)" : "scale(1)",
               flexShrink: 0,
+              padding: 0,
+              margin: 0,
+              lineHeight: 0,
+              boxSizing: "border-box",
             }}
           >
             {sel && (

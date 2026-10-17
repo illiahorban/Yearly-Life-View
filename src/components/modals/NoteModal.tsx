@@ -16,6 +16,7 @@ import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { TrashIcon, ChevronLeftIcon, ChevronRightIcon, GripIcon } from "../icons/Icons";
 import { haptics } from "../../utils/haptics";
+import { isGhostBlocked, blockGhostEvents } from "../../lib/utils";
 
 export function NoteModal({
   dateKey: dk,
@@ -257,7 +258,6 @@ export function NoteModal({
     );
     const g: DayGoals = { ...current, colors: newColors };
     commitGoalsDraft(g);
-    setGoalColorPickerIdx(null);
   };
   const handleGoalDelete = (i: number) => {
     haptics.notificationError();
@@ -277,12 +277,62 @@ export function NoteModal({
     setGoalIds((prev) => prev.filter((_, j) => j !== i));
   };
   const [hoveredGoalIdx, setHoveredGoalIdx] = useState<number | null>(null);
-  const [goalColorPickerIdx, setGoalColorPickerIdx] = useState<number | null>(
-    null,
-  );
-  const [goalColorAnchor, setGoalColorAnchor] =
+  const [focusedNoteId, setFocusedNoteId] = useState<string | null>(null);
+  const [focusedGoalIdx, setFocusedGoalIdx] = useState<number | null>(null);
+  const noteBlurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const goalBlurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastGoalColorPointerTimeRef = useRef<Record<number, number>>({});
+  const lastEditEventColorPointerTimeRef = useRef(0);
+  const lastAddEventColorPointerTimeRef = useRef(0);
+  const isAddEventInputFocusedRef = useRef(false);
+  const isMsEditInputFocusedRef = useRef(false);
+  const [activeMsId, setActiveMsId] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (noteBlurTimeoutRef.current) clearTimeout(noteBlurTimeoutRef.current);
+      if (goalBlurTimeoutRef.current) clearTimeout(goalBlurTimeoutRef.current);
+    };
+  }, []);
+
+  type DayModalColorPickerTarget =
+    | { type: "note"; id: string }
+    | { type: "goal"; index: number }
+    | { type: "addEvent" }
+    | { type: "editEvent" }
+    | null;
+
+  const [colorPickerTarget, setColorPickerTarget] =
+    useState<DayModalColorPickerTarget>(null);
+  const [colorPickerAnchor, setColorPickerAnchor] =
     useState<HTMLElement | null>(null);
-  const [goalColorPlacement, setGoalColorPlacement] = useState<"top" | "bottom">("bottom");
+
+  const closeColorPicker = useCallback(() => {
+    setColorPickerTarget(null);
+    setColorPickerAnchor(null);
+  }, []);
+
+  const toggleColorPickerForTarget = useCallback(
+    (target: Exclude<DayModalColorPickerTarget, null>, anchor: HTMLElement) => {
+      setColorPickerTarget((prev) => {
+        const isSame =
+          prev &&
+          prev.type === target.type &&
+          (target.type === "note"
+            ? prev.type === "note" && prev.id === target.id
+            : target.type === "goal"
+              ? prev.type === "goal" && prev.index === target.index
+              : true);
+        if (isSame) {
+          setColorPickerAnchor(null);
+          return null;
+        }
+        setColorPickerAnchor(anchor);
+        return target;
+      });
+    },
+    [],
+  );
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmDeleteGoalIdx, setConfirmDeleteGoalIdx] = useState<
     number | null
@@ -343,12 +393,14 @@ export function NoteModal({
     _doneSlice.length === goalsDraft.count &&
     _doneSlice.every(Boolean);
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [colorPickerEntryId, setColorPickerEntryId] = useState<string | null>(
-    null,
+  const colorPickerEntryId =
+    colorPickerTarget?.type === "note" ? colorPickerTarget.id : null;
+  const toggleColorPicker = useCallback(
+    (id: string, anchorEl: HTMLElement) => {
+      toggleColorPickerForTarget({ type: "note", id }, anchorEl);
+    },
+    [toggleColorPickerForTarget],
   );
-  const toggleColorPicker = (id: string) => {
-    setColorPickerEntryId((prev) => (prev === id ? null : id));
-  };
 
   // Note height tracking is now delegated entirely to <TextareaAutosize>
   // (react-textarea-autosize), which measures scrollHeight itself and keeps
@@ -382,10 +434,6 @@ export function NoteModal({
   const [msEditDesc, setMsEditDesc] = useState("");
   const [msEditRecurring, setMsEditRecurring] = useState(false);
   const [msEditRecurSpinKey, setMsEditRecurSpinKey] = useState(0);
-  const [msEditColorPickerOpen, setMsEditColorPickerOpen] = useState(false);
-  const [msEditColorAnchor, setMsEditColorAnchor] =
-    useState<HTMLElement | null>(null);
-  const [msEditColorPlacement, setMsEditColorPlacement] = useState<"top" | "bottom">("bottom");
   const msEditLabelInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const msEditDescInputRef = React.useRef<HTMLTextAreaElement | null>(null);
   const lastFocusedMsEditInputRef = React.useRef<"label" | "desc">("label");
@@ -402,10 +450,6 @@ export function NoteModal({
   const [newDesc, setNewDesc] = useState("");
   const [newRecurring, setNewRecurring] = useState(false);
   const [newRecurSpinKey, setNewRecurSpinKey] = useState(0);
-  const [newColorPickerOpen, setNewColorPickerOpen] = useState(false);
-  const [newColorAnchor, setNewColorAnchor] =
-    useState<HTMLElement | null>(null);
-  const [newColorPlacement, setNewColorPlacement] = useState<"top" | "bottom">("bottom");
 
   // Readjust scroll position only when virtual keyboard initially pops up
   const prevKeyboardOpenRef = useRef(false);
@@ -516,17 +560,16 @@ export function NoteModal({
   };
 
   React.useEffect(() => {
-    if (!msEditId) setMsEditColorPickerOpen(false);
-  }, [msEditId]);
+    if (!msEditId && colorPickerTarget?.type === "editEvent") closeColorPicker();
+  }, [msEditId, colorPickerTarget, closeColorPicker]);
 
   React.useEffect(() => {
-    if (!addEventOpen) return;
-    newLabelInputRef.current?.focus({ preventScroll: true });
-    scrollToTarget(addEventFormRef.current, "nearest");
-  }, [addEventOpen, scrollToTarget]);
-
-  React.useEffect(() => {
-    if (!addEventOpen) setNewColorPickerOpen(false);
+    if (addEventOpen) {
+      newLabelInputRef.current?.focus({ preventScroll: true });
+      scrollToTarget(addEventFormRef.current, "nearest");
+    } else {
+      if (colorPickerTarget?.type === "addEvent") closeColorPicker();
+    }
   }, [addEventOpen]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number, number, number];
@@ -542,7 +585,7 @@ export function NoteModal({
     border: `1px solid ${borderColor}`,
     borderRadius: 8,
     padding: "6px 9px",
-    fontSize: 12,
+    fontSize: isMobile ? 16 : 12,
     color: "var(--text)",
     outline: "none",
     fontFamily: "inherit",
@@ -658,7 +701,7 @@ export function NoteModal({
         overscrollBehavior: "contain",
       }}
       onClick={() => {
-        setColorPickerEntryId(null);
+        closeColorPicker();
         onClose();
       }}
     >
@@ -684,7 +727,7 @@ export function NoteModal({
         transition={{ type: "spring", stiffness: 380, damping: 30 }}
         onClick={(e) => {
           e.stopPropagation();
-          if (colorPickerEntryId !== null) setColorPickerEntryId(null);
+          if (colorPickerTarget !== null) closeColorPicker();
         }}
         style={{
           position: "relative",
@@ -1144,7 +1187,13 @@ export function NoteModal({
                         ? "var(--text-tertiary)"
                         : ec.textTitle;
                       const isHovered = hoveredGoalIdx === i;
-                      const isColorOpen = goalColorPickerIdx === i;
+                      const isColorOpen =
+                        colorPickerTarget?.type === "goal" &&
+                        colorPickerTarget.index === i;
+                      const isFocused = focusedGoalIdx === i;
+                      const isGoalActionVisible = isMobile
+                        ? isFocused || isColorOpen
+                        : isHovered || isColorOpen;
                       const goalId = goalIds[i] ?? `goal-fallback-${i}`;
                       const goalAch = goalColor
                         ? achromaticStyle(resolveNoteHex(goalColor), dark)
@@ -1155,8 +1204,12 @@ export function NoteModal({
                       return (
                         <DraggableCard key={goalId} id={goalId} dark={dark}>
                           <div
-                            onMouseEnter={() => setHoveredGoalIdx(i)}
-                            onMouseLeave={() => setHoveredGoalIdx(null)}
+                            onMouseEnter={() => {
+                              if (!isMobile) setHoveredGoalIdx(i);
+                            }}
+                            onMouseLeave={() => {
+                              if (!isMobile) setHoveredGoalIdx(null);
+                            }}
                             style={{
                               position: "relative",
                               display: "flex",
@@ -1231,7 +1284,7 @@ export function NoteModal({
                               );
                             })()}
                             <TextareaAutosize
-                              key={`goal-input-${goalId}-${goalColor || "none"}`}
+                              key={`goal-input-${goalId}`}
                               ref={(el) => {
                                 goalInputRefs.current[i] = el;
                               }}
@@ -1242,9 +1295,37 @@ export function NoteModal({
                               onHeightChange={(h) =>
                                 handleGoalHeightChange(i, h)
                               }
+                              onPointerDown={(e) => {
+                                if (isGhostBlocked()) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  return;
+                                }
+                              }}
+                              onFocus={(e) => {
+                                if (isGhostBlocked()) {
+                                  if (focusedGoalIdx !== i) {
+                                    e.currentTarget.blur();
+                                    return;
+                                  }
+                                }
+                                if (goalBlurTimeoutRef.current) clearTimeout(goalBlurTimeoutRef.current);
+                                setFocusedGoalIdx(i);
+                                setFocusedNoteId(null);
+                              }}
+                              onBlur={() => {
+                                goalBlurTimeoutRef.current = setTimeout(() => {
+                                  setFocusedGoalIdx((prev) => (prev === i ? null : prev));
+                                });
+                              }}
                               onMouseDown={(e) => {
-                                if (goalColorPickerIdx !== null)
-                                  setGoalColorPickerIdx(null);
+                                if (isGhostBlocked()) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  return;
+                                }
+                                if (colorPickerTarget !== null)
+                                  closeColorPicker();
                                 e.stopPropagation();
                               }}
                               placeholder={`${t("goal")} ${i + 1}`}
@@ -1259,7 +1340,7 @@ export function NoteModal({
                                 overflow: "hidden",
                                 overflowWrap: "anywhere",
                                 wordBreak: "break-word",
-                                fontSize: 14,
+                                fontSize: isMobile ? 16 : 14,
                                 color: textColor,
                                 textDecoration: done ? "line-through" : "none",
                                 opacity: done ? 0.55 : 1,
@@ -1285,10 +1366,12 @@ export function NoteModal({
                                 alignItems: "center",
                                 justifyContent: "center",
                                 gap: 6,
-                                opacity: isHovered || isColorOpen ? 1 : 0,
-                                pointerEvents:
-                                  isHovered || isColorOpen ? "auto" : "none",
+                                opacity: isGoalActionVisible ? 1 : 0,
+                                pointerEvents: isGoalActionVisible
+                                  ? "auto"
+                                  : "none",
                                 isolation: "isolate",
+                                transition: "opacity 150ms ease",
                               }}
                             >
                               <div
@@ -1300,14 +1383,31 @@ export function NoteModal({
                                 }}
                               >
                                 <button
-                                  onClick={(e) => {
+                                  type="button"
+                                  onPointerDown={(e) => {
+                                    e.preventDefault(); // Prevents goal input blur, keeps keyboard open!
                                     e.stopPropagation();
-                                    setGoalColorAnchor(e.currentTarget);
-                                    setGoalColorPickerIdx((prev) =>
-                                      prev === i ? null : i,
+                                    lastGoalColorPointerTimeRef.current[i] = Date.now();
+                                    haptics.selection();
+                                    toggleColorPickerForTarget(
+                                      { type: "goal", index: i },
+                                      e.currentTarget,
                                     );
                                   }}
-                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (
+                                      Date.now() -
+                                        (lastGoalColorPointerTimeRef.current[i] ?? 0) <
+                                      400
+                                    )
+                                      return;
+                                    haptics.selection();
+                                    toggleColorPickerForTarget(
+                                      { type: "goal", index: i },
+                                      e.currentTarget,
+                                    );
+                                  }}
                                   title={t("chooseColor")}
                                   aria-label={t("chooseColor")}
                                   style={{
@@ -1348,41 +1448,17 @@ export function NoteModal({
                                     />
                                   )}
                                 </button>
-                                <ColorPickerPopover
-                                  isOpen={goalColorPickerIdx === i}
-                                  onClose={() => setGoalColorPickerIdx(null)}
-                                  anchorEl={goalColorAnchor}
-                                  dark={dark}
-                                  modalBg={modalBg}
-                                  selected={goalsDraft.colors?.[i] ?? null}
-                                  onSelect={(hex) => {
-                                    handleGoalColorChange(
-                                      i,
-                                      goalsDraft.colors?.[i] === hex
-                                        ? undefined
-                                        : hex,
-                                    );
-                                    setGoalColorPickerIdx(null);
-                                    setTimeout(() => {
-                                      goalInputRefs.current[i]?.focus();
-                                    }, 0);
-                                  }}
-                                  onClear={() => {
-                                    handleGoalColorChange(i, undefined);
-                                    setGoalColorPickerIdx(null);
-                                    setTimeout(() => {
-                                      goalInputRefs.current[i]?.focus();
-                                    }, 0);
-                                  }}
-                                  clearLabel={t("noColor")}
-                                />
                               </div>
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  haptics.impactLight();
                                   setConfirmDeleteGoalIdx(i);
                                 }}
-                                onPointerDown={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => {
+                                  e.stopPropagation();
+                                }}
                                 style={{
                                   width: 24,
                                   height: 24,
@@ -1401,6 +1477,8 @@ export function NoteModal({
                                   margin: 0,
                                   padding: 0,
                                   lineHeight: 0,
+                                  opacity: 1,
+                                  pointerEvents: "auto",
                                   transition: "background 0.1s",
                                 }}
                                 onMouseEnter={(e) => {
@@ -1518,7 +1596,10 @@ export function NoteModal({
                     const cardFormSec = ec2.textDesc;
                     const cardFormBdr = ec2.formBorder;
                     const cardFormBg = ec2.formBg;
-                    const hovering = hoveredMsId === ms.id && !isEditing;
+                    const isMsActionVisible =
+                      (isMobile
+                        ? activeMsId === ms.id
+                        : hoveredMsId === ms.id) && !isEditing;
                     const msAch = (isEditing ? msEditColor : ms.color)
                       ? achromaticStyle(
                           resolveNoteHex(isEditing ? msEditColor : ms.color),
@@ -1541,8 +1622,17 @@ export function NoteModal({
                             transition:
                               "background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
                           }}
-                          onMouseEnter={() => setHoveredMsId(ms.id)}
-                          onMouseLeave={() => setHoveredMsId(null)}
+                          onClick={() => {
+                            if (isMobile) {
+                              setActiveMsId((prev) => (prev === ms.id ? null : ms.id));
+                            }
+                          }}
+                          onMouseEnter={() => {
+                            if (!isMobile) setHoveredMsId(ms.id);
+                          }}
+                          onMouseLeave={() => {
+                            if (!isMobile) setHoveredMsId(null);
+                          }}
                         >
                           {/* View row — collapses when editing */}
                           <div
@@ -1636,15 +1726,16 @@ export function NoteModal({
                                   flexDirection: "row-reverse",
                                   flexWrap: "wrap",
                                   gap: 6,
-                                  maxWidth: 70,
+                                  maxWidth: 96,
                                   flexShrink: 0,
                                   alignSelf: "center",
-                                  opacity: hovering ? 1 : 0,
-                                  pointerEvents: hovering ? "auto" : "none",
+                                  opacity: isMsActionVisible ? 1 : 0,
+                                  pointerEvents: isMsActionVisible ? "auto" : "none",
                                   transition: "opacity 0.15s ease-in-out",
                                 }}
                               >
                                 <button
+                                  type="button"
                                   onClick={() => setConfirmDeleteMsIdDay(ms.id)}
                                   title={t("remove")}
                                   style={{
@@ -1692,6 +1783,7 @@ export function NoteModal({
                                   </svg>
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => startMsEdit(ms)}
                                   title={t("edit")}
                                   style={{
@@ -1770,10 +1862,14 @@ export function NoteModal({
                                 }}
                               >
                                 <TextareaAutosize
-                                  key={`ms-edit-label-${ms.id}-${msEditColor || "none"}`}
+                                  key={`ms-edit-label-${ms.id}`}
                                   ref={msEditLabelInputRef}
                                   onFocus={() => {
+                                    isMsEditInputFocusedRef.current = true;
                                     lastFocusedMsEditInputRef.current = "label";
+                                  }}
+                                  onBlur={() => {
+                                    isMsEditInputFocusedRef.current = false;
                                   }}
                                   value={msEditLabel}
                                   onChange={(e) =>
@@ -1807,10 +1903,14 @@ export function NoteModal({
                               </div>
                               <div style={{ position: "relative" }}>
                                 <TextareaAutosize
-                                  key={`ms-edit-desc-${ms.id}-${msEditColor || "none"}`}
+                                  key={`ms-edit-desc-${ms.id}`}
                                   ref={msEditDescInputRef}
                                   onFocus={() => {
+                                    isMsEditInputFocusedRef.current = true;
                                     lastFocusedMsEditInputRef.current = "desc";
+                                  }}
+                                  onBlur={() => {
+                                    isMsEditInputFocusedRef.current = false;
                                   }}
                                   value={msEditDesc}
                                   onChange={(e) =>
@@ -1847,11 +1947,29 @@ export function NoteModal({
                                     }}
                                   >
                                     <button
+                                      type="button"
+                                      onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        lastEditEventColorPointerTimeRef.current = Date.now();
+                                        haptics.selection();
+                                        toggleColorPickerForTarget(
+                                          { type: "editEvent" },
+                                          e.currentTarget,
+                                        );
+                                      }}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setMsEditColorAnchor(e.currentTarget);
-                                        setMsEditColorPickerOpen(
-                                          (prev) => !prev,
+                                        if (
+                                          Date.now() -
+                                            lastEditEventColorPointerTimeRef.current <
+                                          400
+                                        )
+                                          return;
+                                        haptics.selection();
+                                        toggleColorPickerForTarget(
+                                          { type: "editEvent" },
+                                          e.currentTarget,
                                         );
                                       }}
                                       title={t("chooseColor")}
@@ -1889,47 +2007,6 @@ export function NoteModal({
                                         />
                                       )}
                                     </button>
-                                    <ColorPickerPopover
-                                      isOpen={msEditColorPickerOpen}
-                                      onClose={() =>
-                                        setMsEditColorPickerOpen(false)
-                                      }
-                                      anchorEl={msEditColorAnchor}
-                                      dark={dark}
-                                      modalBg={modalBg}
-                                      selected={msEditColor || null}
-                                      onSelect={(hex) => {
-                                        setMsEditColor(
-                                          msEditColor === hex ? "" : hex,
-                                        );
-                                        setMsEditColorPickerOpen(false);
-                                        setTimeout(() => {
-                                          if (
-                                            lastFocusedMsEditInputRef.current ===
-                                            "desc"
-                                          ) {
-                                            msEditDescInputRef.current?.focus();
-                                          } else {
-                                            msEditLabelInputRef.current?.focus();
-                                          }
-                                        }, 0);
-                                      }}
-                                      onClear={() => {
-                                        setMsEditColor("");
-                                        setMsEditColorPickerOpen(false);
-                                        setTimeout(() => {
-                                          if (
-                                            lastFocusedMsEditInputRef.current ===
-                                            "desc"
-                                          ) {
-                                            msEditDescInputRef.current?.focus();
-                                          } else {
-                                            msEditLabelInputRef.current?.focus();
-                                          }
-                                        }, 0);
-                                      }}
-                                      clearLabel={t("noColor")}
-                                    />
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -2101,7 +2178,7 @@ export function NoteModal({
                   border: inputBorder,
                   borderRadius: 8,
                   padding: "6px 9px",
-                  fontSize: 12,
+                  fontSize: isMobile ? 16 : 12,
                   color: inputText,
                   outline: "none",
                   fontFamily: "inherit",
@@ -2144,12 +2221,16 @@ export function NoteModal({
                       style={{ isolation: "isolate" }}
                     >
                       <TextareaAutosize
-                        key={`new-label-${newColor || "none"}`}
+                        key="new-label-input"
                         ref={newLabelInputRef}
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
                         onFocus={() => {
+                          isAddEventInputFocusedRef.current = true;
                           lastFocusedEventInputRef.current = "label";
+                        }}
+                        onBlur={() => {
+                          isAddEventInputFocusedRef.current = false;
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -2175,12 +2256,16 @@ export function NoteModal({
                     </div>
                     <div style={{ position: "relative" }}>
                       <TextareaAutosize
-                        key={`new-desc-${newColor || "none"}`}
+                        key="new-desc-input"
                         ref={newDescInputRef}
                         value={newDesc}
                         onChange={(e) => setNewDesc(e.target.value)}
                         onFocus={() => {
+                          isAddEventInputFocusedRef.current = true;
                           lastFocusedEventInputRef.current = "desc";
+                        }}
+                        onBlur={() => {
+                          isAddEventInputFocusedRef.current = false;
                         }}
                         placeholder={t("descPlaceholder")}
                         className={`${placeholderClass || ""} event-form-input`.trim()}
@@ -2207,10 +2292,30 @@ export function NoteModal({
                         }}
                       >
                         <button
+                          type="button"
+                          onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            lastAddEventColorPointerTimeRef.current = Date.now();
+                            haptics.selection();
+                            toggleColorPickerForTarget(
+                              { type: "addEvent" },
+                              e.currentTarget,
+                            );
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setNewColorAnchor(e.currentTarget);
-                            setNewColorPickerOpen((prev) => !prev);
+                            if (
+                              Date.now() -
+                                lastAddEventColorPointerTimeRef.current <
+                              400
+                            )
+                              return;
+                            haptics.selection();
+                            toggleColorPickerForTarget(
+                              { type: "addEvent" },
+                              e.currentTarget,
+                            );
                           }}
                           title={t("chooseColor")}
                           style={{
@@ -2248,37 +2353,6 @@ export function NoteModal({
                             />
                           )}
                         </button>
-                        <ColorPickerPopover
-                          isOpen={newColorPickerOpen}
-                          onClose={() => setNewColorPickerOpen(false)}
-                          anchorEl={newColorAnchor}
-                          dark={dark}
-                          modalBg={modalBg}
-                          selected={newColor || null}
-                          onSelect={(hex) => {
-                            setNewColor(newColor === hex ? "" : hex);
-                            setNewColorPickerOpen(false);
-                            setTimeout(() => {
-                              if (lastFocusedEventInputRef.current === "desc") {
-                                newDescInputRef.current?.focus();
-                              } else {
-                                newLabelInputRef.current?.focus();
-                              }
-                            }, 0);
-                          }}
-                          onClear={() => {
-                            setNewColor("");
-                            setNewColorPickerOpen(false);
-                            setTimeout(() => {
-                              if (lastFocusedEventInputRef.current === "desc") {
-                                newDescInputRef.current?.focus();
-                              } else {
-                                newLabelInputRef.current?.focus();
-                              }
-                            }, 0);
-                          }}
-                          clearLabel={t("noColor")}
-                        />
                         <button
                           type="button"
                           onClick={() => {
@@ -2401,7 +2475,7 @@ export function NoteModal({
           {entries.length > 0 && (
             <div
               className="px-5 pb-2"
-              onScroll={() => setColorPickerEntryId(null)}
+              onScroll={closeColorPicker}
             >
               <Reorder.Group
                 as="div"
@@ -2434,6 +2508,25 @@ export function NoteModal({
                       toggleColorPicker={toggleColorPicker}
                       colorPickerEntryId={colorPickerEntryId}
                       setConfirmDeleteEntryId={setConfirmDeleteEntryId}
+                      isFocused={focusedNoteId === entry.id}
+                      onFocus={() => {
+                        if (isGhostBlocked()) {
+                          if (focusedNoteId !== entry.id) {
+                            return;
+                          }
+                        }
+                        if (noteBlurTimeoutRef.current)
+                          clearTimeout(noteBlurTimeoutRef.current);
+                        setFocusedNoteId(entry.id);
+                        setFocusedGoalIdx(null);
+                      }}
+                      onBlur={() => {
+                        noteBlurTimeoutRef.current = setTimeout(() => {
+                          setFocusedNoteId((prev) =>
+                            prev === entry.id ? null : prev,
+                          );
+                        }, 200);
+                      }}
                     />
                   ))}
                 </AnimatePresence>
@@ -2514,6 +2607,114 @@ export function NoteModal({
         message={t("deleteGoalConfirm")}
         confirmLabel={t("remove")}
         dark={dark}
+      />
+      <ColorPickerPopover
+        isOpen={colorPickerTarget !== null}
+        onClose={closeColorPicker}
+        anchorEl={colorPickerAnchor}
+        dark={dark}
+        modalBg={modalBg}
+        selected={(() => {
+          if (!colorPickerTarget) return null;
+          if (colorPickerTarget.type === "note") {
+            return entries.find((e) => e.id === colorPickerTarget.id)?.color ?? null;
+          }
+          if (colorPickerTarget.type === "goal") {
+            return goalsDraft.colors?.[colorPickerTarget.index] ?? null;
+          }
+          if (colorPickerTarget.type === "addEvent") {
+            return newColor || null;
+          }
+          if (colorPickerTarget.type === "editEvent") {
+            return msEditColor || null;
+          }
+          return null;
+        })()}
+        onSelect={(hex) => {
+          if (!colorPickerTarget) return;
+          blockGhostEvents(500);
+          const target = colorPickerTarget;
+          closeColorPicker();
+          if (target.type === "note") {
+            const entry = entries.find((e) => e.id === target.id);
+            updateEntryColor(
+              target.id,
+              entry?.color === hex ? undefined : hex,
+            );
+          } else if (target.type === "goal") {
+            const current = goalsDraft.colors?.[target.index];
+            handleGoalColorChange(
+              target.index,
+              current === hex ? undefined : hex,
+            );
+            if (focusedGoalIdx === target.index) {
+              requestAnimationFrame(() => {
+                goalInputRefs.current[target.index]?.focus({ preventScroll: true });
+              });
+            }
+          } else if (target.type === "addEvent") {
+            setNewColor(newColor === hex ? "" : hex);
+            if (isAddEventInputFocusedRef.current) {
+              const el =
+                lastFocusedEventInputRef.current === "desc"
+                  ? newDescInputRef.current
+                  : newLabelInputRef.current;
+              requestAnimationFrame(() => {
+                el?.focus({ preventScroll: true });
+              });
+            }
+          } else if (target.type === "editEvent") {
+            setMsEditColor(msEditColor === hex ? "" : hex);
+            if (isMsEditInputFocusedRef.current) {
+              const el =
+                lastFocusedMsEditInputRef.current === "desc"
+                  ? msEditDescInputRef.current
+                  : msEditLabelInputRef.current;
+              requestAnimationFrame(() => {
+                el?.focus({ preventScroll: true });
+              });
+            }
+          }
+        }}
+        onClear={() => {
+          if (!colorPickerTarget) return;
+          blockGhostEvents(500);
+          const target = colorPickerTarget;
+          closeColorPicker();
+          if (target.type === "note") {
+            updateEntryColor(target.id, undefined);
+          } else if (target.type === "goal") {
+            handleGoalColorChange(target.index, undefined);
+            if (focusedGoalIdx === target.index) {
+              requestAnimationFrame(() => {
+                goalInputRefs.current[target.index]?.focus({ preventScroll: true });
+              });
+            }
+          } else if (target.type === "addEvent") {
+            setNewColor("");
+            if (isAddEventInputFocusedRef.current) {
+              const el =
+                lastFocusedEventInputRef.current === "desc"
+                  ? newDescInputRef.current
+                  : newLabelInputRef.current;
+              requestAnimationFrame(() => {
+                el?.focus({ preventScroll: true });
+              });
+            }
+          } else if (target.type === "editEvent") {
+            setMsEditColor("");
+            if (isMsEditInputFocusedRef.current) {
+              const el =
+                lastFocusedMsEditInputRef.current === "desc"
+                  ? msEditDescInputRef.current
+                  : msEditLabelInputRef.current;
+              requestAnimationFrame(() => {
+                el?.focus({ preventScroll: true });
+              });
+            }
+          }
+        }}
+        clearLabel={t("noColor")}
       />
     </motion.div>
   );

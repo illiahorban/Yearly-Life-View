@@ -9,6 +9,7 @@ import { LangContext } from "../../constants/i18n";
 import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, normaliseGrey } from "../../constants/colors";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { haptics } from "../../utils/haptics";
+import { isGhostBlocked } from "../../lib/utils";
 
 export function NoteEntryItem({
   entry,
@@ -30,6 +31,9 @@ export function NoteEntryItem({
   colorPickerEntryId,
   setConfirmDeleteEntryId,
   autoFocus,
+  isFocused,
+  onFocus,
+  onBlur,
 }: {
   key?: React.Key;
   entry: NoteEntry;
@@ -49,10 +53,13 @@ export function NoteEntryItem({
   colorBtnRefs: React.MutableRefObject<
     Record<string, HTMLButtonElement | null>
   >;
-  toggleColorPicker: (id: string) => void;
+  toggleColorPicker: (id: string, anchorEl: HTMLElement) => void;
   colorPickerEntryId: string | null;
   setConfirmDeleteEntryId: (id: string | null) => void;
   autoFocus?: boolean;
+  isFocused?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }) {
   const { t } = React.useContext(LangContext);
   const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
@@ -81,21 +88,55 @@ export function NoteEntryItem({
     ? `placeholder-note-${noteAch.tier}`
     : undefined;
 
+  const isColorOpen = colorPickerEntryId === entry.id;
+  const isActionVisible = isMobile
+    ? isFocused || isColorOpen
+    : hoveredEntryId === entry.id || isColorOpen;
+  const lastColorPointerTimeRef = useRef(0);
+
   return (
     <DraggableCard id={entry.id} dark={dark}>
       <div
         data-note-card="true"
         style={{ position: "relative" }}
-        onMouseEnter={() => setHoveredEntryId(entry.id)}
-        onMouseLeave={() => setHoveredEntryId(null)}
+        onMouseEnter={() => {
+          if (!isMobile) setHoveredEntryId(entry.id);
+        }}
+        onMouseLeave={() => {
+          if (!isMobile) setHoveredEntryId(null);
+        }}
       >
         <TextareaAutosize
-          key={`note-entry-${entry.id}-${entryColor || "none"}`}
+          key={`note-entry-${entry.id}`}
           ref={setInputRef}
           value={entry.text}
           onChange={(e) => updateEntry(entry.id, e.target.value)}
           onHeightChange={(h) => handleNoteHeightChange(entry.id, h)}
           onKeyDown={handleKey}
+          onPointerDown={(e) => {
+            if (isGhostBlocked()) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+          }}
+          onFocus={(e) => {
+            if (isGhostBlocked()) {
+              if (!isFocused) {
+                e.currentTarget.blur();
+                return;
+              }
+            }
+            onFocus();
+          }}
+          onMouseDown={(e) => {
+            if (isGhostBlocked()) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+          }}
+          onBlur={onBlur}
           placeholder={idx === 0 ? t("notePlaceholder") : t("anotherNote")}
           minRows={1}
           className={`${notePlaceholderClass || ""} event-form-input`.trim()}
@@ -106,7 +147,7 @@ export function NoteEntryItem({
             border: `1px solid ${tintedBorder}`,
             borderRadius: 12,
             padding: "10px 60px 10px 16px",
-            fontSize: 14,
+            fontSize: isMobile ? 16 : 14,
             lineHeight: 1.55,
             fontFamily: "inherit",
             background: tintedBg,
@@ -131,17 +172,10 @@ export function NoteEntryItem({
             alignItems: "center",
             justifyContent: "center",
             gap: 6,
-            opacity:
-              hoveredEntryId === entry.id ||
-              colorPickerEntryId === entry.id
-                ? 1
-                : 0,
-            pointerEvents:
-              hoveredEntryId === entry.id ||
-              colorPickerEntryId === entry.id
-                ? "auto"
-                : "none",
+            opacity: isActionVisible ? 1 : 0,
+            pointerEvents: isActionVisible ? "auto" : "none",
             isolation: "isolate",
+            transition: "opacity 150ms ease",
           }}
         >
           <div
@@ -156,12 +190,20 @@ export function NoteEntryItem({
               ref={(el) => {
                 colorBtnRefs.current[entry.id] = el;
               }}
+              type="button"
+              onPointerDown={(e) => {
+                e.preventDefault(); // Prevents input blur, keeps keyboard open!
+                e.stopPropagation();
+                lastColorPointerTimeRef.current = Date.now();
+                haptics.selection();
+                toggleColorPicker(entry.id, e.currentTarget);
+              }}
               onClick={(e) => {
                 e.stopPropagation();
+                if (Date.now() - lastColorPointerTimeRef.current < 400) return;
                 haptics.selection();
-                toggleColorPicker(entry.id);
+                toggleColorPicker(entry.id, e.currentTarget);
               }}
-              onPointerDown={(e) => e.stopPropagation()}
               title={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
               aria-label={`${t("chooseColor")} — ${entriesCount > 1 ? `${t("note")} ${idx + 1}` : t("note")}`}
               data-testid={`note-color-btn-${idx}`}
@@ -202,39 +244,17 @@ export function NoteEntryItem({
                 />
               )}
             </button>
-            <ColorPickerPopover
-              isOpen={colorPickerEntryId === entry.id}
-              onClose={() => toggleColorPicker(entry.id)}
-              anchorEl={colorBtnRefs.current[entry.id]}
-              dark={dark}
-              modalBg={modalBg}
-              selected={entry.color ?? null}
-              onSelect={(hex) => {
-                updateEntryColor(
-                  entry.id,
-                  entry.color === hex ? undefined : hex,
-                );
-                toggleColorPicker(entry.id);
-                setTimeout(() => {
-                  textareaRef.current?.focus();
-                }, 0);
-              }}
-              onClear={() => {
-                updateEntryColor(entry.id, undefined);
-                toggleColorPicker(entry.id);
-                setTimeout(() => {
-                  textareaRef.current?.focus();
-                }, 0);
-              }}
-              clearLabel={t("noColor")}
-            />
           </div>
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
               haptics.impactLight();
               setConfirmDeleteEntryId(entry.id);
             }}
-            onPointerDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+            }}
             style={{
               width: 24,
               height: 24,
