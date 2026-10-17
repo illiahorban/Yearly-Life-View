@@ -598,6 +598,11 @@ export function NotesPanel({
             grouped.map((group, qi) => {
               if (group.length === 0) return null;
               const quarter = resolvedQuarters[qi]!;
+              const isBlackInDark =
+                dark &&
+                (quarter.key === "black" ||
+                  quarter.border === "#0a0a0a" ||
+                  resolveNoteHex(quarter.border) === "#121212");
               return (
                 <div key={qi}>
                   <div
@@ -674,8 +679,12 @@ export function NotesPanel({
                                 : dark
                                   ? "rgba(255,255,255,0.05)"
                                   : "rgba(0,0,0,0.03)",
-                            border: `1px solid ${quarter.border}`,
-                            boxShadow: getContrastBoxShadow(quarter.key, dark, isMobile, quarter.contrastBorderShadow),
+                            border: isBlackInDark
+                              ? "1px solid transparent"
+                              : `1px solid ${quarter.border}`,
+                            boxShadow: isBlackInDark
+                              ? undefined
+                              : getContrastBoxShadow(quarter.key, dark, isMobile, quarter.contrastBorderShadow),
                             cursor: "pointer",
                             textAlign: "left",
                             fontFamily: "inherit",

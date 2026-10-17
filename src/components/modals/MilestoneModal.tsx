@@ -419,6 +419,7 @@ export function MilestoneModal({
               visibility: showAddForm ? "hidden" : "visible",
               overflow: "hidden",
               pointerEvents: showAddForm ? "none" : "auto",
+              display: showAddForm ? "none" : "block",
             }}
           >
             <button
@@ -450,6 +451,7 @@ export function MilestoneModal({
               visibility: showAddForm ? "visible" : "hidden",
               overflow: "hidden",
               pointerEvents: showAddForm ? "auto" : "none",
+              display: showAddForm ? "block" : "none",
             }}
           >
             {(() => {
@@ -1298,6 +1300,11 @@ export function MilestoneModal({
               return grouped.map((group, qi) => {
                 if (group.length === 0) return null;
                 const quarter = resolvedQuarters[qi] ?? resolvedQuarters[0]!;
+                const isBlackInDark =
+                  dark &&
+                  (quarter.key === "black" ||
+                    quarter.border === "#0a0a0a" ||
+                    resolveNoteHex(quarter.border) === "#121212");
                 const qCount = group.reduce(
                   (acc, dg) => acc + dg.items.length,
                   0,
@@ -1368,8 +1375,12 @@ export function MilestoneModal({
                             background: dark
                               ? "rgba(255,255,255,0.05)"
                               : "rgba(0,0,0,0.03)",
-                            border: `1px solid ${quarter.border}`,
-                            boxShadow: quarter.contrastBorderShadow,
+                            border: isBlackInDark
+                              ? "1px solid transparent"
+                              : `1px solid ${quarter.border}`,
+                            boxShadow: isBlackInDark
+                              ? undefined
+                              : quarter.contrastBorderShadow,
                             width: "100%",
                             boxSizing: "border-box",
                           }}
