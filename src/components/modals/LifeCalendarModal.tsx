@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LifeSettings, LifeView } from "../../types/calendar";
-import { startOfDay, startOfYear, startOfNextYear, addDays, sameDay, daysBetween, monthsBetween, addYears, dayOfYear } from "../../utils/date-utils";
+import { startOfDay, startOfYear, startOfNextYear, startOfWeekMonday, addDays, sameDay, daysBetween, monthsBetween, addYears, dayOfYear } from "../../utils/date-utils";
 import { LIFE_ACCENT } from "../../constants/colors";
 import { LangContext } from "../../constants/i18n";
 import { pluralUnits, pluralCount } from "../../utils/plural";
@@ -62,6 +62,32 @@ export function LifeCalendarModal({
     const e = startOfNextYear(currentYear).getTime();
     return Math.max(0, Math.min(100, ((now.getTime() - s) / (e - s)) * 100));
   }, [now, today]);
+
+  const monthProgress = useMemo(() => {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime();
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime();
+    return Math.max(0, Math.min(100, ((now.getTime() - start) / (end - start)) * 100));
+  }, [now]);
+
+  const weekProgress = useMemo(() => {
+    const start = startOfWeekMonday(now).getTime();
+    const total = 7 * 86_400_000;
+    return Math.max(0, Math.min(100, ((now.getTime() - start) / total) * 100));
+  }, [now]);
+
+  const dayProgress = useMemo(() => {
+    const start = startOfDay(now).getTime();
+    const total = 86_400_000;
+    return Math.max(0, Math.min(100, ((now.getTime() - start) / total) * 100));
+  }, [now]);
+
+  const currentUnitProgress = useMemo(() => {
+    if (view === "years") return yearProgress;
+    if (view === "months") return monthProgress;
+    if (view === "weeks") return weekProgress;
+    if (view === "days") return dayProgress;
+    return 0;
+  }, [view, yearProgress, monthProgress, weekProgress, dayProgress]);
 
   const [viewportSize, setViewportSize] = useState(() => ({
     width: typeof window !== "undefined" ? window.innerWidth : 400,
@@ -833,6 +859,7 @@ export function LifeCalendarModal({
                   <LifeGridCanvas
                     totalUnits={layout.totalUnits}
                     currentCell={layout.currentCell}
+                    currentProgress={currentUnitProgress}
                     cellPx={layout.cellPx}
                     gapPx={layout.gapPx}
                     numCols={layout.cols}
