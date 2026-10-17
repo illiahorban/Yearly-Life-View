@@ -90,7 +90,7 @@ export function NoteEntryItem({
 
   const isColorOpen = colorPickerEntryId === entry.id;
   const isActionVisible = isMobile
-    ? isFocused || isColorOpen
+    ? isFocused || isColorOpen || Boolean(entryColor)
     : hoveredEntryId === entry.id || isColorOpen;
   const lastColorPointerTimeRef = useRef(0);
 
@@ -200,7 +200,7 @@ export function NoteEntryItem({
               }}
               onClick={(e) => {
                 e.stopPropagation();
-                if (Date.now() - lastColorPointerTimeRef.current < 400) return;
+                if (Date.now() - lastColorPointerTimeRef.current < 500) return;
                 haptics.selection();
                 toggleColorPicker(entry.id, e.currentTarget);
               }}

@@ -42,55 +42,71 @@ export function ColorPickerPopover({
   } | null>(null);
 
   const popoverRef = useRef<HTMLDivElement | null>(null);
-  const anchorRef = useRef<HTMLElement | null>(anchorEl);
-  anchorRef.current = anchorEl;
 
   const calculateCoords = useCallback(() => {
-    const el = anchorRef.current;
+    const el = anchorEl;
     if (!el) return null;
+
+    if (!document.body.contains(el)) {
+      return null;
+    }
 
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) {
       return null;
     }
 
+    // If anchor is scrolled completely outside its scrollable parent, hide popover
+    const scrollParent = el.closest("[data-modal-scroll='true']");
+    if (scrollParent) {
+      const spRect = scrollParent.getBoundingClientRect();
+      if (rect.bottom < spRect.top || rect.top > spRect.bottom) {
+        return null;
+      }
+    }
+
     const vv = window.visualViewport;
     const vvHeight = vv ? vv.height : window.innerHeight;
-    const vvOffsetTop = vv ? vv.offsetTop : 0;
     const vvWidth = vv ? vv.width : window.innerWidth;
-    const vvOffsetLeft = vv ? vv.offsetLeft : 0;
 
     const popoverWidth = width;
-    const popoverHeight = 138;
+    const popoverHeight =
+      popoverRef.current?.offsetHeight && popoverRef.current.offsetHeight > 0
+        ? popoverRef.current.offsetHeight
+        : (onClear ? 88 : 64);
     const gap = 6;
     const margin = 8;
-    const viewBottom = vvOffsetTop + vvHeight;
 
-    // Horizontal positioning: align right if in right half of visual viewport, else left
+    // Horizontal positioning: align right edge with anchor right edge if in right half of screen,
+    // otherwise align left edge with anchor left edge
     let left = rect.right - popoverWidth;
-    if (rect.left + rect.width / 2 < vvOffsetLeft + vvWidth / 2) {
+    if (rect.left + rect.width / 2 < vvWidth / 2) {
       left = rect.left;
     }
-    // Clamp to visual viewport edges
+    // Clamp within visible viewport margins
     left = Math.min(
-      Math.max(vvOffsetLeft + margin, left),
-      vvOffsetLeft + vvWidth - popoverWidth - margin,
+      Math.max(margin, left),
+      vvWidth - popoverWidth - margin,
     );
 
-    // Vertical positioning: decide whether to open below or above
-    const spaceBelow = viewBottom - (rect.bottom + gap);
-    const spaceAbove = rect.top - gap - vvOffsetTop;
+    // Vertical positioning: choose side with sufficient space, defaulting below
+    const spaceBelow = vvHeight - (rect.bottom + gap + margin);
+    const spaceAbove = rect.top - gap - margin;
     let top: number;
     let openUpwards = false;
 
-    if (spaceBelow >= popoverHeight || spaceBelow >= spaceAbove) {
+    if (spaceBelow >= popoverHeight) {
+      openUpwards = false;
       top = rect.bottom + gap;
-      top = Math.min(top, viewBottom - popoverHeight - margin);
-      top = Math.max(vvOffsetTop + margin, top);
-    } else {
+    } else if (spaceAbove >= popoverHeight) {
       openUpwards = true;
       top = rect.top - popoverHeight - gap;
-      top = Math.max(vvOffsetTop + margin, top);
+    } else if (spaceAbove > spaceBelow) {
+      openUpwards = true;
+      top = Math.max(margin, rect.top - popoverHeight - gap);
+    } else {
+      openUpwards = false;
+      top = Math.min(vvHeight - popoverHeight - margin, rect.bottom + gap);
     }
 
     return {
@@ -98,11 +114,14 @@ export function ColorPickerPopover({
       left: Math.round(left),
       openUpwards,
     };
-  }, [width]);
+  }, [anchorEl, width, onClear]);
 
   const updatePosition = useCallback(() => {
     const next = calculateCoords();
-    if (!next) return;
+    if (!next) {
+      setCoords(null);
+      return;
+    }
     setCoords((prev) => {
       if (
         prev &&
@@ -126,7 +145,12 @@ export function ColorPickerPopover({
     if (initial) {
       setCoords(initial);
     }
-  }, [isOpen, anchorEl, calculateCoords]);
+    // Re-verify on next animation frame in case container shifts during mount
+    const rafId = requestAnimationFrame(() => {
+      updatePosition();
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [isOpen, anchorEl, calculateCoords, updatePosition]);
 
   useEffect(() => {
     if (!isOpen || !anchorEl) return;
@@ -162,8 +186,7 @@ export function ColorPickerPopover({
       }
 
       // On anchor element itself: let anchor button toggle it
-      const currentAnchor = anchorRef.current;
-      if (currentAnchor && (currentAnchor === target || currentAnchor.contains(target))) {
+      if (anchorEl && (anchorEl === target || anchorEl.contains(target))) {
         return;
       }
 
@@ -175,7 +198,7 @@ export function ColorPickerPopover({
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown, true);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, anchorEl, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;

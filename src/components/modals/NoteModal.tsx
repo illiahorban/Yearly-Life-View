@@ -299,36 +299,33 @@ export function NoteModal({
     | { type: "note"; id: string }
     | { type: "goal"; index: number }
     | { type: "addEvent" }
-    | { type: "editEvent" }
-    | null;
+    | { type: "editEvent" };
 
-  const [colorPickerTarget, setColorPickerTarget] =
-    useState<DayModalColorPickerTarget>(null);
-  const [colorPickerAnchor, setColorPickerAnchor] =
-    useState<HTMLElement | null>(null);
+  interface DayModalColorPickerState {
+    target: DayModalColorPickerTarget;
+    anchor: HTMLElement;
+  }
+
+  const [colorPicker, setColorPicker] =
+    useState<DayModalColorPickerState | null>(null);
 
   const closeColorPicker = useCallback(() => {
-    setColorPickerTarget(null);
-    setColorPickerAnchor(null);
+    setColorPicker(null);
   }, []);
 
   const toggleColorPickerForTarget = useCallback(
-    (target: Exclude<DayModalColorPickerTarget, null>, anchor: HTMLElement) => {
-      setColorPickerTarget((prev) => {
+    (target: DayModalColorPickerTarget, anchor: HTMLElement) => {
+      setColorPicker((prev) => {
+        if (!prev) return { target, anchor };
         const isSame =
-          prev &&
-          prev.type === target.type &&
+          prev.target.type === target.type &&
           (target.type === "note"
-            ? prev.type === "note" && prev.id === target.id
+            ? prev.target.type === "note" && prev.target.id === target.id
             : target.type === "goal"
-              ? prev.type === "goal" && prev.index === target.index
+              ? prev.target.type === "goal" && prev.target.index === target.index
               : true);
-        if (isSame) {
-          setColorPickerAnchor(null);
-          return null;
-        }
-        setColorPickerAnchor(anchor);
-        return target;
+        if (isSame) return null;
+        return { target, anchor };
       });
     },
     [],
@@ -393,8 +390,11 @@ export function NoteModal({
     _doneSlice.length === goalsDraft.count &&
     _doneSlice.every(Boolean);
   const colorBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const goalColorBtnRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+  const addEventColorBtnRef = useRef<HTMLButtonElement | null>(null);
+  const editEventColorBtnRef = useRef<HTMLButtonElement | null>(null);
   const colorPickerEntryId =
-    colorPickerTarget?.type === "note" ? colorPickerTarget.id : null;
+    colorPicker?.target.type === "note" ? colorPicker.target.id : null;
   const toggleColorPicker = useCallback(
     (id: string, anchorEl: HTMLElement) => {
       toggleColorPickerForTarget({ type: "note", id }, anchorEl);
@@ -560,17 +560,17 @@ export function NoteModal({
   };
 
   React.useEffect(() => {
-    if (!msEditId && colorPickerTarget?.type === "editEvent") closeColorPicker();
-  }, [msEditId, colorPickerTarget, closeColorPicker]);
+    if (!msEditId && colorPicker?.target.type === "editEvent") closeColorPicker();
+  }, [msEditId, colorPicker, closeColorPicker]);
 
   React.useEffect(() => {
     if (addEventOpen) {
       newLabelInputRef.current?.focus({ preventScroll: true });
       scrollToTarget(addEventFormRef.current, "nearest");
     } else {
-      if (colorPickerTarget?.type === "addEvent") closeColorPicker();
+      if (colorPicker?.target.type === "addEvent") closeColorPicker();
     }
-  }, [addEventOpen]);
+  }, [addEventOpen, colorPicker, closeColorPicker]);
 
   const [y, m, d] = dk.split("-").map(Number) as [number, number, number];
   const label = new Date(y, m - 1, d).toLocaleDateString(
@@ -727,7 +727,7 @@ export function NoteModal({
         transition={{ type: "spring", stiffness: 380, damping: 30 }}
         onClick={(e) => {
           e.stopPropagation();
-          if (colorPickerTarget !== null) closeColorPicker();
+          if (colorPicker !== null) closeColorPicker();
         }}
         style={{
           position: "relative",
@@ -1188,11 +1188,11 @@ export function NoteModal({
                         : ec.textTitle;
                       const isHovered = hoveredGoalIdx === i;
                       const isColorOpen =
-                        colorPickerTarget?.type === "goal" &&
-                        colorPickerTarget.index === i;
+                        colorPicker?.target.type === "goal" &&
+                        colorPicker.target.index === i;
                       const isFocused = focusedGoalIdx === i;
                       const isGoalActionVisible = isMobile
-                        ? isFocused || isColorOpen
+                        ? isFocused || isColorOpen || Boolean(goalColor)
                         : isHovered || isColorOpen;
                       const goalId = goalIds[i] ?? `goal-fallback-${i}`;
                       const goalAch = goalColor
@@ -1324,7 +1324,7 @@ export function NoteModal({
                                   e.stopPropagation();
                                   return;
                                 }
-                                if (colorPickerTarget !== null)
+                                if (colorPicker !== null)
                                   closeColorPicker();
                                 e.stopPropagation();
                               }}
@@ -1383,6 +1383,9 @@ export function NoteModal({
                                 }}
                               >
                                 <button
+                                  ref={(el) => {
+                                    goalColorBtnRefs.current[i] = el;
+                                  }}
                                   type="button"
                                   onPointerDown={(e) => {
                                     e.preventDefault(); // Prevents goal input blur, keeps keyboard open!
@@ -1399,7 +1402,7 @@ export function NoteModal({
                                     if (
                                       Date.now() -
                                         (lastGoalColorPointerTimeRef.current[i] ?? 0) <
-                                      400
+                                      500
                                     )
                                       return;
                                     haptics.selection();
@@ -1947,6 +1950,7 @@ export function NoteModal({
                                     }}
                                   >
                                     <button
+                                      ref={editEventColorBtnRef}
                                       type="button"
                                       onPointerDown={(e) => {
                                         e.preventDefault();
@@ -1963,7 +1967,7 @@ export function NoteModal({
                                         if (
                                           Date.now() -
                                             lastEditEventColorPointerTimeRef.current <
-                                          400
+                                          500
                                         )
                                           return;
                                         haptics.selection();
@@ -2292,6 +2296,7 @@ export function NoteModal({
                         }}
                       >
                         <button
+                          ref={addEventColorBtnRef}
                           type="button"
                           onPointerDown={(e) => {
                             e.preventDefault();
@@ -2308,7 +2313,7 @@ export function NoteModal({
                             if (
                               Date.now() -
                                 lastAddEventColorPointerTimeRef.current <
-                              400
+                              500
                             )
                               return;
                             haptics.selection();
@@ -2609,31 +2614,48 @@ export function NoteModal({
         dark={dark}
       />
       <ColorPickerPopover
-        isOpen={colorPickerTarget !== null}
+        isOpen={colorPicker !== null}
         onClose={closeColorPicker}
-        anchorEl={colorPickerAnchor}
+        anchorEl={(() => {
+          if (!colorPicker) return null;
+          const { target, anchor } = colorPicker;
+          if (target.type === "goal") {
+            return goalColorBtnRefs.current[target.index] ?? anchor;
+          }
+          if (target.type === "note") {
+            return colorBtnRefs.current[target.id] ?? anchor;
+          }
+          if (target.type === "addEvent") {
+            return addEventColorBtnRef.current ?? anchor;
+          }
+          if (target.type === "editEvent") {
+            return editEventColorBtnRef.current ?? anchor;
+          }
+          return anchor;
+        })()}
         dark={dark}
         modalBg={modalBg}
         selected={(() => {
-          if (!colorPickerTarget) return null;
-          if (colorPickerTarget.type === "note") {
-            return entries.find((e) => e.id === colorPickerTarget.id)?.color ?? null;
+          if (!colorPicker) return null;
+          const { target } = colorPicker;
+          if (target.type === "note") {
+            return entries.find((e) => e.id === target.id)?.color ?? null;
           }
-          if (colorPickerTarget.type === "goal") {
-            return goalsDraft.colors?.[colorPickerTarget.index] ?? null;
+          if (target.type === "goal") {
+            return goalsDraft.colors?.[target.index] ?? null;
           }
-          if (colorPickerTarget.type === "addEvent") {
+          if (target.type === "addEvent") {
             return newColor || null;
           }
-          if (colorPickerTarget.type === "editEvent") {
+          if (target.type === "editEvent") {
             return msEditColor || null;
           }
           return null;
         })()}
         onSelect={(hex) => {
-          if (!colorPickerTarget) return;
+          if (!colorPicker) return;
           blockGhostEvents(500);
-          const target = colorPickerTarget;
+          const { target } = colorPicker;
           closeColorPicker();
           if (target.type === "note") {
             const entry = entries.find((e) => e.id === target.id);
@@ -2677,9 +2699,9 @@ export function NoteModal({
           }
         }}
         onClear={() => {
-          if (!colorPickerTarget) return;
+          if (!colorPicker) return;
           blockGhostEvents(500);
-          const target = colorPickerTarget;
+          const { target } = colorPicker;
           closeColorPicker();
           if (target.type === "note") {
             updateEntryColor(target.id, undefined);
