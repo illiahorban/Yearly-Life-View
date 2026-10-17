@@ -801,9 +801,6 @@ function DayTileComponent({
               isolation: "isolate",
               contain: "paint",
               color: "var(--text)",
-              boxShadow: isWhiteInLight
-                ? "inset 0 0 0 1px var(--border-soft)"
-                : undefined,
             }}
           >
             {/* Base background fill */}
@@ -893,19 +890,20 @@ function DayTileComponent({
               </div>
             )}
             {noteDot}
-            {/* Ring overlay — last in DOM so it paints above the fill, milestone, and text layers,
-                keeping the outline fully visible around the entire tile and event indicator at every fill level including 100%. */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                borderRadius: 12,
-                boxShadow: `inset 0 0 0 ${isCompactViewport ? 1 : 2}px ${ringAccent}`,
-                pointerEvents: "none",
-                zIndex: 10,
-              }}
-            />
           </div>
+          {/* Ring overlay — placed outside the clipping container so it is NEVER clipped on subpixel edges */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: 12,
+              boxShadow: isCompactViewport
+                ? `0 0 0 0.5px ${ringAccent}, inset 0 0 0 0.5px ${ringAccent}`
+                : `0 0 0 1px ${ringAccent}, inset 0 0 0 1px ${ringAccent}`,
+              pointerEvents: "none",
+              zIndex: 10,
+            }}
+          />
         </div>
         {tooltipPortal}
       </>

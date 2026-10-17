@@ -238,7 +238,7 @@ export function GoalsModal({
       ? "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
       : undefined;
 
-  const modalBorderColor = accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.7)");
+  const modalBorderColor = accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)");
   const modalBoxShadow = isWhiteAccentInLight
     ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
     : isBlackAccentInDark
@@ -299,7 +299,7 @@ export function GoalsModal({
             WebkitBackdropFilter: "saturate(180%) blur(28px)",
             borderRadius: 22,
             boxShadow: modalBoxShadow,
-            border: `${isMobile ? 2 : 1}px solid ${modalBorderColor}`,
+            border: `${accentColor ? (isMobile ? 2 : 1) : 1}px solid ${modalBorderColor}`,
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",

@@ -3358,8 +3358,6 @@ function App() {
               initial={yearGoals[viewYear] ?? { description: "", goals: [] }}
               dark={dark}
               modalBg={modalBg}
-              accentColor="#34c759"
-              colorKey="green"
               titleLabel={t("yearGoals")}
               descPlaceholder={t("yearDescPlaceholder")}
               onSave={(bg) => {
