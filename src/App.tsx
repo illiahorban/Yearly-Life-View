@@ -333,14 +333,16 @@ function App() {
   const [goalsOpen, setGoalsOpen] = useState(false);
   const [lifeCalendarOpen, setLifeCalendarOpen] = useState(false);
   const [lifeSettings, setLifeSettings] = useState<LifeSettings>(() => {
-    const fallback = Date.now();
-    return normalizeLifeSettings(
-      ls<LifeSettings>("lifeCalendar:lifeSettings", {
-        birthDate: "",
-        lifespan: 80,
-      }),
-      fallback,
-    );
+    const raw = ls<LifeSettings>("lifeCalendar:lifeSettings", {
+      birthDate: "",
+      lifespan: 80,
+      createdAt: 0,
+      updatedAt: 0,
+    });
+    const isUnconfigured =
+      !raw.birthDate && (!raw.lifespan || raw.lifespan === 80);
+    const fallback = isUnconfigured ? 0 : Date.now();
+    return normalizeLifeSettings(raw, fallback);
   });
   useEffect(() => {
     lsSet("lifeCalendar:lifeSettings", lifeSettings);
@@ -856,9 +858,10 @@ function App() {
       logoutAt: 0,
       milestones: snapshotMilestones,
       lifeSettings: {
-        ...stamp(lifeSettings),
         birthDate: lifeSettings.birthDate,
         lifespan: lifeSettings.lifespan,
+        createdAt: lifeSettings.createdAt ?? 0,
+        updatedAt: lifeSettings.updatedAt ?? 0,
       },
       dayGoals: snapshotDayGoals,
       dayTemplates: snapshotDayTemplates,
@@ -930,7 +933,7 @@ function App() {
       // Life settings
       const normalizedLifeSettings = normalizeLifeSettings(
         snapshot.lifeSettings,
-        stateFallback,
+        snapshot.lifeSettings?.updatedAt ?? 0,
       );
       setLifeSettings(normalizedLifeSettings);
       lsSet("lifeCalendar:lifeSettings", normalizedLifeSettings);
@@ -3420,7 +3423,12 @@ function App() {
               onSettingsChange={(next) =>
                 setLifeSettings((previous) => ({
                   ...next,
-                  createdAt: previous.createdAt ?? next.createdAt ?? Date.now(),
+                  createdAt:
+                    previous.createdAt && previous.createdAt > 0
+                      ? previous.createdAt
+                      : next.createdAt && next.createdAt > 0
+                        ? next.createdAt
+                        : Date.now(),
                   updatedAt: Date.now(),
                 }))
               }

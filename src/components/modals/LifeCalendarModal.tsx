@@ -32,6 +32,18 @@ export function LifeCalendarModal({
   const [lifespanDraft, setLifespanDraft] = useState(String(settings.lifespan));
 
   useEffect(() => {
+    setLifespanDraft(String(settings.lifespan));
+  }, [settings.lifespan]);
+
+  const handleClose = useCallback(() => {
+    const v = Math.max(20, Math.min(120, Number(lifespanDraft) || 80));
+    if (v !== settings.lifespan) {
+      onSettingsChange({ ...settings, lifespan: v });
+    }
+    onClose();
+  }, [lifespanDraft, settings, onSettingsChange, onClose]);
+
+  useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
@@ -345,7 +357,7 @@ export function LifeCalendarModal({
         overflow: "hidden",
         overscrollBehavior: "contain",
       }}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <motion.div
         initial={{ opacity: 0 }}
@@ -394,7 +406,7 @@ export function LifeCalendarModal({
               {t("lifeCalendarBtn")}
             </h2>
           </div>
-          <ModalCloseButton onClick={onClose} />
+          <ModalCloseButton onClick={handleClose} />
         </div>
 
         {/* Scrollable Container (Fit-to-Screen default, with fallback scroll for tiny viewports) */}
@@ -419,9 +431,11 @@ export function LifeCalendarModal({
                 <input
                   type="date"
                   value={settings.birthDate}
-                  onChange={(e) =>
-                    onSettingsChange({ ...settings, birthDate: e.target.value })
-                  }
+                  onChange={(e) => {
+                    if (e.target.value !== settings.birthDate) {
+                      onSettingsChange({ ...settings, birthDate: e.target.value });
+                    }
+                  }}
                   lang={lang}
                   style={{
                     ...inputStyle,
@@ -447,8 +461,9 @@ export function LifeCalendarModal({
                   onChange={(e) => {
                     setLifespanDraft(e.target.value);
                     const n = Number(e.target.value);
-                    if (n >= 20 && n <= 120)
+                    if (n >= 20 && n <= 120 && n !== settings.lifespan) {
                       onSettingsChange({ ...settings, lifespan: n });
+                    }
                   }}
                   onBlur={() => {
                     const v = Math.max(
@@ -456,7 +471,9 @@ export function LifeCalendarModal({
                       Math.min(120, Number(lifespanDraft) || 80),
                     );
                     setLifespanDraft(String(v));
-                    onSettingsChange({ ...settings, lifespan: v });
+                    if (v !== settings.lifespan) {
+                      onSettingsChange({ ...settings, lifespan: v });
+                    }
                   }}
                   style={{
                     ...inputStyle,

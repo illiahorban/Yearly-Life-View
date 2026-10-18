@@ -197,9 +197,10 @@ export function SprintSettingsModal({
                     borderRadius: 999,
                     background: quarter.border,
                     border: "none",
-                    boxShadow: dark
-                      ? "0 0 0 1px rgba(255,255,255,0.25)"
-                      : "0 0 0 1px rgba(0,0,0,0.25)",
+                    boxShadow:
+                      !dark && colorKey === "white"
+                        ? "0 0 0 1px rgba(0,0,0,0.25)"
+                        : "none",
                     cursor: "pointer",
                     display: "block",
                     flexShrink: 0,
@@ -429,9 +430,10 @@ export function SprintSettingsModal({
                         borderRadius: 999,
                         background: bDotHex,
                         border: "none",
-                        boxShadow: dark
-                          ? "0 0 0 1px rgba(255,255,255,0.25)"
-                          : "0 0 0 1px rgba(0,0,0,0.25)",
+                        boxShadow:
+                          !dark && effectiveColorKey === "white"
+                            ? "0 0 0 1px rgba(0,0,0,0.25)"
+                            : "none",
                         cursor: "pointer",
                         display: "block",
                         flexShrink: 0,

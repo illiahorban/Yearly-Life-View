@@ -199,11 +199,10 @@ function mergeLifeSettings(
       ? loser.lifespan
       : 80;
 
-  // Edge case protection: if winner is unconfigured/default lifespan 80 with empty birthDate,
-  // but loser has customized lifespan and/or birthDate:
+  // Edge case protection: if winner has unconfigured/default lifespan 80,
+  // but loser has customized valid lifespan (not 80), take the customized lifespan
   if (
     lifespan === 80 &&
-    !winner.birthDate &&
     loserLifespanValid &&
     loser.lifespan !== 80
   ) {

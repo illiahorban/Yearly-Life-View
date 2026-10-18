@@ -163,9 +163,9 @@ export function ColorSwatchGrid({
               cursor: "pointer",
               transition: "transform 120ms ease",
               boxShadow: sel
-                ? `0 0 0 2px rgba(255,255,255,0.9)${c.key === "white" || c.key === "grey" ? ", inset 0 0 0 1px rgba(0,0,0,0.15)" : ""}`
-                : c.key === "white" || c.key === "grey"
-                  ? "inset 0 0 0 1px rgba(0,0,0,0.15)"
+                ? `0 0 0 2px rgba(255,255,255,0.9)${!dark && c.key === "white" ? ", inset 0 0 0 1px rgba(0,0,0,0.18)" : ""}`
+                : !dark && c.key === "white"
+                  ? "inset 0 0 0 1px rgba(0,0,0,0.18)"
                   : undefined,
               position: "relative",
               display: "flex",
