@@ -188,14 +188,14 @@ export function SprintSettingsModal({
                   }}
                   title={t("chooseColor")}
                   style={{
-                    width: 13,
-                    height: 13,
+                    width: 15,
+                    height: 15,
                     borderRadius: 999,
                     background: quarter.border,
                     border: "none",
-                    boxShadow: isWhiteInLight
-                      ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.32), inset 0 0 0 1px rgba(0,0,0,0.18)"
-                      : "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.32)",
+                    boxShadow: dark
+                      ? "0 0 0 1px rgba(255,255,255,0.25)"
+                      : "0 0 0 1px rgba(0,0,0,0.25)",
                     cursor: "pointer",
                     display: "block",
                     flexShrink: 0,
@@ -356,11 +356,7 @@ export function SprintSettingsModal({
                     ? isMobile
                       ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
                       : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
-                    : isSprintBlackInDark
-                      ? isMobile
-                        ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.16)"
-                        : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
-                      : undefined;
+                    : undefined;
 
                   const bTextColor = isSprintWhiteInLight
                     ? "#18181b"
@@ -414,7 +410,7 @@ export function SprintSettingsModal({
                     />
                   );
 
-                  const renderColorDot = (size = 14) => (
+                  const renderColorDot = (size = 15) => (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -429,9 +425,9 @@ export function SprintSettingsModal({
                         borderRadius: 999,
                         background: bDotHex,
                         border: "none",
-                        boxShadow: isSprintWhiteInLight
-                          ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(0,0,0,0.18)"
-                          : "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25)",
+                        boxShadow: dark
+                          ? "0 0 0 1px rgba(255,255,255,0.25)"
+                          : "0 0 0 1px rgba(0,0,0,0.25)",
                         cursor: "pointer",
                         display: "block",
                         flexShrink: 0,
@@ -561,10 +557,9 @@ export function SprintSettingsModal({
                     >
                       <div
                         style={{
-                          background: isSprintWhiteInLight
-                            ? "transparent"
-                            : isSprintBlackInDark
-                              ? "#000000"
+                          background:
+                            isSprintWhiteInLight || isSprintBlackInDark
+                              ? "transparent"
                               : bEc
                                 ? bEc.bg
                                 : dark
@@ -607,7 +602,7 @@ export function SprintSettingsModal({
                         >
                           {idx + 1}
                         </span>
-                        {renderColorDot(13)}
+                        {renderColorDot(15)}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           {renderInput()}
                         </div>
