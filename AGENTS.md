@@ -77,3 +77,32 @@ The mobile version is specifically engineered for and evaluated on **Google Chro
   - Suppress grey tap flashes with `-webkit-tap-highlight-color: transparent`.
   - Maintain crisp integer pixel strokes and contours for iPhone Super Retina OLED displays (DPR 2x and 3x).
 
+---
+
+## 9. Geometric Centering & Icon Alignment Architecture (Zero Glyph Drift)
+### Root Causes of Element Shifting:
+1. **Glyph Metrics vs. Vector Math**: Raw Unicode characters (e.g. `✕`, `×`, `X`, `+`, `-`, `←`, `→`, `✓`) render using font tables (ascender, descender, cap-height, baseline offset). In system fonts (SF Pro on iOS, Roboto/Inter on desktop), characters do not align to the mathematical geometric center of their glyph box, causing vertical and horizontal drift across platforms and DPR ratios.
+2. **Line-Height & Inline Leading Inheritance**: Buttons and icon containers that lack explicit `line-height: 0` inherit arbitrary line-heights (1.2 to 1.5) from parent elements, injecting invisible vertical padding that pushes elements off-center.
+3. **User-Agent Default Spacing**: `<button>` tags without explicit `padding: 0; margin: 0; border: none;` receive browser-default padding and border models that vary by engine (WebKit vs Blink).
+4. **Container Padding Inconsistencies**: Different modal dialogs using mismatched header insets (`pt-4` vs `pt-5` vs `pt-6`, `items-start` vs `items-center`) cause controls to jump when switching views.
+
+### Mandatory Operational Rules:
+- **Vector Icons ONLY for Action Controls**: NEVER use raw Unicode/text characters for close buttons, counters, steppers, or navigational icons. Always use pure vector `<svg>` elements with explicit `viewBox`, centered coordinates, and `display: block`.
+- **The 7-Property Centering Container Standard**:
+  Every circular or square icon button must enforce:
+  ```css
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  box-sizing: border-box;
+  border: none;
+  flex-shrink: 0;
+  ```
+  And its direct `<svg>` child must have `display: block; flex-shrink: 0;`.
+- **Standardized Modal Close Button (`ModalCloseButton`)**:
+  All modal windows must use the shared `<ModalCloseButton onClick={...} />` component.
+  All modal headers must enforce identical top and right insets (standard `20px` top and `20px` right, `px-5 pt-5 pb-3` / `20px 20px 14px`) and vertically center header items so close buttons never jump or shift between different modals on both mobile and desktop viewports.
+

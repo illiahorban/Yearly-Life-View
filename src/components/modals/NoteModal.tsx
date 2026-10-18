@@ -14,6 +14,7 @@ import { DraggableCard } from "./DraggableCard";
 import { DayTemplatesModal } from "./DayTemplatesModal";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { TrashIcon, ChevronLeftIcon, ChevronRightIcon, GripIcon } from "../icons/Icons";
 import { haptics } from "../../utils/haptics";
 import { isGhostBlocked, blockGhostEvents } from "../../lib/utils";
@@ -745,7 +746,7 @@ export function NoteModal({
         }}
       >
         {/* Header */}
-        <div className="px-5 pt-5 pb-3 flex items-start justify-between shrink-0">
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
           <div>
             <div className="flex items-center gap-2">
               <span
@@ -756,25 +757,7 @@ export function NoteModal({
               </span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 99,
-              background: "rgba(128,128,128,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-secondary)",
-              fontSize: 14,
-              border: "none",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            ✕
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         {/* Scrollable body */}

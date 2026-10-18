@@ -10,6 +10,7 @@ import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, goalCheckbox
 import { LangContext } from "../../constants/i18n";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { GripIcon, TrashIcon, GoalsIcon, CheckIcon, ChevronLeftIcon } from "../icons/Icons";
 import { haptics } from "../../utils/haptics";
 
@@ -321,7 +322,7 @@ export function GoalsModal({
                 style={{
                   width: 26,
                   height: 26,
-                  borderRadius: 99,
+                  borderRadius: 999,
                   background: "rgba(128,128,128,0.15)",
                   display: "flex",
                   alignItems: "center",
@@ -330,7 +331,8 @@ export function GoalsModal({
                   border: "none",
                   cursor: "pointer",
                   flexShrink: 0,
-                  marginTop: 1,
+                  padding: 0,
+                  lineHeight: 0,
                 }}
               >
                 <ChevronLeftIcon />
@@ -374,25 +376,7 @@ export function GoalsModal({
                 }}
               />
             </div>
-            <button
-              onClick={() => finalize(onClose)}
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 99,
-                background: "rgba(128,128,128,0.15)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--text-secondary)",
-                fontSize: 14,
-                border: "none",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              ✕
-            </button>
+            <ModalCloseButton onClick={() => finalize(onClose)} />
           </div>
 
           <div

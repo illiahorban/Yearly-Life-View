@@ -9,6 +9,7 @@ import { pluralWeeks } from "../../utils/plural";
 import { makeId } from "../../utils/storage";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { QuarterNameEditor } from "../calendar/QuarterNameEditor";
 import { TrashIcon, CheckIcon } from "../icons/Icons";
 import { useIsMobile } from "../../hooks/use-mobile";
@@ -170,13 +171,16 @@ export function SprintSettingsModal({
             maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
           }}
         >
-          <div className="px-6 pt-6 pb-3">
-            <h2
-              className="text-base font-semibold tracking-tight mb-2"
-              style={{ color: "var(--text)", letterSpacing: "-0.01em" }}
-            >
-              {t("sprintConfig")}
-            </h2>
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex items-center justify-between mb-2">
+              <h2
+                className="text-base font-semibold tracking-tight m-0"
+                style={{ color: "var(--text)", letterSpacing: "-0.01em" }}
+              >
+                {t("sprintConfig")}
+              </h2>
+              <ModalCloseButton onClick={onClose} />
+            </div>
             <div className="flex items-center gap-2">
               <div style={{ position: "relative" }}>
                 <button

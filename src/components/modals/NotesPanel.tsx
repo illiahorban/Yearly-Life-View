@@ -9,6 +9,7 @@ import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { HighlightText } from "../common/HighlightText";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { SearchIcon, TrashIcon } from "../icons/Icons";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
@@ -181,7 +182,7 @@ export function NotesPanel({
         {/* Header */}
         <div
           style={{
-            padding: "18px 20px 14px",
+            padding: "20px 20px 14px",
             borderBottom: `1px solid ${borderColor}`,
           }}
         >
@@ -222,25 +223,7 @@ export function NotesPanel({
                 </span>
               )}
             </div>
-            <button
-              onClick={onClose}
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 99,
-                background: "rgba(128,128,128,0.15)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--text-secondary)",
-                fontSize: 14,
-                border: "none",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              ✕
-            </button>
+            <ModalCloseButton onClick={onClose} />
           </div>
           {/* Search */}
           <div style={{ position: "relative" }}>

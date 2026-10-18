@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
-import { DownloadIcon, XCloseIcon } from "../icons/Icons";
+import { DownloadIcon } from "../icons/Icons";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 
 interface PWAInstallModalProps {
   isOpen: boolean;
@@ -86,14 +87,10 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
                   {isRu ? "Установка приложения" : "Install Application"}
                 </h3>
               </div>
-              <button
-                type="button"
+              <ModalCloseButton
                 onClick={onClose}
-                className="p-1.5 rounded-lg opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
                 title={isRu ? "Закрыть" : "Close"}
-              >
-                <XCloseIcon className="w-4 h-4" />
-              </button>
+              />
             </div>
 
             {/* Content based on context */}

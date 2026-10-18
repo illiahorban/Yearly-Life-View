@@ -7,6 +7,7 @@ import { LangContext } from "../../constants/i18n";
 import { pluralUnits, pluralCount } from "../../utils/plural";
 import { LifeGridCanvas } from "../calendar/LifeGridCanvas";
 import { LifeIcon } from "../icons/Icons";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
 
@@ -384,7 +385,7 @@ export function LifeCalendarModal({
         }}
       >
         {/* Fixed Header */}
-        <div className="px-4 sm:px-6 pt-4 pb-2.5 flex items-center justify-between shrink-0">
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
           <div>
             <h2
               className="text-[16px] sm:text-[17px] font-semibold"
@@ -393,25 +394,7 @@ export function LifeCalendarModal({
               {t("lifeCalendarBtn")}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 99,
-              background: "rgba(128,128,128,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-secondary)",
-              fontSize: 13,
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            ✕
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         {/* Scrollable Container (Fit-to-Screen default, with fallback scroll for tiny viewports) */}

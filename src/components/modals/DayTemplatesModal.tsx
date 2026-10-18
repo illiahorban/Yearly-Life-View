@@ -6,6 +6,7 @@ import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { makeId, newTimestamps } from "../../utils/storage";
 import { ConfirmDialog } from "../common/ConfirmDialog";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { TrashIcon, GripIcon, CheckIcon } from "../icons/Icons";
 import { haptics } from "../../utils/haptics";
 
@@ -204,7 +205,7 @@ export function DayTemplatesModal({
         {/* Header */}
         <div
           style={{
-            padding: "18px 20px 14px",
+            padding: "20px 20px 14px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -219,7 +220,7 @@ export function DayTemplatesModal({
                 style={{
                   width: 26,
                   height: 26,
-                  borderRadius: 99,
+                  borderRadius: 999,
                   background: "rgba(128,128,128,0.15)",
                   display: "flex",
                   alignItems: "center",
@@ -228,6 +229,9 @@ export function DayTemplatesModal({
                   border: "none",
                   cursor: "pointer",
                   flexShrink: 0,
+                  padding: 0,
+                  margin: 0,
+                  lineHeight: 0,
                 }}
               >
                 <svg
@@ -239,6 +243,7 @@ export function DayTemplatesModal({
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  style={{ display: "block" }}
                 >
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
@@ -268,24 +273,7 @@ export function DayTemplatesModal({
               </div>
             </div>
           </div>
-          <button
-            onClick={onCloseAll ?? onClose}
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 99,
-              background: "rgba(128,128,128,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-secondary)",
-              fontSize: 14,
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            ✕
-          </button>
+          <ModalCloseButton onClick={onCloseAll ?? onClose} />
         </div>
 
         {/* Body */}

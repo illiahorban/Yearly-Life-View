@@ -7,6 +7,7 @@ import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuart
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { pluralCount } from "../../utils/plural";
 import { HighlightText } from "../common/HighlightText";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { SearchIcon, CheckIcon, GoalsIcon } from "../icons/Icons";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
@@ -137,7 +138,7 @@ export function AllGoalsPanel({
         {/* Header */}
         <div
           style={{
-            padding: "18px 20px 14px",
+            padding: "20px 20px 14px",
             borderBottom: `1px solid ${borderColor}`,
             flexShrink: 0,
           }}
@@ -186,25 +187,7 @@ export function AllGoalsPanel({
                 );
               })()}
             </div>
-            <button
-              onClick={onClose}
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 99,
-                background: "rgba(128,128,128,0.15)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--text-secondary)",
-                fontSize: 14,
-                border: "none",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              ✕
-            </button>
+            <ModalCloseButton onClick={onClose} />
           </div>
           {totalGoals > 0 && (
             <div

@@ -10,6 +10,7 @@ import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
 import { ConfirmDialog } from "../common/ConfirmDialog";
+import { ModalCloseButton } from "../common/ModalCloseButton";
 import { HighlightText } from "../common/HighlightText";
 import { FlagIcon, TrashIcon, CheckIcon, SearchIcon } from "../icons/Icons";
 import { haptics } from "../../utils/haptics";
@@ -300,7 +301,7 @@ export function MilestoneModal({
           maxHeight: `${Math.max(160, vvHeight - (isMobile ? 16 : 32))}px`,
         }}
       >
-        <div className="px-6 pt-6 pb-3 flex items-center justify-between">
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <h2
               className="text-base font-semibold"
@@ -325,24 +326,7 @@ export function MilestoneModal({
               </span>
             )}
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 99,
-              background: "rgba(128,128,128,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-secondary)",
-              fontSize: 14,
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            ✕
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         {/* Search */}
