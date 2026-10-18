@@ -55,6 +55,10 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -67,6 +71,17 @@ body {
   font-feature-settings: "ss01", "cv11";
   letter-spacing: -0.01em;
   overflow-x: hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in inputs and editable areas */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Responsive side columns for week-number and goals counter */

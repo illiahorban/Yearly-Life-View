@@ -547,6 +547,9 @@ function DayTileComponent({
     position: "relative",
     overflow: "visible",
     boxShadow: isAllDone ? undefined : highlightRing,
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    WebkitTouchCallout: "none",
   };
 
   // All hooks must run unconditionally on every render (regardless of `isOut`) to keep hook order
@@ -718,6 +721,11 @@ function DayTileComponent({
       holdTimerRef.current = null;
       holdStartPos.current = null;
       longPressActiveRef.current = true;
+      try {
+        window.getSelection()?.removeAllRanges();
+      } catch {
+        // ignore
+      }
       haptics.impactMedium();
       if (hasNote && tileRef.current)
         setTooltipRect(tileRef.current.getBoundingClientRect());
@@ -758,6 +766,9 @@ function DayTileComponent({
     onPointerUp: handlePointerUp,
     onPointerCancel: cancelHold,
     onClick: handleClick,
+    onContextMenu: (e: React.MouseEvent) => {
+      e.preventDefault();
+    },
   };
 
   // Compute portal tooltip position so it never clips outside viewport
