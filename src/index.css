@@ -229,7 +229,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* ─── Fire / Goal Completion Glow ─────────────────────────────────────────── */
 :root {
-  --fire-ring-width: 1.5px;
+  --fire-ring-width: 2px;
   --fire-glow-opacity: 1;
   --fire-glow-size: 0.5;
   --fire-pulse-speed: 5s;
@@ -257,7 +257,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   pointer-events: none;
   box-shadow: 0 0 0 var(--fire-ring-width, 2px) #ff7722;
   animation: lc-fire-pulse var(--fire-pulse-speed, 5s) ease-in-out infinite;
-  will-change: opacity;
+  z-index: 10;
 }
 
 .lc-fire-glow-future {
@@ -280,10 +280,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding: 0;
     margin-bottom: 0;
     max-width: 100%;
-  }
-  .lc-fire-glow,
-  .lc-fire-glow-future {
-    box-shadow: 0 0 0 2px #ff7722 !important;
   }
 }
 

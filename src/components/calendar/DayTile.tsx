@@ -19,25 +19,48 @@ import { haptics } from "../../utils/haptics";
 
 export function syncAllFireAnimations() {
   if (typeof document === "undefined") return;
-  requestAnimationFrame(() => {
-    const glowElements = document.querySelectorAll<HTMLElement>(".lc-fire-glow");
-    if (glowElements.length === 0) return;
-    const now = (document.timeline?.currentTime as number) ?? performance.now();
+  const sync = () => {
     const speedSec =
       parseFloat(
-        getComputedStyle(document.documentElement).getPropertyValue("--fire-pulse-speed")
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--fire-pulse-speed",
+        ),
       ) || 5;
     const cycleMs = Math.max(500, speedSec * 1000);
+    const now = (document.timeline?.currentTime as number) ?? performance.now();
     const targetTime = Number(now) % cycleMs;
 
-    glowElements.forEach((el) => {
-      if (typeof el.getAnimations === "function") {
-        const anims = el.getAnimations();
-        for (const anim of anims) {
-          anim.currentTime = targetTime;
+    if (typeof document.getAnimations === "function") {
+      const allAnims = document.getAnimations();
+      for (const anim of allAnims) {
+        if ((anim as CSSAnimation).animationName === "lc-fire-pulse") {
+          try {
+            anim.currentTime = targetTime;
+          } catch {
+            // ignore
+          }
         }
       }
-    });
+    } else {
+      const glowElements = document.querySelectorAll<HTMLElement>(".lc-fire-glow");
+      glowElements.forEach((el) => {
+        if (typeof el.getAnimations === "function") {
+          const anims = el.getAnimations();
+          for (const anim of anims) {
+            try {
+              anim.currentTime = targetTime;
+            } catch {
+              // ignore
+            }
+          }
+        }
+      });
+    }
+  };
+
+  requestAnimationFrame(() => {
+    sync();
+    requestAnimationFrame(sync);
   });
 }
 
@@ -905,9 +928,6 @@ function DayTileComponent({
           style={{ ...base }}
           {...hov}
         >
-          {isAllDone && (
-            <div className="lc-fire-glow" />
-          )}
           <div
             className="flex flex-col items-center"
             style={{
@@ -936,6 +956,9 @@ function DayTileComponent({
             </div>
             {noteDot}
           </div>
+          {isAllDone && (
+            <div className="lc-fire-glow" />
+          )}
           {hasPastOutline && (
             <div
               style={{
@@ -971,9 +994,6 @@ function DayTileComponent({
           style={{ ...base }}
           {...hov}
         >
-          {isAllDone && (
-            <div className="lc-fire-glow" />
-          )}
           <div
             className="flex flex-col items-center justify-center"
             style={{
@@ -1087,6 +1107,17 @@ function DayTileComponent({
               zIndex: 10,
             }}
           />
+          {isAllDone && (
+            <div
+              className="lc-fire-glow lc-fire-glow-future"
+              style={{
+                zIndex: 9,
+                boxShadow: isCompactViewport
+                  ? `0 0 0 2.5px rgba(255, 119, 34, var(--fire-future-opacity, 1))`
+                  : `0 0 0 3px rgba(255, 119, 34, var(--fire-future-opacity, 1))`,
+              }}
+            />
+          )}
         </div>
         {tooltipPortal}
       </>
@@ -1101,9 +1132,6 @@ function DayTileComponent({
         style={{ ...base }}
         {...hov}
       >
-        {isAllDone && (
-          <div className="lc-fire-glow lc-fire-glow-future" />
-        )}
         <div
           className="flex flex-col items-center justify-center"
           style={{
@@ -1113,7 +1141,9 @@ function DayTileComponent({
             overflow: "hidden",
             contain: "paint",
             color: "var(--text-secondary)",
-            boxShadow: "inset 0 0 0 1px var(--border-soft)",
+            boxShadow: isAllDone
+              ? undefined
+              : "inset 0 0 0 1px var(--border-soft)",
           }}
         >
           {/* Base background fill */}
@@ -1139,6 +1169,9 @@ function DayTileComponent({
           </div>
           {noteDot}
         </div>
+        {isAllDone && (
+          <div className="lc-fire-glow lc-fire-glow-future" />
+        )}
       </div>
       {tooltipPortal}
     </>
