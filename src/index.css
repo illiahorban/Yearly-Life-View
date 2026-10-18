@@ -277,7 +277,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 @media (max-width: 639px) {
   :root {
-    --fire-ring-width: 0.5px;
+    --fire-ring-width: 1px;
   }
   .lc-goal-markers {
     padding: 0;
