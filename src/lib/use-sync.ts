@@ -590,9 +590,15 @@ export function useSyncEngine({
       resetAt: resetNow,
     };
 
-    // A signed-out calendar can still be reset locally. There is simply no
-    // Drive snapshot to replace in that case.
-    if (!isSignedIn()) return resetSnapshot;
+    // A signed-out calendar can only reset the local device. It must not generate
+    // an authoritative resetAt timestamp that would destroy cloud data upon later sign-in.
+    if (!isSignedIn()) {
+      return {
+        ...emptySnapshot(),
+        exportedAt: 0,
+        resetAt: 0,
+      };
+    }
 
     // Let an already-running upload finish before replacing Drive data with
     // the factory-reset snapshot. Otherwise the old snapshot could win the
