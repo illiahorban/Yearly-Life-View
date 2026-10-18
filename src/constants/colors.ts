@@ -243,11 +243,7 @@ export function resolveQuarter(meta: QuarterMeta, dark: boolean): Quarter {
         ? (dark ? hex : "#ffffff")
         : hex;
 
-  const futureTileBg = isWhiteInLight
-    ? "#ededf0"
-    : isBlackInDark
-      ? DARK_BLACK_FUTURE
-      : undefined;
+  const futureTileBg = dark ? DARK_BLACK_FUTURE : "#ededf0";
   // The sprint/quarter *name* and its "add goal" icon aren't drawn on top of a filled
   // colour surface the way percentages/progress bars are, so they don't need the
   // white/black contrast boost applied to `text` for legibility. For grey specifically,

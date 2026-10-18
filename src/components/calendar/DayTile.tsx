@@ -311,13 +311,7 @@ function DayTileComponent({
   const isWhiteInLight = !dark && isWhiteQuarter;
   const isBlackInDark =
     dark && (quarterColorKey === "black" || luminanceOf(accentColor) < 0.15);
-  const futureBg =
-    futureTileBg ??
-    (isWhiteInLight
-      ? "#ededf0"
-      : isBlackInDark
-        ? DARK_BLACK_FUTURE
-        : "var(--surface)");
+  const futureBg = futureTileBg ?? (dark ? DARK_BLACK_FUTURE : "#ededf0");
 
   // Pale accents (e.g. "White") are too light for a single flat text colour to read
   // against reliably: the tile is part accent-fill / part theme surface, and — for
