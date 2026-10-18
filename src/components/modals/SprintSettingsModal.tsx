@@ -191,8 +191,9 @@ export function SprintSettingsModal({
                     borderRadius: 999,
                     background: quarter.border,
                     border: "none",
-                    boxShadow:
-                      "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.32)",
+                    boxShadow: isWhiteInLight
+                      ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.32), inset 0 0 0 1px rgba(0,0,0,0.18)"
+                      : "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.32)",
                     cursor: "pointer",
                     display: "block",
                     flexShrink: 0,
@@ -217,7 +218,11 @@ export function SprintSettingsModal({
                 className="text-[10px] font-semibold tracking-wide px-2 py-1 rounded-xl"
                 style={{
                   color: quarter.text,
-                  border: `1px solid ${dark ? quarter.darkSoft : quarter.soft}`,
+                  border: isWhiteInLight
+                    ? "1px solid rgba(0, 0, 0, 0.12)"
+                    : isBlackInDark
+                      ? "1px solid rgba(255, 255, 255, 0.18)"
+                      : `1px solid ${dark ? quarter.darkSoft : quarter.soft}`,
                   width: "fit-content",
                   maxWidth: "calc(100% - 1.5rem)",
                 }}
@@ -282,7 +287,16 @@ export function SprintSettingsModal({
             </div>
           </div>
 
-          <div className="px-6 mt-4 max-h-80 overflow-auto">
+          <div
+            className="px-6 mt-2.5 max-h-80 overflow-y-auto overflow-x-hidden py-1.5"
+            style={{
+              overscrollBehavior: "contain",
+              scrollbarWidth: "thin",
+              scrollbarColor: dark
+                ? "rgba(255,255,255,0.20) transparent"
+                : "rgba(0,0,0,0.18) transparent",
+            }}
+          >
             <div className="flex flex-col gap-2">
               <AnimatePresence initial={false}>
                 {blocks.map((b, idx) => {
@@ -302,15 +316,66 @@ export function SprintSettingsModal({
                       : bAc.light
                     : quarter.border;
                   const bEc = bAc ? getEventColors(bHex, dark) : null;
-                  const bTextColor = bAc
-                    ? readableGoalTextColor(bHex, dark, "var(--text)")
-                    : "var(--text)";
-                  const bAch = bAc
-                    ? achromaticStyle(resolveNoteHex(bDotHex), dark)
-                    : null;
-                  const bPlaceholderClass = bAch
-                    ? `placeholder-goal-${bAch.tier}`
-                    : undefined;
+
+                  const effectiveColorKey = b.color ?? colorKey;
+                  const isSprintWhiteInLight = effectiveColorKey === "white" && !dark;
+                  const isSprintBlackInDark = effectiveColorKey === "black" && dark;
+
+                  // High-contrast, theme-aware sprint title color:
+                  // For white in light mode, use crisp readable dark charcoal (#18181b).
+                  // For black in dark mode, use readable light off-white (#e5e5e7).
+                  // For chromatic colors, use their vivid theme hex.
+                  const sprintTitleColor = (() => {
+                    if (effectiveColorKey === "white") {
+                      return dark ? "#ffffff" : "#18181b";
+                    }
+                    if (effectiveColorKey === "black") {
+                      return dark ? "#e5e5e7" : "#121212";
+                    }
+                    if (effectiveColorKey === "grey") {
+                      return dark ? "#aeaeb2" : "#8e8e93";
+                    }
+                    if (bAc) {
+                      return dark ? bAc.dark : bAc.light;
+                    }
+                    return quarter.nameColor;
+                  })();
+
+                  const sprintRowBorder = isSprintWhiteInLight
+                    ? "#ffffff"
+                    : isSprintBlackInDark
+                      ? "#000000"
+                      : bEc
+                        ? bEc.border
+                        : (bAc ? bHex : borderColor);
+
+                  // Two-sided contrast outline (outer + inset) matching the calendar quarter/sprint contour
+                  const sprintRowBoxShadow = isSprintWhiteInLight
+                    ? isMobile
+                      ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+                      : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
+                    : isSprintBlackInDark
+                      ? isMobile
+                        ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.16)"
+                        : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
+                      : undefined;
+
+                  const bTextColor = isSprintWhiteInLight
+                    ? "#18181b"
+                    : isSprintBlackInDark
+                      ? "#e5e5e7"
+                      : bAc
+                        ? readableGoalTextColor(bHex, dark, "var(--text)")
+                        : "var(--text)";
+
+                  const bPlaceholderClass =
+                    effectiveColorKey === "white"
+                      ? "placeholder-goal-white"
+                      : effectiveColorKey === "black"
+                        ? "placeholder-goal-black"
+                        : effectiveColorKey === "grey"
+                          ? "placeholder-goal-grey"
+                          : undefined;
 
                   const renderInput = (fontSize = isMobile ? 15 : 13) => (
                     <TextareaAutosize
@@ -329,7 +394,7 @@ export function SprintSettingsModal({
                       minRows={1}
                       className={`${bPlaceholderClass || ""} bg-transparent outline-none w-full resize-none event-form-input`.trim()}
                       style={{
-                        color: bDotHex,
+                        color: sprintTitleColor,
                         fontSize,
                         fontWeight: 500,
                         lineHeight: 1.4,
@@ -342,7 +407,7 @@ export function SprintSettingsModal({
                         wordBreak: "break-word",
                         overflow: "hidden",
                         // @ts-ignore
-                        "--event-ph-color": bDotHex,
+                        "--event-ph-color": sprintTitleColor,
                       }}
                     />
                   );
@@ -362,8 +427,9 @@ export function SprintSettingsModal({
                         borderRadius: 999,
                         background: bDotHex,
                         border: "none",
-                        boxShadow:
-                          "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25)",
+                        boxShadow: isSprintWhiteInLight
+                          ? "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(0,0,0,0.18)"
+                          : "0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px rgba(0,0,0,0.25)",
                         cursor: "pointer",
                         display: "block",
                         flexShrink: 0,
@@ -493,12 +559,17 @@ export function SprintSettingsModal({
                     >
                       <div
                         style={{
-                          background: bEc
-                            ? bEc.bg
-                            : dark
-                              ? "rgba(255,255,255,0.04)"
-                              : "rgba(0,0,0,0.025)",
-                          border: `1px solid ${bEc ? bEc.border : borderColor}`,
+                          background: isSprintWhiteInLight
+                            ? "transparent"
+                            : isSprintBlackInDark
+                              ? "#000000"
+                              : bEc
+                                ? bEc.bg
+                                : dark
+                                  ? "rgba(255,255,255,0.04)"
+                                  : "rgba(0,0,0,0.025)",
+                          border: `1px solid ${sprintRowBorder}`,
+                          boxShadow: sprintRowBoxShadow,
                           borderRadius: 12,
                           padding: "6px 10px",
                           display: "flex",
@@ -507,18 +578,29 @@ export function SprintSettingsModal({
                           flex: 1,
                           minWidth: 0,
                           transition:
-                            "background 200ms ease, border-color 200ms ease",
+                            "background 200ms ease, border-color 200ms ease, box-shadow 200ms ease",
                         }}
                       >
                         <span
                           className="text-[10px] font-bold tabular-nums w-5 h-5 flex items-center justify-center rounded-md flex-shrink-0"
                           style={{
-                            background: bAc
-                              ? `${bHex}20`
-                              : dark
-                                ? "rgba(255,255,255,0.08)"
-                                : "rgba(0,0,0,0.05)",
-                            color: bAc ? bHex : "var(--text-secondary)",
+                            background: isSprintWhiteInLight
+                              ? "rgba(0,0,0,0.05)"
+                              : bAc
+                                ? `${bHex}20`
+                                : dark
+                                  ? "rgba(255,255,255,0.08)"
+                                  : "rgba(0,0,0,0.05)",
+                            color: isSprintWhiteInLight
+                              ? "var(--text-secondary)"
+                              : isSprintBlackInDark
+                                ? "#e5e5e7"
+                                : bAc
+                                  ? bHex
+                                  : "var(--text-secondary)",
+                            border: isSprintWhiteInLight
+                              ? "1px solid rgba(0, 0, 0, 0.08)"
+                              : undefined,
                           }}
                         >
                           {idx + 1}
@@ -596,10 +678,24 @@ export function SprintSettingsModal({
                       ? dark
                         ? "rgba(255,255,255,0.04)"
                         : "rgba(0,0,0,0.04)"
-                      : dark
-                        ? quarter.darkTint
-                        : quarter.tint,
-                  border: `1px solid ${remaining < 1 ? borderColor : dark ? quarter.darkSoft : quarter.soft}`,
+                      : isWhiteInLight
+                        ? "rgba(0,0,0,0.04)"
+                        : isBlackInDark
+                          ? "rgba(255,255,255,0.08)"
+                          : dark
+                            ? quarter.darkTint
+                            : quarter.tint,
+                  border: `1px solid ${
+                    remaining < 1
+                      ? borderColor
+                      : isWhiteInLight
+                        ? "rgba(0, 0, 0, 0.12)"
+                        : isBlackInDark
+                          ? "rgba(255, 255, 255, 0.18)"
+                          : dark
+                            ? quarter.darkSoft
+                            : quarter.soft
+                  }`,
                   opacity: remaining < 1 ? 0.6 : 1,
                 }}
               >
