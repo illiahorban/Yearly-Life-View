@@ -117,6 +117,113 @@ function mergeNotes(
   return merged;
 }
 
+/** Merge life settings with intelligent fallback and per-field protection so lifespan or birthDate are not wiped out by defaults. */
+function mergeLifeSettings(
+  local?: SyncLifeSettings,
+  remote?: SyncLifeSettings,
+): SyncLifeSettings {
+  const base: SyncLifeSettings = {
+    birthDate: "",
+    lifespan: 80,
+    createdAt: 0,
+    updatedAt: 0,
+  };
+  const loc = local ?? base;
+  const rem = remote ?? base;
+
+  const locTs = timestampOf(loc);
+  const remTs = timestampOf(rem);
+
+  // If one side has timestamp 0 (unmodified default), the other side with real changes wins
+  if (locTs === 0 && remTs > 0) {
+    return {
+      birthDate: rem.birthDate || loc.birthDate || "",
+      lifespan:
+        typeof rem.lifespan === "number" &&
+        !isNaN(rem.lifespan) &&
+        rem.lifespan >= 20 &&
+        rem.lifespan <= 120
+          ? rem.lifespan
+          : typeof loc.lifespan === "number" &&
+              !isNaN(loc.lifespan) &&
+              loc.lifespan >= 20 &&
+              loc.lifespan <= 120
+            ? loc.lifespan
+            : 80,
+      createdAt: rem.createdAt || loc.createdAt || 0,
+      updatedAt: rem.updatedAt || remTs,
+    };
+  }
+
+  if (remTs === 0 && locTs > 0) {
+    return {
+      birthDate: loc.birthDate || rem.birthDate || "",
+      lifespan:
+        typeof loc.lifespan === "number" &&
+        !isNaN(loc.lifespan) &&
+        loc.lifespan >= 20 &&
+        loc.lifespan <= 120
+          ? loc.lifespan
+          : typeof rem.lifespan === "number" &&
+              !isNaN(rem.lifespan) &&
+              rem.lifespan >= 20 &&
+              rem.lifespan <= 120
+            ? rem.lifespan
+            : 80,
+      createdAt: loc.createdAt || rem.createdAt || 0,
+      updatedAt: loc.updatedAt || locTs,
+    };
+  }
+
+  const winner = locTs >= remTs ? loc : rem;
+  const loser = locTs >= remTs ? rem : loc;
+
+  // Preserves birthDate if winner has empty birthDate but loser has set one
+  const birthDate = winner.birthDate || loser.birthDate || "";
+
+  // Winner's lifespan, or loser's if winner has invalid lifespan
+  const winnerLifespanValid =
+    typeof winner.lifespan === "number" &&
+    !isNaN(winner.lifespan) &&
+    winner.lifespan >= 20 &&
+    winner.lifespan <= 120;
+  const loserLifespanValid =
+    typeof loser.lifespan === "number" &&
+    !isNaN(loser.lifespan) &&
+    loser.lifespan >= 20 &&
+    loser.lifespan <= 120;
+
+  let lifespan = winnerLifespanValid
+    ? winner.lifespan
+    : loserLifespanValid
+      ? loser.lifespan
+      : 80;
+
+  // Edge case protection: if winner is unconfigured/default lifespan 80 with empty birthDate,
+  // but loser has customized lifespan and/or birthDate:
+  if (
+    lifespan === 80 &&
+    !winner.birthDate &&
+    loserLifespanValid &&
+    loser.lifespan !== 80
+  ) {
+    lifespan = loser.lifespan;
+  }
+
+  return {
+    birthDate,
+    lifespan,
+    createdAt:
+      Math.min(
+        loc.createdAt || Number.MAX_SAFE_INTEGER,
+        rem.createdAt || Number.MAX_SAFE_INTEGER,
+      ) === Number.MAX_SAFE_INTEGER
+        ? 0
+        : Math.min(loc.createdAt || 0, rem.createdAt || 0),
+    updatedAt: Math.max(locTs, remTs),
+  };
+}
+
 // ── Public merge function ─────────────────────────────────────────────────────
 
 /**
@@ -140,10 +247,7 @@ export function mergeSnapshots(
       remote.milestones ?? [],
     ) as SyncMilestone[],
 
-    lifeSettings: newer(
-      local.lifeSettings ?? { ...base.lifeSettings },
-      remote.lifeSettings ?? { ...base.lifeSettings },
-    ) as SyncLifeSettings,
+    lifeSettings: mergeLifeSettings(local.lifeSettings, remote.lifeSettings),
 
     dayGoals: mergeRecord(
       local.dayGoals ?? {},
