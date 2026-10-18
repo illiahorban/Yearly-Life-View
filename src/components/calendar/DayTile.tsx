@@ -288,6 +288,8 @@ function DayTileComponent({
   isCompactViewport,
   onOpen,
 }: DayTileProps) {
+  const onOpenRef = useRef(onOpen);
+  onOpenRef.current = onOpen;
   const isOut = state === "out";
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const tileRef = useRef<HTMLDivElement>(null);
@@ -745,7 +747,7 @@ function DayTileComponent({
       return;
     }
     haptics.selection();
-    onOpen();
+    onOpenRef.current();
   };
 
   const hov = {

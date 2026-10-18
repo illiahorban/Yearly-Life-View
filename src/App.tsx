@@ -555,41 +555,8 @@ function App() {
     anchor: number;
     focus: number;
   } | null>(null);
-  const handleWeekLabelClick = (qi: number, qOffset: number) => {
-    if (isMobile && hasMobileWindowOpen && !weekSel) {
-      closeMobileWindows();
-      return;
-    }
-    setWeekSel((prev) => {
-      if (!prev || prev.qi !== qi)
-        return { qi, anchor: qOffset, focus: qOffset };
-      if (prev.anchor === qOffset && prev.focus === qOffset) return null; // deselect
-      return { ...prev, focus: qOffset };
-    });
-  };
-  useEffect(() => {
-    if (!weekSel) return;
-
-    const handleOutsideWeekSelection = (event: Event) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (
-        target.closest(".lc-week-label") ||
-        target.closest("[data-week-selection-panel]")
-      ) {
-        return;
-      }
-      setWeekSel(null);
-      // On mobile this is the first-tap close. Prevent the same tap from
-      // opening another calendar action underneath the selection panel.
-      if (isMobile) event.stopPropagation();
-    };
-
-    const eventName = isMobile ? "click" : "pointerdown";
-    document.addEventListener(eventName, handleOutsideWeekSelection, isMobile);
-    return () =>
-      document.removeEventListener(eventName, handleOutsideWeekSelection, isMobile);
-  }, [weekSel, isMobile]);
+  const weekSelRef = useRef(weekSel);
+  weekSelRef.current = weekSel;
 
   // Quarter meta (names + colors)
   const [quarterMeta, setQuarterMeta] = useState<QuarterMeta[]>(() =>
@@ -616,7 +583,16 @@ function App() {
     settingsQuarter !== null ||
     weekSel !== null;
 
-  const closeMobileWindows = () => {
+  const hasMobileWindowOpenRef = useRef(false);
+  hasMobileWindowOpenRef.current = hasMobileWindowOpen;
+
+  const openNoteRef = useRef(openNote);
+  openNoteRef.current = openNote;
+
+  const editGoalsBlockIdRef = useRef(editGoalsBlockId);
+  editGoalsBlockIdRef.current = editGoalsBlockId;
+
+  const closeMobileWindows = useCallback(() => {
     setYearPickerOpen(false);
     setSettingsOpen(false);
     setProfileOpen(false);
@@ -634,18 +610,87 @@ function App() {
     setEditYearGoals(false);
     setSettingsQuarter(null);
     setWeekSel(null);
-  };
+  }, []);
 
   // On a phone, a tap on another work area first dismisses the currently
   // visible window. The second tap performs the new action. This prevents
   // one tap from both closing one panel and opening another underneath it.
-  const runMobileWindowAction = (targetIsOpen: boolean, action: () => void) => {
-    if (isMobile && hasMobileWindowOpen && !targetIsOpen) {
-      closeMobileWindows();
-      return;
-    }
-    action();
-  };
+  const runMobileWindowAction = useCallback(
+    (targetIsOpen: boolean, action: () => void) => {
+      if (isMobile && hasMobileWindowOpenRef.current && !targetIsOpen) {
+        closeMobileWindows();
+        return;
+      }
+      action();
+    },
+    [isMobile, closeMobileWindows],
+  );
+
+  const handleWeekLabelClick = useCallback(
+    (qi: number, qOffset: number) => {
+      if (isMobile && hasMobileWindowOpenRef.current && !weekSelRef.current) {
+        closeMobileWindows();
+        return;
+      }
+      setWeekSel((prev) => {
+        if (!prev || prev.qi !== qi)
+          return { qi, anchor: qOffset, focus: qOffset };
+        if (prev.anchor === qOffset && prev.focus === qOffset) return null; // deselect
+        return { ...prev, focus: qOffset };
+      });
+    },
+    [isMobile, closeMobileWindows],
+  );
+
+  useEffect(() => {
+    if (!weekSel) return;
+
+    const handleOutsideWeekSelection = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (
+        target.closest(".lc-week-label") ||
+        target.closest("[data-week-selection-panel]")
+      ) {
+        return;
+      }
+      setWeekSel(null);
+      // On mobile this is the first-tap close. Prevent the same tap from
+      // opening another calendar action underneath the selection panel.
+      if (isMobile) event.stopPropagation();
+    };
+
+    const eventName = isMobile ? "click" : "pointerdown";
+    document.addEventListener(eventName, handleOutsideWeekSelection, isMobile);
+    return () =>
+      document.removeEventListener(eventName, handleOutsideWeekSelection, isMobile);
+  }, [weekSel, isMobile]);
+
+  const handleNoteOpen = useCallback(
+    (k: string) => {
+      if (isMobile && hasMobileWindowOpenRef.current && openNoteRef.current !== k) {
+        closeMobileWindows();
+        return;
+      }
+      setOpenNote(k);
+    },
+    [isMobile, closeMobileWindows],
+  );
+
+  const handleEditGoals = useCallback(
+    (bid: string) => {
+      if (isMobile && hasMobileWindowOpenRef.current && editGoalsBlockIdRef.current !== bid) {
+        closeMobileWindows();
+        return;
+      }
+      setEditGoalsBlockId(bid);
+    },
+    [isMobile, closeMobileWindows],
+  );
+
+  const handleCancelSel = useCallback(() => {
+    setWeekSel(null);
+  }, []);
 
   // ── Google Drive Sync ──────────────────────────────────────────────────────
 
@@ -2886,22 +2931,12 @@ function App() {
                         weekSel={weekSel}
                         matchedDates={matchedDates}
                         activeMatchKey={matchedDatesArray[searchIndex]}
-                        onNoteOpen={(k) =>
-                          runMobileWindowAction(
-                            openNote === k,
-                            () => setOpenNote(k),
-                          )
-                        }
+                        onNoteOpen={handleNoteOpen}
                         onLabelChange={(bid, lbl) =>
                           updateBlockLabel(qi, bid, lbl)
                         }
                         onGoalToggle={toggleGoal}
-                        onEditGoals={(bid) =>
-                          runMobileWindowAction(
-                            editGoalsBlockId === bid,
-                            () => setEditGoalsBlockId(bid),
-                          )
-                        }
+                        onEditGoals={handleEditGoals}
                         onWeekLabelClick={handleWeekLabelClick}
                         onCreateSprint={(selStart, selEnd) => {
                           const container = calendarScrollRef.current;
@@ -2937,7 +2972,7 @@ function App() {
                             });
                           }
                         }}
-                        onCancelSel={() => setWeekSel(null)}
+                        onCancelSel={handleCancelSel}
                         viewYear={viewYear}
                       />
                     </div>

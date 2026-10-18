@@ -130,14 +130,14 @@ export function SprintSettingsModal({
           overscrollBehavior: "contain",
         }}
         initial={false}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 0, pointerEvents: "none" }}
         transition={{ duration: 0.22, ease: "easeOut" }}
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 0, pointerEvents: "none" }}
           transition={{ duration: 0.22, ease: "easeOut" }}
           style={{
             position: "fixed",

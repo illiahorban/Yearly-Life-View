@@ -249,7 +249,7 @@ export function GoalsModal({
     <>
       <motion.div
         initial={false}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 0, pointerEvents: "none" }}
         transition={{ duration: 0.22, ease: "easeOut" }}
         className="flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
         style={{
@@ -270,7 +270,7 @@ export function GoalsModal({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 0, pointerEvents: "none" }}
           transition={{ duration: 0.22, ease: "easeOut" }}
           style={{
             position: "fixed",
