@@ -105,15 +105,17 @@ export function SprintSettingsModal({
   const isWhiteInLight = colorKey === "white" && !dark;
   const isBlackInDark = colorKey === "black" && dark;
 
-  const modalBoxShadow = isWhiteInLight
-    ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
-    : isBlackInDark
-      ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
-      : "none";
+  const modalBorder = `2px solid ${quarter.border}`;
 
-  const modalBorder = isMobile
-    ? `2px solid ${quarter.border}`
-    : `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.6)"}`;
+  const modalBoxShadow = isWhiteInLight
+    ? isMobile
+      ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+      : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22)"
+    : isBlackInDark
+      ? isMobile
+        ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.16)"
+        : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24)"
+      : "none";
 
   return (
     <>
@@ -288,7 +290,7 @@ export function SprintSettingsModal({
           </div>
 
           <div
-            className="px-6 mt-2.5 max-h-80 overflow-y-auto overflow-x-hidden py-1.5"
+            className="px-6 mt-3 max-h-80 overflow-y-auto"
             style={{
               overscrollBehavior: "contain",
               scrollbarWidth: "thin",
@@ -297,7 +299,7 @@ export function SprintSettingsModal({
                 : "rgba(0,0,0,0.18) transparent",
             }}
           >
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 pt-2 pb-2 px-1">
               <AnimatePresence initial={false}>
                 {blocks.map((b, idx) => {
                   const bAc = b.color
@@ -341,13 +343,13 @@ export function SprintSettingsModal({
                     return quarter.nameColor;
                   })();
 
-                  const sprintRowBorder = isSprintWhiteInLight
-                    ? "#ffffff"
-                    : isSprintBlackInDark
-                      ? "#000000"
-                      : bEc
-                        ? bEc.border
-                        : (bAc ? bHex : borderColor);
+                  const sprintRowBorder = (() => {
+                    if (effectiveColorKey === "white") return "#ffffff";
+                    if (effectiveColorKey === "black") return "#000000";
+                    if (effectiveColorKey === "grey") return dark ? "#aeaeb2" : "#8e8e93";
+                    if (bAc) return dark ? bAc.dark : bAc.light;
+                    return quarter.border;
+                  })();
 
                   // Two-sided contrast outline (outer + inset) matching the calendar quarter/sprint contour
                   const sprintRowBoxShadow = isSprintWhiteInLight

@@ -239,11 +239,18 @@ export function GoalsModal({
       : undefined;
 
   const modalBorderColor = accentColor ?? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)");
+  const modalBorder = `2px solid ${modalBorderColor}`;
   const modalBoxShadow = isWhiteAccentInLight
-    ? "0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.12)"
+    ? isMobile
+      ? "0 0 0 1px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(0, 0, 0, 0.22)"
+      : "0 0 0 0.5px rgba(0, 0, 0, 0.22), inset 0 0 0 0.5px rgba(0, 0, 0, 0.22), 0 20px 40px -12px rgba(0,0,0,0.25)"
     : isBlackAccentInDark
-      ? "0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
-      : "none";
+      ? isMobile
+        ? "0 0 0 1px rgba(255, 255, 255, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.24)"
+        : "0 0 0 0.5px rgba(255, 255, 255, 0.24), inset 0 0 0 0.5px rgba(255, 255, 255, 0.24), 0 20px 40px -12px rgba(0,0,0,0.5)"
+      : isMobile
+        ? "none"
+        : "0 20px 40px -12px rgba(0,0,0,0.25)";
 
   return (
     <>
@@ -299,7 +306,7 @@ export function GoalsModal({
             WebkitBackdropFilter: "saturate(180%) blur(28px)",
             borderRadius: 22,
             boxShadow: modalBoxShadow,
-            border: `${accentColor ? (isMobile ? 2 : 1) : 1}px solid ${modalBorderColor}`,
+            border: modalBorder,
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
