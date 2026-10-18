@@ -1002,7 +1002,7 @@ function App() {
             );
           }
         }
-      } else if (isFactoryResetSnapshot) {
+      } else {
         setQuarterMeta(DEFAULT_QUARTER_META);
         lsSet("lifeCalendar:quarterMeta", DEFAULT_QUARTER_META);
         localStorage.removeItem("lifeCalendar:quarterMeta:createdAt");
@@ -3458,6 +3458,7 @@ function App() {
               // visible calendar in the same operation.
               setDark(false);
               setLang("ru");
+              setQuarterMeta(DEFAULT_QUARTER_META);
               applySnapshot(resetSnapshot);
               await triggerSync(resetSnapshot);
               setFactoryResetStep(0);
