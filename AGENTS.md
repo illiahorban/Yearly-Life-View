@@ -62,14 +62,7 @@ When an element does not match an expected/reference element:
 
 ---
 
-## 8. Mobile-Only Focus Policy (STRICT)
-- **Desktop Freeze**: The desktop version of the application is finalized and frozen. It MUST NOT be touched, modified, refactored, or affected in any way.
-- **Mobile Scope**: All subsequent development, fine-tuning, bug fixes, and feature adjustments are strictly scoped to the mobile version (mobile viewports, touch interactions, mobile modals, mobile layout, and mobile-specific states).
-- **Desktop Invariance**: Any code changes must be strictly isolated to mobile (using mobile breakpoints, conditions like `isCompactViewport`, or mobile media queries) so that desktop layout, dimensions, styling, and behavior remain 100% intact and untouched.
-
----
-
-## 9. iPhone & Chrome iOS Runtime Architecture (STRICT)
+## 8. iPhone & Chrome iOS Runtime Architecture (STRICT)
 The mobile version is specifically engineered for and evaluated on **Google Chrome on iPhone** (iOS WebKit / WKWebView environment):
 - **Viewport & Dynamic Toolbars**:
   - Chrome on iOS dynamically expands and collapses its top omnibox and bottom navigation bar during scroll.

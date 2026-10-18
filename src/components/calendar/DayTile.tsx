@@ -41,37 +41,155 @@ export function syncAllFireAnimations() {
   });
 }
 
-function getGoalMarkerColors(rawColor: string | undefined, dark: boolean) {
+function doesGoalMatchSprintColor(
+  rawColor: string | undefined,
+  accentColor: string | undefined,
+  quarterColorKey: AppleColorKey | undefined,
+  dark: boolean,
+): boolean {
+  if (!rawColor) return false;
+  if (quarterColorKey && rawColor === quarterColorKey) return true;
+  const ac = APPLE_COLORS.find(
+    (c) => c.key === rawColor || c.light === rawColor || c.dark === rawColor,
+  );
+  if (ac && quarterColorKey && ac.key === quarterColorKey) return true;
+  const hex = ac ? (dark ? ac.dark : ac.light) : rawColor;
+  if (accentColor && hex.toLowerCase() === accentColor.toLowerCase()) return true;
+  if (
+    accentColor &&
+    resolveNoteHex(hex).toLowerCase() === resolveNoteHex(accentColor).toLowerCase()
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function getContourColorForBg(accentColor?: string, dark?: boolean): string {
+  if (!accentColor) {
+    return dark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.25)";
+  }
+  const lum = luminanceOf(accentColor);
+  return lum > 0.55 ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)";
+}
+
+function getGoalMarkerColors(
+  rawColor: string | undefined,
+  dark: boolean,
+  accentColor?: string,
+  quarterColorKey?: AppleColorKey,
+  isFilledBg?: boolean,
+) {
   if (!rawColor) {
+    const isGreenSprint =
+      Boolean(isFilledBg) &&
+      (quarterColorKey === "green" ||
+        (accentColor &&
+          resolveNoteHex(accentColor).toLowerCase() === "#34c759"));
     return {
       fill: "#34c759",
       icon: "#ffffff",
-      stroke: undefined,
+      stroke: isGreenSprint ? "rgba(255, 255, 255, 0.25)" : undefined,
     };
   }
   const ac = APPLE_COLORS.find(
     (c) => c.key === rawColor || c.light === rawColor || c.dark === rawColor,
   );
   const hex = ac ? (dark ? ac.dark : ac.light) : rawColor;
+
+  const matchesSprint =
+    Boolean(isFilledBg) &&
+    doesGoalMatchSprintColor(rawColor, accentColor, quarterColorKey, dark);
+
   const ach = goalCheckboxAchromaticStyle(resolveNoteHex(hex), dark);
+
+  const isAchromaticSurfaceBlend =
+    !isFilledBg &&
+    ((ach?.tier === "white" && !dark) || (ach?.tier === "black" && dark));
+
+  const contourStroke = matchesSprint
+    ? getContourColorForBg(accentColor, dark)
+    : isAchromaticSurfaceBlend
+      ? (!dark ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)")
+      : undefined;
+
   if (ach) {
+    if (ach.tier === "white") {
+      return {
+        fill: "#ffffff",
+        icon: "#000000",
+        stroke: contourStroke,
+      };
+    }
+    if (ach.tier === "black") {
+      return {
+        fill: "#000000",
+        icon: "#ffffff",
+        stroke: contourStroke,
+      };
+    }
     return {
       fill: ach.bg,
       icon: ach.icon,
-      stroke:
-        ach.bg === "#ffffff"
-          ? "rgba(0,0,0,0.22)"
-          : dark
-            ? "rgba(255,255,255,0.25)"
-            : "rgba(0,0,0,0.25)",
+      stroke: contourStroke,
     };
   }
   const lum = luminanceOf(hex);
   return {
     fill: hex,
     icon: lum > 0.65 ? "#18181b" : "#ffffff",
-    stroke: lum > 0.85 ? "rgba(0,0,0,0.22)" : undefined,
+    stroke: contourStroke,
   };
+}
+
+function getGoalCheckboxInfo(
+  rawColor: string | undefined,
+  dark: boolean,
+  indColor: string,
+  accentColor?: string,
+  quarterColorKey?: AppleColorKey,
+  isFilledBg?: boolean,
+) {
+  if (!rawColor) {
+    return { stroke: indColor, contour: undefined };
+  }
+  const ac = APPLE_COLORS.find(
+    (c) => c.key === rawColor || c.light === rawColor || c.dark === rawColor,
+  );
+  const hex = ac ? (dark ? ac.dark : ac.light) : rawColor;
+
+  const matchesSprint =
+    Boolean(isFilledBg) &&
+    doesGoalMatchSprintColor(rawColor, accentColor, quarterColorKey, dark);
+
+  const ach = goalCheckboxAchromaticStyle(resolveNoteHex(hex), dark);
+
+  const isAchromaticSurfaceBlend =
+    !isFilledBg &&
+    ((ach?.tier === "white" && !dark) || (ach?.tier === "black" && dark));
+
+  const contour = matchesSprint
+    ? getContourColorForBg(accentColor, dark)
+    : isAchromaticSurfaceBlend
+      ? (!dark ? "rgba(0, 0, 0, 0.25)" : "rgba(255, 255, 255, 0.25)")
+      : undefined;
+
+  if (ach) {
+    if (ach.tier === "white") {
+      return {
+        stroke: "#ffffff",
+        contour,
+      };
+    }
+    if (ach.tier === "black") {
+      return {
+        stroke: "#000000",
+        contour,
+      };
+    }
+    return { stroke: "#71717a", contour };
+  }
+
+  return { stroke: hex, contour };
 }
 
 // ─── DayTile ──────────────────────────────────────────────────────────────────
@@ -264,7 +382,7 @@ function DayTileComponent({
   const todayFilledIndicatorColor =
     todayFilledTone === "onGreen" ? "white" : "#18181b";
 
-  const renderMicroMarkers = (indColor: string) => {
+  const renderMicroMarkers = (indColor: string, isFilledBg?: boolean) => {
     if (!dayGoals || dayGoals.count <= 0) return null;
     const indicatorLimit = isCompactViewport ? 6 : 8;
     const showPlus = dayGoals.count > indicatorLimit;
@@ -278,6 +396,14 @@ function DayTileComponent({
     const dots = Array.from({ length: dotCount }, (_, i) => {
       const done = dayGoals.done[i] ?? false;
       if (!done) {
+        const info = getGoalCheckboxInfo(
+          dayGoals.colors?.[i],
+          dark,
+          indColor,
+          accentColor,
+          quarterColorKey,
+          isFilledBg,
+        );
         return (
           <svg
             key={i}
@@ -286,21 +412,38 @@ function DayTileComponent({
             viewBox="0 0 6 6"
             fill="none"
             className="lc-goal-dot"
-            style={{ flexShrink: 0, overflow: "hidden" }}
+            style={{ flexShrink: 0, overflow: "visible" }}
           >
+            {info.contour && (
+              <rect
+                x="0.75"
+                y="0.75"
+                width="4.5"
+                height="4.5"
+                rx="1"
+                stroke={info.contour}
+                strokeWidth="2.2"
+              />
+            )}
             <rect
               x="0.75"
               y="0.75"
               width="4.5"
               height="4.5"
               rx="1"
-              stroke={indColor}
+              stroke={info.stroke}
               strokeWidth="1.2"
             />
           </svg>
         );
       }
-      const marker = getGoalMarkerColors(dayGoals.colors?.[i], dark);
+      const marker = getGoalMarkerColors(
+        dayGoals.colors?.[i],
+        dark,
+        accentColor,
+        quarterColorKey,
+        isFilledBg,
+      );
       return (
         <svg
           key={i}
@@ -309,17 +452,17 @@ function DayTileComponent({
           viewBox="0 0 6 6"
           fill="none"
           className="lc-goal-dot"
-          style={{ flexShrink: 0, overflow: "hidden" }}
+          style={{ flexShrink: 0, overflow: "visible" }}
         >
           <rect
-            x={marker.stroke ? "0.3" : "0"}
-            y={marker.stroke ? "0.3" : "0"}
-            width={marker.stroke ? "5.4" : "6"}
-            height={marker.stroke ? "5.4" : "6"}
+            x={marker.stroke ? "0.5" : "0"}
+            y={marker.stroke ? "0.5" : "0"}
+            width={marker.stroke ? "5" : "6"}
+            height={marker.stroke ? "5" : "6"}
             rx="1.2"
             fill={marker.fill}
             stroke={marker.stroke}
-            strokeWidth={marker.stroke ? "0.6" : undefined}
+            strokeWidth={marker.stroke ? "1" : undefined}
           />
           <path
             d="M1.4 3l1.1 1.1 2.1-2.2"
@@ -782,7 +925,7 @@ function DayTileComponent({
                 overflow: "visible",
               }}
             >
-              {renderMicroMarkers(indicatorColor)}
+              {renderMicroMarkers(indicatorColor, true)}
             </div>
             {noteDot}
           </div>
@@ -888,7 +1031,7 @@ function DayTileComponent({
                   overflow: "visible",
                 }}
               >
-                {renderMicroMarkers(todayBaseIndicatorColor)}
+                {renderMicroMarkers(todayBaseIndicatorColor, false)}
               </div>
             </div>
 
@@ -918,7 +1061,7 @@ function DayTileComponent({
                     overflow: "visible",
                   }}
                 >
-                  {renderMicroMarkers(todayFilledIndicatorColor)}
+                  {renderMicroMarkers(todayFilledIndicatorColor, true)}
                 </div>
               </div>
             )}
@@ -985,7 +1128,7 @@ function DayTileComponent({
               overflow: "visible",
             }}
           >
-            {renderMicroMarkers(indicatorColor)}
+            {renderMicroMarkers(indicatorColor, false)}
           </div>
           {noteDot}
         </div>
