@@ -229,7 +229,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* ─── Fire / Goal Completion Glow ─────────────────────────────────────────── */
 :root {
-  --fire-ring-width: 2px;
+  --fire-ring-width: 1.5px;
   --fire-glow-opacity: 1;
   --fire-glow-size: 0.5;
   --fire-pulse-speed: 5s;

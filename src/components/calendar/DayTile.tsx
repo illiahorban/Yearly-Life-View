@@ -1113,8 +1113,8 @@ function DayTileComponent({
               style={{
                 zIndex: 9,
                 boxShadow: isCompactViewport
-                  ? `0 0 0 2.5px rgba(255, 119, 34, var(--fire-future-opacity, 1))`
-                  : `0 0 0 3px rgba(255, 119, 34, var(--fire-future-opacity, 1))`,
+                  ? `0 0 0 2px rgba(255, 119, 34, var(--fire-future-opacity, 1))`
+                  : `0 0 0 2.5px rgba(255, 119, 34, var(--fire-future-opacity, 1))`,
               }}
             />
           )}
