@@ -483,7 +483,9 @@ export function AllGoalsPanel({
                     style={{
                       borderRadius: 16,
                       border: `1px solid ${qr.border}`,
-                      boxShadow: getContrastBoxShadow(qr.key, dark, isMobile, qr.contrastBorderShadow),
+                      boxShadow: isBlackInDark
+                        ? undefined
+                        : getContrastBoxShadow(qr.key, dark, isMobile, qr.contrastBorderShadow),
                       overflow: "hidden",
                       background: "transparent",
                     }}
@@ -706,6 +708,11 @@ export function AllGoalsPanel({
                                 dark,
                               )
                             : qr;
+                          const isSprintBlackInDark =
+                            dark &&
+                            (effectiveQ.key === "black" ||
+                              effectiveQ.border === "#0a0a0a" ||
+                              resolveNoteHex(effectiveQ.border) === "#121212");
                           const sprintHeaderText = readableGoalTextColor(
                             effectiveQ.nameColor,
                             dark,
@@ -717,7 +724,9 @@ export function AllGoalsPanel({
                               style={{
                                 borderRadius: 11,
                                 border: `1px solid ${effectiveQ.border}`,
-                                boxShadow: getContrastBoxShadow(block.color ?? qr.key, dark, isMobile, effectiveQ.contrastBorderShadow),
+                                boxShadow: isSprintBlackInDark
+                                  ? undefined
+                                  : getContrastBoxShadow(block.color ?? qr.key, dark, isMobile, effectiveQ.contrastBorderShadow),
                                 overflow: "hidden",
                                 background: "transparent",
                               }}

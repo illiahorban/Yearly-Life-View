@@ -533,6 +533,9 @@ export function getContrastBoxShadow(
       ? MOBILE_WHITE_IN_LIGHT_SHADOW
       : defaultShadow ?? "0 0 0 0.5px rgba(0, 0, 0, 0.12), inset 0 0 0 0.5px rgba(0, 0, 0, 0.12)";
   }
+  if (ach.tier === "black" && dark) {
+    return undefined;
+  }
   return defaultShadow;
 }
 
