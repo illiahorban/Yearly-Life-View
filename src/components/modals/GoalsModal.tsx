@@ -524,6 +524,7 @@ export function GoalsModal({
                               fontFamily: "inherit",
                               boxSizing: "border-box",
                               display: "block",
+                              margin: 0,
                               boxShadow: ec.boxShadow || undefined,
                               transition:
                                 "background 200ms ease, border-color 200ms ease, color 200ms ease",
@@ -534,8 +535,8 @@ export function GoalsModal({
                           <div
                             style={{
                               position: "absolute",
-                              top: isMobile ? 9 : 8,
-                              transform: "none",
+                              top: 0,
+                              bottom: 0,
                               right: 8,
                               display: "flex",
                               alignItems: "center",
