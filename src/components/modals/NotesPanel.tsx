@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import type { NoteEntry, Milestone, DayGoals, AppleColorKey, Quarter } from "../../types/calendar";
+import type { CalendarConfig, NoteEntry, Milestone, DayGoals, AppleColorKey, Quarter } from "../../types/calendar";
 import { parseDateQuery, dateKey } from "../../utils/date-utils";
 import { makeId, newTimestamps } from "../../utils/storage";
-import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, getContrastBoxShadow } from "../../constants/colors";
+import { APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuarter, getEventColors, getContrastBoxShadow } from "../../constants/colors";
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { HighlightText } from "../common/HighlightText";
 import { ColorPickerPopover } from "../common/ColorPickerPopover";
@@ -15,6 +15,7 @@ import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
 
 export function NotesPanel({
+  config,
   notes,
   weeks,
   resolvedQuarters,
@@ -26,6 +27,7 @@ export function NotesPanel({
   onClose,
 }: {
   key?: React.Key;
+  config: CalendarConfig;
   notes: Record<string, NoteEntry[]>;
   weeks: { weekStart: Date; days: Date[] }[];
   resolvedQuarters: Quarter[];
@@ -63,6 +65,31 @@ export function NotesPanel({
   const [confirmDeleteDk, setConfirmDeleteDk] = useState<string | null>(null);
 
   const q = query.trim().toLowerCase();
+
+  const dateToEffectiveQ = useMemo(() => {
+    const map: Record<string, Quarter> = {};
+    config.quarters.forEach((qConfig, qi) => {
+      const quarter = resolvedQuarters[qi]!;
+      const startIndex = qi * WEEKS_PER_QUARTER;
+      let cursor = 0;
+      qConfig.blocks.forEach((b) => {
+        const effectiveQ = b.color
+          ? resolveQuarter({ name: b.label, colorKey: b.color }, dark)
+          : quarter;
+        const blockWeeks = weeks.slice(
+          startIndex + cursor,
+          startIndex + cursor + b.weeks,
+        );
+        blockWeeks.forEach((w) => {
+          w.days.forEach((d) => {
+            map[dateKey(d)] = effectiveQ;
+          });
+        });
+        cursor += b.weeks;
+      });
+    });
+    return map;
+  }, [config, resolvedQuarters, weeks, dark]);
 
   const grouped = useMemo(() => {
     const qGroups: { dateKey: string; entries: NoteEntry[] }[][] = [
@@ -645,149 +672,160 @@ export function NotesPanel({
                   <div
                     style={{ display: "flex", flexDirection: "column", gap: 6 }}
                   >
-                    {group.map(({ dateKey: dk, entries }) => (
-                      <div
-                        key={dk}
-                        style={{ position: "relative" }}
-                        onMouseEnter={() => setHoveredDk(dk)}
-                        onMouseLeave={() => setHoveredDk(null)}
-                      >
-                        <button
-                          onClick={() => {
-                            onOpenNote(dk);
-                            onClose();
-                          }}
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 4,
-                            padding: "10px 36px 10px 12px",
-                            borderRadius: 12,
-                            background:
-                              hoveredDk === dk
-                                ? dark
-                                  ? "rgba(255,255,255,0.09)"
-                                  : "rgba(0,0,0,0.06)"
-                                : dark
-                                  ? "rgba(255,255,255,0.05)"
-                                  : "rgba(0,0,0,0.03)",
-                            border: isBlackInDark
-                              ? "1px solid transparent"
-                              : `1px solid ${quarter.border}`,
-                            boxShadow: isBlackInDark
-                              ? undefined
-                              : getContrastBoxShadow(quarter.key, dark, isMobile, quarter.contrastBorderShadow),
-                            cursor: "pointer",
-                            textAlign: "left",
-                            fontFamily: "inherit",
-                            transition: "background 150ms",
-                            width: "100%",
-                          }}
+                    {group.map(({ dateKey: dk, entries }) => {
+                      const effectiveQ = dateToEffectiveQ[dk] ?? quarter;
+                      const isDayBlackInDark =
+                        dark &&
+                        (effectiveQ.key === "black" ||
+                          effectiveQ.border === "#0a0a0a" ||
+                          resolveNoteHex(effectiveQ.border) === "#121212");
+                      return (
+                        <div
+                          key={dk}
+                          style={{ position: "relative" }}
+                          onMouseEnter={() => setHoveredDk(dk)}
+                          onMouseLeave={() => setHoveredDk(null)}
                         >
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color: quarter.text,
-                              letterSpacing: "0.01em",
+                          <button
+                            onClick={() => {
+                              onOpenNote(dk);
+                              onClose();
                             }}
-                          >
-                            {formatDate(dk)}
-                          </span>
-                          <div
                             style={{
                               display: "flex",
                               flexDirection: "column",
-                              gap: 3,
+                              gap: 4,
+                              padding: "10px 36px 10px 12px",
+                              borderRadius: 12,
+                              background:
+                                hoveredDk === dk
+                                  ? dark
+                                    ? "rgba(255,255,255,0.09)"
+                                    : "rgba(0,0,0,0.06)"
+                                  : dark
+                                    ? "rgba(255,255,255,0.05)"
+                                    : "rgba(0,0,0,0.03)",
+                              border: `1px solid ${effectiveQ.border}`,
+                              boxShadow: isDayBlackInDark
+                                ? undefined
+                                : getContrastBoxShadow(
+                                    effectiveQ.key,
+                                    dark,
+                                    isMobile,
+                                    effectiveQ.contrastBorderShadow,
+                                  ),
+                              cursor: "pointer",
+                              textAlign: "left",
+                              fontFamily: "inherit",
+                              transition: "background 150ms",
+                              width: "100%",
                             }}
                           >
-                            {entries.map((e, i) => {
-                              const eec = getEventColors(
-                                e.color ? resolveNoteHex(e.color) : "",
-                                dark,
-                                { isMobile },
-                              );
-                              return (
-                                <div
-                                  key={i}
-                                  style={{
-                                    padding: "8px 10px 8px 12px",
-                                    borderRadius: 12,
-                                    border: `1px solid ${eec.border}`,
-                                    boxShadow: eec.boxShadow || undefined,
-                                    background: eec.bg,
-                                    overflow: "hidden",
-                                  }}
-                                >
-                                  <span
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: effectiveQ.text,
+                                letterSpacing: "0.01em",
+                              }}
+                            >
+                              {formatDate(dk)}
+                            </span>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 3,
+                              }}
+                            >
+                              {entries.map((e, i) => {
+                                const eec = getEventColors(
+                                  e.color ? resolveNoteHex(e.color) : "",
+                                  dark,
+                                  { isMobile },
+                                );
+                                return (
+                                  <div
+                                    key={i}
                                     style={{
-                                      fontSize: 13,
-                                      color: eec.textTitle,
-                                      lineHeight: 1.55,
-                                      display: "block",
-                                      wordBreak: "break-word",
+                                      padding: "8px 10px 8px 12px",
+                                      borderRadius: 12,
+                                      border: `1px solid ${eec.border}`,
+                                      boxShadow: eec.boxShadow || undefined,
+                                      background: eec.bg,
+                                      overflow: "hidden",
                                     }}
                                   >
-                                    <HighlightText text={e.text} query={q} />
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </button>
-                        {hoveredDk === dk && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConfirmDeleteDk(dk);
-                            }}
-                            title={t("remove")}
-                            style={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              width: 26,
-                              height: 26,
-                              borderRadius: 999,
-                              background: dark
-                                ? "rgba(255,59,48,0.15)"
-                                : "rgba(255,59,48,0.1)",
-                              border: "none",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "#ff3b30",
-                              flexShrink: 0,
-                              transition: "background 0.1s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = dark
-                                ? "rgba(255,59,48,0.28)"
-                                : "rgba(255,59,48,0.22)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = dark
-                                ? "rgba(255,59,48,0.15)"
-                                : "rgba(255,59,48,0.1)";
-                            }}
-                          >
-                            <svg
-                              width="9"
-                              height="9"
-                              viewBox="0 0 10 10"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                            >
-                              <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
-                              <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
-                            </svg>
+                                    <span
+                                      style={{
+                                        fontSize: 13,
+                                        color: eec.textTitle,
+                                        lineHeight: 1.55,
+                                        display: "block",
+                                        wordBreak: "break-word",
+                                      }}
+                                    >
+                                      <HighlightText text={e.text} query={q} />
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </button>
-                        )}
-                      </div>
-                    ))}
+                          {hoveredDk === dk && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDeleteDk(dk);
+                              }}
+                              title={t("remove")}
+                              style={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                width: 26,
+                                height: 26,
+                                borderRadius: 999,
+                                background: dark
+                                  ? "rgba(255,59,48,0.15)"
+                                  : "rgba(255,59,48,0.1)",
+                                border: "none",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "#ff3b30",
+                                flexShrink: 0,
+                                transition: "background 0.1s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = dark
+                                  ? "rgba(255,59,48,0.28)"
+                                  : "rgba(255,59,48,0.22)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = dark
+                                  ? "rgba(255,59,48,0.15)"
+                                  : "rgba(255,59,48,0.1)";
+                              }}
+                            >
+                              <svg
+                                width="9"
+                                height="9"
+                                viewBox="0 0 10 10"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                              >
+                                <line x1="1.5" y1="1.5" x2="8.5" y2="8.5" />
+                                <line x1="8.5" y1="1.5" x2="1.5" y2="8.5" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

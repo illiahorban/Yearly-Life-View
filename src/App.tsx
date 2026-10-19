@@ -3249,6 +3249,7 @@ function App() {
           {notesPanelOpen && (
             <NotesPanel
               key="notes-panel"
+              config={config}
               notes={notes}
               weeks={weeks}
               resolvedQuarters={resolvedQuarters}
@@ -3268,6 +3269,8 @@ function App() {
           {milestonePanelOpen && (
             <MilestoneModal
               key="milestones"
+              config={config}
+              viewYear={viewYear}
               milestones={activeMilestones}
               resolvedQuarters={resolvedQuarters}
               weeks={weeks}

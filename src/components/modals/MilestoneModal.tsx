@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Milestone, DayGoals, Quarter } from "../../types/calendar";
-import { dateKey } from "../../utils/date-utils";
+import type { CalendarConfig, Milestone, DayGoals, Quarter } from "../../types/calendar";
+import { dateKey, getRecurringDateKey } from "../../utils/date-utils";
 import { makeId, newTimestamps } from "../../utils/storage";
-import { MILESTONE_COLORS, APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, getEventColors, clampedPopoverPos } from "../../constants/colors";
+import { MILESTONE_COLORS, APPLE_COLORS, adaptColor, achromaticStyle, resolveNoteHex, resolveQuarter, getEventColors, getContrastBoxShadow, clampedPopoverPos } from "../../constants/colors";
 import { LangContext, WEEKS_PER_QUARTER } from "../../constants/i18n";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { useVisualViewport } from "../../hooks/use-visual-viewport";
@@ -16,6 +16,8 @@ import { FlagIcon, TrashIcon, CheckIcon, SearchIcon } from "../icons/Icons";
 import { haptics } from "../../utils/haptics";
 
 export function MilestoneModal({
+  config,
+  viewYear,
   milestones,
   resolvedQuarters,
   weeks,
@@ -25,6 +27,8 @@ export function MilestoneModal({
   onChange,
 }: {
   key?: React.Key;
+  config: CalendarConfig;
+  viewYear: number;
   milestones: Milestone[];
   resolvedQuarters: Quarter[];
   weeks: { weekStart: Date; days: Date[] }[];
@@ -64,6 +68,31 @@ export function MilestoneModal({
         (ms.description ?? "").toLowerCase().includes(q),
     );
   }, [items, q]);
+
+  const dateToEffectiveQ = useMemo(() => {
+    const map: Record<string, Quarter> = {};
+    config.quarters.forEach((qConfig, qi) => {
+      const quarter = resolvedQuarters[qi]!;
+      const startIndex = qi * WEEKS_PER_QUARTER;
+      let cursor = 0;
+      qConfig.blocks.forEach((b) => {
+        const effectiveQ = b.color
+          ? resolveQuarter({ name: b.label, colorKey: b.color }, dark)
+          : quarter;
+        const blockWeeks = weeks.slice(
+          startIndex + cursor,
+          startIndex + cursor + b.weeks,
+        );
+        blockWeeks.forEach((w) => {
+          w.days.forEach((d) => {
+            map[dateKey(d)] = effectiveQ;
+          });
+        });
+        cursor += b.weeks;
+      });
+    });
+    return map;
+  }, [config, resolvedQuarters, weeks, dark]);
 
   const dateToQi = useMemo(() => {
     const map: Record<string, number> = {};
@@ -1356,49 +1385,63 @@ export function MilestoneModal({
                         gap: 6,
                       }}
                     >
-                      {group.map((dg) => (
-                        <div
-                          key={dg.date}
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 4,
-                            padding: "10px 12px",
-                            borderRadius: 12,
-                            background: dark
-                              ? "rgba(255,255,255,0.05)"
-                              : "rgba(0,0,0,0.03)",
-                            border: isBlackInDark
-                              ? "1px solid transparent"
-                              : `1px solid ${quarter.border}`,
-                            boxShadow: isBlackInDark
-                              ? undefined
-                              : quarter.contrastBorderShadow,
-                            width: "100%",
-                            boxSizing: "border-box",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color: quarter.text,
-                              letterSpacing: "0.01em",
-                            }}
-                          >
-                            {formatDate(dg.date)}
-                          </span>
+                      {group.map((dg) => {
+                        const effectiveQ =
+                          dateToEffectiveQ[dg.date] ??
+                          dateToEffectiveQ[getRecurringDateKey(dg.date, viewYear)] ??
+                          quarter;
+                        const isDayBlackInDark =
+                          dark &&
+                          (effectiveQ.key === "black" ||
+                            effectiveQ.border === "#0a0a0a" ||
+                            resolveNoteHex(effectiveQ.border) === "#121212");
+                        return (
                           <div
+                            key={dg.date}
                             style={{
                               display: "flex",
                               flexDirection: "column",
-                              gap: 3,
+                              gap: 4,
+                              padding: "10px 12px",
+                              borderRadius: 12,
+                              background: dark
+                                ? "rgba(255,255,255,0.05)"
+                                : "rgba(0,0,0,0.03)",
+                              border: `1px solid ${effectiveQ.border}`,
+                              boxShadow: isDayBlackInDark
+                                ? undefined
+                                : getContrastBoxShadow(
+                                    effectiveQ.key,
+                                    dark,
+                                    isMobile,
+                                    effectiveQ.contrastBorderShadow,
+                                  ),
+                              width: "100%",
+                              boxSizing: "border-box",
                             }}
                           >
-                            {dg.items.map((ms) => renderCard(ms, false))}
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: effectiveQ.text,
+                                letterSpacing: "0.01em",
+                              }}
+                            >
+                              {formatDate(dg.date)}
+                            </span>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 3,
+                              }}
+                            >
+                              {dg.items.map((ms) => renderCard(ms, false))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 );
