@@ -435,6 +435,9 @@ export function AllGoalsPanel({
             {config.quarters.map((qc, qi) => {
               // eslint-disable-line
               const qr = resolvedQuarters[qi]!;
+              const qDesc = quarterGoals[qi]?.isDeleted
+                ? ""
+                : (quarterGoals[qi]?.description?.trim() ?? "");
               const qGoals = quarterGoals[qi]?.isDeleted
                 ? []
                 : (quarterGoals[qi]?.goals.filter(
@@ -447,7 +450,10 @@ export function AllGoalsPanel({
                     ? []
                     : (bg?.goals.filter((g) => !g.isDeleted && g.text.trim()) ??
                       []);
-                  return { block: b, goals };
+                  const description = bg?.isDeleted
+                    ? ""
+                    : (bg?.description?.trim() ?? "");
+                  return { block: b, goals, description };
                 })
                 .filter((x) => x.goals.length > 0);
               if (qGoals.length === 0 && blocksWithGoals.length === 0)
@@ -610,6 +616,34 @@ export function AllGoalsPanel({
                       );
                     })()}
 
+                    {/* Quarter description */}
+                    {qDesc && (
+                      <p
+                        style={{
+                          margin: qGoals.length > 0 ? "0 14px 4px" : "0 14px 8px",
+                          fontSize: 11,
+                          color: "var(--text-tertiary)",
+                          borderLeft: `2px solid ${
+                            isWhiteInLight
+                              ? "rgba(0,0,0,0.25)"
+                              : isBlackInDark
+                                ? "rgba(255,255,255,0.25)"
+                                : qr.border
+                          }`,
+                          paddingLeft: 8,
+                          lineHeight: "1.5",
+                          whiteSpace: "pre-wrap",
+                          minWidth: 0,
+                          maxWidth: "100%",
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        {qDesc}
+                      </p>
+                    )}
+
                     {/* Quarter goals checkboxes */}
                     {qGoals.length > 0 && (
                       <div
@@ -701,7 +735,7 @@ export function AllGoalsPanel({
                           gap: 5,
                         }}
                       >
-                        {blocksWithGoals.map(({ block, goals }) => {
+                        {blocksWithGoals.map(({ block, goals, description: sDesc }) => {
                           const effectiveQ = block.color
                             ? resolveQuarter(
                                 { name: block.label, colorKey: block.color },
@@ -713,6 +747,11 @@ export function AllGoalsPanel({
                             (effectiveQ.key === "black" ||
                               effectiveQ.border === "#0a0a0a" ||
                               resolveNoteHex(effectiveQ.border) === "#121212");
+                          const isSprintWhiteInLight =
+                            !dark &&
+                            (effectiveQ.key === "white" ||
+                              effectiveQ.border === "#ffffff" ||
+                              resolveNoteHex(effectiveQ.border) === "#ffffff");
                           const sprintHeaderText = readableGoalTextColor(
                             effectiveQ.nameColor,
                             dark,
@@ -825,6 +864,32 @@ export function AllGoalsPanel({
                                   <GoalsIcon />
                                 </button>
                               </div>
+                              {sDesc && (
+                                <p
+                                  style={{
+                                    margin: "6px 10px 2px",
+                                    fontSize: 11,
+                                    color: "var(--text-tertiary)",
+                                    borderLeft: `2px solid ${
+                                      isSprintWhiteInLight
+                                        ? "rgba(0,0,0,0.25)"
+                                        : isSprintBlackInDark
+                                          ? "rgba(255,255,255,0.25)"
+                                          : effectiveQ.border
+                                    }`,
+                                    paddingLeft: 8,
+                                    lineHeight: "1.45",
+                                    whiteSpace: "pre-wrap",
+                                    minWidth: 0,
+                                    maxWidth: "100%",
+                                    overflowWrap: "anywhere",
+                                    wordBreak: "break-word",
+                                    boxSizing: "border-box",
+                                  }}
+                                >
+                                  {sDesc}
+                                </p>
+                              )}
                               <div
                                 style={{
                                   padding: "5px 8px",
