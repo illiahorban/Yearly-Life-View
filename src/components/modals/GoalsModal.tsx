@@ -516,7 +516,7 @@ export function GoalsModal({
                               background: inputBackground,
                               border: `1px solid ${inputBorderColor}`,
                               borderRadius: 12,
-                              padding: "8px 59px 8px 10px",
+                              padding: "8px 50px 8px 10px",
                               fontSize: isMobile ? 16 : 13,
                               lineHeight: 1.4,
                               color: inputTextColor,
@@ -564,8 +564,8 @@ export function GoalsModal({
                               title={t("chooseColor")}
                               aria-label={t("chooseColor")}
                               style={{
-                                width: 22,
-                                height: 22,
+                                width: 16,
+                                height: 16,
                                 borderRadius: 999,
                                 flexShrink: 0,
                                 background: normaliseGrey(gc) || "transparent",
@@ -607,8 +607,8 @@ export function GoalsModal({
                               }}
                               onPointerDown={(e) => e.stopPropagation()}
                               style={{
-                                width: 22,
-                                height: 22,
+                                width: 18,
+                                height: 18,
                                 borderRadius: 999,
                                 border: "none",
                                 boxSizing: "border-box",
@@ -638,8 +638,8 @@ export function GoalsModal({
                               }}
                             >
                               <svg
-                                width="10"
-                                height="10"
+                                width="8"
+                                height="8"
                                 viewBox="0 0 10 10"
                                 fill="none"
                                 stroke="currentColor"
